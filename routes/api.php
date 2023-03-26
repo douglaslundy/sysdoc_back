@@ -41,6 +41,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Route::put('/letter', [LetterController::class, 'update']);
     // Route::delete('/letter/{id}', [LetterController::class, 'delete']);
     Route::apiResource('letters', LetterController::class);
+    Route::post('/letters/newLetter', [LetterController::class, 'createLetterAi'])->name('newLetter');
 
      // user
     //  Route::get('/users', [UserController::class, 'getAll']);
@@ -49,6 +50,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //  Route::put('/user', [UserController::class, 'update']);
     //  Route::delete('/user/{id}', [UserController::class, 'delete']);
 
-     Route::apiResource('users', UserController::class);
+    Route::apiResource('users', UserController::class);
 
 });
