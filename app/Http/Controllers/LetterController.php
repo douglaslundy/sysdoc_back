@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 use App\Models\Letter;
-use App\Models\Model_ai;
+use App\Models\Models;
 use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -122,34 +122,41 @@ class LetterController extends Controller
 
     public function createLetterAi(Request $req)
     {
-        $prompt = "
-                    ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' .$req->treatment_pronoun ],
-                    ['role' => 'user', 'content' => ' em seguida informe o nome para quem é destinado '.$req->recipient],
-                    ['role' => 'user', 'content' => 'Escreva a palavra 'Assunto'  e na frente ' .$req->subject ],
-                    ['role' => 'user', 'content' => ' disserte de forma mais resumida possivel, e não insira novas informações ou escreva sobre nada além de ' .$req->summary ],
-                    ['role' => 'user', 'content' => ' agora despeça com votos de '.$req->whishes],
-                    ['role' => 'user', 'content' => ' Insira o nome  '.$req->sender . ' e na frente escreva  Local e Data']
-                ";
+        // $prompt = [
+        //     ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun .
+        //      ' em seguida informe o nome para quem é destinado ' . $req->recipient .', Escreva a palavra "Assunto"  e na frente ' . $req->subject .
+        //      ',disserte de forma mais resumida possivel, e não insira novas informações ou escreva sobre nada além de ' .
+        //      $req->summary .' agora despeça com votos de ' . $req->whishes .' , Insira o nome  ' . $req->sender . ' e na frente escreva  Local e Data']
+        // ];
+        $prompt = [
+            ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun],
+            ['role' => 'user', 'content' => ' em seguida informe o seguinte destinatário ' . $req->recipient],
+            ['role' => 'user', 'content' => ' Escreva a palavra "Assunto"  e na frente ' . $req->subject],
+            ['role' => 'user', 'content' => ' disserte de forma mais resumida possivel, e não insira novas informações ou escreva sobre nada além de ' . $req->summary],
+            ['role' => 'user', 'content' => ' agora despeça com votos de ' . $req->whishes],
+            ['role' => 'user', 'content' => ' Insira o nome  ' . $req->sender . ' e na frente escreva  Local e Data']
+        ];
 
         try {
 
             $result = OpenAI::chat()->create([
                 'model' => 'gpt-3.5-turbo',
-                'messages' => [$prompt]
+                'messages' => $prompt
             ]);
 
             if ($result->choices[0]->message->content) {
-                $model = new Model_ai();
+                $model = new Models();
                 $model->id_user =  $req->id_user;
                 $model->summary =  $req->summary;
-                $model->prompt =  $req->prompt;
+                // $model->prompt =  $prompt[0]['content'];
+                $model->prompt =  $prompt[0]['content'].$prompt[1]['content'].$prompt[2]['content'].$prompt[3]['content'].$prompt[4]['content'].$prompt[5]['content'];
                 $model->model =  $result->choices[0]->message->content;
                 $model->save();
             }
 
             return $result->choices[0]->message->content;
         } catch (Exception $e) {
-            throw new Exception ("erro ao conectar com a Inteligência Artificial,  tente novamente");
+            throw new Exception("erro ao conectar com a Inteligência Artificial,  tente novamente");
         }
     }
 }
