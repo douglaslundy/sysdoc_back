@@ -18,12 +18,12 @@ class CreateAllTables extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('cpf')->unique();
-            $table->string('password');            
+            $table->string('password');
         });
 
         Schema::create('sectors', function(Blueprint $table){
             $table->id();
-            $table->string('name');           
+            $table->string('name');
         });
 
         Schema::create('letters', function(Blueprint $table){
@@ -34,9 +34,9 @@ class CreateAllTables extends Migration
             $table->string('subject_matter', 100);
             $table->string('sender', 50);
             $table->string('recipient', 50);
-            $table->string('obs', 200)->nullable();
+            $table->string('obs', 1000)->nullable();
             $table->string('fileurl', 100)->nullable();
-            $table->boolean('dispatched')->default(false);              
+            $table->boolean('dispatched')->default(false);
         });
     }
 
