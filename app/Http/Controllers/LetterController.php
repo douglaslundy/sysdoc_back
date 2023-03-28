@@ -17,7 +17,8 @@ class LetterController extends Controller
 {
     public function index()
     {
-        return Letter::orderBy('id', 'desc')->get();
+        // return Letter::orderBy('id', 'desc')->get();
+        return Letter::with(['user'])->orderBy('id', 'desc')->get();
     }
 
     public function store(Request $request)
