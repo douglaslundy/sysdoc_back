@@ -27,7 +27,7 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|email|',
             'cpf' => 'required',
-            'password' => 'required'
+            'password' => 'required',
             //'arquivo' => 'required|mimes:jpg, png, pdf
         ]);
 
@@ -39,6 +39,7 @@ class UserController extends Controller
             $user->name = $request->input('name');
             $user->email = $request->input('email');
             $user->cpf = $request->input('cpf');
+            $user->profile = $request->input('profile');
             $user->password = password_hash($request->input('password'), PASSWORD_DEFAULT);
             $user->save();
             $array['user'] = $user;
@@ -85,6 +86,7 @@ class UserController extends Controller
                     $password = $user->password;
                 }
 
+                $user->profile = $request->input('profile');
                 $user->password = $password;
                 $user->save();
                 $array['user'] = $user;
