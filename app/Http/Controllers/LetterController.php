@@ -17,7 +17,6 @@ class LetterController extends Controller
 {
     public function index()
     {
-        // return Letter::orderBy('id', 'desc')->get();
         return Letter::with(['user'])->orderBy('id', 'desc')->get();
     }
 
@@ -65,13 +64,6 @@ class LetterController extends Controller
         return $array;
     }
 
-    // public function edit($id)
-    // {
-    //     $array = ['errors' => ''];
-    //     $array['letters'] = Letter::find($id);
-    //     return $array;
-    // }
-
     public function update(Request $request)
     {
         $array = ['errors' => ''];
@@ -115,20 +107,19 @@ class LetterController extends Controller
             $array['errors'] = "letter has not found";
         } else {
 
+            $lastLetter = Letter::latest()->first();
+
+            if ($letter->id !== $lastLetter->id)
+                throw new Exception('é permitido excluir Somente o ultimo Ofício');
+
             $letter->delete();
+            return $array;
         }
-        return $array;
     }
 
 
     public function createLetterAi(Request $req)
     {
-        // $prompt = [
-        //     ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun .
-        //      ' em seguida informe o nome para quem é destinado ' . $req->recipient .', Escreva a palavra "Assunto"  e na frente ' . $req->subject .
-        //      ',disserte de forma mais resumida possivel, e não insira novas informações ou escreva sobre nada além de ' .
-        //      $req->summary .' agora despeça com votos de ' . $req->whishes .' , Insira o nome  ' . $req->sender . ' e na frente escreva  Local e Data']
-        // ];
         $prompt = [
             ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun],
             ['role' => 'user', 'content' => ' em seguida informe o seguinte destinatário ' . $req->recipient],
@@ -150,7 +141,7 @@ class LetterController extends Controller
                 $model->id_user =  $req->id_user;
                 $model->summary =  $req->summary;
                 // $model->prompt =  $prompt[0]['content'];
-                $model->prompt =  $prompt[0]['content'].$prompt[1]['content'].$prompt[2]['content'].$prompt[3]['content'].$prompt[4]['content'].$prompt[5]['content'];
+                $model->prompt =  $prompt[0]['content'] . $prompt[1]['content'] . $prompt[2]['content'] . $prompt[3]['content'] . $prompt[4]['content'] . $prompt[5]['content'];
                 $model->model =  $result->choices[0]->message->content;
                 $model->save();
             }
