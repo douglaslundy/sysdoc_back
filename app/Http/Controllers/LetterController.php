@@ -46,8 +46,6 @@ class LetterController extends Controller
                 // ->first()
             ) + 1;
 
-            $letter->date = Carbon::now()->format('Y-m-d');
-
             $letter->subject_matter = $request->input('subject_matter');
             $letter->sender = $request->input('sender');
             $letter->recipient = $request->input('recipient');
