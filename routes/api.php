@@ -33,7 +33,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // letters
     Route::apiResource('letters', LetterController::class);
     Route::post('/letters/newLetter', [LetterController::class, 'createLetterAi'])->name('newLetter');
-
+    // users
     Route::apiResource('users', UserController::class);
     // Models
     Route::apiResource('models', ModelController::class);

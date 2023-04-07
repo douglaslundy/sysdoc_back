@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Letter;
 use App\Models\Models;
 use Exception;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use OpenAI\Laravel\Facades\OpenAI;
 

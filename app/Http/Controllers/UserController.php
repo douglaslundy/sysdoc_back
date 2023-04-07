@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 use App\Models\User;
+use Exception;
 
 class UserController extends Controller
 {
@@ -36,6 +37,10 @@ class UserController extends Controller
             //$file = $request->file('photo')->store('public');
 
             $user = new User();
+
+            if ($request->input('password') !== $request->input('password2'))
+                   throw new Exception('As senhas precisam ser iguais');
+
             $user->name = $request->input('name');
             $user->email = $request->input('email');
             $user->cpf = $request->input('cpf');
@@ -45,13 +50,19 @@ class UserController extends Controller
             $array['user'] = $user;
         } else {
             $array['errors'] = $validator->errors()->first();
-            return $array;
+                throw new Exception($array['errors']);
         }
 
         return $array;
     }
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
 
-    public function edit($id)
+    public function show($id)
     {
         $array = ['errors' => ''];
         $array['users'] = User::find($id);
