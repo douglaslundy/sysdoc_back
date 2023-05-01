@@ -14,7 +14,7 @@ class RoomController extends Controller
      */
     public function index()
     {
-        $rooms = Room::all();
+        $rooms = Room::with(['call_service'])->orderBy('id', 'desc')->get();
         return response()->json($rooms);
 
         // return Room::orderBy('id', 'desc')->get();

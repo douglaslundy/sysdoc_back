@@ -25,7 +25,6 @@ class StoreRoomRequest extends FormRequest
             'name' => 'required|max:100',
             'description' => 'nullable|max:50',
             'status' => 'required|in:OPEN,BUSY,CLOSED',
-            'obs' => 'nullable|max:200',
         ];
     }
 
@@ -37,7 +36,6 @@ class StoreRoomRequest extends FormRequest
             'description.max' => 'O campo descrição não pode ter mais de :max caracteres.',
             'status.required' => 'O campo status é obrigatório.',
             'status.in' => 'O valor do campo status deve ser um dos seguintes valores: :values.',
-            'obs.max' => 'O campo observação não pode ter mais de :max caracteres.',
         ];
     }
 }
