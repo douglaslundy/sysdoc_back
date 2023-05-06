@@ -4,12 +4,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRoomRequest extends FormRequest
+class StoreCallServicelRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -17,27 +17,23 @@ class StoreRoomRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'name' => 'required|max:100',
-            'description' => 'nullable|max:50',
-            'status' => 'required|in:OPEN,BUSY,CLOSED',
-            'call_service_id' => 'required',
+            'name' => 'required|string|max:50',
+            'description' => 'required|string|max:200'
         ];
     }
 
-    public function messages()
+     public function messages()
     {
         return [
             'name.required' => 'O campo nome é obrigatório.',
             'name.max' => 'O campo nome não pode ter mais de :max caracteres.',
+            'description.required' => 'O campo descrição é obrigatório.',
             'description.max' => 'O campo descrição não pode ter mais de :max caracteres.',
-            'status.required' => 'O campo status é obrigatório.',
-            'status.in' => 'O valor do campo status deve ser um dos seguintes valores: :values.',
-            'call_service_id.required' => 'O campo serviço é obrigatório.',
         ];
     }
 }

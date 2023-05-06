@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreRoomRequest;
 use Illuminate\Http\Request;
 use App\Models\Room;
 
@@ -26,14 +27,13 @@ class RoomController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreRoomRequest $request)
     {
         $room = new Room;
         $room->name = $request->input('name');
         $room->description = $request->input('description');
         $room->status = $request->input('status', 'OPEN');
         $room->call_service_id = $request->input('call_service_id');
-        $room->obs = $request->input('obs');
         $room->save();
 
         return response()->json([
@@ -66,7 +66,7 @@ class RoomController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(StoreRoomRequest $request, $id)
     {
         $room = Room::find($id);
         if (!$room) {
@@ -78,7 +78,6 @@ class RoomController extends Controller
         $room->description = $request->input('description');
         $room->status = $request->input('status');
         $room->call_service_id = $request->input('call_service_id');
-        $room->obs = $request->input('obs');
         $room->save();
 
         return response()->json([

@@ -9,7 +9,7 @@ class Room extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'status', 'obs'];
+    protected $fillable = ['name', 'description', 'status'];
 
     public function call_service(){
         return $this->hasOne(CallService::class, 'id', 'call_service_id');
