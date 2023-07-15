@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->integer('id_user');
             $table->string('summary', 500)->nullable();
-            $table->string('prompt', 1000)->nullable();
-            $table->string('model', 1000)->nullable();
+            $table->string('prompt', 2000)->nullable();
+            $table->string('model', 3000)->nullable();
             $table->timestamps();
         });
     }

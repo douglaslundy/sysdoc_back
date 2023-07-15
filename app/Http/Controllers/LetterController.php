@@ -129,7 +129,8 @@ class LetterController extends Controller
         try {
 
             $result = OpenAI::chat()->create([
-                'model' => 'gpt-3.5-turbo',
+                // 'model' => 'gpt-3.5-turbo',
+                'model' => 'gpt-3.5-turbo-16k',
                 'messages' => $prompt
             ]);
 
@@ -148,7 +149,8 @@ class LetterController extends Controller
 
             return $result->choices[0]->message->content;
         } catch (Exception $e) {
-            throw new Exception("erro ao conectar com a Inteligência Artificial,  tente novamente");
+            // throw new Exception("erro ao conectar com a Inteligência Artificial,  tente novamente");
+            throw new Exception("erro ao conectar com a Inteligência Artificial,  tente novamente" . $e->getMessage());
         }
     }
 }
