@@ -34,7 +34,7 @@ class CreateAllTables extends Migration
             $table->string('subject_matter', 100);
             $table->string('sender', 50);
             $table->string('recipient', 50);
-            $table->string('obs', 1000)->nullable();
+            $table->string('obs', 3000)->nullable();
             $table->string('fileurl', 100)->nullable();
             $table->boolean('dispatched')->default(false);
         });

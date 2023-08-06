@@ -46,6 +46,7 @@ class CallController extends Controller
         $call->user_id = $request->input('user_id');
         $call->client_id = $request->input('client_id');
         $call->call_service_id = $request->input('call_service_id');
+        $call->reason = $request->input('reason');
         $call->status = $request->input('status', 'NOT_STARTED');
         $call->save();
 
@@ -92,6 +93,7 @@ class CallController extends Controller
         $call->user_id = $request->input('user_id');
         $call->room_id = $request->input('room_id');
         $call->client_id = $request->input('client_id');
+        $call->reason = $request->input('reason');
         $call->status = $request->input('status');
 
         $call->save();

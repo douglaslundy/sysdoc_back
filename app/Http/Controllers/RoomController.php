@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRoomRequest;
+use App\Models\Call;
 use Illuminate\Http\Request;
 use App\Models\Room;
 
@@ -15,7 +16,7 @@ class RoomController extends Controller
      */
     public function index()
     {
-        $rooms = Room::with(['call_service'])->orderBy('id', 'desc')->get();
+        $rooms = Room::with(['call_service', 'calls'])->orderBy('id', 'desc')->get();
         return response()->json($rooms);
 
         // return Room::orderBy('id', 'desc')->get();

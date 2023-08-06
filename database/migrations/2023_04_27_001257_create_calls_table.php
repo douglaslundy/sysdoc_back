@@ -28,6 +28,7 @@ return new class extends Migration
 
             // fazer validador
             $table->string('reason', 200)->nullable();
+
             $table->unsignedBigInteger('room_id')->nullable();
             $table->foreign('room_id')->references('id')->on('rooms');
 
