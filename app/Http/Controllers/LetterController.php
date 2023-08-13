@@ -118,12 +118,12 @@ class LetterController extends Controller
     public function createLetterAi(Request $req)
     {
         $prompt = [
-            ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun],
-            ['role' => 'user', 'content' => ' em seguida informe o seguinte destinatário ' . $req->recipient],
-            ['role' => 'user', 'content' => ' Escreva a palavra "Assunto"  e na frente ' . $req->subject],
-            ['role' => 'user', 'content' => ' disserte de forma mais resumida possivel, e não insira novas informações ou escreva sobre nada além de ' . $req->summary],
+            ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, no formato de ofício, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun],
+            ['role' => 'user', 'content' => ' em seguida informe o seguinte destinatário  ' . $req->recipient],
+            ['role' => 'user', 'content' => ' crie uma linha para "Assunto"  com seguinte assunto: ' . $req->subject],
+            ['role' => 'user', 'content' => ' utilize o resumo a seguir para elaborar o texto ' . $req->summary],
             ['role' => 'user', 'content' => ' agora despeça com votos de ' . $req->whishes],
-            ['role' => 'user', 'content' => ' Insira o nome  ' . $req->sender . ' e na frente escreva  Local e Data']
+            ['role' => 'user', 'content' => ' Insira o nome  ' . $req->sender . ' em seguida escreva  Local e Data']
         ];
 
         try {

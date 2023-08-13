@@ -10,7 +10,7 @@ class CallServiceController extends Controller
 {
     public function index()
     {
-        $callServices = CallService::all();
+        $callServices = CallService::with(['calls'])->get();
         return response()->json($callServices);
     }
 
