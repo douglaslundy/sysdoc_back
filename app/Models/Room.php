@@ -15,7 +15,11 @@ class Room extends Model
         return $this->hasOne(CallService::class, 'id', 'call_service_id');
     }
 
-    public function calls(){
+    public function calls_per_room(){
         return $this->hasMany(Call::class, 'room_id', 'id');
+    }
+
+    public function calls_per_service(){
+        return $this->hasMany(Call::class, 'call_service_id', 'call_service_id');
     }
 }
