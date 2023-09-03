@@ -95,6 +95,7 @@ class CallController extends Controller
         $call->client_id = $request->input('client_id');
         $call->reason = $request->input('reason');
         $call->status = $request->input('status');
+        $call->is_called = $request->input('is_called');
 
         $call->save();
 
