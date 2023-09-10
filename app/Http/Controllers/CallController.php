@@ -130,6 +130,7 @@ class CallController extends Controller
     {
         $userId = $request->input('user_id');
         $call = Call::find($id);
+
         if (!$call) {
             return response()->json([
                 'error' => 'Call not found'
@@ -144,7 +145,7 @@ class CallController extends Controller
 
         $room = Room::find($request->room_id);
 
-        // Verifica se a sala está aaberta
+        // Verifica se a sala está aberta
         if (!$room) {
             return response()->json([
                 'error' => 'Room not found'
