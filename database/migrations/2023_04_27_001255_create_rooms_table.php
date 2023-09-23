@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50);
             $table->string('description', 50)->nullable();
-            $table->enum('status', ['OPEN', 'BUSY', 'CLOSED'])->default('open');
+            $table->enum('status', ['OPEN', 'BUSY', 'CLOSED'])->default('OPEN');
 
             // falta fazer o validation daqui
             $table->unsignedBigInteger('call_service_id')->required();

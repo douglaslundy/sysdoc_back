@@ -11,6 +11,7 @@ use App\Http\Controllers\CallServiceController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\EndedController;
 
 Route::get('/ping', function () {
     return ['pong' => true];
@@ -58,4 +59,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Call_service
     Route::apiResource('services', CallServiceController::class);
+
+    // EndedCall
+    Route::apiResource('endedcalls', EndedController::class);
 });

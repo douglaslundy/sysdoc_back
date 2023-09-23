@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Call;
+use App\Models\EndedCall;
 use App\Models\Room;
+use Exception;
 
 class CallController extends Controller
 {
@@ -196,6 +199,72 @@ class CallController extends Controller
     }
 
 
+    public function saveEndedCall(Request $request)
+    {
+        // Seu código de criação de EndedCall aqui
+        $endedCall = new EndedCall;
+        $endedCall->user_id = $request->input('user_id');
+        $endedCall->client_id = $request->input('client_id');
+        $endedCall->call_service_forwarded_id = $request->input('call_service_forwarded_id');
+        $endedCall->call_id = $request->input('call_id');
+        $endedCall->description = $request->input('description');
+        $endedCall->service_status = $request->input('service_status');
+        $endedCall->save();
+    }
+
+    // metodo utilizado para atualizar o serviço ao qual cliente foi encaminhado
+    public function updateForwardedCall($id, $idCallServiceForwardedId)
+    {
+        $call = Call::find($id);
+        $call->status = 'NOT_STARTED';
+        $call->call_service_id = $idCallServiceForwardedId;
+        $call->save();
+        return $call;
+    }
+
+    // metodo utilizado para atualizar o serviço ao qual cliente foi encaminhado
+    public function openRoom($id)
+    {
+        $room = Room::find($id);
+        $room->status = 'OPEN';
+        $room->save();
+    }
+
+
+    // metodo utilizado quando a chamada for encaminhada
+    public function forwardCall($id, Request $request)
+    {
+        // Iniciar a transação manualmente
+        DB::beginTransaction();
+
+        try {
+
+            $endedCall = $this->saveEndedCall($request);
+
+            // Atualizar o status do call
+            $call = $this->updateForwardedCall($id, $request->input('call_service_forwarded_id'));
+
+            // Atualizar o status do room
+            $this->openRoom($request->input('room_id'));
+
+            // Confirmar a transação
+            DB::commit();
+        } catch (Exception $e) {
+            // Reverter a transação em caso de exceção
+            DB::rollback();
+            throw $e;
+        }
+
+
+        return response()->json([
+            'message' => 'EndedCall created successfully!',
+            'call' => $call,
+            'endedCall' => $endedCall
+        ], 201);
+    }
+    // 
+
+
     /**
      * End the specified call.
      *
@@ -203,49 +272,76 @@ class CallController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function end_time($id)
+    public function end_time($id, Request $request)
     {
-        $call = Call::find($id);
-        if (!$call) {
-            return response()->json([
-                'error' => 'Call not found'
-            ], 404);
-        }
+        if ($request->input('service_status') == 'forwarded')
+            return $this->forwardCall($id, $request);
 
-        if ($call->status != "IN_PROGRESS") {
-            return response()->json([
-                'error' => 'Call cannot be ended'
-            ], 422);
-        }
+        // falta salvar o ended call aqui
+        if ($request->input('service_status') == 'finished')
+            return $this->end_call($id, $request);
+    }
 
-        $call->end_datetime = now();
-        $call->status = "CLOSED";
-        $call->save();
 
-        // atualiza o status da room para open
+    public function end_call($id, Request $request)
+    {
+        // Iniciar a transação manualmente
+        DB::beginTransaction();
 
-        $room = Room::where('id', $call->room_id)->first();
+        try {
 
-        if (!$room) {
-            return response()->json([
-                'error' => 'Room not found'
-            ], 404);
-        }
+            $call = Call::find($id);
+            if (!$call) {
+                return response()->json([
+                    'error' => 'Call not found'
+                ], 404);
+            }
 
-        if ($room->status !== 'BUSY' && $room->status !== 'CLOSED') {
-            return response()->json([
-                'error' => 'The room is already empty'
-            ], 422);
-        }
+            if ($call->status != "IN_PROGRESS") {
+                return response()->json([
+                    'error' => 'Call cannot be ended'
+                ], 422);
+            }
 
-        if ($room) {
-            $room->status = "OPEN";
-            $room->save();
+            $call->end_datetime = now();
+            $call->status = "CLOSED";
+            $call->save();
+
+            // atualiza o status da room para open
+
+            $room = Room::where('id', $call->room_id)->first();
+
+            if (!$room) {
+                return response()->json([
+                    'error' => 'Room not found'
+                ], 404);
+            }
+
+            if ($room->status !== 'BUSY' && $room->status !== 'CLOSED') {
+                return response()->json([
+                    'error' => 'The room is already empty'
+                ], 422);
+            }
+
+            if ($room) {
+                $room->status = "OPEN";
+                $room->save();
+            }
+
+            $endedCall = $this->saveEndedCall($request);
+
+            // Confirmar a transação
+            DB::commit();
+        } catch (Exception $e) {
+            // Reverter a transação em caso de exceção
+            DB::rollback();
+            throw $e;
         }
 
         return response()->json([
             'message' => 'Call ended successfully!',
-            'call' => $call
+            'call' => $call,
+            'endedCall' => $endedCall
         ]);
     }
 
