@@ -217,6 +217,7 @@ class CallController extends Controller
     {
         $call = Call::find($id);
         $call->status = 'NOT_STARTED';
+        $call->is_called = 'NO';
         $call->call_service_id = $idCallServiceForwardedId;
         $call->save();
         return $call;
@@ -377,5 +378,44 @@ class CallController extends Controller
             'message' => 'Call marked as abandoned successfully!',
             'call' => $call
         ]);
+    }
+
+    /**
+     * Mark the specified call as called
+     *
+     * @return \Illuminate\Http\Response
+     */
+
+    public function called_call()
+    {
+        $getCall = Call::where('is_called', 'NOW')
+            ->where('status', 'NOT_STARTED')
+            ->first();
+
+        if ($getCall) {
+            $getCall->is_called = 'YES';
+            $getCall->when_was_called = now();
+            $getCall->save();
+        }
+
+        return response()->json($getCall);
+    }
+
+
+    public function lasts_calls()
+    {
+        // Obter o ID do último registro
+        $lastCallDateTime = Call::where('is_called', 'YES')
+            ->orderBy('when_was_called', 'desc')
+            ->value('when_was_called');
+
+        // Obter os 4 registros mais recentes, excluindo o último
+        $getCalls = Call::where('is_called', 'YES')
+            ->where('when_was_called', '<', $lastCallDateTime)
+            ->orderBy('when_was_called', 'desc')
+            ->take(4)
+            ->get();
+
+        return response()->json($getCalls);
     }
 }

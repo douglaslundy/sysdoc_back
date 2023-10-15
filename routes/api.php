@@ -52,6 +52,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('clients', ClientController::class);
 
     // Calls
+    Route::get('/calls/called', [CallController::class, 'called_call']);
+    Route::get('/calls/lasts', [CallController::class, 'lasts_calls']);
+    
     Route::apiResource('calls', CallController::class);
     Route::put('/calls/{id}/start', [CallController::class, 'start_time']);
     Route::put('/calls/{id}/end', [CallController::class, 'end_time']);

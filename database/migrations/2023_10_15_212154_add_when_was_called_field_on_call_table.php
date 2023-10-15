@@ -12,17 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('calls', function (Blueprint $table) {
-            $table->enum('is_called', ['NO', 'NOW', 'YES'])->after('status')->default('no');
+            $table->dateTime('when_was_called')->after('end_datetime')->nullable();
         });
     }
 
-   /**
+    /**
      * Reverse the migrations.
      */
     public function down(): void
     {
         Schema::table('calls', function (Blueprint $table) {
-            $table->dropColumn('is_called');
+            $table->dropColumn('when_was_called');
         });
     }
 };
