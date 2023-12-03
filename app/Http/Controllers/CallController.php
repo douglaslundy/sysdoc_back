@@ -18,7 +18,7 @@ class CallController extends Controller
      */
     public function index()
     {
-        $calls = Call::all();
+        $calls = Call::with(['client'])->orderBy('id', 'desc')->get();
         return response()->json($calls);
     }
 
