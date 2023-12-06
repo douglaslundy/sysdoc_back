@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Call;
+use App\Models\CallService;
 use App\Models\EndedCall;
 use App\Models\Room;
 use Exception;
@@ -29,20 +30,25 @@ class CallController extends Controller
      * @return \Illuminate\Http\Response
      */
 
+    public function last_call_number_per_prefix($prefix)
+    {
+
+        // Neste código:
+        // now()->toDateString() obtém a data atual no formato "Y-m-d" (ano-mês-dia).
+        // DATE(created_at) extrai a parte da data de created_at.
+        // whereRaw é usado para permitir expressões SQL brutas.
+        // Dessa forma, você estará comparando apenas as partes da data (ano, mês e dia) de created_at com a data atual.
+
+
+        return $number = Call::where('call_prefix', $prefix)
+            ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
+            ->orderBy('call_number', 'desc')
+            ->value('call_number');
+    }
+
+
     public function store(Request $request)
     {
-        // $roomId = $request->input('room_id');
-        // $userId = $request->input('user_id');
-
-        // // Verifica se a sala está disponível
-        // $room = Room::find($roomId);
-        // if ($room->status != 'OPEN' && $room->status != 'BUSY') {
-        //     return response()->json([
-        //         'error' => 'Room is not available for use.'
-        //     ], 400);
-        // }
-
-
         // Cria a nova chamada
         $call = new Call;
         $call->call_datetime = now();
@@ -51,14 +57,21 @@ class CallController extends Controller
         $call->call_service_id = $request->input('call_service_id');
         $call->subject = $request->input('subject');
         $call->status = $request->input('status', 'NOT_STARTED');
-        $call->save();
 
+        $prefix = CallService::find($call->call_service_id);
+
+        $call->call_number = $this->last_call_number_per_prefix(strtoupper(substr($prefix->name, 0, 3))) + 1;
+
+        $call->call_prefix = strtoupper(substr($prefix->name, 0, 3));
+
+        $call->save();
 
         return response()->json([
             'message' => 'Call created successfully!',
             'call' => $call
         ], 201);
     }
+
 
     /**
      * Display the specified resource.
@@ -389,6 +402,7 @@ class CallController extends Controller
     public function called_call()
     {
         $getCall = Call::where('is_called', 'NOW')
+            ->with(['client'])
             ->where('status', 'NOT_STARTED')
             ->first();
 
