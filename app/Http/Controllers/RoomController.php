@@ -6,6 +6,7 @@ use App\Http\Requests\StoreRoomRequest;
 use App\Models\Call;
 use Illuminate\Http\Request;
 use App\Models\Room;
+use Carbon\Carbon;
 
 class RoomController extends Controller
 {
@@ -17,11 +18,33 @@ class RoomController extends Controller
     public function index()
     {
 
-        $rooms = Room::with(['call_service', 'calls_per_service'])->orderBy('id', 'desc')->get();
+        $rooms = Room::with(['call_service', 'calls_per_service'])
+            ->orderBy('id', 'desc')
+            ->get();
 
         return response()->json($rooms);
 
         // return Room::orderBy('id', 'desc')->get();
+    }
+
+
+// Ao utilizar a função de fechamento (Closure) no relacionamento calls_per_service, 
+// eu posso aplicar uma condição específica a esse relacionamento. 
+// Dessa forma, o código abaixo trará todas as rooms, mas os relacionamentos calls_per_service 
+// associados a cada room serão filtrados para incluir apenas aqueles criados na data de hoje.
+
+    public function rooms_with_today_calls()
+    {
+        $today = Carbon::today();
+
+        $rooms = Room::with(['call_service', 'calls_per_service' => 
+        function ($query) use ($today) {
+            $query->whereDate('created_at', $today);
+        }])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json($rooms);
     }
 
     /**

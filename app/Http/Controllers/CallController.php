@@ -23,6 +23,14 @@ class CallController extends Controller
         return response()->json($calls);
     }
 
+    public function today_calls()
+    {
+        $calls = Call::with(['client'])
+        ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
+        ->orderBy('id', 'asc')->get();
+        return response()->json($calls);
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -42,7 +50,7 @@ class CallController extends Controller
 
         return $number = Call::where('call_prefix', $prefix)
             ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
-            ->orderBy('call_number', 'desc')
+            ->orderBy('id', 'desc')
             ->value('call_number');
     }
 
@@ -81,7 +89,7 @@ class CallController extends Controller
      */
     public function show($id)
     {
-        $call = Call::find($id);
+        $call = Call::with('client')->find($id);
         if (!$call) {
             return response()->json([
                 'error' => 'Call not found'
