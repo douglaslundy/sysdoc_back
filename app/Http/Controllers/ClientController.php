@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Client;
+use App\Models\Addresses;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
@@ -24,25 +26,66 @@ class ClientController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+    // public function store(Request $request)
+    // {
+    //     $client = new Client;
+    //     $client->nome = $request->input('nome');
+    //     $client->mother = $request->input('mother');
+    //     $client->cpf = $request->input('cpf');
+    //     $client->phone = $request->input('phone');
+    //     $client->email = $request->input('email');
+    //     $client->obs = $request->input('obs');
+    //     $client->born_date = $request->input('born_date');
+    //     $client->sexo = $request->input('sexo');
+    //     $client->active = $request->input('active', true);
+    //     $client->save();
+
+    //     return response()->json([
+    //         'message' => 'Client created successfully!',
+    //         'client' => $client
+    //     ], 201);
+    // }
+
+
     public function store(Request $request)
     {
-        $client = new Client;
-        $client->nome = $request->input('nome');
-        $client->mother = $request->input('mother');
-        $client->cpf = $request->input('cpf');
-        $client->phone = $request->input('phone');
-        $client->email = $request->input('email');
-        $client->obs = $request->input('obs');
-        $client->born_date = $request->input('born_date');
-        $client->sexo = $request->input('sexo');
-        $client->active = $request->input('active', true);
-        $client->save();
+        DB::beginTransaction();
+        try {
+            $array = ['status' => 'created'];
 
-        return response()->json([
-            'message' => 'Client created successfully!',
-            'client' => $client
-        ], 201);
+            $client = new Client();
+            $client->name = $request->input('name');
+            $client->mother = $request->input('mother');
+            $client->cpf = $request->input('cpf');
+            $client->phone = $request->input('phone');
+            $client->email = $request->input('email');
+            $client->obs = $request->input('obs');
+            $client->born_date = $request->input('born_date');
+            $client->sexo = $request->input('sexo');
+            $client->active = $request->input('active', true);
+            $client->save();
+
+            $address = new Addresses();
+            $address->id_client = $client->id;
+            $address->zip_code = $request->input('addresses.zip_code');
+            $address->city = $request->input('addresses.city');
+            $address->street = $request->input('addresses.street');
+            $address->number = $request->input('addresses.number');
+            $address->district = $request->input('addresses.district');
+            $address->complement = $request->input('addresses.complement');
+
+            $address->save();
+            $array['client'] = $client;
+
+            DB::commit();
+
+            return $array;
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
+
 
     /**
      * Display the specified resource.
