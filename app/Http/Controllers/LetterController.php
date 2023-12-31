@@ -131,7 +131,8 @@ class LetterController extends Controller
 
             $result = OpenAI::chat()->create([
                 // 'model' => 'gpt-3.5-turbo',
-                'model' => 'gpt-3.5-turbo-16k',
+                // 'model' => 'gpt-4-1106-preview',
+                'model' => 'gpt-4',
                 'messages' => $prompt
             ]);
 
