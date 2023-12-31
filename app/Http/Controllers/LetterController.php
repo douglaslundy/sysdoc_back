@@ -40,6 +40,7 @@ class LetterController extends Controller
             $letter->id_user = $request->input('id_user');
 
             $letter->number = (DB::table('letters')
+                ->whereYear('created_at', date('Y')) // Filtra os registros pelo ano corrente
                 ->orderBy('number', 'desc')
                 ->value('number')
                 // ->first()
