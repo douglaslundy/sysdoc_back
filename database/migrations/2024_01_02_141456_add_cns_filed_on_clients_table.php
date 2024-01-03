@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->string('cns', 15)->unique()->after('mother');
+            $table->string('father', 15)->unique()->after('mother');
+            $table->string('cns', 15)->unique()->after('father');
         });
     }
 
@@ -22,6 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('clients', function (Blueprint $table) {
+            $table->dropColumn('father');
             $table->dropColumn('cns');
         });
     }
