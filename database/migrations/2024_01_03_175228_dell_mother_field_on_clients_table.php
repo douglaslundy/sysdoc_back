@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::table('clients', function (Blueprint $table) {
             $table->dropColumn('cpf');
             $table->dropColumn('mother');
-            $table->dropColumn('father');
-            $table->dropColumn('cns');
         });
     }
 
@@ -25,10 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('clients', function (Blueprint $table) {            
-            $table->string('cpf', 18)->nullable()->after('nome');            
-            $table->string('mother', 100)->nullable()->after('nome');            
-            $table->string('father', 100)->nullable()->after('mother');
-            $table->string('cns', 15)->nullable()->after('father');
+            $table->string('cpf', 18)->nullable()->after('name');            
+            $table->string('mother', 100)->nullable()->after('name');       
         });
     }
 };
