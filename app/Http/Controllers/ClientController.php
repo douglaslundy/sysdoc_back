@@ -16,7 +16,10 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $clients = Client::all();
+        $clients = Client::with(['addresses'])
+            ->where('active', true)
+            ->orderBy('name', 'asc')->get();
+
         return response()->json($clients);
     }
 
@@ -95,7 +98,7 @@ class ClientController extends Controller
      */
     public function show($id)
     {
-        $client = Client::find($id);
+        $client = Client::with(['addresses'])->find($id);
         if (!$client) {
             return response()->json([
                 'error' => 'Client not found'
@@ -119,7 +122,7 @@ class ClientController extends Controller
                 'error' => 'Client not found'
             ], 404);
         }
-        $client->nome = $request->input('nome');
+        $client->name = $request->input('name');
         $client->mother = $request->input('mother');
         $client->phone = $request->input('phone');
         $client->email = $request->input('email');
@@ -128,6 +131,17 @@ class ClientController extends Controller
         $client->sexo = $request->input('sexo');
         $client->active = $request->input('active', true);
         $client->save();
+
+        $address = new Addresses();
+        $address->id_client = $client->id;
+        $address->zip_code = $request->input('addresses.zip_code');
+        $address->city = $request->input('addresses.city');
+        $address->street = $request->input('addresses.street');
+        $address->number = $request->input('addresses.number');
+        $address->district = $request->input('addresses.district');
+        $address->complement = $request->input('addresses.complement');
+
+        $address->save();
 
         return response()->json([
             'message' => 'Client updated successfully!',
