@@ -29,27 +29,7 @@ class ClientController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    // public function store(Request $request)
-    // {
-    //     $client = new Client;
-    //     $client->nome = $request->input('nome');
-    //     $client->mother = $request->input('mother');
-    //     $client->cpf = $request->input('cpf');
-    //     $client->phone = $request->input('phone');
-    //     $client->email = $request->input('email');
-    //     $client->obs = $request->input('obs');
-    //     $client->born_date = $request->input('born_date');
-    //     $client->sexo = $request->input('sexo');
-    //     $client->active = $request->input('active', true);
-    //     $client->save();
-
-    //     return response()->json([
-    //         'message' => 'Client created successfully!',
-    //         'client' => $client
-    //     ], 201);
-    // }
-
-
+    
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -60,6 +40,7 @@ class ClientController extends Controller
             $client->name = $request->input('name');
             $client->mother = $request->input('mother');
             $client->cpf = $request->input('cpf');
+            $client->cns = $request->input('cns');
             $client->phone = $request->input('phone');
             $client->email = $request->input('email');
             $client->obs = $request->input('obs');
@@ -125,6 +106,7 @@ class ClientController extends Controller
         $client->name = $request->input('name');
         $client->mother = $request->input('mother');
         $client->phone = $request->input('phone');
+        $client->cns = $request->input('cns');
         $client->email = $request->input('email');
         $client->obs = $request->input('obs');
         $client->born_date = $request->input('born_date');
