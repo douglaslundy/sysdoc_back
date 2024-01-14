@@ -114,7 +114,11 @@ class ClientController extends Controller
         $client->active = $request->input('active', true);
         $client->save();
 
-        $address = new Addresses();
+        $address = Addresses::where('id_client', $client->id)->first();
+
+        if (!$address)
+                $address = new Addresses();
+
         $address->id_client = $client->id;
         $address->zip_code = $request->input('addresses.zip_code');
         $address->city = $request->input('addresses.city');
