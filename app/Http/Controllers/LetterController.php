@@ -132,7 +132,8 @@ class LetterController extends Controller
             $result = OpenAI::chat()->create([
                 // 'model' => 'gpt-3.5-turbo',
                 // 'model' => 'gpt-4-1106-preview',
-                'model' => 'gpt-4',
+                'model' => 'gpt-4-turbo',
+                'temperature' => 0.7,  // Define a temperatura para 0.7
                 'messages' => $prompt
             ]);
 
