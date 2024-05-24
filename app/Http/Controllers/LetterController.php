@@ -135,7 +135,7 @@ class LetterController extends Controller
                 // 'model' => 'gpt-4-turbo',
                 // 'model' => 'gpt-4o-2024-05-13',
                 'model' => env('MODEL'),
-                'temperature' => 0.7,  // Define a temperatura para 0.7
+                'temperature' => 0.5,  // Define a temperatura para 0.7
                 'messages' => $prompt
             ]);
 
