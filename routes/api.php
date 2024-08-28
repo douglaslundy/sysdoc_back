@@ -12,6 +12,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\EndedController;
+use App\Http\Controllers\SpecialityController;
 
 Route::get('/ping', function () {
     return ['pong' => true];
@@ -56,7 +57,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/calls/called', [CallController::class, 'called_call']);
     Route::get('/calls/lasts', [CallController::class, 'lasts_calls']);
     Route::get('/calls/today', [CallController::class, 'today_calls']);
-    
+
     Route::apiResource('calls', CallController::class);
     Route::put('/calls/{id}/start', [CallController::class, 'start_time']);
     Route::put('/calls/{id}/end', [CallController::class, 'end_time']);
@@ -67,4 +68,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // EndedCall
     Route::apiResource('endedcalls', EndedController::class);
+
+    // Speciality
+    Route::apiResource('specialities', SpecialityController::class);
+
+    // QueueCall
+    // Route::apiResource('queue', QueueController::class);
 });
