@@ -13,6 +13,7 @@ use App\Http\Controllers\ModelController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\SpecialityController;
+use App\Http\Controllers\QueueController;
 
 Route::get('/ping', function () {
     return ['pong' => true];
@@ -73,5 +74,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('specialities', SpecialityController::class);
 
     // QueueCall
-    // Route::apiResource('queue', QueueController::class);
+    Route::apiResource('queues', QueueController::class);
 });

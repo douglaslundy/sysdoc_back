@@ -9,7 +9,13 @@ class Client extends Model
 {
     use HasFactory;
 
-    public function addresses(){
+    public function addresses()
+    {
         return $this->hasOne(Addresses::class, 'id_client', 'id');
+    }
+
+    public function queue()
+    {
+        return $this->hasMany(Queue::class, 'id_client');
     }
 }

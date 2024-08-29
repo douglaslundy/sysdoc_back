@@ -32,7 +32,7 @@ class SpecialityController extends Controller
         // Valida os dados de entrada
         $validatedData = $request->validate([
             'id_user' => 'required|exists:users,id',
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:50',
         ]);
 
         // Cria uma nova especialidade
@@ -66,7 +66,7 @@ class SpecialityController extends Controller
         // Valida os dados de entrada
         $validatedData = $request->validate([
             'id_user' => 'required|exists:users,id',
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:50',
         ]);
 
         // Atualiza a especialidade com os dados validados

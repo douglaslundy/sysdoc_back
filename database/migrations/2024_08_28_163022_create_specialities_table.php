@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('specialities', function (Blueprint $table) {
             $table->id(); // Cria a coluna 'id' como chave primária
             $table->unsignedBigInteger('id_user'); // Cria a coluna 'id_user'
-            $table->string('name', 200); // Cria a coluna 'name' do tipo string
+            $table->string('name', 50); // Cria a coluna 'name' do tipo string
             $table->timestamps(); // Cria as colunas 'created_at' e 'updated_at'
 
             // Define a chave estrangeira que referencia a tabela 'users'

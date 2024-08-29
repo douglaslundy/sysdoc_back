@@ -26,4 +26,9 @@ class Speciality extends Model
     {
         return $this->belongsTo(User::class, 'id_user');
     }
+
+    public function queue()
+    {
+        return $this->hasMany(Queue::class, 'id_specialities');
+    }
 }
