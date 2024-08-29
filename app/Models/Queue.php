@@ -16,7 +16,7 @@ class Queue extends Model
     protected $fillable = [
         'date_of_received',
         'id_client',
-        'id_specialties',
+        'id_specialities',
         'id_user',
         'done',
         'date_of_realized',
@@ -41,7 +41,7 @@ class Queue extends Model
     }
 
     /**
-     * Relacionamento com a tabela Specialties
+     * Relacionamento com a tabela Specialities
      */
     public function speciality()
     {

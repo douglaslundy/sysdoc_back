@@ -13,7 +13,9 @@ class QueueController extends Controller
     public function index()
     {
         // Carrega os relacionamentos client, user, e specialty
-        $queues = Queue::with(['client', 'user', 'specialty'])->get();
+        // $queues = Queue::with(['client', 'user', 'specialty'])->get();
+        // $queues = Queue::all();
+        $queues = Queue::with(['client', 'user', 'speciality'])->get();
 
         return response()->json($queues, 200);
     }
@@ -26,7 +28,7 @@ class QueueController extends Controller
         $validatedData = $request->validate([
             'date_of_received' => 'required|date',
             'id_client' => 'required|exists:clients,id',
-            'id_specialties' => 'required|exists:specialties,id',
+            'id_specialities' => 'required|exists:specialities,id',
             'id_user' => 'required|exists:users,id',
             'done' => 'boolean',
             'date_of_realized' => 'nullable|date',
@@ -67,7 +69,7 @@ class QueueController extends Controller
         $validatedData = $request->validate([
             'date_of_received' => 'sometimes|required|date',
             'id_client' => 'sometimes|required|exists:clients,id',
-            'id_specialties' => 'sometimes|required|exists:specialties,id',
+            'id_specialities' => 'sometimes|required|exists:specialities,id',
             'id_user' => 'sometimes|required|exists:users,id',
             'done' => 'boolean',
             'date_of_realized' => 'nullable|date',

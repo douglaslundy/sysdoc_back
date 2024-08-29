@@ -15,7 +15,7 @@ class CreateQueueTable extends Migration
     {
         Schema::create('queue', function (Blueprint $table) {
             $table->id(); // Cria a coluna id como chave primária
-            $table->date('date_of_received'); // Data de recebimento
+            $table->dateTime('date_of_received'); // Data de recebimento
 
             // Chaves estrangeiras com relacionamento
             $table->unsignedBigInteger('id_client');
