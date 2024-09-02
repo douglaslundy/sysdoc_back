@@ -13,7 +13,7 @@ class QueueController extends Controller
     public function index()
     {
         $queues = Queue::with(['client', 'user', 'speciality'])
-            ->orderBy('date_of_received', 'desc')
+            ->orderBy('date_of_received', 'asc')
             ->get();
 
         return response()->json($queues, 200);
