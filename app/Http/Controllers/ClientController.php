@@ -107,6 +107,10 @@ class ClientController extends Controller
         $client->mother = $request->input('mother');
         $client->phone = $request->input('phone');
         $client->cns = $request->input('cns');
+
+        if ($request->input('cpf'))
+            $client->cpf = $request->input('cpf');
+
         $client->email = $request->input('email');
         $client->obs = $request->input('obs');
         $client->born_date = $request->input('born_date');
