@@ -25,7 +25,7 @@ class CreateQueueTable extends Migration
             // Colunas adicionais
             $table->boolean('done')->default(false); // Situação (se já foi feito)
             $table->date('date_of_realized')->nullable(); // Data de realização (se feito)
-            $table->enum('urgency', ['yes', 'no']); // Prioridade (rotina/urgente)
+            $table->boolean('urgency')->default(false); // Prioridade (rotina/urgente)
             $table->string('obs', 200)->nullable(); // Observações (máximo 200 caracteres)
 
             // Campos de timestamp padrão

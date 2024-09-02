@@ -32,12 +32,16 @@ class QueueController extends Controller
             'id_user' => 'required|exists:users,id',
             'done' => 'boolean',
             'date_of_realized' => 'nullable|date',
-            'urgency' => 'required|in:yes,no',
+            'urgency' => 'required|boolean',
             'obs' => 'nullable|string|max:200',
         ]);
 
         $queue = Queue::create($validatedData);
 
+        // Carrega as relações client e speciality
+        $queue->load('client', 'speciality');
+
+        // Retorna a fila com as relações carregadas
         return response()->json($queue, 201);
     }
 
@@ -73,7 +77,7 @@ class QueueController extends Controller
             'id_user' => 'sometimes|required|exists:users,id',
             'done' => 'boolean',
             'date_of_realized' => 'nullable|date',
-            'urgency' => 'sometimes|required|in:yes,no',
+            'urgency' => 'sometimes|required|boolean',
             'obs' => 'nullable|string|max:200',
         ]);
 
