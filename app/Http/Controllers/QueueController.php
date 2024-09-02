@@ -12,13 +12,13 @@ class QueueController extends Controller
      */
     public function index()
     {
-        // Carrega os relacionamentos client, user, e specialty
-        // $queues = Queue::with(['client', 'user', 'specialty'])->get();
-        // $queues = Queue::all();
-        $queues = Queue::with(['client', 'user', 'speciality'])->get();
+        $queues = Queue::with(['client', 'user', 'speciality'])
+            ->orderBy('data_received', 'desc')
+            ->get();
 
         return response()->json($queues, 200);
     }
+
 
     /**
      * Criar um novo registro na tabela queue.
