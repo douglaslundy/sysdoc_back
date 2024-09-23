@@ -14,6 +14,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\SpecialityController;
 use App\Http\Controllers\QueueController;
+use App\Http\Controllers\LogController;
 
 Route::get('/ping', function () {
     return ['pong' => true];
@@ -23,9 +24,11 @@ Route::get('/ping', function () {
 Route::get('/401', [AuthController::class, 'unauthorized'])->name('login');
 
 Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/login', [AuthController::class, 'login'])->middleware('log_user_action');
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
+    // Route::group(['middleware' => ['auth:sanctum', 'log_user_action']], function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate', [AuthController::class, 'validateToken']);
@@ -75,4 +78,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // QueueCall
     Route::apiResource('queues', QueueController::class);
+
+    // Logs
+    Route::apiResource('logs', logController::class);
 });
