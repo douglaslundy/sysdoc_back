@@ -23,8 +23,8 @@ Route::get('/ping', function () {
 
 Route::get('/401', [AuthController::class, 'unauthorized'])->name('login');
 
-// Route::post('/login', [AuthController::class, 'login']);
-Route::post('/login', [AuthController::class, 'login'])->middleware('log_user_action');
+Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/login', [AuthController::class, 'login'])->middleware('log_user_action');
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
