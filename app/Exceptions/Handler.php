@@ -5,6 +5,9 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
+use App\Models\ErrorLog;
+use Illuminate\Support\Facades\Log;
+
 class Handler extends ExceptionHandler
 {
     /**
@@ -37,5 +40,38 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function report(Throwable $exception)
+    {
+        // Chame o método pai para o logging padrão do Laravel
+        parent::report($exception);
+
+        // Verifica se o ambiente é de produção para evitar capturas desnecessárias
+        // if (app()->environment('production')) {
+        try {
+            // Salva o log no banco de dados
+            ErrorLog::create([
+                'type' => get_class($exception),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'message' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+                'context' => $this->context(),
+            ]);
+        } catch (\Exception $e) {
+            // Loga um erro caso o salvamento do log falhe
+            Log::error('Erro ao salvar log de exceção: ' . $e->getMessage());
+        }
+        // }
+    }
+
+    protected function context()
+    {
+        return array_merge(parent::context(), [
+            'user' => auth()->check() ? auth()->user()->only(['id', 'email']) : null,
+            'url' => request()->fullUrl(),
+            'input' => request()->except(['password', 'password_confirmation']),
+        ]);
     }
 }
