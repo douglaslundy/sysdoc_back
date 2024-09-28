@@ -6,6 +6,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
 use App\Models\ErrorLog;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class Handler extends ExceptionHandler
@@ -47,6 +48,9 @@ class Handler extends ExceptionHandler
         // Chame o método pai para o logging padrão do Laravel
         parent::report($exception);
 
+        // Captura o ID do usuário logado, se estiver autenticado
+        $userId = Auth::check() ? Auth::id() : 0;
+
         // Verifica se o ambiente é de produção para evitar capturas desnecessárias
         // if (app()->environment('production')) {
         try {
@@ -55,6 +59,7 @@ class Handler extends ExceptionHandler
                 'type' => get_class($exception),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
+                'user_id' => $userId, // Loga o ID do usuário
                 'message' => $exception->getMessage(),
                 'trace' => $exception->getTraceAsString(),
                 'context' => $this->context(),

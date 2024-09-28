@@ -13,6 +13,7 @@ class ErrorLog extends Model
         'type',
         'file',
         'line',
+        'user_id',
         'message',
         'trace',
         'context',
@@ -21,4 +22,11 @@ class ErrorLog extends Model
     protected $casts = [
         'context' => 'array',
     ];
+
+    // Relacionamento com o modelo User (opcional)
+    public function user()
+    {
+        // return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
