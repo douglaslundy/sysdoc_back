@@ -16,15 +16,19 @@ use App\Http\Controllers\SpecialityController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\ErrorLogController;
+use Illuminate\Http\Request;
 
 Route::get('/ping', function () {
     return ['pong' => true];
 });
 
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 Route::get('/401', [AuthController::class, 'unauthorized'])->name('login');
-
 Route::post('/login', [AuthController::class, 'login']);
+
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {

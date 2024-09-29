@@ -42,13 +42,16 @@ class LogUserAction
             // Descrição completa da ação
             $description = $request->method() . ' ' . $request->fullUrl();
 
-            // Cria o log no banco de dados
-            Log::create([
-                'user_id' => $user->id,
-                'action' => $action,
-                'description' => $description,
-                'ip_address' => $request->ip(),
-            ]);
+            if ($action) {
+
+                // Cria o log no banco de dados
+                Log::create([
+                    'user_id' => $user->id,
+                    'action' => $action,
+                    'description' => $description,
+                    'ip_address' => $request->ip(),
+                ]);
+            }
         } else {
             // Opcional: Logar alguma informação sobre tentativas de acesso sem usuário autenticado
             // Log::create([

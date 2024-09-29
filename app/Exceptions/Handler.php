@@ -52,23 +52,23 @@ class Handler extends ExceptionHandler
         $userId = Auth::check() ? Auth::id() : 0;
 
         // Verifica se o ambiente é de produção para evitar capturas desnecessárias
-        // if (app()->environment('production')) {
-        try {
-            // Salva o log no banco de dados
-            ErrorLog::create([
-                'type' => get_class($exception),
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'user_id' => $userId, // Loga o ID do usuário
-                'message' => $exception->getMessage(),
-                'trace' => $exception->getTraceAsString(),
-                'context' => $this->context(),
-            ]);
-        } catch (\Exception $e) {
-            // Loga um erro caso o salvamento do log falhe
-            Log::error('Erro ao salvar log de exceção: ' . $e->getMessage());
+        if (app()->environment('production')) {
+            try {
+                // Salva o log no banco de dados
+                ErrorLog::create([
+                    'type' => get_class($exception),
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine(),
+                    'user_id' => $userId, // Loga o ID do usuário
+                    'message' => $exception->getMessage(),
+                    'trace' => $exception->getTraceAsString(),
+                    'context' => $this->context(),
+                ]);
+            } catch (\Exception $e) {
+                // Loga um erro caso o salvamento do log falhe
+                Log::error('Erro ao salvar log de exceção: ' . $e->getMessage());
+            }
         }
-        // }
     }
 
     protected function context()
