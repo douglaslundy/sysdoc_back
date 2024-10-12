@@ -17,6 +17,10 @@ use App\Http\Controllers\QueueController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\ErrorLogController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\TripController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\RouteController;
+
 
 Route::get('/ping', function () {
     return ['pong' => true];
@@ -87,4 +91,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Logs
     Route::apiResource('errorlogs', ErrorLogController::class);
+
+    //Trip
+    Route::apiResource('trips', TripController::class);
+
+    // Rotas para Veículos (Vehicle)
+    Route::apiResource('vehicles', VehicleController::class);
+
+    // Rotas para Rotas (Route)
+    Route::apiResource('routes', RouteController::class);
 });
