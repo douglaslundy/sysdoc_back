@@ -11,7 +11,7 @@ class VehicleController extends Controller
 {
     public function index()
     {
-        return Vehicle::where('active', true)->get();
+        return Vehicle::with('user')->where('active', true)->get();
     }
 
     /**

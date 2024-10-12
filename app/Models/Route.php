@@ -11,10 +11,19 @@ class Route extends Model
         'origin',
         'destination',
         'distance',
+        'id_user',
     ];
 
     public function trips()
     {
         return $this->hasMany(Trip::class);
+    }
+
+    /**
+     * Relacionamento com a tabela Users
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
     }
 }
