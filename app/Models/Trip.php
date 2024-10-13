@@ -12,6 +12,8 @@ class Trip extends Model
         'vehicle_id',
         'route_id',
         'departure_time',
+        'departure_date',
+        'obs',
     ];
 
     public function driver()
