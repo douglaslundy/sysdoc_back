@@ -9,6 +9,7 @@ class Trip extends Model
 {
     protected $fillable = [
         'user_id',
+        'driver_id',
         'vehicle_id',
         'route_id',
         'departure_time',
@@ -17,6 +18,11 @@ class Trip extends Model
     ];
 
     public function driver()
+    {
+        return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

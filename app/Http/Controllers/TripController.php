@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TripRequest;
 use App\Models\Trip;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
@@ -12,20 +14,28 @@ class TripController extends Controller
         return Trip::with(['driver', 'vehicle', 'route', 'clients'])->get();
     }
 
-    public function store(Request $request)
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(TripRequest $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'route_id' => 'required|exists:routes,id',
-            'departure_time' => 'required|date',
-            'client_ids' => 'array|exists:clients,id'
-        ]);
+        DB::beginTransaction();
+        try {
 
-        $trip = Trip::create($validated);
-        $trip->clients()->sync($request->client_ids);
+            $array = ['status' => 'created'];
+            $trip = Trip::create($request->all());
+            $trip->load('driver', 'route', 'vehicle', 'user');
+            $array['trip'] = $trip;
+            DB::commit();
 
-        return response()->json($trip->load('clients'), 201);
+            return response()->json($array, 201);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 
     public function show($id)
@@ -33,13 +43,34 @@ class TripController extends Controller
         return Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($id);
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  Trip  $trip
+     * @return \Illuminate\Http\Response
+     */
+    public function update(TripRequest $request, Trip $trip)
     {
-        $trip = Trip::findOrFail($id);
-        $trip->update($request->only(['user_id', 'vehicle_id', 'route_id', 'departure_time']));
-        $trip->clients()->sync($request->client_ids);
+        DB::beginTransaction();
+        try {
+            $array = ['status' => 'updated'];
+            // $trip->update($request->all());
 
-        return response()->json($trip->load('clients'));
+            $trip->update($request->only(['vehicle_id', 'driver_id', 'route_id', 'departure_date', 'departure_time']));
+            $trip->clients()->sync($request->client_ids);
+
+            $trip->load('driver', 'route', 'vehicle', 'user');
+
+            $array['trip'] = $trip;
+
+            DB::commit();
+
+            return response()->json($array, 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 
     public function destroy($id)
