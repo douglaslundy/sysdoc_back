@@ -26,8 +26,8 @@ class CallController extends Controller
     public function today_calls()
     {
         $calls = Call::with(['client'])
-        ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
-        ->orderBy('id', 'asc')->get();
+            ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
+            ->orderBy('id', 'asc')->get();
         return response()->json($calls);
     }
 
@@ -40,13 +40,6 @@ class CallController extends Controller
 
     public function last_call_number_per_prefix($prefix)
     {
-
-        // Neste código:
-        // now()->toDateString() obtém a data atual no formato "Y-m-d" (ano-mês-dia).
-        // DATE(created_at) extrai a parte da data de created_at.
-        // whereRaw é usado para permitir expressões SQL brutas.
-        // Dessa forma, você estará comparando apenas as partes da data (ano, mês e dia) de created_at com a data atual.
-
 
         return $number = Call::where('call_prefix', $prefix)
             ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
