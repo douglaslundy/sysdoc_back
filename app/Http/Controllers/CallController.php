@@ -192,7 +192,6 @@ class CallController extends Controller
             ], 400);
         }
 
-
         $call->start_datetime = now();
         $call->status = "IN_PROGRESS";
         $call->room_id = $request->input('room_id');
