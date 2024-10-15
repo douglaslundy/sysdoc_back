@@ -25,7 +25,7 @@ class UserRequest extends FormRequest
     public function rules()
     {
         return [
-            "profile" => ['required', 'string', 'max:50', Rule::in('admin', 'partner', 'user')],
+            "profile" => ['required', 'string', 'max:50', Rule::in('admin', 'partner', 'user', 'driver')],
             'name' => 'required|string|max:50',
             'email' => 'string|required|max:100|unique:users,email,' . request()->id,
             'cpf' => 'string|required|max:18|unique:users,cpf,' . request()->id,

@@ -14,7 +14,7 @@ class User extends Authenticatable implements JWTSubject
 
     public $timestamps = false;
 
-    protected $fillable = ['password'];
+    protected $fillable = ['profile', 'name', 'email', 'cpf', '', 'password'];
     protected $hidden = ['password'];
 
     public function getJWTIdentifier()
