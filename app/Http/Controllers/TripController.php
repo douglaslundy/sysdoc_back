@@ -86,14 +86,29 @@ class TripController extends Controller
 
     public function deleteTripClient($client_id)
     {
-        // Encontrar a linha que corresponde ao client_id
-        $cli = TripClient::where('client_id', $client_id)->firstOrFail();
 
-        // Excluir o registro encontrado
-        $cli->delete();
+        DB::beginTransaction();
+        try {
 
-        // Retornar resposta de sucesso (204 - No Content)
-        return response()->json(null, 204);
+            // Encontrar a linha que corresponde ao client_id
+            $cli = TripClient::where('client_id', $client_id)->firstOrFail();
+
+            // Excluir o registro encontrado
+            $cli->delete();
+
+            DB::commit();
+
+            $array = ['status' => 'client deleted'];
+
+            $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($cli->trip_id);
+
+            $array['trip'] = $trip;
+
+            return response()->json($array, 201);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 
 
@@ -109,6 +124,15 @@ class TripController extends Controller
             $tripClient = TripClient::create($request->all());
             $array['trip_client'] = $tripClient;
             DB::commit();
+
+
+            // $trip->clients()->sync($request->client_ids);
+            // $trip->clients()->sync($request->client_ids);
+
+            $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($request->trip_id);
+
+            $array['trip'] = $trip;
+
 
             return response()->json($array, 201);
         } catch (\Exception $e) {
