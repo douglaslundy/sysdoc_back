@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TripClientRequest;
 use App\Http\Requests\TripRequest;
 use App\Models\Trip;
 use App\Models\TripClient;
@@ -96,23 +97,23 @@ class TripController extends Controller
     }
 
 
-    public function insertTripClient(Request $request)
+    public function insertTripClient(TripClientRequest $request)
     {
-        // Valida os dados da requisição
-        $validatedData = $request->validate([
-            'trip_id' => 'required|exists:trips,id',
-            'client_id' => 'required|exists:clients,id',
-            'person_type' => 'required|in:passenger,companion',
-            'destination_location' => 'required|string|max:50',
-        ]);
 
-        // Cria o registro na tabela trip_clients
-        $tripClient = TripClient::create($validatedData);
+        DB::beginTransaction();
+        try {
 
-        // Retorna a resposta em JSON com o status 201
-        return response()->json([
-            'status' => 'created',
-            'trip_client' => $tripClient,
-        ], 201);
+            $array = ['status' => 'created'];
+
+            // Cria o registro na tabela trip_clients
+            $tripClient = TripClient::create($request->all());
+            $array['trip_client'] = $tripClient;
+            DB::commit();
+
+            return response()->json($array, 201);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 }
