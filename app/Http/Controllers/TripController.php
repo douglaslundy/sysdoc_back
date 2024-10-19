@@ -28,7 +28,7 @@ class TripController extends Controller
 
             $array = ['status' => 'created'];
             $trip = Trip::create($request->all());
-            $trip->load('driver', 'route', 'vehicle', 'user');
+            $trip->load('driver', 'route', 'vehicle', 'user', 'clients');
             $array['trip'] = $trip;
             DB::commit();
 
@@ -58,7 +58,7 @@ class TripController extends Controller
             $array = ['status' => 'updated'];
             // $trip->update($request->all());
 
-            $trip->update($request->only(['vehicle_id', 'driver_id', 'route_id', 'departure_date', 'departure_time']));
+            $trip->update($request->only(['vehicle_id', 'driver_id', 'route_id', 'departure_date', 'departure_time', 'obs']));
 
             $trip->load('driver', 'route', 'vehicle', 'user', 'clients');
 
