@@ -6,7 +6,6 @@ use App\Http\Requests\TripClientRequest;
 use App\Http\Requests\TripRequest;
 use App\Models\Trip;
 use App\Models\TripClient;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller

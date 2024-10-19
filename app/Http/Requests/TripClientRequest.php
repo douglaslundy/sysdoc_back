@@ -38,6 +38,7 @@ class TripClientRequest extends FormRequest
             ],
             'person_type' => 'required|in:passenger,companion',
             'destination_location' => 'nullable|string|max:50',
+            'time' => 'required|date_format:H:i',
         ];
     }
 
@@ -62,6 +63,9 @@ class TripClientRequest extends FormRequest
             'destination_location.required' => 'O campo destino é obrigatório.',
             'destination_location.string' => 'O destino deve ser uma string.',
             'destination_location.max' => 'O destino não pode ter mais que 50 caracteres.',
+
+            'time.required' => 'O campo horário é obrigatório.',
+            'time.date_format' => 'O campo horário deve estar no formato HH:MM.',
         ];
     }
 

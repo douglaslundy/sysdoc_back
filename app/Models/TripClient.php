@@ -15,6 +15,7 @@ class TripClient extends Model
         'client_id',
         'person_type',
         'destination_location',
+        'time'
     ];
 
     // Constantes para os possíveis valores do campo 'person_type'
