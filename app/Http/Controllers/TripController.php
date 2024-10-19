@@ -59,9 +59,8 @@ class TripController extends Controller
             // $trip->update($request->all());
 
             $trip->update($request->only(['vehicle_id', 'driver_id', 'route_id', 'departure_date', 'departure_time']));
-            $trip->clients()->sync($request->client_ids);
 
-            $trip->load('driver', 'route', 'vehicle', 'user');
+            $trip->load('driver', 'route', 'vehicle', 'user', 'clients');
 
             $array['trip'] = $trip;
 
