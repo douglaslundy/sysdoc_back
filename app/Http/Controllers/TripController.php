@@ -4,15 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TripClientRequest;
 use App\Http\Requests\TripRequest;
+use Illuminate\Http\Request;
 use App\Models\Trip;
 use App\Models\TripClient;
 use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Trip::with(['driver', 'vehicle', 'route', 'clients'])->get();
+
+        $query =  Trip::query();
+
+        if ($request->has('year')) {
+            $query->whereYear('departure_date', '=', $request->year);
+        }
+        if ($request->has('month')) {
+            $query->whereMonth('departure_date', '=', $request->month);
+        }
+        if ($request->has('day')) {
+            $query->whereDay('departure_date', '=', $request->day);
+        }
+        if ($request->has('date_begin')) {
+            $query->whereDate('departure_date', '>=', $request->date_begin);
+        }
+        if ($request->has('date_end')) {
+            $query->whereDate('departure_date', '<=', $request->date_end);
+        }
+        if ($request->has('date_begin') && !$request->has('date_end')) {
+            // Caso tenha apenas o 'date_begin'
+            $query->whereDate('departure_date', '=', $request->date_begin);
+        }
+
+
+        return $query->with(['driver', 'vehicle', 'route', 'clients'])->get();
     }
 
     /**
