@@ -14,7 +14,6 @@ class Queue extends Model
 
     // Definindo quais atributos podem ser preenchidos em massa (mass assignment)
     protected $fillable = [
-        'date_of_received',
         'id_client',
         'id_specialities',
         'id_user',

@@ -13,7 +13,7 @@ class QueueController extends Controller
     public function index()
     {
         $queues = Queue::with(['client', 'user', 'speciality'])
-            ->orderBy('date_of_received', 'asc')
+            ->orderBy('created_at', 'asc')
             ->get();
 
         return response()->json($queues, 200);
@@ -26,7 +26,6 @@ class QueueController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'date_of_received' => 'required|date',
             'id_client' => 'required|exists:clients,id',
             'id_specialities' => 'required|exists:specialities,id',
             'id_user' => 'required|exists:users,id',
@@ -71,7 +70,6 @@ class QueueController extends Controller
         }
 
         $validatedData = $request->validate([
-            'date_of_received' => 'sometimes|required|date',
             'id_client' => 'sometimes|required|exists:clients,id',
             'id_specialities' => 'sometimes|required|exists:specialities,id',
             'id_user' => 'sometimes|required|exists:users,id',
@@ -82,6 +80,9 @@ class QueueController extends Controller
         ]);
 
         $queue->update($validatedData);
+
+        // Carrega as relações client e speciality
+        $queue->load('client', 'speciality');
 
         return response()->json($queue, 200);
     }
