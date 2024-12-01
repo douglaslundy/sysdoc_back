@@ -37,6 +37,8 @@ class TripClientRequest extends FormRequest
                 }),
             ],
             'person_type' => 'required|in:passenger,companion',
+            'ohone' => 'nullable|string|max:20',
+            'departure_location' => 'nullable|string|max:50',
             'destination_location' => 'nullable|string|max:50',
             'time' => 'required|date_format:H:i',
         ];
@@ -59,6 +61,14 @@ class TripClientRequest extends FormRequest
 
             'person_type.required' => 'O campo tipo de pessoa é obrigatório.',
             'person_type.in' => 'O tipo de pessoa deve ser "passageiro" ou "acompanhante".',
+
+            'phone.required' => 'O campo TELEFONE é obrigatório.',
+            'phone.string' => 'O campo TELEFONE deve ser uma string.',
+            'phone.max' => 'O campo TELEFONE não pode ter mais que 20 caracteres.',
+
+            'departure_location.required' => 'O campo saída é obrigatório.',
+            'departure_location.string' => 'A saída deve ser uma string.',
+            'departure_location.max' => 'A saída não pode ter mais que 50 caracteres.',
 
             'destination_location.required' => 'O campo destino é obrigatório.',
             'destination_location.string' => 'O destino deve ser uma string.',

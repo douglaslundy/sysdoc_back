@@ -14,6 +14,8 @@ class TripClient extends Model
         'trip_id',
         'client_id',
         'person_type',
+        'phone',
+        'departure_location',
         'destination_location',
         'time'
     ];

@@ -40,7 +40,7 @@ class Trip extends Model
     public function clients()
     {
         return $this->belongsToMany(Client::class, 'trip_clients')->with(['addresses:id_client,street,number'])
-            ->withPivot(['person_type', 'destination_location', 'time']); // Adiciona o campo da tabela intermediária;
+            ->withPivot(['person_type', 'phone', 'departure_location',  'destination_location', 'time']); // Adiciona o campo da tabela intermediária;
     }
 
     // public function clients()
