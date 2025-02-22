@@ -102,4 +102,22 @@ class QueueController extends Controller
 
         return response()->json(['message' => 'Registro deletado com sucesso'], 200);
     }
+
+
+    /**
+     * Mostrar um registro específico da tabela queue pelo UUID.
+     */
+    public function showByUuid($uuid)
+    {
+        $queue = Queue::with(['client', 'user', 'speciality'])
+            ->where('uuid', $uuid)
+            ->first();
+
+        if (!$queue) {
+            return response()->json(['message' => 'Registro não encontrado'], 404);
+        }
+
+        return response()->json($queue, 200);
+    }
+
 }

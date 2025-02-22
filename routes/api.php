@@ -26,6 +26,8 @@ Route::get('/ping', function () {
     return ['pong' => true];
 });
 
+
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -34,6 +36,9 @@ Route::get('/401', [AuthController::class, 'unauthorized'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/register', [AuthController::class, 'register']);
+
+// Rota pública para consulta da Queue por UUID
+Route::get('/queues/uuid/{uuid}', [QueueController::class, 'showByUuid']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
