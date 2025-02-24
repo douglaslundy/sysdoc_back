@@ -70,7 +70,7 @@ class QueueController extends Controller
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc') // Garante ordenação consistente em caso de created_at iguais
             ->get();
-    
+
         // Adicionar a posição correta
         foreach ($queues as $queue) {
             if ($queue->done == 1) {
@@ -89,10 +89,10 @@ class QueueController extends Controller
                     ->count() + 1;
             }
         }
-    
+
         return response()->json($queues, 200);
     }
-    
+
 
 
 
@@ -164,39 +164,39 @@ class QueueController extends Controller
     // }
 
     public function update(Request $request, $id)
-{
-    $queue = Queue::find($id);
+    {
+        $queue = Queue::find($id);
 
-    if (!$queue) {
-        return response()->json(['message' => 'Registro não encontrado'], 404);
+        if (!$queue) {
+            return response()->json(['message' => 'Registro não encontrado'], 404);
+        }
+
+        $validatedData = $request->validate([
+            'id_client' => 'sometimes|required|exists:clients,id',
+            'id_specialities' => 'sometimes|required|exists:specialities,id',
+            'id_user' => 'sometimes|required|exists:users,id',
+            'done' => 'boolean',
+            'date_of_realized' => 'nullable|date',
+            'urgency' => 'sometimes|required|boolean',
+            'obs' => 'nullable|string|max:200',
+        ]);
+
+        $queue->update($validatedData);
+
+        // Se o campo done for verdadeiro (true ou 1)
+        if ($queue->done == true) {
+            // Atualiza o campo updated_at de todos os registros com o mesmo id_specialities e done = 0
+            Queue::where('id_specialities', $queue->id_specialities)
+                ->where('urgency', $queue->urgency)
+                ->where('done', 0)
+                ->update(['updated_at' => now()]);
+        }
+
+        // Carrega as relações client e speciality
+        $queue->load('client', 'speciality');
+
+        return response()->json($queue, 200);
     }
-
-    $validatedData = $request->validate([
-        'id_client' => 'sometimes|required|exists:clients,id',
-        'id_specialities' => 'sometimes|required|exists:specialities,id',
-        'id_user' => 'sometimes|required|exists:users,id',
-        'done' => 'boolean',
-        'date_of_realized' => 'nullable|date',
-        'urgency' => 'sometimes|required|boolean',
-        'obs' => 'nullable|string|max:200',
-    ]);
-
-    $queue->update($validatedData);
-
-    // Se o campo done for verdadeiro (true ou 1)
-    if ($queue->done == true) {
-        // Atualiza o campo updated_at de todos os registros com o mesmo id_specialities e done = 0
-        Queue::where('id_specialities', $queue->id_specialities)
-            ->where('urgency', $queue->urgency)
-            ->where('done', 0)
-            ->update(['updated_at' => now()]);
-    }
-
-    // Carrega as relações client e speciality
-    $queue->load('client', 'speciality');
-
-    return response()->json($queue, 200);
-}
 
     /**
      * Deletar um registro específico na tabela queue.
