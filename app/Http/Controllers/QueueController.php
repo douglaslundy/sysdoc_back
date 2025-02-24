@@ -65,30 +65,35 @@ class QueueController extends Controller
 
     public function index()
     {
-        // Buscar todos os registros não finalizados com as relações necessárias
+        // Buscar todos os registros com as relações necessárias (independente de 'done')
         $queues = Queue::with(['client', 'user', 'speciality'])
-            ->where('done', 0)
             ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc') // Garante ordenação consistente em caso de created_at iguais
             ->get();
     
-        // Adicionar a posição correta sem carregar todas as filas na memória
+        // Adicionar a posição correta
         foreach ($queues as $queue) {
-            $queue->position = Queue::where('id_specialities', $queue->id_specialities)
-                ->where('urgency', $queue->urgency)
-                ->where('done', 0)
-                ->where(function ($query) use ($queue) {
-                    $query->where('created_at', '<', $queue->created_at)
-                          ->orWhere(function ($query) use ($queue) {
-                              $query->where('created_at', '=', $queue->created_at)
-                                    ->where('id', '<', $queue->id);
-                          });
-                })
-                ->count() + 1;
+            if ($queue->done == 1) {
+                $queue->position = 0; // Se o registro estiver finalizado, posição é 0
+            } else {
+                $queue->position = Queue::where('id_specialities', $queue->id_specialities)
+                    ->where('urgency', $queue->urgency)
+                    ->where('done', 0)
+                    ->where(function ($query) use ($queue) {
+                        $query->where('created_at', '<', $queue->created_at)
+                            ->orWhere(function ($query) use ($queue) {
+                                $query->where('created_at', '=', $queue->created_at)
+                                    ->where('id', '<', $queue->id); // Garante ordenação estável
+                            });
+                    })
+                    ->count() + 1;
+            }
         }
     
         return response()->json($queues, 200);
     }
     
+
 
 
     /**
@@ -132,31 +137,66 @@ class QueueController extends Controller
     /**
      * Atualizar um registro específico na tabela queue.
      */
+    // public function update(Request $request, $id)
+    // {
+    //     $queue = Queue::find($id);
+
+    //     if (!$queue) {
+    //         return response()->json(['message' => 'Registro não encontrado'], 404);
+    //     }
+
+    //     $validatedData = $request->validate([
+    //         'id_client' => 'sometimes|required|exists:clients,id',
+    //         'id_specialities' => 'sometimes|required|exists:specialities,id',
+    //         'id_user' => 'sometimes|required|exists:users,id',
+    //         'done' => 'boolean',
+    //         'date_of_realized' => 'nullable|date',
+    //         'urgency' => 'sometimes|required|boolean',
+    //         'obs' => 'nullable|string|max:200',
+    //     ]);
+
+    //     $queue->update($validatedData);
+
+    //     // Carrega as relações client e speciality
+    //     $queue->load('client', 'speciality');
+
+    //     return response()->json($queue, 200);
+    // }
+
     public function update(Request $request, $id)
-    {
-        $queue = Queue::find($id);
+{
+    $queue = Queue::find($id);
 
-        if (!$queue) {
-            return response()->json(['message' => 'Registro não encontrado'], 404);
-        }
-
-        $validatedData = $request->validate([
-            'id_client' => 'sometimes|required|exists:clients,id',
-            'id_specialities' => 'sometimes|required|exists:specialities,id',
-            'id_user' => 'sometimes|required|exists:users,id',
-            'done' => 'boolean',
-            'date_of_realized' => 'nullable|date',
-            'urgency' => 'sometimes|required|boolean',
-            'obs' => 'nullable|string|max:200',
-        ]);
-
-        $queue->update($validatedData);
-
-        // Carrega as relações client e speciality
-        $queue->load('client', 'speciality');
-
-        return response()->json($queue, 200);
+    if (!$queue) {
+        return response()->json(['message' => 'Registro não encontrado'], 404);
     }
+
+    $validatedData = $request->validate([
+        'id_client' => 'sometimes|required|exists:clients,id',
+        'id_specialities' => 'sometimes|required|exists:specialities,id',
+        'id_user' => 'sometimes|required|exists:users,id',
+        'done' => 'boolean',
+        'date_of_realized' => 'nullable|date',
+        'urgency' => 'sometimes|required|boolean',
+        'obs' => 'nullable|string|max:200',
+    ]);
+
+    $queue->update($validatedData);
+
+    // Se o campo done for verdadeiro (true ou 1)
+    if ($queue->done == true) {
+        // Atualiza o campo updated_at de todos os registros com o mesmo id_specialities e done = 0
+        Queue::where('id_specialities', $queue->id_specialities)
+            ->where('urgency', $queue->urgency)
+            ->where('done', 0)
+            ->update(['updated_at' => now()]);
+    }
+
+    // Carrega as relações client e speciality
+    $queue->load('client', 'speciality');
+
+    return response()->json($queue, 200);
+}
 
     /**
      * Deletar um registro específico na tabela queue.
@@ -244,7 +284,14 @@ class QueueController extends Controller
             ->count() + 1;
 
         // Adicionar a posição ao objeto sem precisar carregar toda a fila
-        $queue->position = $position;
+
+        if ($queue->done == 0) {
+            $queue->position = $position;
+        } else if ($queue->done == 1) {
+            $queue->position = 0;
+        }
+
+
 
         return response()->json($queue, 200);
     }
