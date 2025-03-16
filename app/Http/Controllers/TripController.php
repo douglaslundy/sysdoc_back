@@ -45,7 +45,7 @@ class TripController extends Controller
     public function index(Request $request)
     {
         $query = Trip::query();
-    
+
         if ($request->has('year')) {
             $query->whereYear('departure_date', '=', $request->year);
         }
@@ -65,16 +65,22 @@ class TripController extends Controller
             // Caso tenha apenas o 'date_begin'
             $query->whereDate('departure_date', '=', $request->date_begin);
         }
-    
+
         $trips = $query->with(['driver', 'vehicle', 'route', 'clients'])->get();
-    
+
         // Adicionar o campo is_ok com base na confirmação dos clientes
         $trips->transform(function ($trip) {
-            $allConfirmed = $trip->clients->every(fn($client) => $client->is_confirmed = true);
-            $trip->is_ok = $allConfirmed;
+            // Se a viagem não tiver clientes, define is_ok como false
+            if ($trip->clients->isEmpty()) {
+                $trip->is_ok = false;
+            } else {
+                // Verifica se todos os clientes confirmaram
+                $allConfirmed = $trip->clients->every(fn($client) => (bool) $client->pivot->is_confirmed);
+                $trip->is_ok = $allConfirmed;
+            }            
             return $trip;
         });
-    
+        
         return $trips;
     }
 
@@ -224,7 +230,13 @@ class TripController extends Controller
 
         $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripClient->trip_id);
 
-        // return response()->json($array, 201);
+        // Verificar se todos os clientes da viagem estão confirmados
+        if (!$trip->clients->isEmpty()) {
+            $allConfirmed = $trip->clients->every(fn($client) => (bool) $client->pivot->is_confirmed);
+            $trip->is_ok = $allConfirmed;
+        } else {
+            $trip->is_ok = false;
+        }
 
         return response()->json(['message' => 'Viagem confirmada com sucesso', 'trip' => $trip], 200);
     }
@@ -238,11 +250,11 @@ class TripController extends Controller
             return response()->json(['error' => 'Cliente não encontrado'], 404);
         }
 
-        // Atualiza a coluna is_confirmed para true
+        // Atualiza a coluna is_confirmed para false
         $tripClient->update(['is_confirmed' => false]);
 
 
-        
+
 
         $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripClient->trip_id);
 
