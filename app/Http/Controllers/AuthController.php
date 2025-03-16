@@ -72,7 +72,7 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = User::where('cpf', $request->cpf)->first();
+        $user = User::where('cpf', $request->cpf)->where('active', true)->first();
 
         //valida e checa usuario e password
 

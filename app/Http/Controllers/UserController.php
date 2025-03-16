@@ -20,8 +20,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        return User::orderBy('id', 'desc')->get();
+        // return User::orderBy('id', 'desc')->get();
         // return User::with(['company'])->where('active', true)->orderBy('id', 'desc')->get();
+        return User::where('active', true)->orderBy('id', 'desc')->get();
     }
 
     /**
@@ -88,7 +89,9 @@ class UserController extends Controller
     {
         $array = ['status' => 'inactivated'];
 
-        User::where('id', $user)->update(['active' => 0, 'inactive_date' => new DateTime()]);
+        // User::where('id', $user)->update(['active' => 0, 'inactive_date' => new DateTime()]);
+        $user->update(['active' => 0, 'inactive_date' => new DateTime()]);
+
         return $array;
     }
 }

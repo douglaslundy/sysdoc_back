@@ -17,7 +17,8 @@ class TripClient extends Model
         'phone',
         'departure_location',
         'destination_location',
-        'time'
+        'time',
+        'is_confirmed'
     ];
 
     // Constantes para os possíveis valores do campo 'person_type'

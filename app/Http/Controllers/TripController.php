@@ -11,11 +11,41 @@ use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
+    // public function index(Request $request)
+    // {
+
+    //     $query = Trip::query();
+
+    //     if ($request->has('year')) {
+    //         $query->whereYear('departure_date', '=', $request->year);
+    //     }
+    //     if ($request->has('month')) {
+    //         $query->whereMonth('departure_date', '=', $request->month);
+    //     }
+    //     if ($request->has('day')) {
+    //         $query->whereDay('departure_date', '=', $request->day);
+    //     }
+    //     if ($request->has('date_begin')) {
+    //         $query->whereDate('departure_date', '>=', $request->date_begin);
+    //     }
+    //     if ($request->has('date_end')) {
+    //         $query->whereDate('departure_date', '<=', $request->date_end);
+    //     }
+    //     if ($request->has('date_begin') && !$request->has('date_end')) {
+    //         // Caso tenha apenas o 'date_begin'
+    //         $query->whereDate('departure_date', '=', $request->date_begin);
+    //     }
+
+
+    //     return $query->with(['driver', 'vehicle', 'route', 'clients'])->get();
+    // }
+
+
+
     public function index(Request $request)
     {
-
-        $query =  Trip::query();
-
+        $query = Trip::query();
+    
         if ($request->has('year')) {
             $query->whereYear('departure_date', '=', $request->year);
         }
@@ -35,10 +65,19 @@ class TripController extends Controller
             // Caso tenha apenas o 'date_begin'
             $query->whereDate('departure_date', '=', $request->date_begin);
         }
-
-
-        return $query->with(['driver', 'vehicle', 'route', 'clients'])->get();
+    
+        $trips = $query->with(['driver', 'vehicle', 'route', 'clients'])->get();
+    
+        // Adicionar o campo is_ok com base na confirmação dos clientes
+        $trips->transform(function ($trip) {
+            $allConfirmed = $trip->clients->every(fn($client) => $client->is_confirmed = true);
+            $trip->is_ok = $allConfirmed;
+            return $trip;
+        });
+    
+        return $trips;
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -162,5 +201,53 @@ class TripController extends Controller
             DB::rollback();
             throw $e;
         }
+    }
+
+    /**
+     * Confirma a viagem de um cliente.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function confirmTripClient($id)
+    {
+        // Busca o cliente na tabela trip_clients
+        $tripClient = TripClient::find($id);
+
+        if (!$tripClient) {
+            return response()->json(['error' => 'Cliente não encontrado'], 404);
+        }
+
+        // Atualiza a coluna is_confirmed para true
+        $tripClient->update(['is_confirmed' => true]);
+
+
+        $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripClient->trip_id);
+
+        // return response()->json($array, 201);
+
+        return response()->json(['message' => 'Viagem confirmada com sucesso', 'trip' => $trip], 200);
+    }
+
+    public function unconfirmTripClient($id)
+    {
+        // Busca o cliente na tabela trip_clients
+        $tripClient = TripClient::find($id);
+
+        if (!$tripClient) {
+            return response()->json(['error' => 'Cliente não encontrado'], 404);
+        }
+
+        // Atualiza a coluna is_confirmed para true
+        $tripClient->update(['is_confirmed' => false]);
+
+
+        
+
+        $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripClient->trip_id);
+
+        // return response()->json($array, 201);
+
+        return response()->json(['message' => 'Confirmação de viagem revogada com sucesso', 'trip' => $trip], 200);
     }
 }
