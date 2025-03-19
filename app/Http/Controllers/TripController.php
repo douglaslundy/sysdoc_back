@@ -238,12 +238,7 @@ class TripController extends Controller
     //     }
     // }
 
-     /**
-     * Confirma a viagem de um cliente.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
+    
     public function editTripClient(TripClientRequest $request, $id)
 {
     DB::beginTransaction();

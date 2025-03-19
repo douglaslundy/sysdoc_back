@@ -103,7 +103,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::patch('/confirm-trip-client/{client_id}', [TripController::class, 'confirmTripClient']);
     Route::patch('/unconfirm-trip-client/{client_id}', [TripController::class, 'unconfirmTripClient']);
     Route::delete('/trip-clients/{client_id}', [TripController::class, 'deleteTripClient']);
-    Route::patch('/trip-clients/{id}', [TripController::class, 'editTripClient']);
+    Route::put('/trip-clients/{id}', [TripController::class, 'editTripClient']);
 
     // Rotas para Veículos (Vehicle)
     Route::apiResource('vehicles', VehicleController::class);
