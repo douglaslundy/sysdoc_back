@@ -152,14 +152,14 @@ class TripController extends Controller
     }
 
 
-    public function deleteTripClient($client_id)
+    public function deleteTripClient($id)
     {
 
         DB::beginTransaction();
         try {
 
             // Encontrar a linha que corresponde ao client_id
-            $cli = TripClient::where('client_id', $client_id)->firstOrFail();
+            $cli = TripClient::findOrFail($id);
 
             // Excluir o registro encontrado
             $cli->delete();
@@ -208,6 +208,71 @@ class TripController extends Controller
             throw $e;
         }
     }
+
+    // public function editTripClient(TripClientRequest $request)
+    // {
+
+    //     DB::beginTransaction();
+    //     try {
+
+    //         $array = ['status' => 'updated'];
+
+    //         // Cria o registro na tabela trip_clients
+    //         $tripClient = TripClient::create($request->all());
+    //         $array['trip_client'] = $tripClient;
+    //         DB::commit();
+
+
+    //         // $trip->clients()->sync($request->client_ids);
+    //         // $trip->clients()->sync($request->client_ids);
+
+    //         $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($request->trip_id);
+
+    //         $array['trip'] = $trip;
+
+
+    //         return response()->json($array, 201);
+    //     } catch (\Exception $e) {
+    //         DB::rollback();
+    //         throw $e;
+    //     }
+    // }
+
+    public function editTripClient(TripClientRequest $request, $id)
+{
+    DB::beginTransaction();
+    try {
+        // Busca o registro existente na tabela trip_clients
+        $tripClient = TripClient::findOrFail($id);
+        
+        // Apenas os campos permitidos serão atualizados
+        $tripClient->update($request->only([
+            'person_type', 
+            'phone', 
+            'departure_location', 
+            'destination_location', 
+            'time'
+        ]));
+        
+        DB::commit();
+        
+        // Busca a viagem com seus relacionamentos atualizados
+        $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])
+            ->findOrFail($tripClient->trip_id);
+        
+        return response()->json([
+            'status' => 'updated',
+            'trip_client' => $tripClient,
+            'trip' => $trip
+        ], 200);
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json([
+            'error' => 'Failed to update trip client',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
 
     /**
      * Confirma a viagem de um cliente.
