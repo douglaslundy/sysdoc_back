@@ -66,7 +66,11 @@ class TripController extends Controller
             $query->whereDate('departure_date', '=', $request->date_begin);
         }
 
-        $trips = $query->with(['driver', 'vehicle', 'route', 'clients'])->get();
+        $trips = $query
+            ->with(['driver', 'vehicle', 'route', 'clients'])
+            ->orderBy('departure_date', 'asc') // ou 'desc' se quiser ordem decrescente
+            ->get();
+
 
         // Adicionar o campo is_ok com base na confirmação dos clientes
         $trips->transform(function ($trip) {
@@ -77,10 +81,10 @@ class TripController extends Controller
                 // Verifica se todos os clientes confirmaram
                 $allConfirmed = $trip->clients->every(fn($client) => (bool) $client->pivot->is_confirmed);
                 $trip->is_ok = $allConfirmed;
-            }            
+            }
             return $trip;
         });
-        
+
         return $trips;
     }
 
@@ -238,42 +242,42 @@ class TripController extends Controller
     //     }
     // }
 
-    
+
     public function editTripClient(TripClientRequest $request, $id)
-{
-    DB::beginTransaction();
-    try {
-        // Busca o registro existente na tabela trip_clients
-        $tripClient = TripClient::findOrFail($id);
-        
-        // Apenas os campos permitidos serão atualizados
-        $tripClient->update($request->only([
-            'person_type', 
-            'phone', 
-            'departure_location', 
-            'destination_location', 
-            'time'
-        ]));
-        
-        DB::commit();
-        
-        // Busca a viagem com seus relacionamentos atualizados
-        $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])
-            ->findOrFail($tripClient->trip_id);
-        
-        return response()->json([
-            'status' => 'updated',
-            'trip_client' => $tripClient,
-            'trip' => $trip
-        ], 200);
-    } catch (\Exception $e) {
-        DB::rollback();
-        return response()->json([
-            'error' => 'Failed to update trip client',
-            'message' => $e->getMessage()
-        ], 500);
+    {
+        DB::beginTransaction();
+        try {
+            // Busca o registro existente na tabela trip_clients
+            $tripClient = TripClient::findOrFail($id);
+
+            // Apenas os campos permitidos serão atualizados
+            $tripClient->update($request->only([
+                'person_type',
+                'phone',
+                'departure_location',
+                'destination_location',
+                'time'
+            ]));
+
+            DB::commit();
+
+            // Busca a viagem com seus relacionamentos atualizados
+            $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])
+                ->findOrFail($tripClient->trip_id);
+
+            return response()->json([
+                'status' => 'updated',
+                'trip_client' => $tripClient,
+                'trip' => $trip
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'error' => 'Failed to update trip client',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
-}
 
     /**
      * Confirma a viagem de um cliente.
