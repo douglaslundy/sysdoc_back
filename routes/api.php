@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\RouteController;
+use App\Http\Controllers\QRCodeLogController;
 
 
 Route::get('/ping', function () {
@@ -112,4 +113,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Rotas para Rotas (Route)
     Route::apiResource('routes', RouteController::class);
+
+    Route::get('/qrcode-logs', [QRCodeLogController::class, 'index']);
 });
