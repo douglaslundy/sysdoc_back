@@ -215,6 +215,7 @@ class QueueController extends Controller
         QRCodeLog::create([
             'uuid' => $uuid,
             'queue_id' => $queue->id,
+            'position' => $queue->position,
             'ip_address' => $ip,
             'user_agent' => $userAgent,
             'location' => $location ? json_encode($location) : null,
