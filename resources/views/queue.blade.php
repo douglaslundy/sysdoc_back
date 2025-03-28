@@ -160,7 +160,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="{{ asset('file/brasao.png') }}" class="logo" alt="Brasão">
+            <img src="{{ asset('files/brasao.png') }}" class="logo" alt="Brasão">
             <div class="header-text">
                 <div>SECRETARIA MUNICIPAL DE SAÚDE DE ILICÍNEA</div>
                 <div>Rua 02 de Novembro, 96 - Centro | TEL: 0800 035 1319</div>
