@@ -9,7 +9,8 @@ class QRCodeLogController extends Controller
 {
     public function index()
     {
-        $logs = QRCodeLog::with(['queue.client', 'queue.speciality'])->get();
+        $logs = QRCodeLog::with(['queue.client', 'queue.speciality'])->orderBy('accessed_at', 'desc')->get();
+        
 
         return response()->json($logs);
     }
