@@ -12,6 +12,7 @@ class QRCodeLog extends Model
     protected $fillable = [
         'uuid',
         'queue_id',
+        'host_name',
         'position',
         'ip_address',
         'user_agent',

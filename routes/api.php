@@ -38,7 +38,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
 // Rota pública para consulta da Queue por UUID
-Route::get('/queues/uuid/{uuid}', [QueueController::class, 'showByUuid']);
 Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']);
 
 

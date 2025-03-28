@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Queue;
 use App\Models\QRCodeLog;
 use Illuminate\Support\Facades\DB;
+use App\Models\PublicQueueLog;
 
 class QueueController extends Controller
 {
@@ -58,10 +59,10 @@ class QueueController extends Controller
                 ->where('done', 0)
                 ->where(function ($query) use ($queue) {
                     $query->where('created_at', '<', $queue->created_at)
-                          ->orWhere(function ($query) use ($queue) {
-                              $query->where('created_at', '=', $queue->created_at)
-                                    ->where('id', '<', $queue->id);
-                          });
+                        ->orWhere(function ($query) use ($queue) {
+                            $query->where('created_at', '=', $queue->created_at)
+                                ->where('id', '<', $queue->id);
+                        });
                 })
                 ->count() + 1;
         }
@@ -74,6 +75,16 @@ class QueueController extends Controller
                     'urgencia' => $fila->where('urgency', 1)->values(),
                 ];
             })->sortKeys();
+
+        // Registrar acesso na tabela de logs
+        PublicQueueLog::create([
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->header('User-Agent'),
+            'host_name' => gethostbyaddr(request()->ip()),
+            'referer' => request()->header('referer'),
+            'accessed_at' => now(),
+        ]);
+
 
         return view('queue', [
             'agrupadas' => $agrupadas,
@@ -170,7 +181,7 @@ class QueueController extends Controller
 
         return response()->json(['message' => 'Registro deletado com sucesso'], 200);
     }
-  
+
 
     public function showByUuid($uuid, Request $request)
     {
@@ -218,13 +229,17 @@ class QueueController extends Controller
             'queue_id' => $queue->id,
             'position' => $queue->position,
             'ip_address' => $ip,
+            'host_name' => gethostbyaddr(request()->ip()),
             'user_agent' => $userAgent,
             'location' => $location ? json_encode($location) : null,
             'referer' => $request->headers->get('referer'),
             'accessed_at' => now(),
         ]);
 
-        return response()->json($queue, 200);
+        // Passando diretamente os dados para a view
+        return view('qrcode', [
+            'queue' => $queue
+        ]);
     }
 
 

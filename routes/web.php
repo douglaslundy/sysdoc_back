@@ -19,3 +19,4 @@ Route::get('/', function () {
 });
 
 Route::get('/showPublicQueue', [QueueController::class, 'showPublicQueue'])->name('showPublicQueue');
+Route::get('/showqueue/{uuid}', [QueueController::class, 'showByUuid'])->name('showByUuid');
