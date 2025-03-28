@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Queue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use App\Models\Queue;
+use App\Models\QRCodeLog;
 use Illuminate\Support\Facades\DB;
 
 class QueueController extends Controller
@@ -132,9 +134,45 @@ class QueueController extends Controller
 
 
 
-    public function showByUuid($uuid)
+    // public function showByUuid($uuid)
+    // {
+    //     // Buscar o registro específico pelo UUID
+    //     $queue = Queue::with(['client', 'user', 'speciality'])
+    //         ->where('uuid', $uuid)
+    //         ->first();
+
+    //     if (!$queue) {
+    //         return response()->json(['message' => 'Registro não encontrado'], 404);
+    //     }
+
+    //     // Determinar a posição corretamente incluindo o próprio registro na contagem
+    //     $position = Queue::where('id_specialities', $queue->id_specialities)
+    //         ->where('urgency', $queue->urgency)
+    //         ->where('done', 0)
+    //         ->where(function ($query) use ($queue) {
+    //             $query->where('created_at', '<', $queue->created_at)
+    //                 ->orWhere(function ($query) use ($queue) {
+    //                     $query->where('created_at', '=', $queue->created_at)
+    //                         ->where('id', '<', $queue->id);
+    //                 });
+    //         })
+    //         ->count() + 1;
+
+    //     // Adicionar a posição ao objeto sem precisar carregar toda a fila
+
+    //     if ($queue->done == 0) {
+    //         $queue->position = $position;
+    //     } else if ($queue->done == 1) {
+    //         $queue->position = 0;
+    //     }
+
+
+
+    //     return response()->json($queue, 200);
+    // }
+
+    public function showByUuid($uuid, Request $request)
     {
-        // Buscar o registro específico pelo UUID
         $queue = Queue::with(['client', 'user', 'speciality'])
             ->where('uuid', $uuid)
             ->first();
@@ -143,7 +181,7 @@ class QueueController extends Controller
             return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
-        // Determinar a posição corretamente incluindo o próprio registro na contagem
+        // Calcula posição (como já estava)
         $position = Queue::where('id_specialities', $queue->id_specialities)
             ->where('urgency', $queue->urgency)
             ->where('done', 0)
@@ -156,16 +194,59 @@ class QueueController extends Controller
             })
             ->count() + 1;
 
-        // Adicionar a posição ao objeto sem precisar carregar toda a fila
+        $queue->position = $queue->done ? 0 : $position;
 
-        if ($queue->done == 0) {
-            $queue->position = $position;
-        } else if ($queue->done == 1) {
-            $queue->position = 0;
+        // Captura IP e User-Agent
+        $ip = $request->ip();
+        $userAgent = $request->userAgent();
+
+        // Opcional: buscar localização via IP (ex: usando ipapi.co ou ipwho.is)
+        $location = null;
+        try {
+            $locationResponse = Http::get("https://ipwho.is/{$ip}");
+            if ($locationResponse->ok()) {
+                $location = $locationResponse->json();
+            }
+        } catch (\Exception $e) {
+            $location = null;
         }
 
-
+        // Salvar log
+        QRCodeLog::create([
+            'uuid' => $uuid,
+            'queue_id' => $queue->id,
+            'ip_address' => $ip,
+            'user_agent' => $userAgent,
+            'location' => $location ? json_encode($location) : null,
+            'referer' => $request->headers->get('referer'),
+            'accessed_at' => now(),
+        ]);
 
         return response()->json($queue, 200);
     }
+
+
+    public function storeLocationLog(Request $request)
+    {
+        $data = $request->validate([
+            'uuid' => 'required|uuid',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        // Atualize o log mais recente desse UUID com localização
+        QRCodeLog::where('uuid', $data['uuid'])
+            ->latest()
+            ->first()
+                ?->update([
+                'location' => json_encode([
+                    'latitude' => $data['latitude'],
+                    'longitude' => $data['longitude'],
+                ]),
+            ]);
+
+        return response()->json(['message' => 'Localização salva com sucesso']);
+    }
+
+
 }
