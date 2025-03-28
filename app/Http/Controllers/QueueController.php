@@ -42,6 +42,45 @@ class QueueController extends Controller
     }
 
 
+    public function showPublicQueue()
+    {
+        // Buscar somente registros com done = 0
+        $queues = Queue::with(['client', 'user', 'speciality'])
+            ->where('done', 0)
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        // Calcular posição de cada item
+        foreach ($queues as $queue) {
+            $queue->position = Queue::where('id_specialities', $queue->id_specialities)
+                ->where('urgency', $queue->urgency)
+                ->where('done', 0)
+                ->where(function ($query) use ($queue) {
+                    $query->where('created_at', '<', $queue->created_at)
+                          ->orWhere(function ($query) use ($queue) {
+                              $query->where('created_at', '=', $queue->created_at)
+                                    ->where('id', '<', $queue->id);
+                          });
+                })
+                ->count() + 1;
+        }
+
+        // Agrupar por especialidade
+        $agrupadas = $queues->groupBy(fn($q) => $q->speciality->name ?? 'Sem Especialidade')
+            ->map(function ($fila) {
+                return [
+                    'comum' => $fila->where('urgency', 0)->values(),
+                    'urgencia' => $fila->where('urgency', 1)->values(),
+                ];
+            })->sortKeys();
+
+        return view('queue', [
+            'agrupadas' => $agrupadas,
+            'data_geracao' => now()->format('d/m/Y H:i:s'),
+        ]);
+    }
+
     /**
      * Criar um novo registro na tabela queue.
      */
@@ -131,45 +170,7 @@ class QueueController extends Controller
 
         return response()->json(['message' => 'Registro deletado com sucesso'], 200);
     }
-
-
-
-    // public function showByUuid($uuid)
-    // {
-    //     // Buscar o registro específico pelo UUID
-    //     $queue = Queue::with(['client', 'user', 'speciality'])
-    //         ->where('uuid', $uuid)
-    //         ->first();
-
-    //     if (!$queue) {
-    //         return response()->json(['message' => 'Registro não encontrado'], 404);
-    //     }
-
-    //     // Determinar a posição corretamente incluindo o próprio registro na contagem
-    //     $position = Queue::where('id_specialities', $queue->id_specialities)
-    //         ->where('urgency', $queue->urgency)
-    //         ->where('done', 0)
-    //         ->where(function ($query) use ($queue) {
-    //             $query->where('created_at', '<', $queue->created_at)
-    //                 ->orWhere(function ($query) use ($queue) {
-    //                     $query->where('created_at', '=', $queue->created_at)
-    //                         ->where('id', '<', $queue->id);
-    //                 });
-    //         })
-    //         ->count() + 1;
-
-    //     // Adicionar a posição ao objeto sem precisar carregar toda a fila
-
-    //     if ($queue->done == 0) {
-    //         $queue->position = $position;
-    //     } else if ($queue->done == 1) {
-    //         $queue->position = 0;
-    //     }
-
-
-
-    //     return response()->json($queue, 200);
-    // }
+  
 
     public function showByUuid($uuid, Request $request)
     {

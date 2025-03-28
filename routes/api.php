@@ -42,6 +42,7 @@ Route::get('/queues/uuid/{uuid}', [QueueController::class, 'showByUuid']);
 Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']);
 
 
+
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
