@@ -79,7 +79,7 @@ class QueueController extends Controller
         // Registrar acesso na tabela de logs
         PublicQueueLog::create([
             'ip_address' => request()->ip(),
-            'user_agent' => request()->header('User-Agent'),
+            'user_agent' => substr(request()->header('User-Agent'), 0, 255),
             'host_name' => gethostbyaddr(request()->ip()),
             'referer' => request()->header('referer'),
             'accessed_at' => now(),
@@ -230,7 +230,7 @@ class QueueController extends Controller
             'position' => $queue->position,
             'ip_address' => $ip,
             'host_name' => gethostbyaddr(request()->ip()),
-            'user_agent' => $userAgent,
+            'user_agent' => substr($userAgent, 0, 255),
             'location' => $location ? json_encode($location) : null,
             'referer' => $request->headers->get('referer'),
             'accessed_at' => now(),
