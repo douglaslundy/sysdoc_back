@@ -40,12 +40,7 @@ class Trip extends Model
     public function clients()
     {
         return $this->belongsToMany(Client::class, 'trip_clients')->with(['addresses:id_client,street,number'])
-            ->withPivot(['id', 'person_type', 'phone', 'departure_location',  'destination_location', 'time', 'is_confirmed']); // Adiciona o campo da tabela intermediária;
+            ->withPivot(['id', 'person_type', 'phone', 'departure_location',  'destination_location', 'time', 'is_confirmed', 'updated_at']); // Adiciona o campo da tabela intermediária;
     }
 
-    // public function clients()
-    // {
-    //     return $this->belongsToMany(Client::class, 'trip_clients')->with(['addresses:client_id,street,number'])
-    //         ->withPivot(['person_type', 'destination_location']); // Adiciona o campo da tabela intermediária;
-    // }
 }

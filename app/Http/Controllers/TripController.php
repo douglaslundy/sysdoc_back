@@ -11,37 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
-    // public function index(Request $request)
-    // {
-
-    //     $query = Trip::query();
-
-    //     if ($request->has('year')) {
-    //         $query->whereYear('departure_date', '=', $request->year);
-    //     }
-    //     if ($request->has('month')) {
-    //         $query->whereMonth('departure_date', '=', $request->month);
-    //     }
-    //     if ($request->has('day')) {
-    //         $query->whereDay('departure_date', '=', $request->day);
-    //     }
-    //     if ($request->has('date_begin')) {
-    //         $query->whereDate('departure_date', '>=', $request->date_begin);
-    //     }
-    //     if ($request->has('date_end')) {
-    //         $query->whereDate('departure_date', '<=', $request->date_end);
-    //     }
-    //     if ($request->has('date_begin') && !$request->has('date_end')) {
-    //         // Caso tenha apenas o 'date_begin'
-    //         $query->whereDate('departure_date', '=', $request->date_begin);
-    //     }
-
-
-    //     return $query->with(['driver', 'vehicle', 'route', 'clients'])->get();
-    // }
-
-
-
+    
     public function index(Request $request)
     {
         $query = Trip::query();
@@ -212,35 +182,6 @@ class TripController extends Controller
             throw $e;
         }
     }
-
-    // public function editTripClient(TripClientRequest $request)
-    // {
-
-    //     DB::beginTransaction();
-    //     try {
-
-    //         $array = ['status' => 'updated'];
-
-    //         // Cria o registro na tabela trip_clients
-    //         $tripClient = TripClient::create($request->all());
-    //         $array['trip_client'] = $tripClient;
-    //         DB::commit();
-
-
-    //         // $trip->clients()->sync($request->client_ids);
-    //         // $trip->clients()->sync($request->client_ids);
-
-    //         $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($request->trip_id);
-
-    //         $array['trip'] = $trip;
-
-
-    //         return response()->json($array, 201);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         throw $e;
-    //     }
-    // }
 
 
     public function editTripClient(TripClientRequest $request, $id)
