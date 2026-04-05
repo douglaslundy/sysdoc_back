@@ -21,6 +21,7 @@ use App\Http\Controllers\TripController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\QRCodeLogController;
+use App\Http\Controllers\StateController;
 
 
 Route::get('/ping', function () {
@@ -108,11 +109,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::delete('/trip-clients/{client_id}', [TripController::class, 'deleteTripClient']);
     Route::put('/trip-clients/{id}', [TripController::class, 'editTripClient']);
 
-    // Rotas para Veículos (Vehicle)
+    // Rota para Veículos (Vehicle)
     Route::apiResource('vehicles', VehicleController::class);
 
-    // Rotas para Rotas (Route)
+    // Rota para Rotas (Route)
     Route::apiResource('routes', RouteController::class);
+
+    // Rota para States
+    Route::get('/states', [StateController::class, 'index']);
 
     Route::get('/qrcode-logs', [QRCodeLogController::class, 'index']);
 });

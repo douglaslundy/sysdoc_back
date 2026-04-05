@@ -9,7 +9,9 @@ class Route extends Model
 {
     protected $fillable = [
         'origin',
+        'origin_state',
         'destination',
+        'destination_state',
         'distance',
         'id_user',
     ];
