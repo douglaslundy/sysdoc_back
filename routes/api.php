@@ -72,6 +72,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Clients
     Route::apiResource('clients', ClientController::class);
+    Route::get('/detailed-client-report', [ClientController::class, 'detailedClientReport']);
 
     // Calls
     Route::get('/calls/called', [CallController::class, 'called_call']);

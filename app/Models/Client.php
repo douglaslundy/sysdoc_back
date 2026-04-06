@@ -9,20 +9,31 @@ class Client extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'mother', 'mother', 'father', 'cns', 'born_date', 'sexo', 'cpf', 'email', 'phone', 'obs', 'active'];
+    protected $fillable = ['name', 'mother',  'father', 'cns', 'born_date', 'sexo', 'cpf', 'email', 'phone', 'obs', 'active'];
+
 
     // public function addresses()
     // {
-    //     return $this->hasOne(Addresses::class, 'id_client', 'id');
+    //     return $this->hasOne(Addresses::class, 'id_client')->join('clients', 'clients.id', '=', 'addresses.id_client');
     // }
 
     public function addresses()
     {
-        return $this->hasOne(Addresses::class, 'id_client')->join('clients', 'clients.id', '=', 'addresses.id_client');
+        return $this->hasOne(Addresses::class, 'id_client', 'id');
     }
 
     public function queue()
     {
         return $this->hasMany(Queue::class, 'id_client');
+    }
+
+    public function trips()
+    {
+        return $this->belongsToMany(
+            Trip::class,
+            'trip_clients',
+            'client_id',
+            'trip_id'
+        );
     }
 }
