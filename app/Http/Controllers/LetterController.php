@@ -118,24 +118,65 @@ class LetterController extends Controller
 
     public function createLetterAi(Request $req)
     {
+        // $prompt = [
+        //     ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, no formato de ofício, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun],
+        //     ['role' => 'user', 'content' => ' em seguida informe o seguinte destinatário  ' . $req->recipient],
+        //     ['role' => 'user', 'content' => ' crie uma linha para "Assunto"  com seguinte assunto: ' . $req->subject],
+        //     ['role' => 'user', 'content' => ' utilize o resumo a seguir para elaborar o texto ' . $req->summary],
+        //     ['role' => 'user', 'content' => ' agora despeça com votos de ' . $req->whishes],
+        //     ['role' => 'user', 'content' => ' Insira o nome  ' . $req->sender . ' em seguida escreva  Local e Data']
+        // ];
+
         $prompt = [
-            ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, no formato de ofício, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun],
-            ['role' => 'user', 'content' => ' em seguida informe o seguinte destinatário  ' . $req->recipient],
-            ['role' => 'user', 'content' => ' crie uma linha para "Assunto"  com seguinte assunto: ' . $req->subject],
-            ['role' => 'user', 'content' => ' utilize o resumo a seguir para elaborar o texto ' . $req->summary],
-            ['role' => 'user', 'content' => ' agora despeça com votos de ' . $req->whishes],
-            ['role' => 'user', 'content' => ' Insira o nome  ' . $req->sender . ' em seguida escreva  Local e Data']
+            [
+                'role' => 'user',
+                'content' => "
+                    Elabore um OFÍCIO FORMAL com linguagem jurídica precisa, objetiva e técnica, evitando termos genéricos ou vagos.
+
+                    Siga rigorosamente a estrutura abaixo:
+
+                    1. Vocativo:
+                    Inicie com o pronome de tratamento: {$req->treatment_pronoun}
+
+                    2. Identificação do destinatário:
+                    {$req->recipient}
+
+                    3. Linha de assunto:
+                    Assunto: {$req->subject}
+
+                    4. Corpo do texto:
+                    - Redija de forma clara, direta e fundamentada.
+                    - Utilize o resumo fornecido como base factual: {$req->summary}
+                    - Estruture o texto com:
+                        a) contextualização objetiva dos fatos
+                        b) fundamentação jurídica (quando aplicável, mencione princípios, normas ou deveres legais de forma específica)
+                        c) pedido ou encaminhamento claro e inequívoco
+                    - Evite expressões genéricas como “conforme legislação vigente” sem especificação.
+                    - Não use linguagem excessivamente rebuscada ou prolixa.
+
+                    5. Fecho:
+                    Finalize com votos de {$req->whishes}
+
+                    6. Assinatura:
+                    {$req->sender}
+
+                    7. Local e data:
+                    Insira ao final no formato: [Cidade], [data completa]
+
+                    Requisitos obrigatórios:
+                    - Texto coeso, assertivo e sem redundâncias
+                    - Parágrafos bem definidos
+                    - Clareza no objetivo do ofício
+                    - Tom institucional e profissional
+                    "
+            ]
         ];
 
         try {
 
             $result = OpenAI::chat()->create([
-                // 'model' => 'gpt-3.5-turbo',
-                // 'model' => 'gpt-4-1106-preview',
-                // 'model' => 'gpt-4-turbo',
-                // 'model' => 'gpt-4o-2024-05-13',
                 'model' => env('MODEL'),
-                'temperature' => 0.5,  // Define a temperatura para 0.7
+                'temperature' => 0.7,  // Define a temperatura para 0.7
                 'messages' => $prompt
             ]);
 
