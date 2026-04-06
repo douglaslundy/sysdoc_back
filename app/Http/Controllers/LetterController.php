@@ -187,8 +187,7 @@ class LetterController extends Controller
                 $model->recipient =  $req->recipient;
                 $model->subject =  $req->subject;
                 $model->summary =  $req->summary;
-                // $model->prompt =  $prompt[0]['content'];
-                $model->prompt =  $prompt[0]['content'] . $prompt[1]['content'] . $prompt[2]['content'] . $prompt[3]['content'] . $prompt[4]['content'] . $prompt[5]['content'];
+                $model->prompt = implode(' ', array_column($prompt, 'content'));
                 $model->model =  $result->choices[0]->message->content;
                 $model->save();
             }
