@@ -22,6 +22,7 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\QRCodeLogController;
 use App\Http\Controllers\StateController;
+use App\Http\Controllers\OrdinanceController;
 
 
 Route::get('/ping', function () {
@@ -119,5 +120,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Rota para States
     Route::get('/states', [StateController::class, 'index']);
 
+    // rota para logs do qrcode
     Route::get('/qrcode-logs', [QRCodeLogController::class, 'index']);
+
+    //rota para portarias 
+    Route::apiResource('ordinances', OrdinanceController::class);
+    Route::post('/ordinances/newOrdinance', [OrdinanceController::class, 'createOrdinanceAi'])->name('newOrdinance');
 });

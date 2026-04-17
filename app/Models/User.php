@@ -36,4 +36,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Queue::class, 'id_user');
     }
+
+    public function ordinances()
+    {
+        return $this->hasMany(Ordinance::class, 'user_id');
+    }
 }
