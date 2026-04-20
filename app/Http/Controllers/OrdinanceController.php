@@ -194,21 +194,22 @@ class OrdinanceController extends Controller
 
             $content = $result->choices[0]->message->content ?? null;
             
-             if ($result->choices[0]->message->content) {
-                $model = new Models();
-                $model->id_user =  $req->id_user;
-                $model->sender =  $req->sender;
-                $model->recipient =  $req->recipient;
-                $model->subject =  $req->subject;
-                $model->summary =  $req->summary;
-                $model->prompt = implode(' ', array_column($prompt, 'content'));
-                $model->model =  $result->choices[0]->message->content;
-                $model->save();
-            }
-
             if (!$content) {
                 throw new Exception('A IA não retornou conteúdo para a portaria.');
             }
+            
+             if ($result->choices[0]->message->content) {
+                $model = new Models();
+                $model->id_user =  $request->user_id;
+                $model->sender =  $request->signatory_name;
+                $model->recipient =  $request->type;
+                $model->subject =  $request->subject;
+                $model->summary =  $request->summary;
+                $model->prompt = implode(' ', array_column($prompt, 'content'));
+                $model->model =  $content;
+                $model->save();
+            }
+
 
             return response()->json([
                 'errors' => '',
