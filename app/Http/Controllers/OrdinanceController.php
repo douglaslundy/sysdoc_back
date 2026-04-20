@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use OpenAI\Laravel\Facades\OpenAI;
+use App\Models\Models;
 
 class OrdinanceController extends Controller
 {
@@ -192,6 +193,18 @@ class OrdinanceController extends Controller
             ]);
 
             $content = $result->choices[0]->message->content ?? null;
+            
+             if ($result->choices[0]->message->content) {
+                $model = new Models();
+                $model->id_user =  $req->id_user;
+                $model->sender =  $req->sender;
+                $model->recipient =  $req->recipient;
+                $model->subject =  $req->subject;
+                $model->summary =  $req->summary;
+                $model->prompt = implode(' ', array_column($prompt, 'content'));
+                $model->model =  $result->choices[0]->message->content;
+                $model->save();
+            }
 
             if (!$content) {
                 throw new Exception('A IA não retornou conteúdo para a portaria.');
