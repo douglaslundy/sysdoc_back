@@ -43,11 +43,24 @@ class ConsultaPublicaController extends Controller
             'data_liberacao'  => $resultado->data_liberacao,
             'data_validade'   => $resultado->data_validade,
             'paciente'        => [
-                'nome'       => $resultado->pedido->cliente->name ?? '—',
-                'born_date'  => $resultado->pedido->cliente->born_date ?? null,
+                'nome'      => $this->maskName($resultado->pedido->cliente->name ?? ''),
+                'born_date' => $resultado->pedido->cliente->born_date ?? null,
             ],
             'medico_solicitante' => $resultado->pedido->medico_solicitante,
             'campos_por_exame'   => $campos,
         ]);
+    }
+
+    // Exibe as 2 primeiras letras de cada palavra e mascara o restante
+    // "Douglas Lundy" → "Do**** Lu***"
+    private function maskName(string $name): string
+    {
+        if (empty($name)) return '—';
+
+        return collect(explode(' ', $name))
+            ->map(fn($word) => strlen($word) <= 2
+                ? $word
+                : substr($word, 0, 2) . str_repeat('*', strlen($word) - 2))
+            ->implode(' ');
     }
 }
