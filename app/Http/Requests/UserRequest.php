@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,7 +29,7 @@ class UserRequest extends FormRequest
             "profile" => ['required', 'string', 'max:50', Rule::in('admin', 'partner', 'user', 'driver', 'tfd', 'manager')],
             'name' => 'required|string|max:50',
             'email' => 'string|required|max:100|unique:users,email,' . request()->id,
-            'cpf' => 'string|required|max:18|unique:users,cpf,' . request()->id,
+            'cpf' => ['string', 'required', 'max:18', 'unique:users,cpf,' . request()->id, new ValidCpf()],
             'email_verified_at' => ['nullable', 'date'],
             'active' => ['Boolean'],
             'inactive_date' => ['nullable', 'date'],

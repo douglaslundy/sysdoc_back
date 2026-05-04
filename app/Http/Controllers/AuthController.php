@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\ValidCpf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -18,7 +19,7 @@ class AuthController extends Controller
         $request->validate([
             'name'             => 'required|string|max:100',
             'email'            => 'required|email|unique:users,email',
-            'cpf'              => 'required|digits:11|unique:users,cpf',
+            'cpf'              => ['required', 'digits:11', 'unique:users,cpf', new ValidCpf()],
             'password'         => 'required|string|min:8',
             'password_confirm' => 'required|same:password',
         ]);
@@ -41,7 +42,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'cpf'      => 'required|digits:11',
+            'cpf'      => ['required', 'digits:11', new ValidCpf()],
             'password' => 'required',
         ]);
 

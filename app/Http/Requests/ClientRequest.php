@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\PhoneValidation;
+use App\Rules\ValidCpf;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ClientRequest extends FormRequest
@@ -27,7 +28,7 @@ class ClientRequest extends FormRequest
     {
         $rules = [
             'name' => ['string', 'required', 'min:5', 'max:100'],
-            'cpf' => ['required', 'string', 'max:18'],
+            'cpf' => ['required', 'string', 'max:18', new ValidCpf()],
             'email' => ['nullable', 'string', 'email', 'max:100'],
             'phone' => [new PhoneValidation],
             'obs' => ['nullable', 'string', 'max:500'],
@@ -46,7 +47,7 @@ class ClientRequest extends FormRequest
                 })->orWhereNull('active');
             });
         } else {
-            $rules['cpf'] = ['required', 'string', 'max:18', Rule::unique('clients', 'cpf')->ignore(request()->id)->where(function ($query) {
+            $rules['cpf'] = ['required', 'string', 'max:18', new ValidCpf(), Rule::unique('clients', 'cpf')->ignore(request()->id)->where(function ($query) {
                 return $query->where(function ($q) {
                     $q->where('active', 1);
                 })->orWhereNull('active');
