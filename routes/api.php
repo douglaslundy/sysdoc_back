@@ -83,6 +83,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('rooms', RoomController::class);
 
     // Clients
+    Route::get('/clients/buscar-cpf-cns', [ClientController::class, 'buscarPorCpfCns']);
     Route::apiResource('clients', ClientController::class);
     Route::get('/detailed-client-report', [ClientController::class, 'detailedClientReport']);
 

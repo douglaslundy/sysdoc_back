@@ -171,6 +171,26 @@ class ClientController extends Controller
     //     ]);
     // }
 
+    public function buscarPorCpfCns(Request $request)
+    {
+        $termo = preg_replace('/\D/', '', trim($request->query('q', '')));
+
+        if (strlen($termo) < 6) {
+            return response()->json(['message' => 'Informe ao menos 6 dígitos do CPF ou CNS.'], 422);
+        }
+
+        $client = Client::where(function ($q) use ($termo) {
+            $q->where('cpf', 'like', "%{$termo}%")
+              ->orWhere('cns', 'like', "%{$termo}%");
+        })->where('active', true)->first();
+
+        if (!$client) {
+            return response()->json(['message' => 'Paciente não encontrado.'], 404);
+        }
+
+        return response()->json($client);
+    }
+
     public function detailedClientReport(Request $request)
     {
         $value = trim($request->query('value', ''));
