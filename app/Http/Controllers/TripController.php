@@ -67,20 +67,12 @@ class TripController extends Controller
      */
     public function store(TripRequest $request)
     {
-        DB::beginTransaction();
-        try {
-
-            $array = ['status' => 'created'];
+        $trip = DB::transaction(function () use ($request) {
             $trip = Trip::create($request->all());
-            $trip->load('driver', 'route', 'vehicle', 'user', 'clients');
-            $array['trip'] = $trip;
-            DB::commit();
+            return $trip->load('driver', 'route', 'vehicle', 'user', 'clients');
+        });
 
-            return response()->json($array, 201);
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return response()->json(['status' => 'created', 'trip' => $trip], 201);
     }
 
     public function show($id)
@@ -97,24 +89,12 @@ class TripController extends Controller
      */
     public function update(TripRequest $request, Trip $trip)
     {
-        DB::beginTransaction();
-        try {
-            $array = ['status' => 'updated'];
-            // $trip->update($request->all());
-
+        DB::transaction(function () use ($request, $trip) {
             $trip->update($request->only(['vehicle_id', 'driver_id', 'route_id', 'departure_date', 'departure_time', 'obs']));
-
             $trip->load('driver', 'route', 'vehicle', 'user', 'clients');
+        });
 
-            $array['trip'] = $trip;
-
-            DB::commit();
-
-            return response()->json($array, 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return response()->json(['status' => 'updated', 'trip' => $trip], 200);
     }
 
     public function destroy($id)
@@ -128,96 +108,41 @@ class TripController extends Controller
 
     public function deleteTripClient($id)
     {
-
-        DB::beginTransaction();
-        try {
-
-            // Encontrar a linha que corresponde ao client_id
+        $tripId = DB::transaction(function () use ($id) {
             $cli = TripClient::findOrFail($id);
-
-            // Excluir o registro encontrado
             $cli->delete();
+            return $cli->trip_id;
+        });
 
-            DB::commit();
+        $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripId);
 
-            $array = ['status' => 'client deleted'];
-
-            $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($cli->trip_id);
-
-            $array['trip'] = $trip;
-
-            return response()->json($array, 201);
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return response()->json(['status' => 'client deleted', 'trip' => $trip], 201);
     }
 
 
     public function insertTripClient(TripClientRequest $request)
     {
+        $tripClient = DB::transaction(fn () => TripClient::create($request->all()));
 
-        DB::beginTransaction();
-        try {
+        $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($request->trip_id);
 
-            $array = ['status' => 'created'];
-
-            // Cria o registro na tabela trip_clients
-            $tripClient = TripClient::create($request->all());
-            $array['trip_client'] = $tripClient;
-            DB::commit();
-
-
-            // $trip->clients()->sync($request->client_ids);
-            // $trip->clients()->sync($request->client_ids);
-
-            $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($request->trip_id);
-
-            $array['trip'] = $trip;
-
-
-            return response()->json($array, 201);
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return response()->json(['status' => 'created', 'trip_client' => $tripClient, 'trip' => $trip], 201);
     }
 
 
     public function editTripClient(TripClientRequest $request, $id)
     {
-        DB::beginTransaction();
-        try {
-            // Busca o registro existente na tabela trip_clients
+        $tripClient = DB::transaction(function () use ($request, $id) {
             $tripClient = TripClient::findOrFail($id);
-
-            // Apenas os campos permitidos serão atualizados
             $tripClient->update($request->only([
-                'person_type',
-                'phone',
-                'departure_location',
-                'destination_location',
-                'time'
+                'person_type', 'phone', 'departure_location', 'destination_location', 'time',
             ]));
+            return $tripClient;
+        });
 
-            DB::commit();
+        $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripClient->trip_id);
 
-            // Busca a viagem com seus relacionamentos atualizados
-            $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])
-                ->findOrFail($tripClient->trip_id);
-
-            return response()->json([
-                'status' => 'updated',
-                'trip_client' => $tripClient,
-                'trip' => $trip
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'error' => 'Failed to update trip client',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json(['status' => 'updated', 'trip_client' => $tripClient, 'trip' => $trip], 200);
     }
 
     /**

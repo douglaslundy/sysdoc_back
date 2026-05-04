@@ -33,31 +33,23 @@ class ClientController extends Controller
 
     public function store(ClientRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $array = ['status' => 'created'];
-
+        $client = DB::transaction(function () use ($request) {
             $client = Client::create($request->all());
 
-            $address = new Addresses();
-            $address->id_client = $client->id;
-            $address->zip_code = $request->input('addresses.zip_code');
-            $address->city = $request->input('addresses.city');
-            $address->street = $request->input('addresses.street');
-            $address->number = $request->input('addresses.number');
-            $address->district = $request->input('addresses.district');
-            $address->complement = $request->input('addresses.complement');
+            Addresses::create([
+                'id_client'  => $client->id,
+                'zip_code'   => $request->input('addresses.zip_code'),
+                'city'       => $request->input('addresses.city'),
+                'street'     => $request->input('addresses.street'),
+                'number'     => $request->input('addresses.number'),
+                'district'   => $request->input('addresses.district'),
+                'complement' => $request->input('addresses.complement'),
+            ]);
 
-            $address->save();
-            $array['client'] = $client;
+            return $client;
+        });
 
-            DB::commit();
-
-            return $array;
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return response()->json(['status' => 'created', 'client' => $client->load('addresses')], 201);
     }
 
 
@@ -87,37 +79,25 @@ class ClientController extends Controller
      */
     public function update(ClientRequest $request, Client $client)
     {
-        DB::beginTransaction();
-        try {
-            $array = ['status' => 'updated'];
+        DB::transaction(function () use ($request, $client) {
             $client->update($request->all());
-            $array['client'] = $client;
 
-            $address = Addresses::where('id_client', $client->id)->first();
+            $address = Addresses::firstOrNew(['id_client' => $client->id]);
+            $address->fill([
+                'id_client'  => $client->id,
+                'zip_code'   => $request->input('addresses.zip_code'),
+                'city'       => $request->input('addresses.city'),
+                'street'     => $request->input('addresses.street'),
+                'number'     => $request->input('addresses.number'),
+                'district'   => $request->input('addresses.district'),
+                'complement' => $request->input('addresses.complement'),
+            ])->save();
+        });
 
-            if (!$address)
-                $address = new Addresses();
-
-            $address->id_client = $client->id;
-            $address->zip_code = $request->input('addresses.zip_code');
-            $address->city = $request->input('addresses.city');
-            $address->street = $request->input('addresses.street');
-            $address->number = $request->input('addresses.number');
-            $address->district = $request->input('addresses.district');
-            $address->complement = $request->input('addresses.complement');
-
-            $address->save();
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Client updated successfully!',
-                'client' => $client
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return response()->json([
+            'message' => 'Client updated successfully!',
+            'client'  => $client->load('addresses'),
+        ]);
     }
 
     /**
