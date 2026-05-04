@@ -7,16 +7,10 @@ use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
-    /**
-     * Exibe uma lista de logs com seus relacionamentos.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function index()
+    public function index(Request $request)
     {
-        return Log::with(['user'])
-            ->orderBy('id', 'desc')
-            ->take(3000)
-            ->get();
+        return Log::with('user')
+            ->orderByDesc('id')
+            ->paginate($request->per_page ?? 50);
     }
 }
