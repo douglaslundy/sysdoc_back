@@ -30,6 +30,7 @@ use App\Http\Controllers\PedidoExameController;
 use App\Http\Controllers\ResultadoExameController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\CategoriaExameController;
+use App\Http\Controllers\MedicoSolicitanteController;
 
 
 Route::get('/ping', function () {
@@ -160,6 +161,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/campos/{campo}/referencias', [CampoReferenciaController::class, 'store']);
         Route::put('/campos/{campo}/referencias/{referencia}', [CampoReferenciaController::class, 'update']);
         Route::delete('/campos/{campo}/referencias/{referencia}', [CampoReferenciaController::class, 'destroy']);
+
+        // Médicos solicitantes
+        Route::get('/medicos', [MedicoSolicitanteController::class, 'index']);
+        Route::post('/medicos', [MedicoSolicitanteController::class, 'store']);
+        Route::put('/medicos/{medico}', [MedicoSolicitanteController::class, 'update']);
+        Route::delete('/medicos/{medico}', [MedicoSolicitanteController::class, 'destroy']);
 
         // Pedidos de exame
         Route::apiResource('pedidos', PedidoExameController::class);

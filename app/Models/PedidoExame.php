@@ -13,7 +13,7 @@ class PedidoExame extends Model
     protected $table = 'pedidos_exame';
 
     protected $fillable = [
-        'client_id', 'criado_por', 'medico_solicitante',
+        'client_id', 'criado_por', 'medico_solicitante_id',
         'data_pedido', 'data_coleta', 'status', 'observacoes',
     ];
 
@@ -40,5 +40,10 @@ class PedidoExame extends Model
     public function criadoPor()
     {
         return $this->hasOne(User::class, 'id', 'criado_por');
+    }
+
+    public function medicoSolicitante()
+    {
+        return $this->hasOne(MedicoSolicitante::class, 'id', 'medico_solicitante_id');
     }
 }

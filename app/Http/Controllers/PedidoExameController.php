@@ -22,7 +22,7 @@ class PedidoExameController extends Controller
 
     public function index(Request $request)
     {
-        $query = PedidoExame::with(['cliente', 'exames', 'resultado'])
+        $query = PedidoExame::with(['cliente', 'exames', 'resultado', 'medicoSolicitante'])
             ->orderBy('data_pedido', 'desc');
 
         if ($request->filled('status')) {
@@ -51,9 +51,9 @@ class PedidoExameController extends Controller
         DB::beginTransaction();
         try {
             $pedido = new PedidoExame;
-            $pedido->client_id          = $request->input('client_id');
-            $pedido->criado_por         = Auth::id();
-            $pedido->medico_solicitante = $request->input('medico_solicitante');
+            $pedido->client_id             = $request->input('client_id');
+            $pedido->criado_por            = Auth::id();
+            $pedido->medico_solicitante_id = $request->input('medico_solicitante_id');
             $pedido->data_pedido        = $request->input('data_pedido');
             $pedido->data_coleta        = $request->input('data_coleta');
             $pedido->status             = 'solicitado';
@@ -75,7 +75,7 @@ class PedidoExameController extends Controller
 
         return response()->json([
             'message' => 'Pedido criado com sucesso!',
-            'pedido'  => $pedido->load(['cliente', 'exames']),
+            'pedido'  => $pedido->load(['cliente', 'exames', 'medicoSolicitante']),
         ], 201);
     }
 

@@ -15,7 +15,7 @@ class StorePedidoExameRequest extends FormRequest
     {
         return [
             'client_id'          => 'required|exists:clients,id',
-            'medico_solicitante' => 'nullable|string|max:100',
+            'medico_solicitante_id' => 'nullable|exists:medicos_solicitantes,id',
             'data_pedido'        => 'required|date',
             'data_coleta'        => 'nullable|date',
             'observacoes'        => 'nullable|string',
