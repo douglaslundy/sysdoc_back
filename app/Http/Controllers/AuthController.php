@@ -3,125 +3,86 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
-
 use App\Models\User;
 
 class AuthController extends Controller
 {
-    public function unauthorized(){
-        return response()->json([
-            'error' => 'Não autorizado'
-        ], 401);
+    public function unauthorized()
+    {
+        return response()->json(['error' => 'Não autorizado'], 401);
     }
 
-    public function register(Request $request){
-        $array = ['error'=> ''];
-
-        $validator = Validator::make($request->all(), [
-        'name'=>'required',
-        'email'=>'required|email|unique:users,email',
-        'cpf'=>'required|digits:11|unique:users,cpf',
-        'password'=>'required',
-        'password_confirm'=>'required|same:password'
-    ]);
-
-    if(!$validator->fails()){
-
-        $cpf = $request->input('cpf');
-        $password = $request->input('password');
-
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-
-        $newUser = new User();
-        $newUser->name = $request->input('name');
-        $newUser->email = $request->input('email');
-        $newUser->cpf = $cpf;
-        $newUser->password = $hash;
-        $newUser->save();
-
-        $token = auth()->attempt([
-            'cpf'=>$cpf,
-            'password'=>$password
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name'             => 'required|string|max:100',
+            'email'            => 'required|email|unique:users,email',
+            'cpf'              => 'required|digits:11|unique:users,cpf',
+            'password'         => 'required|string|min:8',
+            'password_confirm' => 'required|same:password',
         ]);
 
-        if(!$token){
-            $array['error'] = 'ocorreu um erro';
-            return $array;
-        }
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'cpf'      => $request->cpf,
+            'password' => Hash::make($request->password),
+        ]);
 
-        $array['token'] = $token;
+        $token = $user->createToken('token')->plainTextToken;
 
-        $user = auth()->user();
-        $array['user'] = [
-            'id'      => $user->id,
-            'name'    => $user->name,
-            'email'   => $user->email,
-            'profile' => $user->profile,
-        ];
-
-    } else{
-        $array['errors'] = $validator->errors()->first();
-        return $array;
-    }
-
-    return $array;
+        return response()->json([
+            'token' => $token,
+            'user'  => $this->userPayload($user),
+        ], 201);
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'cpf' => 'required|digits:11',
-            'password' => 'required'
+            'cpf'      => 'required|digits:11',
+            'password' => 'required',
         ]);
 
         $user = User::where('cpf', $request->cpf)->where('active', true)->first();
 
-        //valida e checa usuario e password
-
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response([
-                'message' => 'Usuario ou senha Inválidos'
-            ], 401);
+            return response()->json(['message' => 'Usuário ou senha inválidos.'], 401);
         }
+
         $token = $user->createToken('token')->plainTextToken;
 
-        $response = [
+        return response()->json([
             'token' => $token,
-            'user'  => [
-                'id'      => $user->id,
-                'name'    => $user->name,
-                'email'   => $user->email,
-                'profile' => $user->profile,
-            ],
-        ];
-
-        return response($response, 201);
+            'user'  => $this->userPayload($user),
+        ], 201);
     }
 
-    public function validateToken(){
-        $array = ['error' => ''];
-        $array = ['message' => 'Authenticated'];
-
+    public function validateToken()
+    {
         $user = auth()->user();
-        $array['user'] = [
-            'id'      => $user->id,
-            'name'    => $user->name,
-            'email'   => $user->email,
-            'profile' => $user->profile,
-        ];
 
-        return $array;
+        return response()->json([
+            'message' => 'Authenticated',
+            'user'    => $this->userPayload($user),
+        ]);
     }
 
     public function logout()
     {
-
         auth()->user()->tokens()->delete();
 
+        return response()->json(['message' => 'Logout efetuado com sucesso.']);
+    }
+
+    private function userPayload(User $user): array
+    {
         return [
-            'message' => 'Logout efetuado com sucesso '
+            'id'      => $user->id,
+            'name'    => $user->name,
+            'email'   => $user->email,
+            'profile' => $user->profile,
         ];
     }
 }
