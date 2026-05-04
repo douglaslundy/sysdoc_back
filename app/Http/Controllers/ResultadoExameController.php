@@ -8,6 +8,7 @@ use App\Models\ResultadoExame;
 use App\Services\Laboratorio\ResultadoExameService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -22,10 +23,16 @@ class ResultadoExameController extends Controller
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
 
-        $resultado = ResultadoExame::firstOrCreate(
-            ['pedido_exame_id' => $pedidoId],
-            ['ativo' => true]
-        );
+        $resultado = DB::transaction(function () use ($pedidoId) {
+            $existing = ResultadoExame::where('pedido_exame_id', $pedidoId)
+                ->lockForUpdate()
+                ->first();
+
+            return $existing ?? ResultadoExame::create([
+                'pedido_exame_id' => $pedidoId,
+                'ativo'           => true,
+            ]);
+        });
 
         return response()->json([
             'message'   => 'Resultado iniciado!',
