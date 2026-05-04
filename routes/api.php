@@ -36,6 +36,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\AccessProfileController;
 use App\Http\Controllers\SystemPageController;
+use App\Http\Controllers\AuditLogController;
 
 
 Route::get('/ping', function () {
@@ -76,8 +77,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Permissões do usuário logado
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
 
-    // Perfis de acesso e páginas do sistema (somente admin)
+    // Auditoria + perfis de acesso e páginas do sistema (somente admin)
     Route::middleware('admin')->group(function () {
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
         Route::apiResource('access-profiles', AccessProfileController::class);
         Route::get('/system-pages', [SystemPageController::class, 'index']);
         Route::post('/system-pages', [SystemPageController::class, 'store']);
