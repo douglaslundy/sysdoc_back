@@ -31,6 +31,7 @@ use App\Http\Controllers\ResultadoExameController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\CategoriaExameController;
 use App\Http\Controllers\MedicoSolicitanteController;
+use App\Http\Controllers\AgendaColetaController;
 
 
 Route::get('/ping', function () {
@@ -172,6 +173,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         // Pedidos de exame
         Route::apiResource('pedidos', PedidoExameController::class);
         Route::patch('/pedidos/{pedido}/status', [PedidoExameController::class, 'atualizarStatus']);
+
+        // Agenda de coleta
+        Route::get('/agenda', [AgendaColetaController::class, 'index']);
 
         // Resultados
         Route::post('/pedidos/{pedido}/resultado', [ResultadoExameController::class, 'store']);
