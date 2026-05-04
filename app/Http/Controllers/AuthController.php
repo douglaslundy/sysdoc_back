@@ -54,8 +54,12 @@ class AuthController extends Controller
         $array['token'] = $token;
 
         $user = auth()->user();
-        $array['user'] = $user;
-
+        $array['user'] = [
+            'id'      => $user->id,
+            'name'    => $user->name,
+            'email'   => $user->email,
+            'profile' => $user->profile,
+        ];
 
     } else{
         $array['errors'] = $validator->errors()->first();
@@ -84,8 +88,13 @@ class AuthController extends Controller
         $token = $user->createToken('token')->plainTextToken;
 
         $response = [
-            'user' => $user,
-            'token' => $token
+            'token' => $token,
+            'user'  => [
+                'id'      => $user->id,
+                'name'    => $user->name,
+                'email'   => $user->email,
+                'profile' => $user->profile,
+            ],
         ];
 
         return response($response, 201);
@@ -96,7 +105,12 @@ class AuthController extends Controller
         $array = ['message' => 'Authenticated'];
 
         $user = auth()->user();
-        $array['user'] = $user;
+        $array['user'] = [
+            'id'      => $user->id,
+            'name'    => $user->name,
+            'email'   => $user->email,
+            'profile' => $user->profile,
+        ];
 
         return $array;
     }

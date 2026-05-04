@@ -69,6 +69,20 @@ class ResultadoExameService
             throw new Exception('Este resultado já foi liberado.');
         }
 
+        $totalCampos = $resultado->load('pedido.exames.camposAtivos')->pedido->exames
+            ->flatMap(fn($e) => $e->camposAtivos)
+            ->count();
+
+        $camposPreenchidos = $resultado->campos()
+            ->where(function ($q) {
+                $q->whereNotNull('valor_numerico')
+                  ->orWhere(fn($q2) => $q2->whereNotNull('valor_texto')->where('valor_texto', '!=', ''));
+            })->count();
+
+        if ($totalCampos > 0 && $camposPreenchidos === 0) {
+            throw new Exception('Preencha ao menos um campo antes de liberar o resultado.');
+        }
+
         DB::beginTransaction();
         try {
             $protocolo = ResultadoExame::gerarProtocolo();

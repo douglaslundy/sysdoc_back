@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/401', [AuthController::class, 'unauthorized'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::post('/register', [AuthController::class, 'register']);
+Route::middleware('throttle:5,1')->post('/register', [AuthController::class, 'register']);
 
 // Rota pública para consulta da Queue por UUID
 Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']);
@@ -76,14 +76,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Permissões do usuário logado
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
 
-    // Perfis de acesso (somente admin)
-    Route::apiResource('access-profiles', AccessProfileController::class);
-
-    // Páginas do sistema (somente admin)
-    Route::get('/system-pages', [SystemPageController::class, 'index']);
-    Route::post('/system-pages', [SystemPageController::class, 'store']);
-    Route::put('/system-pages/{id}', [SystemPageController::class, 'update']);
-    Route::delete('/system-pages/{id}', [SystemPageController::class, 'destroy']);
+    // Perfis de acesso e páginas do sistema (somente admin)
+    Route::middleware('admin')->group(function () {
+        Route::apiResource('access-profiles', AccessProfileController::class);
+        Route::get('/system-pages', [SystemPageController::class, 'index']);
+        Route::post('/system-pages', [SystemPageController::class, 'store']);
+        Route::put('/system-pages/{id}', [SystemPageController::class, 'update']);
+        Route::delete('/system-pages/{id}', [SystemPageController::class, 'destroy']);
+    });
 
     // sector
     Route::get('/sectors', [SectorController::class, 'getAll']);
