@@ -8,18 +8,15 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
-       DB::table('users')->insert([
-           'name'=>'Douglas',
-           'email'=>'douglaslundy@gmail.com',
-           'cpf'=>'08449222699',
-           'password' => Hash::make('12345'),
-       ]);
+        DB::table('users')->insertOrIgnore([
+            'name'    => 'Douglas',
+            'email'   => 'douglaslundy@gmail.com',
+            'cpf'     => '08449222699',
+            'password' => Hash::make('12345678'),
+            'profile' => 'admin',
+            'active'  => true,
+        ]);
     }
 }
