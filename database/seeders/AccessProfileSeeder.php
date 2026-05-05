@@ -9,10 +9,14 @@ class AccessProfileSeeder extends Seeder
 {
     public function run(): void
     {
+        // Migra paths renomeados em bancos já existentes
+        DB::table('system_pages')
+            ->where('path', '/dashboards')
+            ->update(['titulo' => 'Dashboard', 'path' => '/dashboard', 'updated_at' => now()]);
+
         // Páginas do sistema (baseado em MenuItems.js)
         $pages = [
-            ['titulo' => 'Dashboard',           'path' => '/',                          'icone' => 'home',         'categoria' => 'Geral'],
-            ['titulo' => 'Dashboards',           'path' => '/dashboards',                'icone' => 'pie-chart',    'categoria' => 'Geral'],
+            ['titulo' => 'Dashboard',           'path' => '/dashboard',                 'icone' => 'pie-chart',    'categoria' => 'Geral'],
             ['titulo' => 'Usuários',             'path' => '/users',                     'icone' => 'user',         'categoria' => 'Administração'],
             ['titulo' => 'Clientes',             'path' => '/clients',                   'icone' => 'users',        'categoria' => 'Cadastros'],
             ['titulo' => 'Relatório Clientes',   'path' => '/client_report',             'icone' => 'bar-chart-2',  'categoria' => 'Relatórios'],
@@ -74,12 +78,12 @@ class AccessProfileSeeder extends Seeder
 
         // Permissões por perfil (baseado em MenuItems.js)
         $permissoes = [
-            'admin'   => ['/', '/dashboards', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/logs', '/errorlogs', '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria'],
-            'manager' => ['/', '/dashboards', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance'],
-            'user'    => ['/', '/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
-            'tfd'     => ['/', '/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
-            'driver'  => ['/', '/panel', '/trips'],
-            'partner' => ['/', '/clients'],
+            'admin'   => ['/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/logs', '/errorlogs', '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria'],
+            'manager' => ['/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance'],
+            'user'    => ['/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
+            'tfd'     => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
+            'driver'  => ['/panel', '/trips'],
+            'partner' => ['/clients'],
         ];
 
         foreach ($permissoes as $slug => $paths) {
