@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AccessProfile;
 use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,8 +26,10 @@ class UserRequest extends FormRequest
      */
     public function rules()
     {
+        $validSlugs = AccessProfile::where('ativo', true)->pluck('slug')->toArray();
+
         return [
-            "profile" => ['required', 'string', 'max:50', Rule::in('admin', 'partner', 'user', 'driver', 'tfd', 'manager')],
+            "profile" => ['required', 'string', 'max:50', Rule::in($validSlugs)],
             'name' => 'required|string|max:50',
             'email' => 'string|required|max:100|unique:users,email,' . request()->id,
             'cpf' => ['string', 'required', 'max:18', 'unique:users,cpf,' . request()->id, new ValidCpf()],
@@ -46,7 +49,7 @@ class UserRequest extends FormRequest
             'cpf.required' => 'O campo CPF é obrigatório',
             'email.unique' => 'Ja existe um usuário cadastrado com este E-Mail',
             'email.required' => 'O campo E-mail é obrigatório',
-            'profile.in' => 'Tipo de Perfil selecionado não existe',
+            'profile.in' => 'Tipo de Perfil selecionado não existe ou está inativo',
         ];
     }
 }
