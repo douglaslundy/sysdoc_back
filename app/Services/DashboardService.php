@@ -18,7 +18,7 @@ class DashboardService
         return [
             'exames'     => Exame::where('ativo', true)->count(),
             'pedidos'    => PedidoExame::whereNull('deleted_at')->count(),
-            'clientes'   => Client::whereNull('deleted_at')->count(),
+            'clientes'   => Client::where('active', true)->count(),
             'medicos'    => MedicoSolicitante::where('ativo', true)->count(),
             'categorias' => CategoriaExame::where('ativo', true)->count(),
             'usuarios'   => User::where('active', true)->count(),
@@ -70,7 +70,7 @@ class DashboardService
 
     public function getClientesPorMes(): array
     {
-        return Client::whereNull('deleted_at')
+        return Client::where('active', true)
             ->where('created_at', '>=', now()->subMonths(12))
             ->select(DB::raw('DATE_FORMAT(created_at, "%Y-%m") as mes'), DB::raw('count(*) as total'))
             ->groupBy('mes')
@@ -82,7 +82,7 @@ class DashboardService
     public function getResultadosStatus(): array
     {
         return [
-            'liberados' => ResultadoExame::whereNotNull('data_liberacao')->count(),
+            'liberados' => ResultadoExame::where('ativo', true)->whereNotNull('data_liberacao')->count(),
             'pendentes' => PedidoExame::whereNull('deleted_at')
                 ->whereIn('status', ['solicitado', 'coletado', 'em_analise'])
                 ->count(),
