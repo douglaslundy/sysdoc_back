@@ -6,16 +6,14 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     *
-     * @return void
-     */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
-        $this->call(UserSeeder::class);
-        $this->call(StateSeeder::class);
-        $this->call(AccessProfileSeeder::class);
+        $this->call([
+            UserSeeder::class,          // Usuário admin padrão
+            StateSeeder::class,         // Estados brasileiros
+            AccessProfileSeeder::class, // Perfis de acesso + páginas + permissões
+            CategoriaExameSeeder::class,// Categorias de exames laboratoriais
+            ExamesCompletosSeeder::class, // Catálogo completo de exames
+        ]);
     }
 }
