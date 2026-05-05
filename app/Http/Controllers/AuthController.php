@@ -42,7 +42,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'cpf'      => ['required', 'digits:11', new ValidCpf()],
+            'cpf'      => 'required|string',
             'password' => 'required',
         ]);
 
