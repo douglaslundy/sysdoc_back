@@ -73,6 +73,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Dashboard analítico
     Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio']);
+    Route::get('/dashboard/fila',        [DashboardController::class, 'fila']);
+    Route::get('/dashboard/tfd',         [DashboardController::class, 'tfd']);
+    Route::get('/dashboard/logs',        [DashboardController::class, 'logs']);
 
     // Permissões do usuário logado
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
