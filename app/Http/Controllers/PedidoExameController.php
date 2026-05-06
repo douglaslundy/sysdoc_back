@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePedidoExameRequest;
 use App\Models\PedidoExame;
 use App\Models\PedidoExameItem;
+use App\Models\ResultadoExame;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class PedidoExameController extends Controller
 {
@@ -67,6 +69,16 @@ class PedidoExameController extends Controller
                 ]);
             }
 
+            $protocolo = ResultadoExame::gerarProtocolo();
+            $senha = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            ResultadoExame::create([
+                'pedido_exame_id' => $pedido->id,
+                'protocolo'       => $protocolo,
+                'senha_hash'      => Hash::make($senha),
+                'ativo'           => true,
+            ]);
+
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -74,8 +86,10 @@ class PedidoExameController extends Controller
         }
 
         return response()->json([
-            'message' => 'Pedido criado com sucesso!',
-            'pedido'  => $pedido->load(['cliente', 'exames', 'medicoSolicitante']),
+            'message'   => 'Pedido criado com sucesso!',
+            'pedido'    => $pedido->load(['cliente', 'exames', 'medicoSolicitante']),
+            'protocolo' => $protocolo,
+            'senha'     => $senha,
         ], 201);
     }
 

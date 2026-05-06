@@ -85,11 +85,15 @@ class ResultadoExameService
 
         DB::beginTransaction();
         try {
-            $protocolo = ResultadoExame::gerarProtocolo();
-            $senha = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            if (!$resultado->protocolo) {
+                $protocolo = ResultadoExame::gerarProtocolo();
+                $senha = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $resultado->protocolo  = $protocolo;
+                $resultado->senha_hash = Hash::make($senha);
+            } else {
+                $senha = null;
+            }
 
-            $resultado->protocolo      = $protocolo;
-            $resultado->senha_hash     = Hash::make($senha);
             $resultado->liberado_por   = $userId;
             $resultado->data_liberacao = now();
             $resultado->data_validade  = now()->addYear();
@@ -103,7 +107,7 @@ class ResultadoExameService
 
             $resultado->load(['pedido.cliente', 'campos.campo']);
             Mail::to($resultado->pedido->cliente->email ?? null)
-                ->queue(new ResultadoLiberadoMail($resultado, $senha));
+                ->queue(new ResultadoLiberadoMail($resultado, $senha ?? ''));
 
             DB::commit();
         } catch (Exception $e) {
