@@ -59,7 +59,47 @@ class DashboardController extends Controller
 
     public function tfd()
     {
-        $totais = $this->service->getTfdTotais();
+        try {
+            $totais = $this->service->getTfdTotais();
+        } catch (\Throwable $e) {
+            Log::error('DashboardTfd totais: ' . $e->getMessage());
+            $totais = ['total_viagens_mes' => 0, 'pessoas_transportadas_mes' => 0, 'km_rodados_mes' => 0];
+        }
+
+        try {
+            $viagensPorDia = $this->service->getViagensPorDia();
+        } catch (\Throwable $e) {
+            Log::error('DashboardTfd viagens_por_dia: ' . $e->getMessage());
+            $viagensPorDia = collect();
+        }
+
+        try {
+            $motoristas = $this->service->getViagensPorMotorista();
+        } catch (\Throwable $e) {
+            Log::error('DashboardTfd motoristas: ' . $e->getMessage());
+            $motoristas = collect();
+        }
+
+        try {
+            $rotas = $this->service->getTopRotas();
+        } catch (\Throwable $e) {
+            Log::error('DashboardTfd rotas: ' . $e->getMessage());
+            $rotas = collect();
+        }
+
+        try {
+            $viagensPorMes = $this->service->getViagensPorMes();
+        } catch (\Throwable $e) {
+            Log::error('DashboardTfd viagens_por_mes: ' . $e->getMessage());
+            $viagensPorMes = [];
+        }
+
+        try {
+            $viagensPorAno = $this->service->getViagensPorAno();
+        } catch (\Throwable $e) {
+            Log::error('DashboardTfd viagens_por_ano: ' . $e->getMessage());
+            $viagensPorAno = [];
+        }
 
         return response()->json([
             'totais' => [
@@ -67,11 +107,11 @@ class DashboardController extends Controller
                 'pessoas_transportadas' => $totais['pessoas_transportadas_mes'],
                 'km_rodados'            => $totais['km_rodados_mes'],
             ],
-            'viagens_por_dia' => $this->service->getViagensPorDia(),
-            'motoristas'      => $this->service->getViagensPorMotorista(),
-            'rotas'           => $this->service->getTopRotas(),
-            'viagens_por_mes' => $this->service->getViagensPorMes(),
-            'viagens_por_ano' => $this->service->getViagensPorAno(),
+            'viagens_por_dia' => $viagensPorDia,
+            'motoristas'      => $motoristas,
+            'rotas'           => $rotas,
+            'viagens_por_mes' => $viagensPorMes,
+            'viagens_por_ano' => $viagensPorAno,
         ]);
     }
 

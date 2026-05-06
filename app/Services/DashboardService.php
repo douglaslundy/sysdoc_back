@@ -233,34 +233,39 @@ class DashboardService
 
     public function getViagensPorMes(): array
     {
+        $desde = now()->subMonths(11)->startOfMonth();
+
+        $viagens = DB::table('trips')
+            ->where('departure_date', '>=', $desde)
+            ->select(DB::raw('DATE_FORMAT(departure_date, "%Y-%m") as mes'), DB::raw('count(*) as total'))
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $pessoas = DB::table('trip_clients')
+            ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
+            ->where('trips.departure_date', '>=', $desde)
+            ->select(DB::raw('DATE_FORMAT(trips.departure_date, "%Y-%m") as mes'), DB::raw('count(*) as total'))
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $km = DB::table('trips')
+            ->join('routes', 'trips.route_id', '=', 'routes.id')
+            ->where('trips.departure_date', '>=', $desde)
+            ->select(DB::raw('DATE_FORMAT(trips.departure_date, "%Y-%m") as mes'), DB::raw('sum(routes.distance) as total'))
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
         $resultado = [];
         for ($i = 11; $i >= 0; $i--) {
-            $data = now()->subMonths($i);
-            $ano  = $data->year;
-            $mes  = $data->month;
-
-            $viagens = DB::table('trips')
-                ->whereYear('departure_date', $ano)
-                ->whereMonth('departure_date', $mes)
-                ->count();
-
-            $pessoas = DB::table('trip_clients')
-                ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
-                ->whereYear('trips.departure_date', $ano)
-                ->whereMonth('trips.departure_date', $mes)
-                ->count();
-
-            $km = (int) DB::table('trips')
-                ->join('routes', 'trips.route_id', '=', 'routes.id')
-                ->whereYear('trips.departure_date', $ano)
-                ->whereMonth('trips.departure_date', $mes)
-                ->sum('routes.distance');
-
+            $key = now()->subMonths($i)->format('Y-m');
             $resultado[] = [
-                'mes'     => $data->format('Y-m'),
-                'viagens' => $viagens,
-                'pessoas' => $pessoas,
-                'km'      => $km,
+                'mes'     => $key,
+                'viagens' => (int) ($viagens[$key] ?? 0),
+                'pessoas' => (int) ($pessoas[$key] ?? 0),
+                'km'      => (int) ($km[$key] ?? 0),
             ];
         }
         return $resultado;
@@ -268,30 +273,40 @@ class DashboardService
 
     public function getViagensPorAno(): array
     {
+        $desde = now()->subYears(4)->startOfYear();
+
+        $viagens = DB::table('trips')
+            ->where('departure_date', '>=', $desde)
+            ->select(DB::raw('YEAR(departure_date) as ano'), DB::raw('count(*) as total'))
+            ->groupBy('ano')
+            ->orderBy('ano')
+            ->pluck('total', 'ano');
+
+        $pessoas = DB::table('trip_clients')
+            ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
+            ->where('trips.departure_date', '>=', $desde)
+            ->select(DB::raw('YEAR(trips.departure_date) as ano'), DB::raw('count(*) as total'))
+            ->groupBy('ano')
+            ->orderBy('ano')
+            ->pluck('total', 'ano');
+
+        $km = DB::table('trips')
+            ->join('routes', 'trips.route_id', '=', 'routes.id')
+            ->where('trips.departure_date', '>=', $desde)
+            ->select(DB::raw('YEAR(trips.departure_date) as ano'), DB::raw('sum(routes.distance) as total'))
+            ->groupBy('ano')
+            ->orderBy('ano')
+            ->pluck('total', 'ano');
+
         $resultado = [];
         $anoAtual  = now()->year;
         for ($i = 4; $i >= 0; $i--) {
             $ano = $anoAtual - $i;
-
-            $viagens = DB::table('trips')
-                ->whereYear('departure_date', $ano)
-                ->count();
-
-            $pessoas = DB::table('trip_clients')
-                ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
-                ->whereYear('trips.departure_date', $ano)
-                ->count();
-
-            $km = (int) DB::table('trips')
-                ->join('routes', 'trips.route_id', '=', 'routes.id')
-                ->whereYear('trips.departure_date', $ano)
-                ->sum('routes.distance');
-
             $resultado[] = [
                 'ano'     => (string) $ano,
-                'viagens' => $viagens,
-                'pessoas' => $pessoas,
-                'km'      => $km,
+                'viagens' => (int) ($viagens[$ano] ?? 0),
+                'pessoas' => (int) ($pessoas[$ano] ?? 0),
+                'km'      => (int) ($km[$ano] ?? 0),
             ];
         }
         return $resultado;
