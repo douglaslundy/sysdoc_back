@@ -63,7 +63,7 @@ class ResultadoExameService
         }
     }
 
-    public function liberar(ResultadoExame $resultado, int $userId): ResultadoExame
+    public function liberar(ResultadoExame $resultado, int $userId): array
     {
         if ($resultado->data_liberacao) {
             throw new Exception('Este resultado já foi liberado.');
@@ -111,7 +111,7 @@ class ResultadoExameService
             throw $e;
         }
 
-        return $resultado->fresh();
+        return ['resultado' => $resultado->fresh(), 'senha' => $senha];
     }
 
     public function consultarPublico(string $protocolo, string $senha): ?ResultadoExame

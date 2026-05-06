@@ -87,7 +87,7 @@ class ResultadoExameController extends Controller
         }
 
         try {
-            $resultado = $this->service->liberar($resultado, Auth::id());
+            ['resultado' => $resultado, 'senha' => $senha] = $this->service->liberar($resultado, Auth::id());
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
@@ -95,6 +95,7 @@ class ResultadoExameController extends Controller
         return response()->json([
             'message'    => 'Resultado liberado com sucesso!',
             'protocolo'  => $resultado->protocolo,
+            'senha'      => $senha,
             'resultado'  => $resultado,
         ]);
     }
