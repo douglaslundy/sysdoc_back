@@ -212,7 +212,7 @@ class DashboardService
         return DB::table('trips')
             ->join('routes', 'trips.route_id', '=', 'routes.id')
             ->select(
-                DB::raw('CONCAT(routes.origin, " X ", routes.destination) as nome'),
+                DB::raw('CONCAT(routes.origin, " X ", routes.destination) as rota'),
                 DB::raw('count(*) as total')
             )
             ->groupBy('routes.id', 'routes.origin', 'routes.destination')

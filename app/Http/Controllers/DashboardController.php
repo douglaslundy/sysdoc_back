@@ -27,11 +27,13 @@ class DashboardController extends Controller
         $totais = $this->service->getFilaTotais();
 
         return response()->json([
-            'total_na_fila'          => $totais['total_na_fila'],
-            'fila_7_dias'            => $totais['fila_7_dias'],
-            'total_realizados'       => $totais['total_realizados'],
-            'fila_por_especialidade' => $this->service->getFilaPorEspecialidade(),
-            'fila_por_mes'           => $this->service->getFilaPorMes(),
+            'totais' => [
+                'total_fila'       => $totais['total_na_fila'],
+                'fila_7dias'       => $totais['fila_7_dias'],
+                'total_realizados' => $totais['total_realizados'],
+            ],
+            'especialidades'   => $this->service->getFilaPorEspecialidade(),
+            'entradas_por_mes' => $this->service->getFilaPorMes(),
         ]);
     }
 
@@ -40,12 +42,14 @@ class DashboardController extends Controller
         $totais = $this->service->getTfdTotais();
 
         return response()->json([
-            'total_viagens_mes'         => $totais['total_viagens_mes'],
-            'pessoas_transportadas_mes' => $totais['pessoas_transportadas_mes'],
-            'km_rodados_mes'            => $totais['km_rodados_mes'],
-            'viagens_por_dia'           => $this->service->getViagensPorDia(),
-            'viagens_por_motorista'     => $this->service->getViagensPorMotorista(),
-            'top_rotas'                 => $this->service->getTopRotas(),
+            'totais' => [
+                'total_viagens'         => $totais['total_viagens_mes'],
+                'pessoas_transportadas' => $totais['pessoas_transportadas_mes'],
+                'km_rodados'            => $totais['km_rodados_mes'],
+            ],
+            'viagens_por_dia' => $this->service->getViagensPorDia(),
+            'motoristas'      => $this->service->getViagensPorMotorista(),
+            'rotas'           => $this->service->getTopRotas(),
         ]);
     }
 
@@ -54,12 +58,14 @@ class DashboardController extends Controller
         $totais = $this->service->getLogsTotais();
 
         return response()->json([
-            'total_qr'           => $totais['total_qr'],
-            'total_link_publico' => $totais['total_link_publico'],
-            'qr_mes'             => $totais['qr_mes'],
-            'link_publico_mes'   => $totais['link_publico_mes'],
-            'qr_por_dia'         => $this->service->getQrPorDia(),
-            'link_por_dia'       => $this->service->getLinkPorDia(),
+            'totais' => [
+                'total_qr'   => $totais['total_qr'],
+                'total_link' => $totais['total_link_publico'],
+                'qr_mes'     => $totais['qr_mes'],
+                'link_mes'   => $totais['link_publico_mes'],
+            ],
+            'qr_por_dia'   => $this->service->getQrPorDia(),
+            'link_por_dia' => $this->service->getLinkPorDia(),
         ]);
     }
 }
