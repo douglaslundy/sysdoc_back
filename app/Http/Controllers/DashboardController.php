@@ -50,6 +50,8 @@ class DashboardController extends Controller
             'viagens_por_dia' => $this->service->getViagensPorDia(),
             'motoristas'      => $this->service->getViagensPorMotorista(),
             'rotas'           => $this->service->getTopRotas(),
+            'viagens_por_mes' => $this->service->getViagensPorMes(),
+            'viagens_por_ano' => $this->service->getViagensPorAno(),
         ]);
     }
 

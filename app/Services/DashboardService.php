@@ -221,6 +221,72 @@ class DashboardService
             ->get();
     }
 
+    public function getViagensPorMes(): array
+    {
+        $resultado = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $data = now()->subMonths($i);
+            $ano  = $data->year;
+            $mes  = $data->month;
+
+            $viagens = DB::table('trips')
+                ->whereYear('departure_date', $ano)
+                ->whereMonth('departure_date', $mes)
+                ->count();
+
+            $pessoas = DB::table('trip_clients')
+                ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
+                ->whereYear('trips.departure_date', $ano)
+                ->whereMonth('trips.departure_date', $mes)
+                ->count();
+
+            $km = (int) DB::table('trips')
+                ->join('routes', 'trips.route_id', '=', 'routes.id')
+                ->whereYear('trips.departure_date', $ano)
+                ->whereMonth('trips.departure_date', $mes)
+                ->sum('routes.distance');
+
+            $resultado[] = [
+                'mes'     => $data->format('Y-m'),
+                'viagens' => $viagens,
+                'pessoas' => $pessoas,
+                'km'      => $km,
+            ];
+        }
+        return $resultado;
+    }
+
+    public function getViagensPorAno(): array
+    {
+        $resultado = [];
+        $anoAtual  = now()->year;
+        for ($i = 4; $i >= 0; $i--) {
+            $ano = $anoAtual - $i;
+
+            $viagens = DB::table('trips')
+                ->whereYear('departure_date', $ano)
+                ->count();
+
+            $pessoas = DB::table('trip_clients')
+                ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
+                ->whereYear('trips.departure_date', $ano)
+                ->count();
+
+            $km = (int) DB::table('trips')
+                ->join('routes', 'trips.route_id', '=', 'routes.id')
+                ->whereYear('trips.departure_date', $ano)
+                ->sum('routes.distance');
+
+            $resultado[] = [
+                'ano'     => (string) $ano,
+                'viagens' => $viagens,
+                'pessoas' => $pessoas,
+                'km'      => $km,
+            ];
+        }
+        return $resultado;
+    }
+
     // -------------------------------------------------------------------------
     // Seção: Logs / QR Code
     // Tabelas: qrcode_logs (acessos via QR code), public_queue_logs (link público)
