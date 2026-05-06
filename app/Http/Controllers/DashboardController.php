@@ -81,7 +81,7 @@ class DashboardController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return response()->json($data)->header('Cache-Control', 'private, max-age=300');
     }
 
     public function fila()
@@ -119,7 +119,7 @@ class DashboardController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return response()->json($data)->header('Cache-Control', 'private, max-age=300');
     }
 
     public function tfd()
@@ -181,7 +181,7 @@ class DashboardController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return response()->json($data)->header('Cache-Control', 'private, max-age=300');
     }
 
     public function logs()
@@ -220,6 +220,6 @@ class DashboardController extends Controller
             ];
         });
 
-        return response()->json($data);
+        return response()->json($data)->header('Cache-Control', 'private, max-age=300');
     }
 }
