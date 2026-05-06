@@ -111,32 +111,42 @@ class DashboardService
     public function getFilaTotais(): array
     {
         return [
-            'total_na_fila'     => DB::table('queue')->where('done', false)->count(),
-            'fila_7_dias'       => DB::table('queue')->where('created_at', '>=', now()->subDays(7))->count(),
-            'total_realizados'  => DB::table('queue')->where('done', true)->count(),
+            'total_na_fila'    => DB::table('queue')->where('done', 0)->count(),
+            'fila_7_dias'      => DB::table('queue')->where('created_at', '>=', now()->subDays(7))->count(),
+            'total_realizados' => DB::table('queue')->where('done', 1)->count(),
         ];
     }
 
     public function getFilaPorEspecialidade(): \Illuminate\Support\Collection
     {
         return DB::table('queue')
-            ->join('specialities', 'queue.id_specialities', '=', 'specialities.id')
+            ->leftJoin('specialities', 'queue.id_specialities', '=', 'specialities.id')
+            ->whereNotNull('specialities.id')
             ->select(
+                'specialities.id',
                 'specialities.name as nome',
-                DB::raw('SUM(CASE WHEN queue.urgency = 0 THEN 1 ELSE 0 END) as normal'),
-                DB::raw('SUM(CASE WHEN queue.urgency = 1 THEN 1 ELSE 0 END) as urgente')
+                DB::raw('SUM(CASE WHEN queue.urgency = 0 THEN 1 ELSE 0 END) as qtd_normal'),
+                DB::raw('SUM(CASE WHEN queue.urgency = 1 THEN 1 ELSE 0 END) as qtd_urgente')
             )
             ->groupBy('specialities.id', 'specialities.name')
-            ->orderByDesc(DB::raw('normal + urgente'))
-            ->get();
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->get()
+            ->map(fn($row) => [
+                'nome'    => $row->nome,
+                'normal'  => (int) $row->qtd_normal,
+                'urgente' => (int) $row->qtd_urgente,
+            ]);
     }
 
     public function getFilaPorMes(): array
     {
         return DB::table('queue')
             ->where('created_at', '>=', now()->subMonths(12))
-            ->select(DB::raw('DATE_FORMAT(created_at, "%Y-%m") as mes'), DB::raw('count(*) as total'))
-            ->groupBy('mes')
+            ->select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as mes'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
             ->orderBy('mes')
             ->pluck('total', 'mes')
             ->toArray();

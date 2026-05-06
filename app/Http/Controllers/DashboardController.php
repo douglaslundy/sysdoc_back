@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -24,7 +25,26 @@ class DashboardController extends Controller
 
     public function fila()
     {
-        $totais = $this->service->getFilaTotais();
+        try {
+            $totais = $this->service->getFilaTotais();
+        } catch (\Throwable $e) {
+            Log::error('DashboardFila totais: ' . $e->getMessage());
+            $totais = ['total_na_fila' => 0, 'fila_7_dias' => 0, 'total_realizados' => 0];
+        }
+
+        try {
+            $especialidades = $this->service->getFilaPorEspecialidade();
+        } catch (\Throwable $e) {
+            Log::error('DashboardFila especialidades: ' . $e->getMessage());
+            $especialidades = collect();
+        }
+
+        try {
+            $entradasPorMes = $this->service->getFilaPorMes();
+        } catch (\Throwable $e) {
+            Log::error('DashboardFila por_mes: ' . $e->getMessage());
+            $entradasPorMes = [];
+        }
 
         return response()->json([
             'totais' => [
@@ -32,8 +52,8 @@ class DashboardController extends Controller
                 'fila_7dias'       => $totais['fila_7_dias'],
                 'total_realizados' => $totais['total_realizados'],
             ],
-            'especialidades'   => $this->service->getFilaPorEspecialidade(),
-            'entradas_por_mes' => $this->service->getFilaPorMes(),
+            'especialidades'   => $especialidades,
+            'entradas_por_mes' => $entradasPorMes,
         ]);
     }
 
