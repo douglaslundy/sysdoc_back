@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
+    private const TOP_EXAMES     = 10;
+    private const TOP_CATEGORIAS = 8;
+    private const TOP_MEDICOS    = 5;
+    private const TOP_MOTORISTAS = 10;
+    private const TOP_ROTAS      = 10;
+
     public function getTotais(): array
     {
         return [
@@ -52,7 +58,7 @@ class DashboardService
             ->select('exames.nome', 'exames.codigo', DB::raw('count(*) as total'))
             ->groupBy('exames.id', 'exames.nome', 'exames.codigo')
             ->orderByDesc('total')
-            ->limit(10)
+            ->limit(self::TOP_EXAMES)
             ->get();
     }
 
@@ -64,7 +70,7 @@ class DashboardService
             ->select('categoria_exames.nome', DB::raw('count(*) as total'))
             ->groupBy('categoria_exames.id', 'categoria_exames.nome')
             ->orderByDesc('total')
-            ->limit(8)
+            ->limit(self::TOP_CATEGORIAS)
             ->get();
     }
 
@@ -97,7 +103,7 @@ class DashboardService
             ->select('medicos_solicitantes.nome', DB::raw('count(*) as total'))
             ->groupBy('medicos_solicitantes.id', 'medicos_solicitantes.nome')
             ->orderByDesc('total')
-            ->limit(5)
+            ->limit(self::TOP_MEDICOS)
             ->get();
     }
 
@@ -208,7 +214,7 @@ class DashboardService
             ->select('users.name as nome', DB::raw('count(*) as total'))
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('total')
-            ->limit(10)
+            ->limit(self::TOP_MOTORISTAS)
             ->get();
     }
 
@@ -222,7 +228,7 @@ class DashboardService
             )
             ->groupBy('routes.id', 'routes.origin', 'routes.destination')
             ->orderByDesc('total')
-            ->limit(10)
+            ->limit(self::TOP_ROTAS)
             ->get();
     }
 
