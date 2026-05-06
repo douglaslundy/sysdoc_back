@@ -163,27 +163,24 @@ class DashboardService
 
     public function getTfdTotais(): array
     {
-        $mesAtual   = now()->month;
-        $anoAtual   = now()->year;
+        $inicioDomes = now()->startOfMonth();
+        $fimDomes    = now()->endOfMonth();
 
         $totalViagens = DB::table('trips')
-            ->whereMonth('departure_date', $mesAtual)
-            ->whereYear('departure_date', $anoAtual)
+            ->whereBetween('departure_date', [$inicioDomes, $fimDomes])
             ->count();
 
         // Passageiros = contagem de registros em trip_clients para as trips do mês
         $pessoasTransportadas = DB::table('trip_clients')
             ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
-            ->whereMonth('trips.departure_date', $mesAtual)
-            ->whereYear('trips.departure_date', $anoAtual)
+            ->whereBetween('trips.departure_date', [$inicioDomes, $fimDomes])
             ->count();
 
         // KM rodados = soma da distância das rotas para as trips do mês
         // Não há coluna km direta na trips; usamos routes.distance como distância por viagem
         $kmRodados = DB::table('trips')
             ->join('routes', 'trips.route_id', '=', 'routes.id')
-            ->whereMonth('trips.departure_date', $mesAtual)
-            ->whereYear('trips.departure_date', $anoAtual)
+            ->whereBetween('trips.departure_date', [$inicioDomes, $fimDomes])
             ->sum('routes.distance');
 
         return [
@@ -196,9 +193,7 @@ class DashboardService
     public function getViagensPorDia(): \Illuminate\Support\Collection
     {
         return DB::table('trips')
-            ->whereMonth('departure_date', now()->month)
-            ->whereYear('departure_date', now()->year)
-            ->whereNotNull('departure_date')
+            ->whereBetween('departure_date', [now()->startOfMonth(), now()->endOfMonth()])
             ->select(DB::raw('DAY(departure_date) as dia'), DB::raw('count(*) as total'))
             ->groupBy('dia')
             ->orderBy('dia')
@@ -321,19 +316,17 @@ class DashboardService
 
     public function getLogsTotais(): array
     {
-        $mesAtual = now()->month;
-        $anoAtual = now()->year;
+        $inicioDomes = now()->startOfMonth();
+        $fimDomes    = now()->endOfMonth();
 
         return [
             'total_qr'           => DB::table('qrcode_logs')->count(),
             'total_link_publico' => DB::table('public_queue_logs')->count(),
             'qr_mes'             => DB::table('qrcode_logs')
-                ->whereMonth('accessed_at', $mesAtual)
-                ->whereYear('accessed_at', $anoAtual)
+                ->whereBetween('accessed_at', [$inicioDomes, $fimDomes])
                 ->count(),
             'link_publico_mes'   => DB::table('public_queue_logs')
-                ->whereMonth('accessed_at', $mesAtual)
-                ->whereYear('accessed_at', $anoAtual)
+                ->whereBetween('accessed_at', [$inicioDomes, $fimDomes])
                 ->count(),
         ];
     }
@@ -341,8 +334,7 @@ class DashboardService
     public function getQrPorDia(): \Illuminate\Support\Collection
     {
         return DB::table('qrcode_logs')
-            ->whereMonth('accessed_at', now()->month)
-            ->whereYear('accessed_at', now()->year)
+            ->whereBetween('accessed_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->select(DB::raw('DAY(accessed_at) as dia'), DB::raw('count(*) as total'))
             ->groupBy('dia')
             ->orderBy('dia')
@@ -352,8 +344,7 @@ class DashboardService
     public function getLinkPorDia(): \Illuminate\Support\Collection
     {
         return DB::table('public_queue_logs')
-            ->whereMonth('accessed_at', now()->month)
-            ->whereYear('accessed_at', now()->year)
+            ->whereBetween('accessed_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->select(DB::raw('DAY(accessed_at) as dia'), DB::raw('count(*) as total'))
             ->groupBy('dia')
             ->orderBy('dia')
