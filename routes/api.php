@@ -71,12 +71,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate', [AuthController::class, 'validateToken']);
 
-    // Dashboard analítico — throttle: 20 req/min por usuário
+    // Dashboard analítico — throttle: 20 req/min + controle de acesso por perfil
     Route::middleware('throttle:20,1')->group(function () {
-        Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio']);
-        Route::get('/dashboard/fila',        [DashboardController::class, 'fila']);
-        Route::get('/dashboard/tfd',         [DashboardController::class, 'tfd']);
-        Route::get('/dashboard/logs',        [DashboardController::class, 'logs']);
+        Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
+        Route::get('/dashboard/fila',        [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
+        Route::get('/dashboard/tfd',         [DashboardController::class, 'tfd'])->middleware('can:dashboard-tfd');
+        Route::get('/dashboard/logs',        [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
     });
 
     // Permissões do usuário logado
