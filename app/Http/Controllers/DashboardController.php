@@ -11,15 +11,71 @@ class DashboardController extends Controller
 
     public function laboratorio()
     {
+        try {
+            $totais = $this->service->getTotais();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab totais: ' . $e->getMessage());
+            $totais = ['exames' => 0, 'pedidos' => 0, 'clientes' => 0, 'medicos' => 0, 'categorias' => 0, 'usuarios' => 0];
+        }
+
+        try {
+            $pedidosPorStatus = $this->service->getPedidosPorStatus();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab pedidos_por_status: ' . $e->getMessage());
+            $pedidosPorStatus = [];
+        }
+
+        try {
+            $pedidosPorMes = $this->service->getPedidosPorMes();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab pedidos_por_mes: ' . $e->getMessage());
+            $pedidosPorMes = [];
+        }
+
+        try {
+            $topExames = $this->service->getTopExames();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab top_exames: ' . $e->getMessage());
+            $topExames = collect();
+        }
+
+        try {
+            $pedidosPorCategoria = $this->service->getPedidosPorCategoria();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab pedidos_por_categoria: ' . $e->getMessage());
+            $pedidosPorCategoria = collect();
+        }
+
+        try {
+            $clientesPorMes = $this->service->getClientesPorMes();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab clientes_por_mes: ' . $e->getMessage());
+            $clientesPorMes = [];
+        }
+
+        try {
+            $resultadosStatus = $this->service->getResultadosStatus();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab resultados_status: ' . $e->getMessage());
+            $resultadosStatus = ['liberados' => 0, 'pendentes' => 0];
+        }
+
+        try {
+            $topMedicos = $this->service->getTopMedicos();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLab top_medicos: ' . $e->getMessage());
+            $topMedicos = collect();
+        }
+
         return response()->json([
-            'totais'                => $this->service->getTotais(),
-            'pedidos_por_status'    => $this->service->getPedidosPorStatus(),
-            'pedidos_por_mes'       => $this->service->getPedidosPorMes(),
-            'top_exames'            => $this->service->getTopExames(),
-            'pedidos_por_categoria' => $this->service->getPedidosPorCategoria(),
-            'clientes_por_mes'      => $this->service->getClientesPorMes(),
-            'resultados_status'     => $this->service->getResultadosStatus(),
-            'top_medicos'           => $this->service->getTopMedicos(),
+            'totais'                => $totais,
+            'pedidos_por_status'    => $pedidosPorStatus,
+            'pedidos_por_mes'       => $pedidosPorMes,
+            'top_exames'            => $topExames,
+            'pedidos_por_categoria' => $pedidosPorCategoria,
+            'clientes_por_mes'      => $clientesPorMes,
+            'resultados_status'     => $resultadosStatus,
+            'top_medicos'           => $topMedicos,
         ]);
     }
 
@@ -117,7 +173,26 @@ class DashboardController extends Controller
 
     public function logs()
     {
-        $totais = $this->service->getLogsTotais();
+        try {
+            $totais = $this->service->getLogsTotais();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLogs totais: ' . $e->getMessage());
+            $totais = ['total_qr' => 0, 'total_link_publico' => 0, 'qr_mes' => 0, 'link_publico_mes' => 0];
+        }
+
+        try {
+            $qrPorDia = $this->service->getQrPorDia();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLogs qr_por_dia: ' . $e->getMessage());
+            $qrPorDia = collect();
+        }
+
+        try {
+            $linkPorDia = $this->service->getLinkPorDia();
+        } catch (\Throwable $e) {
+            Log::error('DashboardLogs link_por_dia: ' . $e->getMessage());
+            $linkPorDia = collect();
+        }
 
         return response()->json([
             'totais' => [
@@ -126,8 +201,8 @@ class DashboardController extends Controller
                 'qr_mes'     => $totais['qr_mes'],
                 'link_mes'   => $totais['link_publico_mes'],
             ],
-            'qr_por_dia'   => $this->service->getQrPorDia(),
-            'link_por_dia' => $this->service->getLinkPorDia(),
+            'qr_por_dia'   => $qrPorDia,
+            'link_por_dia' => $linkPorDia,
         ]);
     }
 }
