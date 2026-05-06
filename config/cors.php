@@ -22,6 +22,7 @@ return [
     'allowed_origins' => [
         'http://localhost:3000',
         'https://sysvendas.vercel.app',
+        'https://sysdoc.vercel.app',
     ],
 
     'allowed_origins_patterns' => [],
