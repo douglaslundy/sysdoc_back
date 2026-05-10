@@ -29,7 +29,8 @@ class PedidoExame extends Model
 
     public function exames()
     {
-        return $this->belongsToMany(Exame::class, 'pedido_exame_itens', 'pedido_exame_id', 'exame_id');
+        return $this->belongsToMany(Exame::class, 'pedido_exame_itens', 'pedido_exame_id', 'exame_id')
+            ->distinct();
     }
 
     public function resultado()

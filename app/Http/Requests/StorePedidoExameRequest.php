@@ -20,7 +20,7 @@ class StorePedidoExameRequest extends FormRequest
             'data_coleta'        => 'nullable|date',
             'observacoes'        => 'nullable|string',
             'exames'             => 'required|array|min:1',
-            'exames.*'           => 'required|exists:exames,id',
+            'exames.*'           => 'required|integer|distinct|exists:exames,id',
         ];
     }
 
@@ -33,6 +33,7 @@ class StorePedidoExameRequest extends FormRequest
             'exames.required'    => 'Selecione ao menos um exame.',
             'exames.min'         => 'Selecione ao menos um exame.',
             'exames.*.exists'    => 'Um dos exames selecionados não existe.',
+            'exames.*.distinct'  => 'O mesmo exame não pode ser selecionado mais de uma vez.',
         ];
     }
 }

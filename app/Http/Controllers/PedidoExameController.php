@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePedidoExameRequest;
 use App\Models\PedidoExame;
-use App\Models\PedidoExameItem;
 use App\Models\ResultadoExame;
 use Exception;
 use Illuminate\Http\Request;
@@ -71,12 +70,7 @@ class PedidoExameController extends Controller
             $pedido->observacoes        = $request->input('observacoes');
             $pedido->save();
 
-            foreach ($request->input('exames') as $exameId) {
-                PedidoExameItem::create([
-                    'pedido_exame_id' => $pedido->id,
-                    'exame_id'        => $exameId,
-                ]);
-            }
+            $pedido->exames()->sync($request->input('exames'));
 
             $protocolo = ResultadoExame::gerarProtocolo();
             $senha = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
