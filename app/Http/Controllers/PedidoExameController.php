@@ -47,10 +47,14 @@ class PedidoExameController extends Controller
 
         if ($request->filled('busca')) {
             $busca = $request->busca;
-            $query->whereHas('cliente', function ($q) use ($busca) {
-                $q->where('name', 'LIKE', "%{$busca}%")
-                  ->orWhere('cns', 'LIKE', "%{$busca}%")
-                  ->orWhere('cpf', 'LIKE', "%{$busca}%");
+            $query->where(function ($q) use ($busca) {
+                $q->whereHas('cliente', fn($c) =>
+                    $c->where('name', 'LIKE', "%{$busca}%")
+                      ->orWhere('cns', 'LIKE', "%{$busca}%")
+                      ->orWhere('cpf', 'LIKE', "%{$busca}%")
+                )->orWhereHas('resultado', fn($r) =>
+                    $r->where('protocolo', 'LIKE', "%{$busca}%")
+                );
             });
         }
 
