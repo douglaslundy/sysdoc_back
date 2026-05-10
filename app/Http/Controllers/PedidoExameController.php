@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePedidoExameRequest;
+use App\Http\Requests\UpdatePedidoExameRequest;
 use App\Models\PedidoExame;
+use App\Models\ResultadoCampo;
 use App\Models\ResultadoExame;
+use App\Services\AuditService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -131,6 +134,48 @@ class PedidoExameController extends Controller
         return response()->json([
             'message' => 'Status atualizado com sucesso!',
             'pedido'  => $pedido,
+        ]);
+    }
+
+    public function update(UpdatePedidoExameRequest $request, PedidoExame $pedido)
+    {
+        // Block editing liberado or cancelado pedidos
+        if (in_array($pedido->status, ['liberado', 'cancelado'])) {
+            return response()->json(['error' => 'Pedido com status ' . $pedido->status . ' não pode ser editado.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Update scalar fields (only those present in request)
+            $pedido->fill($request->only(['medico_solicitante_id', 'data_pedido', 'data_coleta', 'observacoes']));
+            $pedido->save();
+
+            // Sync exames (removes detached, adds attached)
+            if ($request->has('exames')) {
+                $sync = $pedido->exames()->sync($request->input('exames'));
+
+                // Cascade: delete resultado_campos for removed exames
+                if (!empty($sync['detached'])) {
+                    $pedido->load('resultado');
+                    if ($pedido->resultado) {
+                        ResultadoCampo::where('resultado_exame_id', $pedido->resultado->id)
+                            ->whereIn('exame_id', $sync['detached'])
+                            ->delete();
+                    }
+                }
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+        AuditService::record('UPDATE', $pedido);
+
+        return response()->json([
+            'message' => 'Pedido atualizado com sucesso!',
+            'pedido'  => $pedido->fresh()->load(['cliente', 'exames', 'medicoSolicitante', 'resultado']),
         ]);
     }
 
