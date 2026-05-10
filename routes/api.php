@@ -59,6 +59,7 @@ Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']
 
 // Consulta pública de resultado de exame (throttle: 10 req/min por IP)
 Route::middleware('throttle:10,1')->post('/consulta-exame', [ConsultaPublicaController::class, 'consultar']);
+Route::middleware('throttle:10,1')->post('/consulta-exame/pdf/{protocolo}', [ConsultaPublicaController::class, 'downloadPdf']);
 
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:3,1')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);

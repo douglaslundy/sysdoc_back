@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ResultadoExame;
 use App\Services\Laboratorio\ResultadoExameService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class ConsultaPublicaController extends Controller
 {
@@ -53,6 +56,21 @@ class ConsultaPublicaController extends Controller
             'medico_solicitante' => $resultado->pedido->medico_solicitante,
             'campos_por_exame'   => $campos,
         ]);
+    }
+
+    public function downloadPdf(Request $request, string $protocolo): mixed
+    {
+        $resultado = ResultadoExame::where('protocolo', strtoupper($protocolo))->first();
+
+        if (!$resultado || !Hash::check($request->input('senha', ''), $resultado->senha_hash)) {
+            return response()->json(['error' => 'Protocolo ou senha inválidos.'], 401);
+        }
+
+        if (!$resultado->pdf_path || !Storage::exists($resultado->pdf_path)) {
+            return response()->json(['error' => 'PDF não disponível. Tente novamente mais tarde.'], 404);
+        }
+
+        return Storage::download($resultado->pdf_path, 'laudo-' . $resultado->protocolo . '.pdf');
     }
 
     // Exibe as 2 primeiras letras de cada palavra e mascara o restante
