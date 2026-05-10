@@ -39,7 +39,6 @@ class AccessProfileSeeder extends Seeder
             ['titulo' => 'Em Atendimento',       'path' => '/attending',                 'icone' => 'activity',     'categoria' => 'Atendimento'],
             ['titulo' => 'Novo Atendimento',     'path' => '/call',                      'icone' => 'plus-circle',  'categoria' => 'Atendimento'],
             ['titulo' => 'Painel',               'path' => '/panel',                     'icone' => 'layout',       'categoria' => 'Administração'],
-            ['titulo' => 'Logs',                 'path' => '/logs',                      'icone' => 'clipboard',    'categoria' => 'Administração'],
             ['titulo' => 'Logs de Erro',         'path' => '/errorlogs',                 'icone' => 'alert-triangle','categoria' => 'Administração'],
             ['titulo' => 'Logs de QRCODE',       'path' => '/qrcodelogs',               'icone' => 'maximize',     'categoria' => 'Administração'],
             ['titulo' => 'Perfis de Acesso',     'path' => '/perfis',                    'icone' => 'shield',       'categoria' => 'Administração'],
@@ -78,7 +77,7 @@ class AccessProfileSeeder extends Seeder
 
         // Permissões por perfil (baseado em MenuItems.js)
         $permissoes = [
-            'admin'   => ['/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/logs', '/errorlogs', '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria'],
+            'admin'   => ['/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/errorlogs', '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria'],
             'manager' => ['/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance'],
             'user'    => ['/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
             'tfd'     => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],

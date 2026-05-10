@@ -14,7 +14,6 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\SpecialityController;
 use App\Http\Controllers\QueueController;
-use App\Http\Controllers\LogController;
 use App\Http\Controllers\ErrorLogController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\TripController;
@@ -147,10 +146,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // QueueCall
     Route::apiResource('queues', QueueController::class);
 
-    // Logs
-    Route::apiResource('logs', logController::class);
-
-    // Logs
+    // Logs de Erro
     Route::apiResource('errorlogs', ErrorLogController::class);
 
     //Trip
