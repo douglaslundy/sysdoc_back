@@ -107,6 +107,42 @@ class DashboardService
             ->get();
     }
 
+    public function getResultadosRealizadosPorMes(): array
+    {
+        $desde = now()->subMonths(11)->startOfMonth();
+
+        $dados = DB::table('pedidos_exame')
+            ->whereNull('deleted_at')
+            ->where('status', 'liberado')
+            ->where('updated_at', '>=', $desde)
+            ->select(DB::raw('DATE_FORMAT(updated_at, "%Y-%m") as mes'), DB::raw('count(*) as total'))
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $resultado = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $key = now()->subMonths($i)->format('Y-m');
+            $resultado[$key] = (int) ($dados[$key] ?? 0);
+        }
+        return $resultado;
+    }
+
+    public function getResultadosRealizadosPorAno(): array
+    {
+        $desde = now()->subYears(4)->startOfYear();
+
+        return DB::table('pedidos_exame')
+            ->whereNull('deleted_at')
+            ->where('status', 'liberado')
+            ->where('updated_at', '>=', $desde)
+            ->select(DB::raw('YEAR(updated_at) as ano'), DB::raw('count(*) as total'))
+            ->groupBy('ano')
+            ->orderBy('ano')
+            ->pluck('total', 'ano')
+            ->toArray();
+    }
+
     // -------------------------------------------------------------------------
     // Seção: Fila / Atendimento
     // Tabela principal: queue
@@ -156,6 +192,47 @@ class DashboardService
             ->orderBy('mes')
             ->pluck('total', 'mes')
             ->toArray();
+    }
+
+    public function getEspecialidadesRealizadas(): \Illuminate\Support\Collection
+    {
+        return DB::table('queue')
+            ->leftJoin('specialities', 'queue.id_specialities', '=', 'specialities.id')
+            ->whereNotNull('specialities.id')
+            ->where('queue.done', 1)
+            ->select(
+                'specialities.name as nome',
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('specialities.id', 'specialities.name')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn($r) => ['nome' => $r->nome, 'total' => (int) $r->total]);
+    }
+
+    public function getEspecialidadesRealizadasPorMes(): array
+    {
+        $desde = now()->subMonths(11)->startOfMonth();
+
+        $dados = DB::table('queue')
+            ->leftJoin('specialities', 'queue.id_specialities', '=', 'specialities.id')
+            ->whereNotNull('specialities.id')
+            ->where('queue.done', 1)
+            ->where('queue.date_of_realized', '>=', $desde)
+            ->select(
+                DB::raw('DATE_FORMAT(queue.date_of_realized, "%Y-%m") as mes'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $resultado = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $key = now()->subMonths($i)->format('Y-m');
+            $resultado[$key] = (int) ($dados[$key] ?? 0);
+        }
+        return $resultado;
     }
 
     // -------------------------------------------------------------------------
@@ -229,6 +306,47 @@ class DashboardService
             ->groupBy('routes.id', 'routes.origin', 'routes.destination')
             ->orderByDesc('total')
             ->limit(self::TOP_ROTAS)
+            ->get();
+    }
+
+    public function getTodosMotoristas(string $periodo = 'mes'): \Illuminate\Support\Collection
+    {
+        $query = DB::table('trips')->join('users', 'trips.driver_id', '=', 'users.id');
+
+        if ($periodo === 'mes') {
+            $query->whereBetween('departure_date', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($periodo === '12meses') {
+            $query->where('departure_date', '>=', now()->subMonths(11)->startOfMonth());
+        } elseif ($periodo === 'ano') {
+            $query->whereYear('departure_date', now()->year);
+        }
+
+        return $query
+            ->select('users.name as nome', DB::raw('count(*) as total'))
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('total')
+            ->get();
+    }
+
+    public function getTodasRotas(string $periodo = 'mes'): \Illuminate\Support\Collection
+    {
+        $query = DB::table('trips')->join('routes', 'trips.route_id', '=', 'routes.id');
+
+        if ($periodo === 'mes') {
+            $query->whereBetween('departure_date', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($periodo === '12meses') {
+            $query->where('departure_date', '>=', now()->subMonths(11)->startOfMonth());
+        } elseif ($periodo === 'ano') {
+            $query->whereYear('departure_date', now()->year);
+        }
+
+        return $query
+            ->select(
+                DB::raw('CONCAT(routes.origin, " X ", routes.destination) as rota'),
+                DB::raw('count(*) as total')
+            )
+            ->groupBy('routes.id', 'routes.origin', 'routes.destination')
+            ->orderByDesc('total')
             ->get();
     }
 

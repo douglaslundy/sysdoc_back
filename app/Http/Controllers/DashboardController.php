@@ -69,6 +69,20 @@ class DashboardController extends Controller
                 $topMedicos = collect();
             }
 
+            try {
+                $realizadosPorMes = $this->service->getResultadosRealizadosPorMes();
+            } catch (\Throwable $e) {
+                Log::error('DashboardLab realizados_por_mes: ' . $e->getMessage());
+                $realizadosPorMes = [];
+            }
+
+            try {
+                $realizadosPorAno = $this->service->getResultadosRealizadosPorAno();
+            } catch (\Throwable $e) {
+                Log::error('DashboardLab realizados_por_ano: ' . $e->getMessage());
+                $realizadosPorAno = [];
+            }
+
             return [
                 'totais'                => $totais,
                 'pedidos_por_status'    => $pedidosPorStatus,
@@ -78,6 +92,8 @@ class DashboardController extends Controller
                 'clientes_por_mes'      => $clientesPorMes,
                 'resultados_status'     => $resultadosStatus,
                 'top_medicos'           => $topMedicos,
+                'realizados_por_mes'    => $realizadosPorMes,
+                'realizados_por_ano'    => $realizadosPorAno,
             ];
         });
 
@@ -108,14 +124,30 @@ class DashboardController extends Controller
                 $entradasPorMes = [];
             }
 
+            try {
+                $especialidadesRealizadas = $this->service->getEspecialidadesRealizadas();
+            } catch (\Throwable $e) {
+                Log::error('DashboardFila especialidades_realizadas: ' . $e->getMessage());
+                $especialidadesRealizadas = collect();
+            }
+
+            try {
+                $realizadasPorMes = $this->service->getEspecialidadesRealizadasPorMes();
+            } catch (\Throwable $e) {
+                Log::error('DashboardFila realizadas_por_mes: ' . $e->getMessage());
+                $realizadasPorMes = [];
+            }
+
             return [
                 'totais' => [
                     'total_fila'       => $totais['total_na_fila'],
                     'fila_7dias'       => $totais['fila_7_dias'],
                     'total_realizados' => $totais['total_realizados'],
                 ],
-                'especialidades'   => $especialidades,
-                'entradas_por_mes' => $entradasPorMes,
+                'especialidades'           => $especialidades,
+                'entradas_por_mes'         => $entradasPorMes,
+                'especialidades_realizadas' => $especialidadesRealizadas,
+                'realizadas_por_mes'        => $realizadasPorMes,
             ];
         });
 
@@ -124,7 +156,12 @@ class DashboardController extends Controller
 
     public function tfd()
     {
-        $data = Cache::remember('dashboard.tfd', 300, function () {
+        $periodo = in_array(request()->input('periodo'), ['mes', '12meses', 'ano'])
+            ? request()->input('periodo')
+            : 'mes';
+
+        $cacheKey = 'dashboard.tfd.' . $periodo;
+        $data = Cache::remember($cacheKey, 300, function () use ($periodo) {
             try {
                 $totais = $this->service->getTfdTotais();
             } catch (\Throwable $e) {
@@ -140,14 +177,14 @@ class DashboardController extends Controller
             }
 
             try {
-                $motoristas = $this->service->getViagensPorMotorista();
+                $motoristas = $this->service->getTodosMotoristas($periodo);
             } catch (\Throwable $e) {
                 Log::error('DashboardTfd motoristas: ' . $e->getMessage());
                 $motoristas = collect();
             }
 
             try {
-                $rotas = $this->service->getTopRotas();
+                $rotas = $this->service->getTodasRotas($periodo);
             } catch (\Throwable $e) {
                 Log::error('DashboardTfd rotas: ' . $e->getMessage());
                 $rotas = collect();
@@ -178,6 +215,7 @@ class DashboardController extends Controller
                 'rotas'           => $rotas,
                 'viagens_por_mes' => $viagensPorMes,
                 'viagens_por_ano' => $viagensPorAno,
+                'periodo'         => $periodo,
             ];
         });
 

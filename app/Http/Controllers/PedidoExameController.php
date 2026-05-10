@@ -43,6 +43,15 @@ class PedidoExameController extends Controller
             $query->whereDate('data_pedido', '<=', $request->data_ate);
         }
 
+        if ($request->filled('busca')) {
+            $busca = $request->busca;
+            $query->whereHas('cliente', function ($q) use ($busca) {
+                $q->where('name', 'LIKE', "%{$busca}%")
+                  ->orWhere('cns', 'LIKE', "%{$busca}%")
+                  ->orWhere('cpf', 'LIKE', "%{$busca}%");
+            });
+        }
+
         $pedidos = $query->paginate($request->input('per_page', 20));
 
         return response()->json($pedidos);
