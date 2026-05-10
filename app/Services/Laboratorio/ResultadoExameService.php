@@ -106,8 +106,11 @@ class ResultadoExameService
             $resultado->pedido()->update(['status' => 'liberado']);
 
             $resultado->load(['pedido.cliente', 'campos.campo']);
-            Mail::to($resultado->pedido->cliente->email ?? null)
-                ->queue(new ResultadoLiberadoMail($resultado, $senha ?? ''));
+            $clienteEmail = $resultado->pedido->cliente?->email;
+            if ($clienteEmail) {
+                Mail::to($clienteEmail)
+                    ->queue(new ResultadoLiberadoMail($resultado, $senha ?? ''));
+            }
 
             DB::commit();
         } catch (Exception $e) {

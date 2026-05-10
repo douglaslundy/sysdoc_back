@@ -36,7 +36,11 @@ class ResultadoExameController extends Controller
 
         return response()->json([
             'message'   => 'Resultado iniciado!',
-            'resultado' => $resultado->load(['campos.campo', 'pedido.cliente']),
+            'resultado' => $resultado->load([
+                'campos.campo',
+                'pedido.cliente',
+                'pedido.exames.camposAtivos.referencias',
+            ]),
         ], 201);
     }
 
