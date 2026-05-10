@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
+        AuditService::record('VIEW');
         $query = AuditLog::orderByDesc('created_at');
 
         if ($request->filled('user_id')) {

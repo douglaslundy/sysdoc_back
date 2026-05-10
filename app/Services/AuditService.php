@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,10 +15,11 @@ class AuditService
         string $action,
         ?Model $model = null,
         ?array $old = null,
-        ?array $new = null
+        ?array $new = null,
+        ?User $actingUser = null
     ): void {
         try {
-            $user = Auth::user();
+            $user = $actingUser ?? Auth::user();
 
             AuditLog::create([
                 'user_id'    => $user?->id,

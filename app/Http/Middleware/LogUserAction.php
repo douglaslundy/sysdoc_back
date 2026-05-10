@@ -15,14 +15,9 @@ class LogUserAction
 
     public function terminate(Request $request, $response): void
     {
-        $path   = $request->path();
-        $status = $response->getStatusCode();
+        $path = $request->path();
 
-        if ($request->isMethod('POST') && $path === 'api/login' && $status < 300) {
-            AuditService::record('LOGIN');
-            return;
-        }
-
+        // LOGIN é auditado diretamente no AuthController (Auth::user() é null aqui)
         if ($request->isMethod('POST') && $path === 'api/logout') {
             AuditService::record('LOGOUT');
         }

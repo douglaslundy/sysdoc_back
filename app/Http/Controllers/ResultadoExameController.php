@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SalvarCamposResultadoRequest;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
+use App\Services\AuditService;
 use App\Services\Laboratorio\ResultadoExameService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,8 @@ class ResultadoExameController extends Controller
         if (!$resultado) {
             return response()->json(['error' => 'Resultado não encontrado'], 404);
         }
+
+        AuditService::record('VIEW', $resultado);
 
         return response()->json($resultado);
     }
@@ -114,6 +117,8 @@ class ResultadoExameController extends Controller
         if (!Storage::exists($resultado->pdf_path)) {
             return response()->json(['error' => 'Arquivo não encontrado'], 404);
         }
+
+        AuditService::record('DOWNLOAD', $resultado);
 
         return Storage::download($resultado->pdf_path, 'laudo-' . $resultado->protocolo . '.pdf');
     }

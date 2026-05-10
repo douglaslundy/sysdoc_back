@@ -28,14 +28,18 @@ class ConsultaPublicaController extends Controller
         }
 
         $campos = $resultado->campos->groupBy('exame_id')->map(function ($itens) {
-            return $itens->map(fn($rc) => [
-                'campo'             => $rc->campo->nome ?? '—',
-                'unidade'           => $rc->campo->unidade ?? null,
-                'valor_numerico'    => $rc->valor_numerico,
-                'valor_texto'       => $rc->valor_texto,
-                'status_referencia' => $rc->status_referencia,
-                'observacao'        => $rc->observacao,
-            ]);
+            $exame = $itens->first()->campo->exame ?? null;
+            return [
+                'nome_exame' => $exame?->nome ?? 'Exame',
+                'campos'     => $itens->map(fn($rc) => [
+                    'campo'             => $rc->campo->nome ?? '—',
+                    'unidade'           => $rc->campo->unidade ?? null,
+                    'valor_numerico'    => $rc->valor_numerico,
+                    'valor_texto'       => $rc->valor_texto,
+                    'status_referencia' => $rc->status_referencia,
+                    'observacao'        => $rc->observacao,
+                ])->values(),
+            ];
         });
 
         return response()->json([

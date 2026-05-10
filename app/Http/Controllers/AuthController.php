@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Rules\ValidCpf;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -53,6 +54,8 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('token')->plainTextToken;
+
+        AuditService::record('LOGIN', null, null, null, $user);
 
         return response()->json([
             'token' => $token,
