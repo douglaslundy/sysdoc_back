@@ -52,7 +52,7 @@
     <div class="info-row">
       <div class="info-cell">
         <div class="info-label">Médico Solicitante</div>
-        <div class="info-value">{{ $resultado->pedido->medico_solicitante ?? '—' }}</div>
+        <div class="info-value">{{ $resultado->pedido->medicoSolicitante?->nome ?? '—' }}</div>
       </div>
       <div class="info-cell">
         <div class="info-label">Data do Pedido</div>

@@ -12,6 +12,7 @@ class LaudoPdfService
     {
         $resultado->load([
             'pedido.cliente',
+            'pedido.medicoSolicitante',
             'campos.campo',
             'liberadoPor',
         ]);

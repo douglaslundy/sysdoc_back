@@ -76,7 +76,7 @@ class ResultadoExameController extends Controller
 
         try {
             $this->service->salvarCampos($resultado, $request->input('campos'));
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
@@ -95,7 +95,7 @@ class ResultadoExameController extends Controller
 
         try {
             ['resultado' => $resultado, 'senha' => $senha] = $this->service->liberar($resultado, Auth::id());
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
 

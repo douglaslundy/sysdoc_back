@@ -57,7 +57,7 @@ class ResultadoExameService
             }
 
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
         }
@@ -114,7 +114,7 @@ class ResultadoExameService
             }
 
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
         }
