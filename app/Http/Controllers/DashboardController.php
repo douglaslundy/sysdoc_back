@@ -160,7 +160,7 @@ class DashboardController extends Controller
             ? request()->input('periodo')
             : 'mes';
 
-        $cacheKey = 'dashboard.tfd.' . $periodo;
+        $cacheKey = 'dashboard.tfd.' . $periodo . '.' . now()->format('Y-m');
         $data = Cache::remember($cacheKey, 300, function () use ($periodo) {
             try {
                 $totais = $this->service->getTfdTotais();

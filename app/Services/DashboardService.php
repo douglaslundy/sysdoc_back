@@ -172,6 +172,7 @@ class DashboardService
             )
             ->groupBy('specialities.id', 'specialities.name')
             ->orderByDesc(DB::raw('COUNT(*)'))
+            ->limit(10)
             ->get()
             ->map(fn($row) => [
                 'nome'    => $row->nome,
@@ -206,6 +207,7 @@ class DashboardService
             )
             ->groupBy('specialities.id', 'specialities.name')
             ->orderByDesc('total')
+            ->limit(10)
             ->get()
             ->map(fn($r) => ['nome' => $r->nome, 'total' => (int) $r->total]);
     }
@@ -347,6 +349,7 @@ class DashboardService
             )
             ->groupBy('routes.id', 'routes.origin', 'routes.destination')
             ->orderByDesc('total')
+            ->limit(10)
             ->get();
     }
 
