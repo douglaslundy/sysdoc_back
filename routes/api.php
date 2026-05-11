@@ -39,6 +39,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\EstabelecimentoController;
 use App\Http\Controllers\AlvaraController;
+use App\Http\Controllers\VigilanciaConfigController;
 
 
 Route::get('/ping', function () {
@@ -179,11 +180,18 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('ordinances', OrdinanceController::class);
     Route::post('/ordinances/newOrdinance', [OrdinanceController::class, 'createOrdinanceAi'])->name('newOrdinance');
 
-    // Alvarás
-    // ATENÇÃO: 'select' deve ser registrado ANTES de apiResource para não conflitar com {id}
+    // Alvarás e Estabelecimentos (Vigilância Sanitária)
+    // ATENÇÃO: rotas estáticas ANTES de apiResource para não conflitar com {id}
     Route::get('/estabelecimentos/select', [EstabelecimentoController::class, 'select']);
     Route::apiResource('estabelecimentos', EstabelecimentoController::class);
+    Route::get('/alvaras/{id}/pdf', [AlvaraController::class, 'downloadPdf']);
     Route::apiResource('alvaras', AlvaraController::class);
+
+    // Configuração da Vigilância Sanitária (somente admin)
+    Route::middleware('admin')->group(function () {
+        Route::get('/vigilancia/config', [VigilanciaConfigController::class, 'show']);
+        Route::put('/vigilancia/config', [VigilanciaConfigController::class, 'update']);
+    });
 
     // Laboratório
     Route::prefix('laboratorio')->group(function () {

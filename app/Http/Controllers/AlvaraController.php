@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateAlvaraRequest;
 use App\Http\Resources\AlvaraResource;
 use App\Models\Alvara;
 use App\Services\AlvaraNumberService;
+use App\Services\AlvaraPdfService;
 use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -126,5 +127,16 @@ class AlvaraController extends Controller
         $alvara->delete();
 
         return response()->json(['message' => 'Alvará excluído com sucesso']);
+    }
+
+    public function downloadPdf(int $id, AlvaraPdfService $service)
+    {
+        $alvara = Alvara::with('estabelecimento')->find($id);
+
+        if (!$alvara) {
+            return response()->json(['error' => 'Alvará não encontrado'], 404);
+        }
+
+        return $service->gerar($alvara);
     }
 }
