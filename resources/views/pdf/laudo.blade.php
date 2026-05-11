@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { margin: 3cm 2.5cm 1cm 2.5cm; }
+  @page { margin: 1.5cm 2.5cm 1cm 2.5cm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; padding-top: 3cm; }
+  body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; padding-top: 1.5cm; }
   .page { width: 100%; }
 
   /* ── CABEÇALHO ── */
