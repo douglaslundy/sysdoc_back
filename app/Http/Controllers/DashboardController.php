@@ -140,6 +140,7 @@ class DashboardController extends Controller
 
             return [
                 'totais' => [
+                    'especialidades'   => $totais['especialidades'],
                     'total_fila'       => $totais['total_na_fila'],
                     'fila_7dias'       => $totais['fila_7_dias'],
                     'total_realizados' => $totais['total_realizados'],

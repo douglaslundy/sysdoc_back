@@ -166,6 +166,7 @@ class DashboardService
             'total_na_fila'    => DB::table('queue')->where('done', 0)->count(),
             'fila_7_dias'      => DB::table('queue')->where('created_at', '>=', now()->subDays(7))->count(),
             'total_realizados' => DB::table('queue')->where('done', 1)->count(),
+            'especialidades'   => Speciality::count(),
         ];
     }
 
