@@ -199,6 +199,11 @@ class PedidoExameController extends Controller
         if ($pedido->status === 'liberado') {
             return response()->json(['error' => 'Pedido liberado não pode ser excluído.'], 422);
         }
+
+        // Remove registros filhos antes do soft delete (cascades de FK não disparam em soft delete)
+        $pedido->itens()->delete();       // pedido_exame_itens
+        $pedido->resultado()->delete();   // resultado_exames + resultado_campos (ON DELETE CASCADE do banco)
+
         $pedido->delete();
         return response()->json(['message' => 'Pedido removido com sucesso!']);
     }
