@@ -16,8 +16,13 @@ class Estabelecimento extends Model
     protected $fillable = [
         'nome_responsavel',
         'nome_estabelecimento',
+        'razao_social',
+        'nome_fantasia',
+        'cnpj',
+        'telefone',
         'endereco',
         'cnaes',
+        'obs',
     ];
 
     public function alvaras(): HasMany

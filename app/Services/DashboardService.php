@@ -2,12 +2,18 @@
 
 namespace App\Services;
 
+use App\Models\Alvara;
 use App\Models\CategoriaExame;
 use App\Models\Client;
+use App\Models\Estabelecimento;
 use App\Models\Exame;
+use App\Models\Letter;
 use App\Models\MedicoSolicitante;
+use App\Models\Models;
+use App\Models\Ordinance;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
+use App\Models\Speciality;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -491,5 +497,123 @@ class DashboardService
             ->groupBy('dia')
             ->orderBy('dia')
             ->get();
+    }
+
+    // -------------------------------------------------------------------------
+    // Seção: Início — contadores gerais do sistema
+    // -------------------------------------------------------------------------
+
+    public function getInicioTotais(): array
+    {
+        return [
+            'clientes'      => Client::where('active', true)->count(),
+            'especialidades' => Speciality::count(),
+            'oficios'       => Letter::count(),
+            'portarias'     => Ordinance::count(),
+            'modelos_ia'    => Models::count(),
+        ];
+    }
+
+    public function getOficiosPorMes(): array
+    {
+        $rows = DB::table('letters')
+            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as mes"), DB::raw('count(*) as total'))
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $resultado = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $chave = now()->subMonths($i)->format('Y-m');
+            $resultado[$chave] = (int) ($rows[$chave] ?? 0);
+        }
+        return $resultado;
+    }
+
+    public function getPortariasPorMes(): array
+    {
+        $rows = DB::table('ordinances')
+            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as mes"), DB::raw('count(*) as total'))
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $resultado = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $chave = now()->subMonths($i)->format('Y-m');
+            $resultado[$chave] = (int) ($rows[$chave] ?? 0);
+        }
+        return $resultado;
+    }
+
+    // -------------------------------------------------------------------------
+    // Seção: Vigilância Sanitária — alvarás e estabelecimentos
+    // -------------------------------------------------------------------------
+
+    public function getVigilanciaTotais(): array
+    {
+        $hoje = now()->toDateString();
+        $em30 = now()->addDays(30)->toDateString();
+
+        return [
+            'estabelecimentos' => Estabelecimento::count(),
+            'alvaras'          => Alvara::count(),
+            'vigentes'         => Alvara::where('status', 'Vigente')->count(),
+            'vencidos'         => Alvara::where('status', 'Vencido')->count(),
+            'a_vencer'         => Alvara::where('status', 'A vencer')->count(),
+            'vencendo_em_30'   => Alvara::whereNotNull('vencimento_alvara')
+                ->whereDate('vencimento_alvara', '>=', $hoje)
+                ->whereDate('vencimento_alvara', '<=', $em30)
+                ->whereNotIn('status', ['Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado'])
+                ->count(),
+        ];
+    }
+
+    public function getAlvarasPorStatus(): array
+    {
+        return Alvara::select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->orderByDesc('total')
+            ->pluck('total', 'status')
+            ->toArray();
+    }
+
+    public function getAlvarasPorNivelRisco(): array
+    {
+        return Alvara::select('nivel_risco', DB::raw('count(*) as total'))
+            ->groupBy('nivel_risco')
+            ->orderBy('nivel_risco')
+            ->pluck('total', 'nivel_risco')
+            ->toArray();
+    }
+
+    public function getAlvarasPorMes(): array
+    {
+        $rows = Alvara::select(DB::raw("DATE_FORMAT(data_alvara, '%Y-%m') as mes"), DB::raw('count(*) as total'))
+            ->where('data_alvara', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $resultado = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $chave = now()->subMonths($i)->format('Y-m');
+            $resultado[$chave] = (int) ($rows[$chave] ?? 0);
+        }
+        return $resultado;
+    }
+
+    public function getProximosVencimentos(): array
+    {
+        return Alvara::with('estabelecimento:id,nome_estabelecimento')
+            ->whereNotNull('vencimento_alvara')
+            ->whereDate('vencimento_alvara', '>=', now()->toDateString())
+            ->whereNotIn('status', ['Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado'])
+            ->orderBy('vencimento_alvara')
+            ->limit(10)
+            ->get(['id', 'numero_alvara', 'status', 'vencimento_alvara', 'estabelecimento_id'])
+            ->toArray();
     }
 }

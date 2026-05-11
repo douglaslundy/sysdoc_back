@@ -268,4 +268,92 @@ class DashboardController extends Controller
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=300');
     }
+
+    public function inicio()
+    {
+        try {
+            $totais = $this->service->getInicioTotais();
+        } catch (\Throwable $e) {
+            Log::error('DashboardInicio totais: ' . $e->getMessage());
+            $totais = ['clientes' => 0, 'especialidades' => 0, 'oficios' => 0, 'portarias' => 0, 'modelos_ia' => 0];
+        }
+
+        try {
+            $clientesPorMes = $this->service->getClientesPorMes();
+        } catch (\Throwable $e) {
+            Log::error('DashboardInicio clientes_por_mes: ' . $e->getMessage());
+            $clientesPorMes = [];
+        }
+
+        try {
+            $oficiosPorMes = $this->service->getOficiosPorMes();
+        } catch (\Throwable $e) {
+            Log::error('DashboardInicio oficios_por_mes: ' . $e->getMessage());
+            $oficiosPorMes = [];
+        }
+
+        try {
+            $portariasPorMes = $this->service->getPortariasPorMes();
+        } catch (\Throwable $e) {
+            Log::error('DashboardInicio portarias_por_mes: ' . $e->getMessage());
+            $portariasPorMes = [];
+        }
+
+        return response()->json([
+            'totais'           => $totais,
+            'clientes_por_mes' => $clientesPorMes,
+            'oficios_por_mes'  => $oficiosPorMes,
+            'portarias_por_mes' => $portariasPorMes,
+        ]);
+    }
+
+    public function vigilancia()
+    {
+        $data = Cache::remember('dashboard.vigilancia', 300, function () {
+            try {
+                $totais = $this->service->getVigilanciaTotais();
+            } catch (\Throwable $e) {
+                Log::error('DashboardVigilancia totais: ' . $e->getMessage());
+                $totais = ['estabelecimentos' => 0, 'alvaras' => 0, 'vigentes' => 0, 'vencidos' => 0, 'a_vencer' => 0, 'vencendo_em_30' => 0];
+            }
+
+            try {
+                $porStatus = $this->service->getAlvarasPorStatus();
+            } catch (\Throwable $e) {
+                Log::error('DashboardVigilancia por_status: ' . $e->getMessage());
+                $porStatus = [];
+            }
+
+            try {
+                $porNivelRisco = $this->service->getAlvarasPorNivelRisco();
+            } catch (\Throwable $e) {
+                Log::error('DashboardVigilancia por_nivel_risco: ' . $e->getMessage());
+                $porNivelRisco = [];
+            }
+
+            try {
+                $porMes = $this->service->getAlvarasPorMes();
+            } catch (\Throwable $e) {
+                Log::error('DashboardVigilancia por_mes: ' . $e->getMessage());
+                $porMes = [];
+            }
+
+            try {
+                $proximosVencimentos = $this->service->getProximosVencimentos();
+            } catch (\Throwable $e) {
+                Log::error('DashboardVigilancia proximos_vencimentos: ' . $e->getMessage());
+                $proximosVencimentos = [];
+            }
+
+            return [
+                'totais'              => $totais,
+                'por_status'          => $porStatus,
+                'por_nivel_risco'     => $porNivelRisco,
+                'por_mes'             => $porMes,
+                'proximos_vencimentos' => $proximosVencimentos,
+            ];
+        });
+
+        return response()->json($data)->header('Cache-Control', 'private, max-age=300');
+    }
 }

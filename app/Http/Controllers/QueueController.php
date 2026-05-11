@@ -58,6 +58,22 @@ class QueueController extends Controller
             'status'        => $queue->done ? 'realizado' : 'aguardando',
         ]);
 
+        if ($queue->done == 1) {
+            $queue->position = 0;
+        } else {
+            $queue->position = Queue::where('id_specialities', $queue->id_specialities)
+                ->where('urgency', $queue->urgency)
+                ->where('done', 0)
+                ->where(function ($query) use ($queue) {
+                    $query->where('created_at', '<', $queue->created_at)
+                        ->orWhere(function ($query) use ($queue) {
+                            $query->where('created_at', '=', $queue->created_at)
+                                ->where('id', '<', $queue->id);
+                        });
+                })
+                ->count() + 1;
+        }
+
         return response()->json($queue);
     }
 

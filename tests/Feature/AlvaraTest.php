@@ -190,4 +190,45 @@ class AlvaraTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['estabelecimento_id']);
     }
+
+    public function test_criacao_com_status_valido(): void
+    {
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload(['status' => 'Vigente']));
+
+        $response->assertStatus(201)
+            ->assertJsonPath('status', 'Vigente');
+    }
+
+    public function test_status_padrao_e_nao_requerido(): void
+    {
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload());
+
+        $response->assertStatus(201)
+            ->assertJsonPath('status', 'Não requerido');
+    }
+
+    public function test_status_invalido_retorna_422(): void
+    {
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload(['status' => 'StatusInvalido']));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['status']);
+    }
+
+    public function test_filtro_por_status(): void
+    {
+        $this->actingAs($this->user, 'sanctum');
+        $this->postJson('/api/alvaras', $this->payload(['status' => 'Vigente', 'data_alvara' => '2026-01-01']));
+        $this->postJson('/api/alvaras', $this->payload(['status' => 'Vencido', 'data_alvara' => '2026-02-01']));
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson('/api/alvaras?status=Vigente');
+
+        $response->assertStatus(200);
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame('Vigente', $response->json('data.0.status'));
+    }
 }

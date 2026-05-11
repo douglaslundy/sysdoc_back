@@ -18,6 +18,7 @@ class AlvaraResource extends JsonResource
             'data_alvara'         => $this->data_alvara?->toDateString(),
             'vencimento_alvara'   => $this->vencimento_alvara?->toDateString(),
             'contato'             => $this->contato,
+            'status'              => $this->status,
             'created_at'          => $this->created_at?->toDateTimeString(),
             'updated_at'          => $this->updated_at?->toDateTimeString(),
         ];

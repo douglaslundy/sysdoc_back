@@ -25,6 +25,7 @@ class AlvaraFactory extends Factory
             'data_alvara'        => $dataAlvara->format('Y-m-d'),
             'vencimento_alvara'  => $this->faker->optional()->dateTimeBetween('now', '+2 years')?->format('Y-m-d'),
             'contato'            => $this->faker->optional()->phoneNumber(),
+            'status'             => $this->faker->randomElement(['Não requerido', 'Protocolado', 'Vigente', 'Vencido']),
         ];
     }
 }

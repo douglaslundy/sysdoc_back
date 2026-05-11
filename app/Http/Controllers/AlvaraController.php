@@ -35,6 +35,10 @@ class AlvaraController extends Controller
             $query->where('nivel_risco', $request->nivel_risco);
         }
 
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
         if ($request->filled('estabelecimento_id')) {
             $query->where('estabelecimento_id', $request->estabelecimento_id);
         }

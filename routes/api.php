@@ -76,10 +76,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Dashboard analítico — throttle: 20 req/min + controle de acesso por perfil
     Route::middleware('throttle:20,1')->group(function () {
+        Route::get('/dashboard/inicio',       [DashboardController::class, 'inicio']);
         Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
         Route::get('/dashboard/fila',        [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
         Route::get('/dashboard/tfd',         [DashboardController::class, 'tfd'])->middleware('can:dashboard-tfd');
         Route::get('/dashboard/logs',        [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
+        Route::get('/dashboard/vigilancia',  [DashboardController::class, 'vigilancia']);
     });
 
     // Permissões do usuário logado

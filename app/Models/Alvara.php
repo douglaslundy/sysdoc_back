@@ -16,10 +16,15 @@ class Alvara extends Model
     protected $fillable = [
         'numero_alvara',
         'nivel_risco',
+        'status',
         'estabelecimento_id',
         'data_alvara',
         'vencimento_alvara',
         'contato',
+    ];
+
+    protected $attributes = [
+        'status' => 'Não requerido',
     ];
 
     protected $casts = [

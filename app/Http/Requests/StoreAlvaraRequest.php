@@ -17,6 +17,11 @@ class StoreAlvaraRequest extends FormRequest
         return [
             'estabelecimento_id'  => ['required', 'integer', 'exists:estabelecimentos,id'],
             'nivel_risco'         => ['required', Rule::in(['1', '2', '3', 'N/A'])],
+            'status'              => ['sometimes', 'nullable', Rule::in([
+                'Não requerido', 'Dispensado', 'Protocolado', 'Em análise', 'Em exigência',
+                'Deferido', 'Indeferido', 'Vigente', 'A vencer', 'Vencido', 'Em renovação',
+                'Suspenso', 'Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado',
+            ])],
             'data_alvara'         => ['required', 'date'],
             'vencimento_alvara'   => ['nullable', 'date', 'after_or_equal:data_alvara'],
             'contato'             => ['nullable', 'string', 'max:1000'],
