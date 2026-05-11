@@ -16,6 +16,9 @@ class AuditLogController extends Controller
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
         }
+        if ($request->filled('user_name')) {
+            $query->where('user_name', $request->user_name);
+        }
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
@@ -32,5 +35,16 @@ class AuditLogController extends Controller
         return response()->json(
             $query->paginate($request->per_page ?? 50)
         );
+    }
+
+    public function users()
+    {
+        $users = AuditLog::select('user_id', 'user_name')
+            ->whereNotNull('user_id')
+            ->distinct()
+            ->orderBy('user_name')
+            ->get();
+
+        return response()->json($users);
     }
 }

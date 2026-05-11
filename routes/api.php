@@ -92,6 +92,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Auditoria + perfis de acesso e páginas do sistema (somente admin)
     Route::middleware('admin')->group(function () {
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
+        Route::get('/audit-logs/users', [AuditLogController::class, 'users']);
         Route::apiResource('access-profiles', AccessProfileController::class);
         Route::get('/system-pages', [SystemPageController::class, 'index']);
         Route::post('/system-pages', [SystemPageController::class, 'store']);
