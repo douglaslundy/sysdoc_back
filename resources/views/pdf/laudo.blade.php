@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { margin: 30px 2.5cm; }
+  @page { margin: 3cm 2.5cm 1cm 2.5cm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; }
+  body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; padding-top: 3cm; }
   .page { width: 100%; }
 
   /* ── CABEÇALHO ── */
@@ -23,14 +23,14 @@
   .header-logo img  { width: 124px; height: 68px; }
   .header-brasao img { width: 68px; height: 68px; }
   .lab-nome     { font-size: 14px; font-weight: bold; color: #1565c0; }
-  .lab-razao    { font-size: 11px; color: #444; margin-top: 2px; }
+  .lab-razao    { font-size: 11px; font-weight: bold; color: #444; margin-top: 2px; }
   .lab-endereco { font-size: 9px;  color: #666; margin-top: 3px; }
   .lab-contato  { font-size: 9px;  color: #666; margin-top: 1px; }
 
   /* ── DADOS DO PACIENTE ── */
   .paciente-box {
     border: 1px solid #b0bec5; border-radius: 4px;
-    padding: 6px 10px; margin-bottom: 10px;
+    padding: 6px 10px; margin: 0 12px 10px;
   }
   .paciente-title {
     font-size: 10px; font-weight: bold; color: #1565c0;
@@ -44,6 +44,7 @@
   .p-value { font-size: 10px; font-weight: bold; }
 
   /* ── RESULTADOS ── */
+  .resultados-wrapper { margin: 0 12px; }
   .section-title {
     font-size: 11px; font-weight: bold; background: #e3f0fc;
     padding: 4px 8px; margin: 12px 0 5px;
@@ -51,12 +52,12 @@
   }
   .exame-nome {
     font-size: 11px; font-weight: bold; color: #1565c0;
-    margin: 10px 0 3px; padding: 2px 0;
+    margin: 10px 0 3px; padding: 2px 0 2px 8px;
     border-bottom: 1px dashed #90caf9;
   }
   table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-  th { background: #1565c0; color: #fff; text-align: left; padding: 4px 7px; font-size: 9px; }
-  td { padding: 4px 7px; border-bottom: 1px solid #eee; font-size: 10px; }
+  th { background: #1565c0; color: #fff; text-align: left; padding: 4px 8px; font-size: 9px; }
+  td { padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 10px; }
   tr:nth-child(even) td { background: #f5f9ff; }
   .badge {
     display: inline-block; padding: 1px 7px; border-radius: 8px;
@@ -75,7 +76,7 @@
 
   /* ── LIBERAÇÃO ── */
   .liberacao {
-    margin-top: 14px; padding: 6px 10px;
+    margin: 14px 4px 0; padding: 6px 10px;
     border: 1px solid #e0e0e0; border-radius: 4px;
     font-size: 9px; color: #666;
   }
@@ -83,8 +84,8 @@
 
   /* ── RODAPÉ ── */
   .footer {
-    margin-top: 16px; border-top: 1px solid #ccc;
-    padding-top: 6px; font-size: 8px; color: #555;
+    margin: 16px 4px 0; border-top: 1px solid #ccc;
+    padding: 6px 0 0 4px; font-size: 8px; color: #555;
   }
   .footer .rodape1 { font-style: italic; font-weight: bold; margin-bottom: 3px; }
   .footer .rodape2 { color: #777; }
@@ -209,45 +210,47 @@
   </div>
 
   {{-- ══ RESULTADOS ══ --}}
-  <div class="section-title">Resultados dos Exames</div>
+  <div class="resultados-wrapper">
+    <div class="section-title">Resultados dos Exames</div>
 
-  @foreach($camposPorExame as $exameId => $campos)
-    @php $exame = $campos->first()->campo->exame ?? null; @endphp
-    <div class="exame-nome">{{ $exame->nome ?? 'Exame #' . $exameId }}</div>
-    <table>
-      <thead>
-        <tr>
-          <th>Campo</th>
-          <th>Valor</th>
-          <th>Unidade</th>
-          <th>Referência</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($campos as $rc)
-          @php
-            $campo = $rc->campo;
-            $valor = $rc->valor_numerico ?? $rc->valor_texto ?? '—';
-            $ref   = '—';
-            if ($campo && $campo->referencias->isNotEmpty()) {
-                $r = $campo->referencias->first();
-                if ($r->valor_min !== null && $r->valor_max !== null) {
-                    $ref = number_format($r->valor_min, 2) . ' – ' . number_format($r->valor_max, 2);
-                } elseif ($r->valor_texto) {
-                    $ref = $r->valor_texto;
-                }
-            }
-          @endphp
+    @foreach($camposPorExame as $exameId => $campos)
+      @php $exame = $campos->first()->campo->exame ?? null; @endphp
+      <div class="exame-nome">{{ $exame->nome ?? 'Exame #' . $exameId }}</div>
+      <table>
+        <thead>
           <tr>
-            <td>{{ $campo->nome ?? '—' }}</td>
-            <td>{{ $valor }}</td>
-            <td>{{ $campo->unidade ?? '—' }}</td>
-            <td>{{ $ref }}</td>
+            <th>Campo</th>
+            <th>Valor</th>
+            <th>Unidade</th>
+            <th>Referência</th>
           </tr>
-        @endforeach
-      </tbody>
-    </table>
-  @endforeach
+        </thead>
+        <tbody>
+          @foreach($campos as $rc)
+            @php
+              $campo = $rc->campo;
+              $valor = $rc->valor_numerico ?? $rc->valor_texto ?? '—';
+              $ref   = '—';
+              if ($campo && $campo->referencias->isNotEmpty()) {
+                  $r = $campo->referencias->first();
+                  if ($r->valor_min !== null && $r->valor_max !== null) {
+                      $ref = number_format($r->valor_min, 2) . ' – ' . number_format($r->valor_max, 2);
+                  } elseif ($r->valor_texto) {
+                      $ref = $r->valor_texto;
+                  }
+              }
+            @endphp
+            <tr>
+              <td>{{ $campo->nome ?? '—' }}</td>
+              <td>{{ $valor }}</td>
+              <td>{{ $campo->unidade ?? '—' }}</td>
+              <td>{{ $ref }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    @endforeach
+  </div>
 
   {{-- ══ ASSINATURA DO RESPONSÁVEL ══ --}}
   <div class="assinatura-block">
