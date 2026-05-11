@@ -99,6 +99,8 @@ class ResultadoExameController extends Controller
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
+        AuditService::record('LIBERAR', $resultado);
+
         return response()->json([
             'message'    => 'Resultado liberado com sucesso!',
             'protocolo'  => $resultado->protocolo,
