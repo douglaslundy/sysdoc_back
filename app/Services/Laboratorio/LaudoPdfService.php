@@ -24,14 +24,14 @@ class LaudoPdfService
         $config = LabConfig::get();
 
         $brasaoPath  = public_path('files/brasao.png');
-        $logoSusPath = public_path('files/logosus.svg');
+        $logoSusPath = public_path('files/logosus.png');
 
         $brasaoB64  = file_exists($brasaoPath)
             ? 'data:image/png;base64,' . base64_encode(file_get_contents($brasaoPath))
             : null;
 
         $logoSusB64 = file_exists($logoSusPath)
-            ? 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($logoSusPath))
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoSusPath))
             : null;
 
         $pdf = Pdf::loadView('pdf.laudo', [

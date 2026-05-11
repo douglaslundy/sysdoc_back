@@ -10,16 +10,17 @@
   /* ── CABEÇALHO ── */
   .header-wrap {
     display: table; width: 100%;
-    border: 1px solid #b0bec5; border-radius: 4px;
+    border: 0;
     margin-bottom: 10px;
   }
   .header-logo, .header-center, .header-brasao {
     display: table-cell; vertical-align: middle; padding: 8px;
   }
-  .header-logo   { width: 80px; text-align: center; }
-  .header-brasao { width: 80px; text-align: center; }
-  .header-center { text-align: center; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
-  .header-logo img, .header-brasao img { max-width: 68px; max-height: 68px; }
+  .header-logo   { width: 162px; text-align: center; padding: 8px 10px 8px 28px; }
+  .header-brasao { width: 110px; text-align: center; padding: 8px 28px 8px 10px; }
+  .header-center { text-align: center; border-left: 0; border-right: 0; }
+  .header-logo img  { width: 124px; height: 68px; }
+  .header-brasao img { width: 68px; height: 68px; }
   .lab-nome     { font-size: 14px; font-weight: bold; color: #1565c0; }
   .lab-razao    { font-size: 11px; color: #444; margin-top: 2px; }
   .lab-endereco { font-size: 9px;  color: #666; margin-top: 3px; }
@@ -66,6 +67,11 @@
   .badge-critico   { background: #f3e5f5; color: #6a1b9a; }
   .badge-indefinido{ background: #f5f5f5; color: #777; }
 
+  /* ── ASSINATURA ── */
+  .assinatura-block { margin-top: 85px; text-align: center; }
+  .assinatura-line  { border-top: 1px solid #555; width: 220px; margin: 0 auto 4px; }
+  .assinatura-label { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+
   /* ── LIBERAÇÃO ── */
   .liberacao {
     margin-top: 14px; padding: 6px 10px;
@@ -91,7 +97,7 @@
     {{-- Logo SUS --}}
     <div class="header-logo">
       @if($logoSusB64)
-        <img src="{{ $logoSusB64 }}" alt="SUS">
+        <img src="{{ $logoSusB64 }}" alt="SUS" style="width:124px;height:68px;">
       @endif
     </div>
 
@@ -127,7 +133,7 @@
     {{-- Brasão --}}
     <div class="header-brasao">
       @if($brasaoB64)
-        <img src="{{ $brasaoB64 }}" alt="Brasão">
+        <img src="{{ $brasaoB64 }}" alt="Brasão" style="width:68px;height:68px;">
       @endif
     </div>
   </div>
@@ -145,9 +151,9 @@
     }
 
     $sexoLabel = match(strtolower($cliente->sexo ?? '')) {
-        'm', 'masculino' => 'Masculino',
-        'f', 'feminino'  => 'Feminino',
-        default          => $cliente->sexo ?? '—',
+        'm', 'masculino', 'masculine' => 'Masculino',
+        'f', 'feminino',  'feminine'  => 'Feminino',
+        default                       => $cliente->sexo ?? '—',
     };
 
     $dataColeta = $pedido->data_coleta
@@ -190,7 +196,7 @@
       </div>
       <div class="paciente-row">
         <div class="paciente-cell">
-          <div class="p-label">Médico Dr(a)</div>
+          <div class="p-label">Médico(a) Solicitante</div>
           <div class="p-value">{{ $medico?->nome ?? '—' }}</div>
         </div>
         <div class="paciente-cell">
@@ -244,15 +250,18 @@
     </table>
   @endforeach
 
+  {{-- ══ ASSINATURA DO RESPONSÁVEL ══ --}}
+  <div class="assinatura-block">
+    <div class="assinatura-line"></div>
+    <div class="assinatura-label">Assinatura do Responsável</div>
+  </div>
+
   {{-- ══ DADOS DE LIBERAÇÃO ══ --}}
   <div class="liberacao">
     <div>
       Liberado em: {{ $resultado->data_liberacao ? \Carbon\Carbon::parse($resultado->data_liberacao)->format('d/m/Y H:i') : '—' }}
       &nbsp;|&nbsp;
       Válido até: {{ $resultado->data_validade ? \Carbon\Carbon::parse($resultado->data_validade)->format('d/m/Y') : '—' }}
-      @if($resultado->liberadoPor)
-        &nbsp;|&nbsp; Responsável: {{ $resultado->liberadoPor->name }}
-      @endif
     </div>
     <div class="protocolo">Protocolo: {{ $resultado->protocolo }}</div>
   </div>

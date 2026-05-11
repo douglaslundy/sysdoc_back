@@ -123,84 +123,72 @@ class LetterController extends Controller
 
     public function createLetterAi(Request $req)
     {
-        // $prompt = [
-        //     ['role' => 'user', 'content' => 'escreva um texto em linguagem formal, no formato de ofício, seguindo rigorosamente a seguinte ordem, primeiro chame pelo pronome de tratamento ' . $req->treatment_pronoun],
-        //     ['role' => 'user', 'content' => ' em seguida informe o seguinte destinatário  ' . $req->recipient],
-        //     ['role' => 'user', 'content' => ' crie uma linha para "Assunto"  com seguinte assunto: ' . $req->subject],
-        //     ['role' => 'user', 'content' => ' utilize o resumo a seguir para elaborar o texto ' . $req->summary],
-        //     ['role' => 'user', 'content' => ' agora despeça com votos de ' . $req->whishes],
-        //     ['role' => 'user', 'content' => ' Insira o nome  ' . $req->sender . ' em seguida escreva  Local e Data']
-        // ];
+        $req->validate([
+            'id_user'        => ['required'],
+            'sender'         => ['required', 'string'],
+            'recipient'      => ['required', 'string'],
+            'subject_matter' => ['required', 'string'],
+            'summary'        => ['nullable', 'string'],
+            'wishes'         => ['nullable', 'string'],
+            'treatment_pronoun' => ['nullable', 'string'],
+        ]);
 
-        $prompt = [
-            [
-                'role' => 'user',
-                'content' => "
-                    Elabore um OFÍCIO FORMAL com linguagem jurídica precisa, objetiva e técnica, evitando termos genéricos ou vagos.
+        $promptText = 'Elabore um OFICIO FORMAL com linguagem juridica precisa, objetiva e tecnica.'
+            . "\n\nSiga rigorosamente a estrutura abaixo:\n"
+            . "\n1. Vocativo:\nInicie com o pronome de tratamento: " . $req->treatment_pronoun
+            . "\n\n2. Identificacao do destinatario:\n" . $req->recipient
+            . "\n\n3. Linha de assunto:\nAssunto: " . $req->subject_matter
+            . "\n\n4. Corpo do texto:"
+            . "\n- Redija de forma clara, direta e fundamentada."
+            . "\n- Utilize o resumo fornecido como base factual: " . $req->summary
+            . "\n- Estruture o texto com:"
+            . "\n  a) contextualizacao objetiva dos fatos"
+            . "\n  b) fundamentacao juridica (quando aplicavel, mencione principios, normas ou deveres legais de forma especifica)"
+            . "\n  c) pedido ou encaminhamento claro e inequivoco"
+            . "\n- Evite expressoes genericas sem especificacao."
+            . "\n- Nao use linguagem excessivamente rebuscada ou prolixa."
+            . "\n\n5. Fecho:\nFinalize com votos de " . $req->wishes
+            . "\n\n6. Assinatura:\n" . $req->sender
+            . "\n\n7. Local e data:\nInsira ao final no formato: [Cidade], [data completa]"
+            . "\n\nRequisitos obrigatorios:"
+            . "\n- Texto coeso, assertivo e sem redundancias"
+            . "\n- Paragrafos bem definidos"
+            . "\n- Clareza no objetivo do oficio"
+            . "\n- Tom institucional e profissional";
 
-                    Siga rigorosamente a estrutura abaixo:
-
-                    1. Vocativo:
-                    Inicie com o pronome de tratamento: {$req->treatment_pronoun}
-
-                    2. Identificação do destinatário:
-                    {$req->recipient}
-
-                    3. Linha de assunto:
-                    Assunto: {$req->subject}
-
-                    4. Corpo do texto:
-                    - Redija de forma clara, direta e fundamentada.
-                    - Utilize o resumo fornecido como base factual: {$req->summary}
-                    - Estruture o texto com:
-                        a) contextualização objetiva dos fatos
-                        b) fundamentação jurídica (quando aplicável, mencione princípios, normas ou deveres legais de forma específica)
-                        c) pedido ou encaminhamento claro e inequívoco
-                    - Evite expressões genéricas como “conforme legislação vigente” sem especificação.
-                    - Não use linguagem excessivamente rebuscada ou prolixa.
-
-                    5. Fecho:
-                    Finalize com votos de {$req->whishes}
-
-                    6. Assinatura:
-                    {$req->sender}
-
-                    7. Local e data:
-                    Insira ao final no formato: [Cidade], [data completa]
-
-                    Requisitos obrigatórios:
-                    - Texto coeso, assertivo e sem redundâncias
-                    - Parágrafos bem definidos
-                    - Clareza no objetivo do ofício
-                    - Tom institucional e profissional
-                    "
-            ]
-        ];
+        $prompt = [['role' => 'user', 'content' => $promptText]];
 
         try {
-
             $result = OpenAI::chat()->create([
-                'model' => env('MODEL'),
-                'temperature' => 0.7,  // Define a temperatura para 0.7
-                'messages' => $prompt
+                'model'       => env('MODEL'),
+                'temperature' => 0.7,
+                'messages'    => $prompt,
             ]);
 
-            if ($result->choices[0]->message->content) {
-                $model = new Models();
-                $model->id_user =  $req->id_user;
-                $model->sender =  $req->sender;
-                $model->recipient =  $req->recipient;
-                $model->subject =  $req->subject;
-                $model->summary =  $req->summary;
-                $model->prompt = implode(' ', array_column($prompt, 'content'));
-                $model->model =  $result->choices[0]->message->content;
-                $model->save();
+            $content = $result->choices[0]->message->content ?? null;
+
+            if (!$content) {
+                throw new Exception('A IA nao retornou conteudo para o oficio.');
             }
 
-            return $result->choices[0]->message->content;
+            $model = new Models();
+            $model->id_user   = $req->id_user;
+            $model->sender    = $req->sender;
+            $model->recipient = $req->recipient;
+            $model->subject   = $req->subject_matter;
+            $model->summary   = $req->summary;
+            $model->prompt    = $promptText;
+            $model->model     = $content;
+            $model->save();
+
+            return response()->json([
+                'errors'  => '',
+                'content' => $content,
+            ]);
         } catch (Exception $e) {
-            // throw new Exception("erro ao conectar com a Inteligência Artificial,  tente novamente");
-            throw new Exception("erro ao conectar com a Inteligência Artificial,  tente novamente" . $e->getMessage());
+            return response()->json([
+                'errors' => 'Erro ao conectar com a Inteligencia Artificial, tente novamente. ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

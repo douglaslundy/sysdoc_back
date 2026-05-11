@@ -6,6 +6,7 @@ use App\Http\Requests\SalvarCamposResultadoRequest;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
 use App\Services\AuditService;
+use App\Services\Laboratorio\LaudoPdfService;
 use App\Services\Laboratorio\ResultadoExameService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -112,12 +113,18 @@ class ResultadoExameController extends Controller
     public function downloadPdf($id): StreamedResponse|array
     {
         $resultado = ResultadoExame::find($id);
-        if (!$resultado || !$resultado->pdf_path) {
+        if (!$resultado) {
             return response()->json(['error' => 'PDF não disponível'], 404);
         }
 
-        if (!Storage::exists($resultado->pdf_path)) {
-            return response()->json(['error' => 'Arquivo não encontrado'], 404);
+        if (!$resultado->pdf_path || !Storage::exists($resultado->pdf_path)) {
+            try {
+                $pdfPath = app(LaudoPdfService::class)->gerar($resultado);
+                $resultado->pdf_path = $pdfPath;
+                $resultado->save();
+            } catch (\Throwable $e) {
+                return response()->json(['error' => 'Erro ao gerar PDF: ' . $e->getMessage()], 500);
+            }
         }
 
         AuditService::record('DOWNLOAD', $resultado);

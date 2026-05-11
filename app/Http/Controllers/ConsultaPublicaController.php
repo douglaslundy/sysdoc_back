@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ResultadoExame;
+use App\Services\Laboratorio\LaudoPdfService;
 use App\Services\Laboratorio\ResultadoExameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -67,7 +68,13 @@ class ConsultaPublicaController extends Controller
         }
 
         if (!$resultado->pdf_path || !Storage::exists($resultado->pdf_path)) {
-            return response()->json(['error' => 'PDF não disponível. Tente novamente mais tarde.'], 404);
+            try {
+                $pdfPath = app(LaudoPdfService::class)->gerar($resultado);
+                $resultado->pdf_path = $pdfPath;
+                $resultado->save();
+            } catch (\Throwable $e) {
+                return response()->json(['error' => 'Erro ao gerar PDF: ' . $e->getMessage()], 500);
+            }
         }
 
         return Storage::download($resultado->pdf_path, 'laudo-' . $resultado->protocolo . '.pdf');
