@@ -134,21 +134,6 @@ class QueueController extends Controller
         return response()->json($queue, 201);
     }
 
-    /**
-     * Mostrar um registro específico da tabela queue.
-     */
-    public function show($id)
-    {
-        $queue = Queue::find($id);
-
-        if (!$queue) {
-            return response()->json(['message' => 'Registro não encontrado'], 404);
-        }
-
-        return response()->json($queue, 200);
-    }
-
-
     public function update(Request $request, $id)
     {
         $queue = Queue::find($id);
