@@ -278,7 +278,18 @@ class DashboardService
     public function getViagensPorDia(): \Illuminate\Support\Collection
     {
         return DB::table('trips')
-            ->whereBetween('departure_date', [now()->startOfMonth(), now()->endOfMonth()])
+            ->whereBetween('departure_date', [now()->startOfMonth()->toDateString(), now()->toDateString()])
+            ->select(DB::raw('DAY(departure_date) as dia'), DB::raw('count(*) as total'))
+            ->groupBy('dia')
+            ->orderBy('dia')
+            ->get();
+    }
+
+    public function getViagensPorDiaAgendadas(): \Illuminate\Support\Collection
+    {
+        return DB::table('trips')
+            ->where('departure_date', '>', now()->toDateString())
+            ->where('departure_date', '<=', now()->endOfMonth()->toDateString())
             ->select(DB::raw('DAY(departure_date) as dia'), DB::raw('count(*) as total'))
             ->groupBy('dia')
             ->orderBy('dia')

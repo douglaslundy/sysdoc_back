@@ -177,6 +177,13 @@ class DashboardController extends Controller
             }
 
             try {
+                $viagensPorDiaAgendadas = $this->service->getViagensPorDiaAgendadas();
+            } catch (\Throwable $e) {
+                Log::error('DashboardTfd viagens_por_dia_agendadas: ' . $e->getMessage());
+                $viagensPorDiaAgendadas = collect();
+            }
+
+            try {
                 $motoristas = $this->service->getTodosMotoristas($periodo);
             } catch (\Throwable $e) {
                 Log::error('DashboardTfd motoristas: ' . $e->getMessage());
@@ -210,7 +217,8 @@ class DashboardController extends Controller
                     'pessoas_transportadas' => $totais['pessoas_transportadas_mes'],
                     'km_rodados'            => $totais['km_rodados_mes'],
                 ],
-                'viagens_por_dia' => $viagensPorDia,
+                'viagens_por_dia'           => $viagensPorDia,
+                'viagens_por_dia_agendadas' => $viagensPorDiaAgendadas,
                 'motoristas'      => $motoristas,
                 'rotas'           => $rotas,
                 'viagens_por_mes' => $viagensPorMes,
