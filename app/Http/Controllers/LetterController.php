@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 
 use App\Models\Letter;
 use App\Models\Models;
+use App\Services\AuditService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use OpenAI\Laravel\Facades\OpenAI;
@@ -53,6 +54,7 @@ class LetterController extends Controller
             $letter->summary = $request->input('summary');
             $letter->fileurl = $request->input('fileurl');
             $letter->save();
+            AuditService::record('CREATE', $letter, null, $letter->toArray());
             $array['letter'] = $letter;
         } else {
             $array['errors'] = $validator->errors()->first();
@@ -79,6 +81,7 @@ class LetterController extends Controller
             //$file = $request->file('photo')->store('public');
 
             $letter = Letter::find($request->input('id'));
+            $old = $letter->toArray();
             $letter->subject_matter = $request->input('subject_matter');
             $letter->sender = $request->input('sender');
             $letter->recipient = $request->input('recipient');
@@ -86,6 +89,7 @@ class LetterController extends Controller
             $letter->summary = $request->input('summary');
             $letter->fileurl = $request->input('fileurl') ? $request->input('fileurl') : $letter->fileurl;
             $letter->save();
+            AuditService::record('UPDATE', $letter, $old, $letter->toArray());
         } else {
             $array['errors'] = $validator->errors()->first();
             return $array;
@@ -110,6 +114,7 @@ class LetterController extends Controller
             if ($letter->id !== $lastLetter->id)
                 throw new Exception('é permitido excluir Somente o ultimo Ofício');
 
+            AuditService::record('DELETE', $letter, $letter->toArray(), null);
             $letter->delete();
             return $array;
         }

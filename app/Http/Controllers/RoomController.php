@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRoomRequest;
 use App\Models\Call;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use App\Models\Room;
 use Carbon\Carbon;
@@ -61,6 +62,7 @@ class RoomController extends Controller
         $room->status = $request->input('status', 'OPEN');
         $room->call_service_id = $request->input('call_service_id');
         $room->save();
+        AuditService::record('CREATE', $room, null, $room->toArray());
 
         return response()->json([
             'message' => 'Room created successfully!',
@@ -100,11 +102,13 @@ class RoomController extends Controller
                 'error' => 'Room not found'
             ], 404);
         }
+        $old = $room->toArray();
         $room->name = $request->input('name');
         $room->description = $request->input('description');
         $room->status = $request->input('status');
         $room->call_service_id = $request->input('call_service_id');
         $room->save();
+        AuditService::record('UPDATE', $room, $old, $room->toArray());
 
         return response()->json([
             'message' => 'Room updated successfully!',
@@ -126,6 +130,7 @@ class RoomController extends Controller
                 'error' => 'Room not found'
             ], 404);
         }
+        AuditService::record('DELETE', $room, $room->toArray(), null);
         $room->delete();
 
         return response()->json([

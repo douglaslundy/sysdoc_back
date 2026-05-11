@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreExameCampoRequest;
 use App\Models\Exame;
 use App\Models\ExameCampo;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class ExameCampoController extends Controller
@@ -42,6 +43,7 @@ class ExameCampoController extends Controller
         $campo->obrigatorio    = $request->input('obrigatorio', true);
         $campo->ativo          = $request->input('ativo', true);
         $campo->save();
+        AuditService::record('CREATE', $campo, null, $campo->toArray());
 
         return response()->json([
             'message' => 'Campo criado com sucesso!',
@@ -56,6 +58,7 @@ class ExameCampoController extends Controller
             return response()->json(['error' => 'Campo não encontrado'], 404);
         }
 
+        $old = $campo->toArray();
         $campo->nome           = $request->input('nome');
         $campo->descricao      = $request->input('descricao');
         $campo->tipo_valor     = $request->input('tipo_valor', $campo->tipo_valor);
@@ -64,6 +67,7 @@ class ExameCampoController extends Controller
         $campo->obrigatorio    = $request->input('obrigatorio', $campo->obrigatorio);
         $campo->ativo          = $request->input('ativo', $campo->ativo);
         $campo->save();
+        AuditService::record('UPDATE', $campo, $old, $campo->toArray());
 
         return response()->json([
             'message' => 'Campo atualizado com sucesso!',
@@ -77,6 +81,7 @@ class ExameCampoController extends Controller
         if (!$campo) {
             return response()->json(['error' => 'Campo não encontrado'], 404);
         }
+        AuditService::record('DELETE', $campo, $campo->toArray(), null);
         $campo->delete();
         return response()->json(['message' => 'Campo removido com sucesso!']);
     }

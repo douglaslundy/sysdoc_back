@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRouteRequest;
 use App\Models\Route;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -27,6 +28,7 @@ class RouteController extends Controller
 
             $array = ['status' => 'created'];
             $route = Route::create($request->all());
+            AuditService::record('CREATE', $route, null, $route->toArray());
             $array['route'] = $route;
             DB::commit();
             return response()->json($array, 201);
@@ -53,7 +55,9 @@ class RouteController extends Controller
         DB::beginTransaction();
         try {
             $array = ['status' => 'updated'];
+            $old = $route->toArray();
             $route->update($request->all());
+            AuditService::record('UPDATE', $route, $old, $route->toArray());
             $array['route'] = $route;
 
             DB::commit();
@@ -71,6 +75,7 @@ class RouteController extends Controller
     public function destroy($id)
     {
         $route = Route::findOrFail($id);
+        AuditService::record('DELETE', $route, $route->toArray(), null);
         $route->active = false;
         $route->update();
 

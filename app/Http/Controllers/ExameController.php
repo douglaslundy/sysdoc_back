@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExameRequest;
 use App\Models\Exame;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class ExameController extends Controller
@@ -43,6 +44,7 @@ class ExameController extends Controller
             'ativo'              => $request->input('ativo', true),
         ]);
 
+        AuditService::record('CREATE', $exame, null, $exame->toArray());
         $exame->load('categoriaExame');
 
         return response()->json([
@@ -67,12 +69,14 @@ class ExameController extends Controller
             return response()->json(['error' => 'Exame não encontrado'], 404);
         }
 
+        $old = $exame->toArray();
         $exame->nome               = strtoupper($request->input('nome'));
         $exame->codigo             = strtoupper($request->input('codigo'));
         $exame->categoria_exame_id = $request->input('categoria_exame_id');
         $exame->descricao          = $request->input('descricao');
         $exame->ativo              = $request->input('ativo', $exame->ativo);
         $exame->save();
+        AuditService::record('UPDATE', $exame, $old, $exame->toArray());
 
         $exame->load('categoriaExame');
 
@@ -88,6 +92,7 @@ class ExameController extends Controller
         if (!$exame) {
             return response()->json(['error' => 'Exame não encontrado'], 404);
         }
+        AuditService::record('DELETE', $exame, $exame->toArray(), null);
         $exame->delete();
         return response()->json(['message' => 'Exame removido com sucesso!']);
     }

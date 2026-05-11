@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMedicoSolicitanteRequest;
 use App\Models\MedicoSolicitante;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class MedicoSolicitanteController extends Controller
@@ -35,6 +36,7 @@ class MedicoSolicitanteController extends Controller
     public function store(StoreMedicoSolicitanteRequest $request)
     {
         $medico = MedicoSolicitante::create($request->validated());
+        AuditService::record('CREATE', $medico, null, $medico->toArray());
         return response()->json($medico, 201);
     }
 
@@ -45,7 +47,9 @@ class MedicoSolicitanteController extends Controller
 
     public function update(StoreMedicoSolicitanteRequest $request, MedicoSolicitante $medico)
     {
+        $old = $medico->toArray();
         $medico->update($request->validated());
+        AuditService::record('UPDATE', $medico, $old, $medico->toArray());
         return response()->json($medico);
     }
 
@@ -55,6 +59,7 @@ class MedicoSolicitanteController extends Controller
             return response()->json(['message' => 'Médico possui pedidos vinculados e não pode ser excluído.'], 422);
         }
 
+        AuditService::record('DELETE', $medico, $medico->toArray(), null);
         $medico->delete();
         return response()->json(null, 204);
     }

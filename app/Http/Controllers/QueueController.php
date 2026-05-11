@@ -126,6 +126,7 @@ class QueueController extends Controller
         ]);
 
         $queue = Queue::create($validatedData);
+        AuditService::record('CREATE', $queue, null, $queue->toArray());
 
         // Carrega as relações client e speciality
         $queue->load('client', 'speciality');
@@ -152,7 +153,9 @@ class QueueController extends Controller
             'obs' => 'nullable|string|max:200',
         ]);
 
+        $old = $queue->toArray();
         $queue->update($validatedData);
+        AuditService::record('UPDATE', $queue, $old, $queue->toArray());
 
         // Se o campo done for verdadeiro (true ou 1)
         if ($queue->done == true) {
@@ -180,6 +183,7 @@ class QueueController extends Controller
             return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
+        AuditService::record('DELETE', $queue, $queue->toArray(), null);
         $queue->delete();
 
         return response()->json(['message' => 'Registro deletado com sucesso'], 200);

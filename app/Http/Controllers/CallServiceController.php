@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCallServicelRequest;
-use Illuminate\Http\Request;
 use App\Models\CallService;
+use App\Services\AuditService;
+use Illuminate\Http\Request;
 
 class CallServiceController extends Controller
 {
@@ -20,6 +21,7 @@ class CallServiceController extends Controller
         $callService->name = $request->input('name');
         $callService->description = $request->input('description');
         $callService->save();
+        AuditService::record('CREATE', $callService, null, $callService->toArray());
 
         return response()->json([
             'message' => 'Call service created successfully!',
@@ -43,9 +45,11 @@ class CallServiceController extends Controller
                 'error' => 'Room not found'
             ], 404);
         }
+        $old = $callService->toArray();
         $callService->name = $request->input('name');
         $callService->description = $request->input('description');
         $callService->save();
+        AuditService::record('UPDATE', $callService, $old, $callService->toArray());
 
         return response()->json([
             'message' => 'Call service updated successfully!',
@@ -56,6 +60,7 @@ class CallServiceController extends Controller
     public function destroy($id)
     {
         $callService = CallService::find($id);
+        AuditService::record('DELETE', $callService, $callService->toArray(), null);
         $callService->delete();
 
         return response()->json(null, 204);

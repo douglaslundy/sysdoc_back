@@ -23,4 +23,9 @@ class PedidoExameObserver
     {
         AuditService::record('DELETE', $pedido, $pedido->toArray(), null);
     }
+
+    public function forceDeleted(PedidoExame $pedido): void
+    {
+        AuditService::record('DELETE', $pedido, $pedido->toArray(), null);
+    }
 }

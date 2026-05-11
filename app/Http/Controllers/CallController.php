@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Call;
@@ -66,6 +67,7 @@ class CallController extends Controller
         $call->call_prefix = strtoupper(substr($prefix->name, 0, 3));
 
         $call->save();
+        AuditService::record('CREATE', $call, null, $call->toArray());
 
         return response()->json([
             'message' => 'Call created successfully!',
@@ -107,6 +109,7 @@ class CallController extends Controller
             ], 404);
         }
 
+        $old = $call->toArray();
         $call->user_id = $request->input('user_id');
         $call->room_id = $request->input('room_id');
         $call->client_id = $request->input('client_id');
@@ -115,6 +118,7 @@ class CallController extends Controller
         $call->is_called = $request->input('is_called');
 
         $call->save();
+        AuditService::record('UPDATE', $call, $old, $call->toArray());
 
         return response()->json([
             'message' => 'Call updated successfully!',

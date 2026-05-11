@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SystemPage;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class SystemPageController extends Controller
@@ -24,6 +25,7 @@ class SystemPageController extends Controller
         ]);
 
         $page = SystemPage::create($request->only(['titulo', 'path', 'icone', 'categoria']));
+        AuditService::record('CREATE', $page, null, $page->toArray());
         return response()->json($page, 201);
     }
 
@@ -42,7 +44,9 @@ class SystemPageController extends Controller
             'ativo'     => 'sometimes|boolean',
         ]);
 
+        $old = $page->toArray();
         $page->update($request->only(['titulo', 'path', 'icone', 'categoria', 'ativo']));
+        AuditService::record('UPDATE', $page, $old, $page->toArray());
         return response()->json($page);
     }
 
@@ -52,6 +56,7 @@ class SystemPageController extends Controller
         if (!$page) {
             return response()->json(['error' => 'Página não encontrada'], 404);
         }
+        AuditService::record('DELETE', $page, $page->toArray(), null);
         $page->delete();
         return response()->json(['message' => 'Página removida.']);
     }

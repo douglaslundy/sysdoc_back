@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Services\AuditService;
 use Illuminate\Support\Facades\Validator;
 
 use App\Models\Sector;
@@ -32,6 +33,7 @@ class SectorController extends Controller
             $sector = new Sector();
             $sector->name = $request->input('name');
             $sector->save();
+            AuditService::record('CREATE', $sector, null, $sector->toArray());
 
         }else {
            $array['error'] = $validator->errors()->first();
@@ -65,11 +67,13 @@ class SectorController extends Controller
             if(is_null($sector)){
 
                 $array['errors'] = "sector has not found";
-    
+
             } else {
 
+            $old = $sector->toArray();
             $sector->name = $request->input('name');
             $sector->save();
+            AuditService::record('UPDATE', $sector, $old, $sector->toArray());
 
             }
 
@@ -92,6 +96,7 @@ class SectorController extends Controller
 
         } else {
 
+        AuditService::record('DELETE', $sector, $sector->toArray(), null);
         $sector->delete();
 
         }

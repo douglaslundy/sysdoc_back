@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCampoReferenciaRequest;
 use App\Models\CampoReferencia;
 use App\Models\ExameCampo;
+use App\Services\AuditService;
 
 class CampoReferenciaController extends Controller
 {
@@ -34,6 +35,7 @@ class CampoReferenciaController extends Controller
         $referencia->valor_texto    = $request->input('valor_texto');
         $referencia->descricao      = $request->input('descricao');
         $referencia->save();
+        AuditService::record('CREATE', $referencia, null, $referencia->toArray());
 
         return response()->json([
             'message'    => 'Referência criada com sucesso!',
@@ -48,12 +50,14 @@ class CampoReferenciaController extends Controller
             return response()->json(['error' => 'Referência não encontrada'], 404);
         }
 
+        $old = $referencia->toArray();
         $referencia->perfil      = $request->input('perfil');
         $referencia->valor_min   = $request->input('valor_min');
         $referencia->valor_max   = $request->input('valor_max');
         $referencia->valor_texto = $request->input('valor_texto');
         $referencia->descricao   = $request->input('descricao');
         $referencia->save();
+        AuditService::record('UPDATE', $referencia, $old, $referencia->toArray());
 
         return response()->json([
             'message'    => 'Referência atualizada com sucesso!',
@@ -67,6 +71,7 @@ class CampoReferenciaController extends Controller
         if (!$referencia) {
             return response()->json(['error' => 'Referência não encontrada'], 404);
         }
+        AuditService::record('DELETE', $referencia, $referencia->toArray(), null);
         $referencia->delete();
         return response()->json(['message' => 'Referência removida com sucesso!']);
     }
