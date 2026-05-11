@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { margin: 1cm; }
+  @page { margin: 30px 2.5cm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; }
   .page { width: 100%; }
@@ -17,8 +17,8 @@
   .header-logo, .header-center, .header-brasao {
     display: table-cell; vertical-align: middle; padding: 8px;
   }
-  .header-logo   { width: 162px; text-align: center; padding: 8px 10px 8px 28px; }
-  .header-brasao { width: 110px; text-align: center; padding: 8px 28px 8px 10px; }
+  .header-logo   { width: 162px; text-align: center; padding: 8px; }
+  .header-brasao { width: 110px; text-align: center; padding: 8px; }
   .header-center { text-align: center; border-left: 0; border-right: 0; }
   .header-logo img  { width: 124px; height: 68px; }
   .header-brasao img { width: 68px; height: 68px; }
