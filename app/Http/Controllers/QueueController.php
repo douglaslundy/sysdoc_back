@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Queue;
 use App\Models\QRCodeLog;
+use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 use App\Models\PublicQueueLog;
 
@@ -42,6 +43,23 @@ class QueueController extends Controller
         return response()->json($queues, 200);
     }
 
+    public function show($id)
+    {
+        $queue = Queue::with(['client', 'user', 'speciality'])->find($id);
+
+        if (!$queue) {
+            return response()->json(['error' => 'Registro não encontrado'], 404);
+        }
+
+        AuditService::record('VIEW', $queue, null, [
+            'cliente'       => $queue->client?->name,
+            'cpf'           => $queue->client?->cpf,
+            'especialidade' => $queue->speciality?->name,
+            'status'        => $queue->done ? 'realizado' : 'aguardando',
+        ]);
+
+        return response()->json($queue);
+    }
 
     public function showPublicQueue()
     {
