@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <style>
+  @page { margin: 16px 20px; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; }
-  .page { width: 100%; padding: 16px 20px; }
+  .page { width: 100%; }
 
   /* ── CABEÇALHO ── */
   .header-wrap {
@@ -220,7 +221,6 @@
           <th>Valor</th>
           <th>Unidade</th>
           <th>Referência</th>
-          <th>Status</th>
         </tr>
       </thead>
       <tbody>
@@ -243,7 +243,6 @@
             <td>{{ $valor }}</td>
             <td>{{ $campo->unidade ?? '—' }}</td>
             <td>{{ $ref }}</td>
-            <td><span class="badge badge-{{ $rc->status_referencia ?? 'indefinido' }}">{{ $rc->status_referencia ?? '—' }}</span></td>
           </tr>
         @endforeach
       </tbody>
