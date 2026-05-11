@@ -557,17 +557,22 @@ class DashboardService
     {
         $hoje = now()->toDateString();
         $em30 = now()->addDays(30)->toDateString();
+        $encerrados = ['Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado'];
 
         return [
             'estabelecimentos' => Estabelecimento::count(),
             'alvaras'          => Alvara::count(),
-            'vigentes'         => Alvara::where('status', 'Vigente')->count(),
-            'vencidos'         => Alvara::where('status', 'Vencido')->count(),
-            'a_vencer'         => Alvara::where('status', 'A vencer')->count(),
+            'vigentes'         => Alvara::whereNotNull('vencimento_alvara')
+                ->whereDate('vencimento_alvara', '>=', $hoje)
+                ->whereNotIn('status', $encerrados)
+                ->count(),
+            'vencidos'         => Alvara::whereNotNull('vencimento_alvara')
+                ->whereDate('vencimento_alvara', '<', $hoje)
+                ->count(),
             'vencendo_em_30'   => Alvara::whereNotNull('vencimento_alvara')
                 ->whereDate('vencimento_alvara', '>=', $hoje)
                 ->whereDate('vencimento_alvara', '<=', $em30)
-                ->whereNotIn('status', ['Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado'])
+                ->whereNotIn('status', $encerrados)
                 ->count(),
         ];
     }

@@ -19,7 +19,7 @@ class StoreAlvaraRequest extends FormRequest
             'nivel_risco'         => ['required', Rule::in(['1', '2', '3', 'N/A'])],
             'status'              => ['sometimes', 'nullable', Rule::in([
                 'Não requerido', 'Dispensado', 'Protocolado', 'Em análise', 'Em exigência',
-                'Deferido', 'Indeferido', 'Vigente', 'A vencer', 'Vencido', 'Em renovação',
+                'Vigente', 'Vencido', 'Em renovação',
                 'Suspenso', 'Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado',
             ])],
             'data_alvara'         => ['required', 'date'],

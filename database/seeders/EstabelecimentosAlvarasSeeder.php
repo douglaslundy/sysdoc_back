@@ -31,7 +31,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-29',
             'vencimento_alvara'  => '2026-09-29',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -52,7 +52,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-15',
             'vencimento_alvara'  => '2026-09-15',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -73,7 +73,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-29',
             'vencimento_alvara'  => '2026-09-29',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -114,7 +114,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-06-05',
             'vencimento_alvara'  => '2026-06-05',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -155,7 +155,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-08',
             'vencimento_alvara'  => '2026-10-08',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -197,7 +197,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-11',
             'vencimento_alvara'  => '2026-07-11',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -238,7 +238,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-19',
             'vencimento_alvara'  => '2026-03-19',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -329,7 +329,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-13',
             'vencimento_alvara'  => '2026-02-13',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -350,7 +350,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-05',
             'vencimento_alvara'  => '2026-08-05',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -371,7 +371,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-07',
             'vencimento_alvara'  => '2026-07-07',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -392,7 +392,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-24',
             'vencimento_alvara'  => '2026-02-24',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -413,7 +413,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-21',
             'vencimento_alvara'  => '2026-10-21',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -434,7 +434,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-11-11',
             'vencimento_alvara'  => '2026-11-11',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -465,7 +465,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-27',
             'vencimento_alvara'  => '2027-01-27',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -516,7 +516,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-07',
             'vencimento_alvara'  => '2026-02-07',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -537,7 +537,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-06-04',
             'vencimento_alvara'  => '2026-06-04',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -568,7 +568,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-02-02',
             'vencimento_alvara'  => '2027-02-02',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -589,7 +589,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-01',
             'vencimento_alvara'  => '2026-08-01',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -610,7 +610,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-20',
             'vencimento_alvara'  => '2026-03-20',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -631,7 +631,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-04-24',
             'vencimento_alvara'  => '2026-04-24',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -652,7 +652,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-14',
             'vencimento_alvara'  => '2027-01-14',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -694,7 +694,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-12-18',
             'vencimento_alvara'  => '2026-12-18',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -715,7 +715,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-28',
             'vencimento_alvara'  => '2027-01-28',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -736,7 +736,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-11',
             'vencimento_alvara'  => '2026-09-11',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -757,7 +757,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-11',
             'vencimento_alvara'  => '2026-07-11',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -778,7 +778,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-06-30',
             'vencimento_alvara'  => '2026-06-30',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -799,7 +799,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-04-27',
             'vencimento_alvara'  => '2026-04-27',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -820,7 +820,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-15',
             'vencimento_alvara'  => '2026-07-15',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -841,7 +841,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-28',
             'vencimento_alvara'  => '2026-07-28',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -862,7 +862,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-05-25',
             'vencimento_alvara'  => '2026-05-25',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -883,7 +883,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-25',
             'vencimento_alvara'  => '2026-03-25',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -904,7 +904,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-31',
             'vencimento_alvara'  => '2026-03-31',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -925,7 +925,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-02-25',
             'vencimento_alvara'  => '2027-02-25',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -976,7 +976,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-02-03',
             'vencimento_alvara'  => '2027-02-03',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1027,7 +1027,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-05-21',
             'vencimento_alvara'  => '2026-05-21',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1068,7 +1068,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-11-03',
             'vencimento_alvara'  => '2026-11-03',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1089,7 +1089,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-01',
             'vencimento_alvara'  => '2026-09-01',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1110,7 +1110,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-31',
             'vencimento_alvara'  => '2026-03-31',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1131,7 +1131,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-27',
             'vencimento_alvara'  => '2026-03-27',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1162,7 +1162,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-25',
             'vencimento_alvara'  => '2026-03-25',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1204,7 +1204,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-01',
             'vencimento_alvara'  => '2026-07-01',
             'contato'            => '(35) 9 8469-0507',
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1225,7 +1225,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-06-03',
             'vencimento_alvara'  => '2026-06-03',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1246,7 +1246,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-30',
             'vencimento_alvara'  => '2027-01-30',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1318,7 +1318,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-15',
             'vencimento_alvara'  => '2026-08-15',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1390,7 +1390,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-29',
             'vencimento_alvara'  => '2026-08-29',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1411,7 +1411,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-10',
             'vencimento_alvara'  => '2026-03-10',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1512,7 +1512,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-04-29',
             'vencimento_alvara'  => '2026-04-29',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1533,7 +1533,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-22',
             'vencimento_alvara'  => '2026-08-22',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1554,7 +1554,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-11-25',
             'vencimento_alvara'  => '2026-11-25',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1575,7 +1575,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-09',
             'vencimento_alvara'  => '2026-07-09',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1596,7 +1596,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-09',
             'vencimento_alvara'  => '2026-09-09',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1617,7 +1617,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-11',
             'vencimento_alvara'  => '2026-02-11',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1638,7 +1638,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-30',
             'vencimento_alvara'  => '2026-07-30',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1659,7 +1659,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-03',
             'vencimento_alvara'  => '2026-07-03',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1680,7 +1680,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-02-19',
             'vencimento_alvara'  => '2027-02-19',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1701,7 +1701,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-15',
             'vencimento_alvara'  => '2026-08-15',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1722,7 +1722,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-21',
             'vencimento_alvara'  => '2027-01-21',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1753,7 +1753,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-12-22',
             'vencimento_alvara'  => '2026-12-22',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1774,7 +1774,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-24',
             'vencimento_alvara'  => '2026-02-24',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1795,7 +1795,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-05',
             'vencimento_alvara'  => '2026-08-05',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1816,7 +1816,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-15',
             'vencimento_alvara'  => '2026-07-15',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1837,7 +1837,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-03-03',
             'vencimento_alvara'  => '2027-03-03',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1858,7 +1858,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-15',
             'vencimento_alvara'  => '2026-07-15',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1909,7 +1909,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-29',
             'vencimento_alvara'  => '2027-01-29',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -1940,7 +1940,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-02-03',
             'vencimento_alvara'  => '2027-02-03',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2011,7 +2011,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-06-17',
             'vencimento_alvara'  => '2026-06-17',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2032,7 +2032,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-03-10',
             'vencimento_alvara'  => '2026-03-10',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2053,7 +2053,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-30',
             'vencimento_alvara'  => '2026-09-30',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2074,7 +2074,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-01-27',
             'vencimento_alvara'  => '2026-01-27',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2095,7 +2095,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-01-27',
             'vencimento_alvara'  => '2026-01-27',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2116,7 +2116,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-21',
             'vencimento_alvara'  => '2027-01-21',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2137,7 +2137,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-14',
             'vencimento_alvara'  => '2026-10-14',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2158,7 +2158,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-05',
             'vencimento_alvara'  => '2026-10-05',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2179,7 +2179,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-13',
             'vencimento_alvara'  => '2026-10-13',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2200,7 +2200,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-12',
             'vencimento_alvara'  => '2026-02-12',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2221,7 +2221,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-01',
             'vencimento_alvara'  => '2026-02-01',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2242,7 +2242,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-08',
             'vencimento_alvara'  => '2026-10-08',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2263,7 +2263,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-17',
             'vencimento_alvara'  => '2026-07-17',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2284,7 +2284,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-31',
             'vencimento_alvara'  => '2026-10-31',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2315,7 +2315,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-06-24',
             'vencimento_alvara'  => '2026-06-24',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2336,7 +2336,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-04-03',
             'vencimento_alvara'  => '2026-04-03',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2357,7 +2357,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-05',
             'vencimento_alvara'  => '2026-08-05',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2378,7 +2378,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-02-18',
             'vencimento_alvara'  => '2026-02-18',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2399,7 +2399,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-24',
             'vencimento_alvara'  => '2026-07-24',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2420,7 +2420,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-20',
             'vencimento_alvara'  => '2026-10-20',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2441,7 +2441,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-18',
             'vencimento_alvara'  => '2026-07-18',
             'contato'            => '(35) 9 9827-1912',
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2462,7 +2462,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-07-18',
             'vencimento_alvara'  => '2026-07-18',
             'contato'            => '(35) 9 8436-3659',
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2483,7 +2483,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2026-01-07',
             'vencimento_alvara'  => '2027-01-07',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2504,7 +2504,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-11',
             'vencimento_alvara'  => '2026-09-11',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2525,7 +2525,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-09-22',
             'vencimento_alvara'  => '2026-09-22',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2546,7 +2546,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-10-16',
             'vencimento_alvara'  => '2026-10-16',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2597,7 +2597,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-08-11',
             'vencimento_alvara'  => '2026-08-11',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vigente',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
@@ -2638,7 +2638,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'data_alvara'        => '2025-04-28',
             'vencimento_alvara'  => '2026-04-28',
             'contato'            => null,
-            'status'             => 'Não requerido',
+            'status'             => 'Vencido',
             'created_at'         => $agora,
             'updated_at'         => $agora,
         ]);
