@@ -5,67 +5,208 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #222; }
-  .page { width: 100%; padding: 20px; }
-  .header { border-bottom: 2px solid #1565c0; padding-bottom: 10px; margin-bottom: 16px; }
-  .header h1 { font-size: 18px; color: #1565c0; }
-  .header .subtitle { font-size: 10px; color: #555; margin-top: 2px; }
-  .section-title { font-size: 12px; font-weight: bold; background: #e3f0fc; padding: 4px 8px; margin: 14px 0 6px; }
-  .info-grid { display: table; width: 100%; border-collapse: collapse; }
-  .info-row { display: table-row; }
-  .info-cell { display: table-cell; padding: 3px 6px; width: 50%; }
-  .info-label { font-size: 9px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; }
-  .info-value { font-size: 11px; font-weight: bold; }
-  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-  th { background: #1565c0; color: #fff; text-align: left; padding: 5px 8px; font-size: 10px; }
-  td { padding: 5px 8px; border-bottom: 1px solid #eee; font-size: 11px; }
+  .page { width: 100%; padding: 16px 20px; }
+
+  /* ── CABEÇALHO ── */
+  .header-wrap {
+    display: table; width: 100%;
+    border: 1px solid #b0bec5; border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .header-logo, .header-center, .header-brasao {
+    display: table-cell; vertical-align: middle; padding: 8px;
+  }
+  .header-logo   { width: 80px; text-align: center; }
+  .header-brasao { width: 80px; text-align: center; }
+  .header-center { text-align: center; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
+  .header-logo img, .header-brasao img { max-width: 68px; max-height: 68px; }
+  .lab-nome     { font-size: 14px; font-weight: bold; color: #1565c0; }
+  .lab-razao    { font-size: 11px; color: #444; margin-top: 2px; }
+  .lab-endereco { font-size: 9px;  color: #666; margin-top: 3px; }
+  .lab-contato  { font-size: 9px;  color: #666; margin-top: 1px; }
+
+  /* ── DADOS DO PACIENTE ── */
+  .paciente-box {
+    border: 1px solid #b0bec5; border-radius: 4px;
+    padding: 6px 10px; margin-bottom: 10px;
+  }
+  .paciente-title {
+    font-size: 10px; font-weight: bold; color: #1565c0;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 5px; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;
+  }
+  .paciente-grid { display: table; width: 100%; }
+  .paciente-row  { display: table-row; }
+  .paciente-cell { display: table-cell; width: 50%; padding: 2px 4px; }
+  .p-label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.4px; }
+  .p-value { font-size: 10px; font-weight: bold; }
+
+  /* ── RESULTADOS ── */
+  .section-title {
+    font-size: 11px; font-weight: bold; background: #e3f0fc;
+    padding: 4px 8px; margin: 12px 0 5px;
+    border-left: 3px solid #1565c0;
+  }
+  .exame-nome {
+    font-size: 11px; font-weight: bold; color: #1565c0;
+    margin: 10px 0 3px; padding: 2px 0;
+    border-bottom: 1px dashed #90caf9;
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  th { background: #1565c0; color: #fff; text-align: left; padding: 4px 7px; font-size: 9px; }
+  td { padding: 4px 7px; border-bottom: 1px solid #eee; font-size: 10px; }
   tr:nth-child(even) td { background: #f5f9ff; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-  .badge-normal  { background: #e8f5e9; color: #2e7d32; }
-  .badge-baixo   { background: #e3f2fd; color: #1565c0; }
-  .badge-alto    { background: #ffebee; color: #c62828; }
-  .badge-critico { background: #f3e5f5; color: #6a1b9a; }
-  .badge-indefinido { background: #f5f5f5; color: #777; }
-  .exame-nome { font-size: 12px; font-weight: bold; color: #1565c0; margin: 12px 0 4px; }
-  .footer { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 8px; font-size: 9px; color: #888; }
-  .footer .protocolo { font-size: 11px; font-weight: bold; color: #333; }
+  .badge {
+    display: inline-block; padding: 1px 7px; border-radius: 8px;
+    font-size: 8px; font-weight: bold; text-transform: uppercase;
+  }
+  .badge-normal    { background: #e8f5e9; color: #2e7d32; }
+  .badge-baixo     { background: #e3f2fd; color: #1565c0; }
+  .badge-alto      { background: #ffebee; color: #c62828; }
+  .badge-critico   { background: #f3e5f5; color: #6a1b9a; }
+  .badge-indefinido{ background: #f5f5f5; color: #777; }
+
+  /* ── LIBERAÇÃO ── */
+  .liberacao {
+    margin-top: 14px; padding: 6px 10px;
+    border: 1px solid #e0e0e0; border-radius: 4px;
+    font-size: 9px; color: #666;
+  }
+  .liberacao .protocolo { font-size: 11px; font-weight: bold; color: #333; margin-top: 2px; }
+
+  /* ── RODAPÉ ── */
+  .footer {
+    margin-top: 16px; border-top: 1px solid #ccc;
+    padding-top: 6px; font-size: 8px; color: #555;
+  }
+  .footer .rodape1 { font-style: italic; font-weight: bold; margin-bottom: 3px; }
+  .footer .rodape2 { color: #777; }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="header">
-    <h1>Laudo de Exame Laboratorial</h1>
-    <div class="subtitle">Documento gerado em {{ now()->format('d/m/Y H:i') }}</div>
+
+  {{-- ══ CABEÇALHO INSTITUCIONAL ══ --}}
+  <div class="header-wrap">
+    {{-- Logo SUS --}}
+    <div class="header-logo">
+      @if($logoSusB64)
+        <img src="{{ $logoSusB64 }}" alt="SUS">
+      @endif
+    </div>
+
+    {{-- Dados do Laboratório --}}
+    <div class="header-center">
+      <div class="lab-nome">{{ $config->nome_estabelecimento ?: 'Laboratório Municipal' }}</div>
+      @if($config->razao_social)
+        <div class="lab-razao">{{ $config->razao_social }}</div>
+      @endif
+      @php
+        $endereco = collect([
+          $config->endereco_rua,
+          $config->endereco_numero ? 'nº ' . $config->endereco_numero : null,
+          $config->endereco_bairro,
+          $config->endereco_cep ? 'CEP ' . $config->endereco_cep : null,
+        ])->filter()->implode(', ');
+      @endphp
+      @if($endereco)
+        <div class="lab-endereco">{{ $endereco }}</div>
+      @endif
+      @php
+        $contato = collect([
+          $config->telefone ? 'Tel: ' . $config->telefone : null,
+          $config->cnpj ? 'CNPJ: ' . $config->cnpj : null,
+          $config->email_lab,
+        ])->filter()->implode(' | ');
+      @endphp
+      @if($contato)
+        <div class="lab-contato">{{ $contato }}</div>
+      @endif
+    </div>
+
+    {{-- Brasão --}}
+    <div class="header-brasao">
+      @if($brasaoB64)
+        <img src="{{ $brasaoB64 }}" alt="Brasão">
+      @endif
+    </div>
   </div>
 
-  <div class="section-title">Dados do Paciente</div>
-  <div class="info-grid">
-    <div class="info-row">
-      <div class="info-cell">
-        <div class="info-label">Nome</div>
-        <div class="info-value">{{ $resultado->pedido->cliente->name ?? '—' }}</div>
+  {{-- ══ DADOS DO PACIENTE ══ --}}
+  @php
+    $cliente   = $resultado->pedido->cliente;
+    $pedido    = $resultado->pedido;
+    $medico    = $pedido->medicoSolicitante;
+
+    $idade = '—';
+    if ($cliente->born_date) {
+        $anos = \Carbon\Carbon::parse($cliente->born_date)->age;
+        $idade = $anos . ' ' . ($anos === 1 ? 'ano' : 'anos');
+    }
+
+    $sexoLabel = match(strtolower($cliente->sexo ?? '')) {
+        'm', 'masculino' => 'Masculino',
+        'f', 'feminino'  => 'Feminino',
+        default          => $cliente->sexo ?? '—',
+    };
+
+    $dataColeta = $pedido->data_coleta
+        ? \Carbon\Carbon::parse($pedido->data_coleta)->format('d/m/Y')
+        : ($pedido->data_pedido ? \Carbon\Carbon::parse($pedido->data_pedido)->format('d/m/Y') : '—');
+  @endphp
+
+  <div class="paciente-box">
+    <div class="paciente-title">Dados do Paciente</div>
+    <div class="paciente-grid">
+      <div class="paciente-row">
+        <div class="paciente-cell">
+          <div class="p-label">Nome Sr(a)</div>
+          <div class="p-value">{{ $cliente->name ?? '—' }}</div>
+        </div>
+        <div class="paciente-cell">
+          <div class="p-label">Idade</div>
+          <div class="p-value">{{ $idade }}</div>
+        </div>
       </div>
-      <div class="info-cell">
-        <div class="info-label">Data de Nascimento</div>
-        <div class="info-value">{{ $resultado->pedido->cliente->born_date ? \Carbon\Carbon::parse($resultado->pedido->cliente->born_date)->format('d/m/Y') : '—' }}</div>
+      <div class="paciente-row">
+        <div class="paciente-cell">
+          <div class="p-label">Sexo</div>
+          <div class="p-value">{{ $sexoLabel }}</div>
+        </div>
+        <div class="paciente-cell">
+          <div class="p-label">Telefone</div>
+          <div class="p-value">{{ $cliente->phone ?? '—' }}</div>
+        </div>
       </div>
-    </div>
-    <div class="info-row">
-      <div class="info-cell">
-        <div class="info-label">Médico Solicitante</div>
-        <div class="info-value">{{ $resultado->pedido->medicoSolicitante?->nome ?? '—' }}</div>
+      <div class="paciente-row">
+        <div class="paciente-cell">
+          <div class="p-label">Data da Coleta</div>
+          <div class="p-value">{{ $dataColeta }}</div>
+        </div>
+        <div class="paciente-cell">
+          <div class="p-label">CPF</div>
+          <div class="p-value">{{ $cliente->cpf ?? '—' }}</div>
+        </div>
       </div>
-      <div class="info-cell">
-        <div class="info-label">Data do Pedido</div>
-        <div class="info-value">{{ \Carbon\Carbon::parse($resultado->pedido->data_pedido)->format('d/m/Y') }}</div>
+      <div class="paciente-row">
+        <div class="paciente-cell">
+          <div class="p-label">Médico Dr(a)</div>
+          <div class="p-value">{{ $medico?->nome ?? '—' }}</div>
+        </div>
+        <div class="paciente-cell">
+          <div class="p-label">Data do Pedido</div>
+          <div class="p-value">{{ \Carbon\Carbon::parse($pedido->data_pedido)->format('d/m/Y') }}</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="section-title">Resultados</div>
+  {{-- ══ RESULTADOS ══ --}}
+  <div class="section-title">Resultados dos Exames</div>
 
   @foreach($camposPorExame as $exameId => $campos)
     @php $exame = $campos->first()->campo->exame ?? null; @endphp
-    <div class="exame-nome">{{ $exame->nome ?? 'Exame #'.$exameId }}</div>
+    <div class="exame-nome">{{ $exame->nome ?? 'Exame #' . $exameId }}</div>
     <table>
       <thead>
         <tr>
@@ -81,7 +222,7 @@
           @php
             $campo = $rc->campo;
             $valor = $rc->valor_numerico ?? $rc->valor_texto ?? '—';
-            $ref = '—';
+            $ref   = '—';
             if ($campo && $campo->referencias->isNotEmpty()) {
                 $r = $campo->referencias->first();
                 if ($r->valor_min !== null && $r->valor_max !== null) {
@@ -96,19 +237,38 @@
             <td>{{ $valor }}</td>
             <td>{{ $campo->unidade ?? '—' }}</td>
             <td>{{ $ref }}</td>
-            <td><span class="badge badge-{{ $rc->status_referencia }}">{{ $rc->status_referencia }}</span></td>
+            <td><span class="badge badge-{{ $rc->status_referencia ?? 'indefinido' }}">{{ $rc->status_referencia ?? '—' }}</span></td>
           </tr>
         @endforeach
       </tbody>
     </table>
   @endforeach
 
-  <div class="footer">
-    <div>Liberado em: {{ $resultado->data_liberacao ? \Carbon\Carbon::parse($resultado->data_liberacao)->format('d/m/Y H:i') : '—' }}
-      &nbsp;|&nbsp; Válido até: {{ $resultado->data_validade ? \Carbon\Carbon::parse($resultado->data_validade)->format('d/m/Y') : '—' }}
+  {{-- ══ DADOS DE LIBERAÇÃO ══ --}}
+  <div class="liberacao">
+    <div>
+      Liberado em: {{ $resultado->data_liberacao ? \Carbon\Carbon::parse($resultado->data_liberacao)->format('d/m/Y H:i') : '—' }}
+      &nbsp;|&nbsp;
+      Válido até: {{ $resultado->data_validade ? \Carbon\Carbon::parse($resultado->data_validade)->format('d/m/Y') : '—' }}
+      @if($resultado->liberadoPor)
+        &nbsp;|&nbsp; Responsável: {{ $resultado->liberadoPor->name }}
+      @endif
     </div>
     <div class="protocolo">Protocolo: {{ $resultado->protocolo }}</div>
   </div>
+
+  {{-- ══ RODAPÉ ══ --}}
+  @if($config->rodape1 || $config->rodape2)
+    <div class="footer">
+      @if($config->rodape1)
+        <div class="rodape1">{{ $config->rodape1 }}</div>
+      @endif
+      @if($config->rodape2)
+        <div class="rodape2">{{ $config->rodape2 }}</div>
+      @endif
+    </div>
+  @endif
+
 </div>
 </body>
 </html>
