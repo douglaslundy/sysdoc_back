@@ -9,11916 +9,2649 @@ class EstabelecimentosAlvarasSeeder extends Seeder
 {
     public function run(): void
     {
-        $agora = now()->toDateTimeString();
+        if (DB::table('estabelecimentos')->exists()) {
+            return;
+        }
 
-        $dados = [
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Wagner Eduardo Bueno',
-                    'nome_estabelecimento' => 'Academia Evolution Fitness',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '12-09/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-09-29',
-                    'vencimento_alvara' => '2026-09-29',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Sandro Menezes de Oliveira',
-                    'nome_estabelecimento' => 'Academia Saúde Total',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '19-08/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-09-15',
-                    'vencimento_alvara' => '2026-09-15',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Marcelino Moreira Costa',
-                    'nome_estabelecimento' => 'Academia Vida Ativa',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-09/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-09-29',
-                    'vencimento_alvara' => '2026-09-29',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Açaí e CIA',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Neimar Pereira Guedes',
-                    'nome_estabelecimento' => 'Açaí Sorvetes',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Celeno César de Sousa',
-                    'nome_estabelecimento' => 'Açougue Casa da Carne João e Maria',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-06/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-06-05',
-                    'vencimento_alvara' => '2026-06-05',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Dayvison Wallas Claudino',
-                    'nome_estabelecimento' => 'Adega DAYVISON WALLAS CLAUDINO (Distribuidora DJ)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Antônio Roberto de Andrade Junior',
-                    'nome_estabelecimento' => 'Adega do Juninho do Beto',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Vinícius Eugênio Alvarenga de Melo',
-                    'nome_estabelecimento' => 'Adega House Beer',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-10/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-10-08',
-                    'vencimento_alvara' => '2026-10-08',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Bruna Loraine Rocha Assis',
-                    'nome_estabelecimento' => 'Ar Essence Espaço Integrado',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '08-07/2025',
-                    'nivel_risco'       => '1',
-                    'data_alvara'       => '2025-07-11',
-                    'vencimento_alvara' => null,
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Querem Danielle Rocha Assis',
-                    'nome_estabelecimento' => 'Ar Essence Espaço Integrado',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '08-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-11',
-                    'vencimento_alvara' => '2026-07-11',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Odilon Rodrigues de Oliveira',
-                    'nome_estabelecimento' => 'Atividade de Estética',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Larissa Bernardes de Oliveira',
-                    'nome_estabelecimento' => 'Bar Chalé da XV',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Rosilene Júlia Vilela',
-                    'nome_estabelecimento' => 'Bar da Rosy',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '12-02/2026',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-03-19',
-                    'vencimento_alvara' => '2026-03-19',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Roberto Antônio de Lima',
-                    'nome_estabelecimento' => 'Bar do Baiano',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Rosimeire Aparecida da Costa',
-                    'nome_estabelecimento' => 'Bar do Beto',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'José Marcio dos Santos',
-                    'nome_estabelecimento' => 'Bar do José Marcio',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Rone Marcos Alves',
-                    'nome_estabelecimento' => 'Bar do Rone',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Marciel Antônio da Silva',
-                    'nome_estabelecimento' => 'BAR E PETISCARIA DO MARCIEL LTDA',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'João Paulo Lucarini Bueno',
-                    'nome_estabelecimento' => 'Bar Morada Caipira',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maria Luiza Montanine',
-                    'nome_estabelecimento' => 'Bar Recanto da Lagoa',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Irandi Patrocinio Leite',
-                    'nome_estabelecimento' => 'Barbearia do Pretinho',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-02/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-02-13',
-                    'vencimento_alvara' => '2026-02-13',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Guilherme Henrique Vilela Messias',
-                    'nome_estabelecimento' => 'Barbearia Gentleman\'s Barbershop',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '06-08/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-08-05',
-                    'vencimento_alvara' => '2026-08-05',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Kelder de Lucas',
-                    'nome_estabelecimento' => 'Barbearia kerder Cortes',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-07',
-                    'vencimento_alvara' => '2026-07-07',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Matheus Oliveira Pereira',
-                    'nome_estabelecimento' => 'Barbearia Matheus',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-02/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-02-24',
-                    'vencimento_alvara' => '2026-02-24',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Weverton Cesar de Oliveira',
-                    'nome_estabelecimento' => 'Barbearia Oliveira',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '17-10/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-10-21',
-                    'vencimento_alvara' => '2026-10-21',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Cristiane Barbosa Ferreira',
-                    'nome_estabelecimento' => 'BARBOSA FERREIRA LABORATORIO LTDA (Labcon)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-11/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-11-11',
-                    'vencimento_alvara' => '2026-11-11',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Neymar Eventos',
-                    'nome_estabelecimento' => 'Barracas Motorock',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Lucimar Aparecida Teixeira',
-                    'nome_estabelecimento' => 'Bona Quitanda',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '07-01/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-01-27',
-                    'vencimento_alvara' => '2027-01-27',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Tereza Cristina Vilela Lemos',
-                    'nome_estabelecimento' => 'Bradesco S.A.',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Elias Alves dos Santos',
-                    'nome_estabelecimento' => 'Buteko da Praça',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ana Luiza Alves Teixeira',
-                    'nome_estabelecimento' => 'Cantinho do Açaí',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Elaine Aparecida Pereira',
-                    'nome_estabelecimento' => 'Casa de Rações Amigo do Campo',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '06-02/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-02-07',
-                    'vencimento_alvara' => '2026-02-07',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Lucineia Santos',
-                    'nome_estabelecimento' => 'Centro Dias (APAE)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-06/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-06-04',
-                    'vencimento_alvara' => '2026-06-04',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Clínica F&L Aliança LTDA',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Gessica Camila da Silva',
-                    'nome_estabelecimento' => 'Clínica Gessica Camila Podologia',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '02-02/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-02-02',
-                    'vencimento_alvara' => '2027-02-02',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Patrícia Figueiredo',
-                    'nome_estabelecimento' => 'Clínica Patrícia Figueiredo Odontologia',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-08/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-08-01',
-                    'vencimento_alvara' => '2026-08-01',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Igor Ferreira Botto',
-                    'nome_estabelecimento' => 'Clinica Revigore Centro Médico e Exames EIRELLISILVA LTDA.',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '08-03/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-03-20',
-                    'vencimento_alvara' => '2026-03-20',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maik',
-                    'nome_estabelecimento' => 'Clube Social Ilicinense',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '12-04/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-04-24',
-                    'vencimento_alvara' => '2026-04-24',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Juliana Aparecida Alves Faria',
-                    'nome_estabelecimento' => 'Comercial Faria LTDA.',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '02-01/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-01-14',
-                    'vencimento_alvara' => '2027-01-14',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Danele Françue Vitar Lima',
-                    'nome_estabelecimento' => 'Consultorio Danelly Lima',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-01/2026',
-                    'nivel_risco'       => '1',
-                    'data_alvara'       => '2026-01-19',
-                    'vencimento_alvara' => null,
-                    'contato'           => '(35) 98473-2569',
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Izabelly Lucarini Vilela Carvalho',
-                    'nome_estabelecimento' => 'Consultório Izabelle Lucarini',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '03-12/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-12-18',
-                    'vencimento_alvara' => '2026-12-18',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Frank Luis Martins Graneiro CRM/MG 38485',
-                    'nome_estabelecimento' => 'Consultório Médico Dr. Frank',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-01/2026',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2026-01-28',
-                    'vencimento_alvara' => '2027-01-28',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Aluany Luisa de Sousa Alvarenga',
-                    'nome_estabelecimento' => 'Consultório Odontológico Aluany',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '03-09/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-09-11',
-                    'vencimento_alvara' => '2026-09-11',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Angelo de Oliveira Junior Dias',
-                    'nome_estabelecimento' => 'Consultório Odontológico Angelo',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '06-07/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-07-11',
-                    'vencimento_alvara' => '2026-07-11',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Gabriela Alvarenga Vilela',
-                    'nome_estabelecimento' => 'Consultório Odontológico Gabriela',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-06/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-06-30',
-                    'vencimento_alvara' => '2026-06-30',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maria Gisele Damasceno',
-                    'nome_estabelecimento' => 'Consultório Odontológico Gisele',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '02-05/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-04-27',
-                    'vencimento_alvara' => '2026-04-27',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Gisele Arco Verde',
-                    'nome_estabelecimento' => 'Consultório Odontológico Giséle Arco Verde',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-07/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-07-15',
-                    'vencimento_alvara' => '2026-07-15',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maria Regina Oliveira Silva',
-                    'nome_estabelecimento' => 'Consultório Odontológico RG',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '09-07/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-07-28',
-                    'vencimento_alvara' => '2026-07-28',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Viviane Vilela Oliveira',
-                    'nome_estabelecimento' => 'Consultório Odontológico Viviane',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '03-05/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-05-25',
-                    'vencimento_alvara' => '2026-05-25',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ciciana Almeida Silva',
-                    'nome_estabelecimento' => 'CRAS (centro de assistência)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-03/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-03-25',
-                    'vencimento_alvara' => '2026-03-25',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maria Helena Carvalho',
-                    'nome_estabelecimento' => 'Creche Cemei Luriane Rosalves Ribeiro',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-03/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-03-31',
-                    'vencimento_alvara' => '2026-03-31',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Cristiane de Paula Silva',
-                    'nome_estabelecimento' => 'Cristiane Bolos',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-02/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-02-25',
-                    'vencimento_alvara' => '2027-02-25',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Gabriel Henrique da Cunha',
-                    'nome_estabelecimento' => 'Distibuidora Conveniencia SM.',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Rafael Oliveira Damasceno',
-                    'nome_estabelecimento' => 'Docê Hamburgueria e Confeitaria',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Otávio Henrique Rezende A.',
-                    'nome_estabelecimento' => 'Droga 100',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Daine Aparecida Lima',
-                    'nome_estabelecimento' => 'Drogaria Dias - ME (Filial)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-02/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2026-02-03',
-                    'vencimento_alvara' => '2027-02-03',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Jaqueline Dayane da Silva CRF/MG31.695',
-                    'nome_estabelecimento' => 'Drogaria Dias Ltda. Rede Mais Minas (Matriz)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Denis Rafael Vilela de Sousa CRF 44623',
-                    'nome_estabelecimento' => 'Drogaria Minas Master (Filial)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Deliani Aparecida Oliveira',
-                    'nome_estabelecimento' => 'Drogaria Minas Master (Matriz)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Otávio Junqueira Silva',
-                    'nome_estabelecimento' => 'Drogaria Minas Super Farma',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '02-04/2026',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-05-21',
-                    'vencimento_alvara' => '2026-05-21',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Marilia Ranieli de Sousa',
-                    'nome_estabelecimento' => 'Drogaria Nossa Senhora Aparecida',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Mateus Faustino de Carvalho',
-                    'nome_estabelecimento' => 'Drogaria Nossa Senhora Aparecida (Filial)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Adriano da Silva Pires',
-                    'nome_estabelecimento' => 'EDSON SILVA BORGES (Funerária Santa Rita)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-11/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-11-03',
-                    'vencimento_alvara' => '2026-11-03',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Andrelisa Aparecida de Andrade Carrijo',
-                    'nome_estabelecimento' => 'EMPORIO J.N LTDA',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-09/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-09-01',
-                    'vencimento_alvara' => '2026-09-01',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Claudia Aparecida Nunes',
-                    'nome_estabelecimento' => 'Escola Estadual Nossa Senhora Aparecida',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '14-03/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-03-31',
-                    'vencimento_alvara' => '2026-03-31',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Elaine Carvalho',
-                    'nome_estabelecimento' => 'Escola Municiapal Maria Elma Firmino',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-03/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-03-27',
-                    'vencimento_alvara' => '2026-03-27',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Izabel Aparecida Oliveira',
-                    'nome_estabelecimento' => 'Escola Municipal Neiva Maria Mendes',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Germana Isabel Misseno',
-                    'nome_estabelecimento' => 'Escola Municipal Professor Ismael Silva',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '09-03/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-03-25',
-                    'vencimento_alvara' => '2026-03-25',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Vera Lucia Marciano',
-                    'nome_estabelecimento' => 'Espaço Diola',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '06-01/2026',
-                    'nivel_risco'       => '1',
-                    'data_alvara'       => '2026-01-19',
-                    'vencimento_alvara' => null,
-                    'contato'           => '(35) 9 8438-0778',
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Bruniely Aparecida Belineli',
-                    'nome_estabelecimento' => 'Estética Bruniely',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-07/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-07-01',
-                    'vencimento_alvara' => '2026-07-01',
-                    'contato'           => '(35) 9 8469-0507',
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Erica Fernanda de Paulo',
-                    'nome_estabelecimento' => 'Estética Erica Fernanda',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-06/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-06-03',
-                    'vencimento_alvara' => '2026-06-03',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Lilian Oliveira Dutra Costa',
-                    'nome_estabelecimento' => 'Farmácia de Minas',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '14-01/2026',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2026-01-30',
-                    'vencimento_alvara' => '2027-01-30',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Dijan Vitor Freire',
-                    'nome_estabelecimento' => 'Festa do Peão de Ilicínea',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Evani Alvarenga Vilela',
-                    'nome_estabelecimento' => 'Festa Junina Creche',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Naiane Fonseca',
-                    'nome_estabelecimento' => 'Festa Junina na Praça',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Lucilei Dias Rocha',
-                    'nome_estabelecimento' => 'Hortigranjeiro',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-04/2025',
-                    'nivel_risco'       => '1',
-                    'data_alvara'       => '2025-04-08',
-                    'vencimento_alvara' => null,
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Aliny Bruniely Amaral',
-                    'nome_estabelecimento' => 'Instituição de Longa Permanência para Idosos Vila Vicentina',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-08/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-08-15',
-                    'vencimento_alvara' => '2026-08-15',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Jaqueline Alves',
-                    'nome_estabelecimento' => 'Jaqueline Alves',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-09/2025',
-                    'nivel_risco'       => '1',
-                    'data_alvara'       => '2025-09-25',
-                    'vencimento_alvara' => null,
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Joyce Maria Leopoldino',
-                    'nome_estabelecimento' => 'JOYCE MARIA LEOPOLDINO (Banho e tosa)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Fabricio Faria de Oliveira',
-                    'nome_estabelecimento' => 'KAROLAINE APARECIDA CASSIANO OLIVEIRA (Mascote)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ricardo Luiz Pereira Sergio',
-                    'nome_estabelecimento' => 'Kspetos Bar - Ricardo do Espeto',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Waldir José de Assis',
-                    'nome_estabelecimento' => 'Laboratório Biológica',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '18-08/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-08-29',
-                    'vencimento_alvara' => '2026-08-29',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'João Marcos Siqueira',
-                    'nome_estabelecimento' => 'Lanchonete D`Guste',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-03/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-03-10',
-                    'vencimento_alvara' => '2026-03-10',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ana Paula Alves de Assis',
-                    'nome_estabelecimento' => 'Lanchonete Espaço Burger',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Laís Correia Araújo',
-                    'nome_estabelecimento' => 'Lanchonete House Burger',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Claudio Cesar Vaneli',
-                    'nome_estabelecimento' => 'Lanchonete Los Vaneli',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Luiz Henrique Pereira Sergio',
-                    'nome_estabelecimento' => 'Lanchonete Mega Lanche',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Letícia Sabrino Francisco/ Hudson Ramos da Cunha',
-                    'nome_estabelecimento' => 'Lanchonete Mek Dog e Açai',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Neymar Pereira Guedes',
-                    'nome_estabelecimento' => 'Lanchonete P. Café da Praça',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Tallys Bricio Morais Silva',
-                    'nome_estabelecimento' => 'Lanchonete Sabor na Chapa',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Livia Aparecida de Souza',
-                    'nome_estabelecimento' => 'Lanconete THE FRUIT',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Adenilson Ferreira',
-                    'nome_estabelecimento' => 'Mercado Adenilson',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '15-04/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-04-29',
-                    'vencimento_alvara' => '2026-04-29',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Antônio José Martins Murta',
-                    'nome_estabelecimento' => 'Mercado CARLINHOS SUPERMERCADOS LTDA',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '16-08/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-08-22',
-                    'vencimento_alvara' => '2026-08-22',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Luciano Francisco de Assis',
-                    'nome_estabelecimento' => 'Mercado e Bar do Luciano',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '09-11/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-11-25',
-                    'vencimento_alvara' => '2026-11-25',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Carlos Vilela',
-                    'nome_estabelecimento' => 'Mercado Matheus Thieres',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-07/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-07-09',
-                    'vencimento_alvara' => '2026-07-09',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Stefani Cristina Silva',
-                    'nome_estabelecimento' => 'Mercado Padre Vitor - Filial',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '02-09/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-09-09',
-                    'vencimento_alvara' => '2026-09-09',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Lucimara Amaral Oliveira',
-                    'nome_estabelecimento' => 'Mercado Padre Vitor (Matriz)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '08-02/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-02-11',
-                    'vencimento_alvara' => '2026-02-11',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Wendel Rodrigo Alves Pinheiro',
-                    'nome_estabelecimento' => 'Mercado Pinheiro',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '25-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-30',
-                    'vencimento_alvara' => '2026-07-30',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Luzia de Lourdes Vilela',
-                    'nome_estabelecimento' => 'Mercado Rainha da Paz',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '02-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-03',
-                    'vencimento_alvara' => '2026-07-03',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maria Lúcia Vilela Damasceno',
-                    'nome_estabelecimento' => 'Mercado São Geraldo',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '11-02/2026',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2026-02-19',
-                    'vencimento_alvara' => '2027-02-19',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Israel Benedito da Silva',
-                    'nome_estabelecimento' => 'Mercearia do Israel',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '12-08/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-08-15',
-                    'vencimento_alvara' => '2026-08-15',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Silvia Regina Resende da Silva',
-                    'nome_estabelecimento' => 'Mini Padaria da Silva',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '03-01/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-01-21',
-                    'vencimento_alvara' => '2027-01-21',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Marcelo Montijo Teixeira',
-                    'nome_estabelecimento' => 'Montijo Odontologia LTDA',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Núbia Alves Belineli',
-                    'nome_estabelecimento' => 'Movimento e Saúde',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-12/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-12-22',
-                    'vencimento_alvara' => '2026-12-22',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Janizia Adriana Silva',
-                    'nome_estabelecimento' => 'Mercado Jc Faria Comercio de Alimentos LTDA.',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '12-02/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-02-24',
-                    'vencimento_alvara' => '2026-02-24',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Larissa Borges Costa',
-                    'nome_estabelecimento' => 'Oliva Granel',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-08/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-08-05',
-                    'vencimento_alvara' => '2026-08-05',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Fabrício Figueiredo Mendes',
-                    'nome_estabelecimento' => 'Ortoclínicas',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '11-07/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-07-15',
-                    'vencimento_alvara' => '2026-07-15',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ana Clara Silva Nunes',
-                    'nome_estabelecimento' => 'Padaria Ana Clara',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '02-03/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-03-03',
-                    'vencimento_alvara' => '2027-03-03',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Edivânia Aparecida Pereira',
-                    'nome_estabelecimento' => 'Padaria Bagueteria Ilicínea',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-17/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-07-15',
-                    'vencimento_alvara' => '2026-07-15',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maria de Fatima Oliveira',
-                    'nome_estabelecimento' => 'Padaria da Fatinha',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Sueli Andrade Alves',
-                    'nome_estabelecimento' => 'Padaria da Sueli',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ricardo Alberto Fernandes',
-                    'nome_estabelecimento' => 'Padaria do Ricardo',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Antônio Marcos Durval',
-                    'nome_estabelecimento' => 'Padaria Pão e CIA',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '09-01/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-01-29',
-                    'vencimento_alvara' => '2027-01-29',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Neimar Pereira Guedes',
-                    'nome_estabelecimento' => 'Pães e Bolos Central',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Paula de Oliveira Figueiredo Lima',
-                    'nome_estabelecimento' => 'Pastelaria da Paula',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-02/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-02-03',
-                    'vencimento_alvara' => '2027-02-03',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Christian Luis Gois de Melo',
-                    'nome_estabelecimento' => 'Pastelaria do Christião',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maikel Pereira Sérgio',
-                    'nome_estabelecimento' => 'Pastelaria Rei do Salgado',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Patrícia Magalhães',
-                    'nome_estabelecimento' => 'Patricciah M Studio Personal',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Patty Odontologia',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Pedro Domiciano Vieira',
-                    'nome_estabelecimento' => 'Pedro do Zeca',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Markeline Garcia Silva',
-                    'nome_estabelecimento' => 'Peixaria Empório do Peixe',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '07-06/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-06-17',
-                    'vencimento_alvara' => '2026-06-17',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Leonice Aparecida Souza Oliveira',
-                    'nome_estabelecimento' => 'Peixaria Santa Maria',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-03/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-03-10',
-                    'vencimento_alvara' => '2026-03-10',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Rozimeire Aparecida Andrade Rezende',
-                    'nome_estabelecimento' => 'Pizzaria Bella Italia',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '11-09/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-09-30',
-                    'vencimento_alvara' => '2026-09-30',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Henrique Vilela Amaral',
-                    'nome_estabelecimento' => 'Polpa de frutas',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-06/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-01-27',
-                    'vencimento_alvara' => '2026-01-27',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Paulo Gonçalves do Amaral',
-                    'nome_estabelecimento' => 'Polpa de frutas',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '10-01/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-01-27',
-                    'vencimento_alvara' => '2026-01-27',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Marcio Vinícius Vilela',
-                    'nome_estabelecimento' => 'Posto de Coleta Messora e Vilela Ltda.',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '08-01/2026',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2026-01-21',
-                    'vencimento_alvara' => '2027-01-21',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Alda de Oliveira',
-                    'nome_estabelecimento' => 'PSF Central',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '09-10/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-10-14',
-                    'vencimento_alvara' => '2026-10-14',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Beatriz Aparecida Alves',
-                    'nome_estabelecimento' => 'PSF Rosário',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '05-10/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-10-05',
-                    'vencimento_alvara' => '2026-10-05',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Gisele Aparecida de Carvalho Bueno',
-                    'nome_estabelecimento' => 'PSF Rural',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-10/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-10-13',
-                    'vencimento_alvara' => '2026-10-13',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Josyane Costa Conde Ferreira',
-                    'nome_estabelecimento' => 'Restaurante D`Guste',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '08-10/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-02-12',
-                    'vencimento_alvara' => '2026-02-12',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Maria Aparecida Alves',
-                    'nome_estabelecimento' => 'Restaurante da Nenem',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-03/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-02-01',
-                    'vencimento_alvara' => '2026-02-01',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Emerson Luiz de Souza',
-                    'nome_estabelecimento' => 'Restaurante disk Rango',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '03-10/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-10-08',
-                    'vencimento_alvara' => '2026-10-08',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Tayrine Oliveira',
-                    'nome_estabelecimento' => 'Restaurante e Lanchonete Sabor Nobre',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '16-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-17',
-                    'vencimento_alvara' => '2026-07-17',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Régia de Fátima Machado',
-                    'nome_estabelecimento' => 'Restaurante e Pousada Recanto dos Araças',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '12-01/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-10-31',
-                    'vencimento_alvara' => '2026-10-31',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Taíza Amanda Rodrigues',
-                    'nome_estabelecimento' => 'Restaurante Porcolino Grill',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Claudia Aurica de Oliveira',
-                    'nome_estabelecimento' => 'Restaurante Tradição Mineira',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '09-06/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-06-24',
-                    'vencimento_alvara' => '2026-06-24',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Adriana da Silveira Vitor',
-                    'nome_estabelecimento' => 'Restaurante Vitor/ Mathias Choperia',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-04/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-04-03',
-                    'vencimento_alvara' => '2026-04-03',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Robson Moscardini',
-                    'nome_estabelecimento' => 'Robinho Dentista',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '03-08/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-08-05',
-                    'vencimento_alvara' => '2026-08-05',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Karine de Freitas Silva',
-                    'nome_estabelecimento' => 'Salão beleza e estetica',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '11-02/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-02-18',
-                    'vencimento_alvara' => '2026-02-18',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Conceição Aparecida Alves',
-                    'nome_estabelecimento' => 'Salão Cidinha Alves',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '23-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-24',
-                    'vencimento_alvara' => '2026-07-24',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ana Flávia Silvestre Silva',
-                    'nome_estabelecimento' => 'Salão da Ana Flávia',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-10/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-10-20',
-                    'vencimento_alvara' => '2026-10-20',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Jaqueline Margaria de Lima',
-                    'nome_estabelecimento' => 'Salão da Jaque Lima',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '19-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-18',
-                    'vencimento_alvara' => '2026-07-18',
-                    'contato'           => '(35) 9 9827-1912',
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Samara Santos da Silva',
-                    'nome_estabelecimento' => 'Salão da Samara',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '20-07/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-07-18',
-                    'vencimento_alvara' => '2026-07-18',
-                    'contato'           => '(35) 9 8436-3659',
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Histefani Pereira Ferreira',
-                    'nome_estabelecimento' => 'Salão Espaço Renovar',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '01-01/2026',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2026-01-07',
-                    'vencimento_alvara' => '2027-01-07',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Eduardo José de Oliveira',
-                    'nome_estabelecimento' => 'SAO BENTO COMERCIO E PRESTAÇOES DE SERVICO LTDA (Lava rápido, borracharia e oficina)',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '04-09/2025',
-                    'nivel_risco'       => 'N/A',
-                    'data_alvara'       => '2025-09-11',
-                    'vencimento_alvara' => '2026-09-11',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Adriana Miranda de Alcântara',
-                    'nome_estabelecimento' => 'Saúde Mental',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '06-09/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-09-22',
-                    'vencimento_alvara' => '2026-09-22',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Vitor Tadeu Alves de Jesus',
-                    'nome_estabelecimento' => 'Sorveteria 4 Estações',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '06-10/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-10-16',
-                    'vencimento_alvara' => '2026-10-16',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Wallison Fernando de Oliveira',
-                    'nome_estabelecimento' => 'Sorveteria e Açai',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Cleudes Oswaldo de Souza',
-                    'nome_estabelecimento' => 'Sorveteria Fino Sabor',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Amanda Dias',
-                    'nome_estabelecimento' => 'Sorveteria PONTO 265',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Patrícia Conceição Alves Barbosa',
-                    'nome_estabelecimento' => 'Studio de Cabelos Phaty',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '11-08/2025',
-                    'nivel_risco'       => '2',
-                    'data_alvara'       => '2025-08-11',
-                    'vencimento_alvara' => '2026-08-11',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Ailton Rodrigues da Cunha',
-                    'nome_estabelecimento' => 'Trailer do Ailton',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Luis Fernando Mathias',
-                    'nome_estabelecimento' => 'Trem Bão Restaurante',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Eduardo Miranda de Carvalho',
-                    'nome_estabelecimento' => 'Veterinário e Pet Shop CENTER VET.',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => [
-                    'numero_alvara'     => '13-04/2025',
-                    'nivel_risco'       => '3',
-                    'data_alvara'       => '2025-04-28',
-                    'vencimento_alvara' => '2026-04-28',
-                    'contato'           => null,
-                    'status'            => 'Não requerido',
-                    'created_at'        => $agora,
-                    'updated_at'        => $agora,
-                ],
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'Eandra Brunielli Oliveira Barbosa',
-                    'nome_estabelecimento' => 'Vita Care Serviços em Saúde',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 158',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 159',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 160',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 161',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 162',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 163',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 164',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 165',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 166',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 167',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 168',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 169',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 170',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 171',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 172',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 173',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 174',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 175',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 176',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 177',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 178',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 179',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 180',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 181',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 182',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 183',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 184',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 185',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 186',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 187',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 188',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 189',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 190',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 191',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 192',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 193',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 194',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 195',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 196',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 197',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 198',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 199',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 200',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 201',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 202',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 203',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 204',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 205',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 206',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 207',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 208',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 209',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 210',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 211',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 212',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 213',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 214',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 215',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 216',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 217',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 218',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 219',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 220',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 221',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 222',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 223',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 224',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 225',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 226',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 227',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 228',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 229',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 230',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 231',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 232',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 233',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 234',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 235',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 236',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 237',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 238',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 239',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 240',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 241',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 242',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 243',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 244',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 245',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 246',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 247',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 248',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 249',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 250',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 251',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 252',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 253',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 254',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 255',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 256',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 257',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 258',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 259',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 260',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 261',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 262',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 263',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 264',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 265',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 266',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 267',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 268',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 269',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 270',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 271',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 272',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 273',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 274',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 275',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 276',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 277',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 278',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 279',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 280',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 281',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 282',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 283',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 284',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 285',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 286',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 287',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 288',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 289',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 290',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 291',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 292',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 293',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 294',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 295',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 296',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 297',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 298',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 299',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 300',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 301',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 302',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 303',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 304',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 305',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 306',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 307',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 308',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 309',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 310',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 311',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 312',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 313',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 314',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 315',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 316',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 317',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 318',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 319',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 320',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 321',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 322',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 323',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 324',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 325',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 326',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 327',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 328',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 329',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 330',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 331',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 332',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 333',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 334',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 335',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 336',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 337',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 338',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 339',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 340',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 341',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 342',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 343',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 344',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 345',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 346',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 347',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 348',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 349',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 350',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 351',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 352',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 353',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 354',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 355',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 356',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 357',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 358',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 359',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 360',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 361',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 362',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 363',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 364',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 365',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 366',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 367',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 368',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 369',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 370',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 371',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 372',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 373',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 374',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 375',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 376',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 377',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 378',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 379',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 380',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 381',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 382',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 383',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 384',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 385',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 386',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 387',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 388',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 389',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 390',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 391',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 392',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 393',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 394',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 395',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 396',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 397',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 398',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 399',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 400',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 401',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 402',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 403',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 404',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 405',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 406',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 407',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 408',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 409',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 410',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 411',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 412',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 413',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 414',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 415',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 416',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 417',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 418',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 419',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 420',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 421',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 422',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 423',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 424',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 425',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 426',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 427',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 428',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 429',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 430',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 431',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 432',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 433',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 434',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 435',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 436',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 437',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 438',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 439',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 440',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 441',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 442',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 443',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 444',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 445',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 446',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 447',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 448',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 449',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 450',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 451',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 452',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 453',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 454',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 455',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 456',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 457',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 458',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 459',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 460',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 461',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 462',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 463',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 464',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 465',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 466',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 467',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 468',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 469',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 470',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 471',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 472',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 473',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 474',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 475',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 476',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 477',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 478',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 479',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 480',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 481',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 482',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 483',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 484',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 485',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 486',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 487',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 488',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 489',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 490',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 491',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 492',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 493',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 494',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 495',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 496',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 497',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 498',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 499',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 500',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 501',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 502',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 503',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 504',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 505',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 506',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 507',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 508',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 509',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 510',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 511',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 512',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 513',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 514',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 515',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 516',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 517',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 518',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 519',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 520',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 521',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 522',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 523',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 524',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 525',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 526',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 527',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 528',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 529',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 530',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 531',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 532',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 533',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 534',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 535',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 536',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 537',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 538',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 539',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 540',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 541',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 542',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 543',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 544',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 545',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 546',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 547',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 548',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 549',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 550',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 551',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 552',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 553',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 554',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 555',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 556',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 557',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 558',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 559',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 560',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 561',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 562',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 563',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 564',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 565',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 566',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 567',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 568',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 569',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 570',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 571',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 572',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 573',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 574',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 575',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 576',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 577',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 578',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 579',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 580',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 581',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 582',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 583',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 584',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 585',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 586',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 587',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 588',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 589',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 590',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 591',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 592',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 593',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 594',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 595',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 596',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 597',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 598',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 599',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 600',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 601',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 602',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 603',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 604',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 605',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 606',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 607',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 608',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 609',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 610',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 611',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 612',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 613',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 614',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 615',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 616',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 617',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 618',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 619',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 620',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 621',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 622',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 623',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 624',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 625',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 626',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 627',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 628',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 629',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 630',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 631',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 632',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 633',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 634',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 635',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 636',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 637',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 638',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 639',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 640',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 641',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 642',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 643',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 644',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 645',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 646',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 647',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 648',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 649',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 650',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 651',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 652',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 653',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 654',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 655',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 656',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 657',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 658',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 659',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 660',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 661',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 662',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 663',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 664',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 665',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 666',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 667',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 668',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 669',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 670',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 671',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 672',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 673',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 674',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 675',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 676',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 677',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 678',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 679',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 680',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 681',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 682',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 683',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 684',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 685',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 686',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 687',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 688',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 689',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 690',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 691',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 692',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 693',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 694',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 695',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 696',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 697',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 698',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 699',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 700',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 701',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 702',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 703',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 704',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 705',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 706',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 707',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 708',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 709',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 710',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 711',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 712',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 713',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 714',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 715',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 716',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 717',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 718',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 719',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 720',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 721',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 722',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 723',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 724',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 725',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 726',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 727',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 728',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 729',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 730',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 731',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 732',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 733',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 734',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 735',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 736',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 737',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 738',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 739',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 740',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 741',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 742',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 743',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 744',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 745',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 746',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 747',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 748',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 749',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 750',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 751',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 752',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 753',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 754',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 755',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 756',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 757',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 758',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 759',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 760',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 761',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 762',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 763',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 764',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 765',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 766',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 767',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 768',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 769',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 770',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 771',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 772',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 773',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 774',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 775',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 776',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 777',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 778',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 779',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 780',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 781',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 782',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 783',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 784',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 785',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 786',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 787',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 788',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 789',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 790',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 791',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 792',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 793',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 794',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 795',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 796',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 797',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 798',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 799',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 800',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 801',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 802',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 803',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 804',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 805',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 806',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 807',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 808',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 809',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 810',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 811',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 812',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 813',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 814',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 815',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 816',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 817',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 818',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 819',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 820',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 821',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 822',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 823',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 824',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 825',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 826',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 827',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 828',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 829',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 830',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 831',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 832',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 833',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 834',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 835',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 836',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 837',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 838',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 839',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 840',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 841',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 842',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 843',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 844',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 845',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 846',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 847',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 848',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 849',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 850',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 851',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 852',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 853',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 854',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 855',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 856',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 857',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 858',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 859',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 860',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 861',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 862',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 863',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 864',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 865',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 866',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 867',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 868',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 869',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 870',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 871',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 872',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 873',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 874',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 875',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 876',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 877',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 878',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 879',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 880',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 881',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 882',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 883',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 884',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 885',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 886',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 887',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 888',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 889',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 890',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 891',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 892',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 893',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 894',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 895',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 896',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 897',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 898',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 899',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 900',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 901',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 902',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 903',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 904',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 905',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 906',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 907',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 908',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 909',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 910',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 911',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 912',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 913',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 914',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 915',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 916',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 917',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 918',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 919',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 920',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 921',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 922',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 923',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 924',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 925',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 926',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 927',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 928',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 929',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 930',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 931',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 932',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 933',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 934',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 935',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 936',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 937',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 938',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 939',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 940',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 941',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 942',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 943',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 944',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 945',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 946',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 947',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 948',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 949',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 950',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 951',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 952',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 953',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 954',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 955',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 956',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 957',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 958',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 959',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 960',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 961',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 962',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 963',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 964',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 965',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 966',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 967',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 968',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 969',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 970',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 971',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 972',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 973',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 974',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 975',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 976',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 977',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 978',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 979',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 980',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 981',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 982',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 983',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 984',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 985',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 986',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 987',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 988',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 989',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 990',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 991',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 992',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 993',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 994',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 995',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 996',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 997',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 998',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 999',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 1000',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 1001',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-            [
-                'est' => [
-                    'nome_responsavel'     => 'A Definir',
-                    'nome_estabelecimento' => 'Estabelecimento linha 1002',
-                    'endereco'             => 'Endereço a informar.',
-                    'cnaes'                => '00.00-0/00',
-                    'created_at'           => $agora,
-                    'updated_at'           => $agora,
-                ],
-                'alv' => null,
-            ],
-        ];
+        $agora = now();
 
-        DB::transaction(function () use ($dados) {
-            foreach ($dados as $item) {
-                if (DB::table('estabelecimentos')->where('nome_estabelecimento', $item['est']['nome_estabelecimento'])->exists()) {
-                    continue;
-                }
-                $estId = DB::table('estabelecimentos')->insertGetId($item['est']);
-                if ($item['alv'] !== null) {
-                    if (!DB::table('alvaras')->where('numero_alvara', $item['alv']['numero_alvara'])->exists()) {
-                        DB::table('alvaras')->insert(array_merge($item['alv'], ['estabelecimento_id' => $estId]));
-                    }
-                }
-            }
-        });
+        // Linha 2
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Wagner Eduardo Bueno',
+            'nome_estabelecimento' => 'Academia Evolution Fitness',
+            'endereco'             => 'Rua do Comércio, 420',
+            'cnaes'                => '9313-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '12-09/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-09-29',
+            'vencimento_alvara'  => '2026-09-29',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 3
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Sandro Menezes de Oliveira',
+            'nome_estabelecimento' => 'Academia Saúde Total',
+            'endereco'             => 'Rua do Comércio, 215',
+            'cnaes'                => '9313-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '19-08/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-09-15',
+            'vencimento_alvara'  => '2026-09-15',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 4
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Marcelino Moreira Costa',
+            'nome_estabelecimento' => 'Academia Vida Ativa',
+            'endereco'             => 'Rua Direita, 110',
+            'cnaes'                => '9313-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-09/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-09-29',
+            'vencimento_alvara'  => '2026-09-29',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 5
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'A informar',
+            'nome_estabelecimento' => 'Açaí e CIA',
+            'endereco'             => 'Endereço a informar.',
+            'cnaes'                => '00.00-0/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 6
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Neimar Pereira Guedes',
+            'nome_estabelecimento' => 'Açaí Sorvetes',
+            'endereco'             => 'Rua Direita, 72 - Centro',
+            'cnaes'                => '1053-8/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 7
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Celeno César de Sousa',
+            'nome_estabelecimento' => 'Açougue Casa da Carne João e Maria',
+            'endereco'             => 'Rua Doze de Outúbro, 78',
+            'cnaes'                => '4722-9/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-06/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-06-05',
+            'vencimento_alvara'  => '2026-06-05',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 8
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Dayvison Wallas Claudino',
+            'nome_estabelecimento' => 'Adega DAYVISON WALLAS CLAUDINO (Distribuidora DJ)',
+            'endereco'             => 'Rua Brasil, 08',
+            'cnaes'                => '4723-7/00 4789-0/99 5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 9
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Antônio Roberto de Andrade Junior',
+            'nome_estabelecimento' => 'Adega do Juninho do Beto',
+            'endereco'             => 'Rua Santa Catarina, 22',
+            'cnaes'                => '5611-2/04 5320-2/02 4729-6/01 5611-2/03 5611-2/05',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 10
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Vinícius Eugênio Alvarenga de Melo',
+            'nome_estabelecimento' => 'Adega House Beer',
+            'endereco'             => 'Praça Padre João Lourenço Leite, 02',
+            'cnaes'                => '4723-7/00 4729-6/01 4729-6/99 5611-2/05',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-10/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-10-08',
+            'vencimento_alvara'  => '2026-10-08',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 11
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Bruna Loraine Rocha Assis',
+            'nome_estabelecimento' => 'Ar Essence Espaço Integrado',
+            'endereco'             => 'Avenida José Vilela da Costa, 980 - Cidade Nova',
+            'cnaes'                => '8650-0/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '08-07/2025',
+            'nivel_risco'        => '1',
+            'data_alvara'        => '2025-07-11',
+            'vencimento_alvara'  => null,
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 12
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Querem Danielle Rocha Assis',
+            'nome_estabelecimento' => 'Ar Essence Espaço Integrado',
+            'endereco'             => 'Avenida José Vilela da Costa, 980 - Cidade Nova',
+            'cnaes'                => '8650-0/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '08-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-11',
+            'vencimento_alvara'  => '2026-07-11',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 13
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Odilon Rodrigues de Oliveira',
+            'nome_estabelecimento' => 'Atividade de Estética',
+            'endereco'             => 'Rua Paraíba, 370',
+            'cnaes'                => '9602-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 14
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Larissa Bernardes de Oliveira',
+            'nome_estabelecimento' => 'Bar Chalé da XV',
+            'endereco'             => 'Avenida XV de Novembro, 1457',
+            'cnaes'                => '5611-2/05 4712-1/00 4723-7/00 5611-2/03 5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 15
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Rosilene Júlia Vilela',
+            'nome_estabelecimento' => 'Bar da Rosy',
+            'endereco'             => 'Rua Maranhão, 182',
+            'cnaes'                => '5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '12-02/2026',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-03-19',
+            'vencimento_alvara'  => '2026-03-19',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 16
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Roberto Antônio de Lima',
+            'nome_estabelecimento' => 'Bar do Baiano',
+            'endereco'             => 'Rua Vanilton Vilela de Faria, 242',
+            'cnaes'                => '5611-2/04 4723-7/00 4929-6/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 17
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Rosimeire Aparecida da Costa',
+            'nome_estabelecimento' => 'Bar do Beto',
+            'endereco'             => 'Rua do Comércio, 272',
+            'cnaes'                => '5611-2/05',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 18
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'José Marcio dos Santos',
+            'nome_estabelecimento' => 'Bar do José Marcio',
+            'endereco'             => 'Rua Querubino Vilela Moscardini, 245',
+            'cnaes'                => '5611-2/05 4723-7 4729-6/01 5611-2/04 4729-6/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 19
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Rone Marcos Alves',
+            'nome_estabelecimento' => 'Bar do Rone',
+            'endereco'             => 'Avenida José Vilela da Costa, 211',
+            'cnaes'                => '5611-2/05 4723-7/00 4729-6/01 4729-6/99  5611-2/04 5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 20
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Marciel Antônio da Silva',
+            'nome_estabelecimento' => 'BAR E PETISCARIA DO MARCIEL LTDA',
+            'endereco'             => 'Rua Vanilton Vilela de Faria, 292',
+            'cnaes'                => '5611-2/05 4723-7/00 5611-2/01 5611-2/03 5611-2/04 7319-0/99 8230-0/01 8230-0/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 21
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'João Paulo Lucarini Bueno',
+            'nome_estabelecimento' => 'Bar Morada Caipira',
+            'endereco'             => 'Rua Vanilton Vilela de Faria, 302',
+            'cnaes'                => '4723-7/00 5620-1/04 4789-0/99 4729-6/01 4721-1/03 4729-6/99 5612-1/00 4724-5/00 4721-1/02 4772-5/00 4789-0/04 4789-0/05',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 22
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maria Luiza Montanine',
+            'nome_estabelecimento' => 'Bar Recanto da Lagoa',
+            'endereco'             => 'Rua Joaquim Marciano de Carvalho',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 23
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Irandi Patrocinio Leite',
+            'nome_estabelecimento' => 'Barbearia do Pretinho',
+            'endereco'             => 'Rua Boa Esperança, 540',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-02/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-02-13',
+            'vencimento_alvara'  => '2026-02-13',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 24
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Guilherme Henrique Vilela Messias',
+            'nome_estabelecimento' => 'Barbearia Gentleman\'s Barbershop',
+            'endereco'             => 'Avenida XV de Novembro, 120',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '06-08/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-08-05',
+            'vencimento_alvara'  => '2026-08-05',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 25
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Kelder de Lucas',
+            'nome_estabelecimento' => 'Barbearia kerder Cortes',
+            'endereco'             => 'Rua Sebastião Cardoso, 220 - Centro',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-07',
+            'vencimento_alvara'  => '2026-07-07',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 26
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Matheus Oliveira Pereira',
+            'nome_estabelecimento' => 'Barbearia Matheus',
+            'endereco'             => 'Rua Padre Jose Zellis, 102',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-02/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-02-24',
+            'vencimento_alvara'  => '2026-02-24',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 27
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Weverton Cesar de Oliveira',
+            'nome_estabelecimento' => 'Barbearia Oliveira',
+            'endereco'             => 'Rua Leopoldino Mendes, 141',
+            'cnaes'                => '9602-5/01 4772-5/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '17-10/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-10-21',
+            'vencimento_alvara'  => '2026-10-21',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 28
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Cristiane Barbosa Ferreira',
+            'nome_estabelecimento' => 'BARBOSA FERREIRA LABORATORIO LTDA (Labcon)',
+            'endereco'             => 'Avenida 15 de Novembro, 206',
+            'cnaes'                => '8640-2/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-11/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-11-11',
+            'vencimento_alvara'  => '2026-11-11',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 29
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Neymar Eventos',
+            'nome_estabelecimento' => 'Barracas Motorock',
+            'endereco'             => 'Praça Padre João Lourenço Leite',
+            'cnaes'                => '8230-0/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 30
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Lucimar Aparecida Teixeira',
+            'nome_estabelecimento' => 'Bona Quitanda',
+            'endereco'             => 'Rua Herculino da Silva, 73',
+            'cnaes'                => '1091-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '07-01/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-01-27',
+            'vencimento_alvara'  => '2027-01-27',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 31
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Tereza Cristina Vilela Lemos',
+            'nome_estabelecimento' => 'Bradesco S.A.',
+            'endereco'             => 'Rua Direita, 173 - Centro',
+            'cnaes'                => '6422-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 32
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Elias Alves dos Santos',
+            'nome_estabelecimento' => 'Buteko da Praça',
+            'endereco'             => 'Rua Doze de Outubro, 213',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 33
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ana Luiza Alves Teixeira',
+            'nome_estabelecimento' => 'Cantinho do Açaí',
+            'endereco'             => 'Rua do comércio, 586',
+            'cnaes'                => '4729-6/99 5611-2/03 5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 34
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Elaine Aparecida Pereira',
+            'nome_estabelecimento' => 'Casa de Rações Amigo do Campo',
+            'endereco'             => 'Rua Brasil, 298',
+            'cnaes'                => '4789-0/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '06-02/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-02-07',
+            'vencimento_alvara'  => '2026-02-07',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 35
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Lucineia Santos',
+            'nome_estabelecimento' => 'Centro Dias (APAE)',
+            'endereco'             => 'Rua Querubino Vilela Moscardini, 125',
+            'cnaes'                => '9430-8',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-06/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-06-04',
+            'vencimento_alvara'  => '2026-06-04',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 36
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'A informar',
+            'nome_estabelecimento' => 'Clínica F&L Aliança LTDA',
+            'endereco'             => 'Endereço a informar.',
+            'cnaes'                => '00.00-0/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 37
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Gessica Camila da Silva',
+            'nome_estabelecimento' => 'Clínica Gessica Camila Podologia',
+            'endereco'             => 'Avenida XV de Novembro, 104',
+            'cnaes'                => '8690-9/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '02-02/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-02-02',
+            'vencimento_alvara'  => '2027-02-02',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 38
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Patrícia Figueiredo',
+            'nome_estabelecimento' => 'Clínica Patrícia Figueiredo Odontologia',
+            'endereco'             => 'Rua Paraná, 47 - Centro',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-08/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-08-01',
+            'vencimento_alvara'  => '2026-08-01',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 39
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Igor Ferreira Botto',
+            'nome_estabelecimento' => 'Clinica Revigore Centro Médico e Exames EIRELLISILVA LTDA.',
+            'endereco'             => 'Rua Parana, 97',
+            'cnaes'                => '00.00-0/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '08-03/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-03-20',
+            'vencimento_alvara'  => '2026-03-20',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 40
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maik',
+            'nome_estabelecimento' => 'Clube Social Ilicinense',
+            'endereco'             => 'Rua Edson Bernardesa Vilela, 301',
+            'cnaes'                => '9312-3/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '12-04/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-04-24',
+            'vencimento_alvara'  => '2026-04-24',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 41
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Juliana Aparecida Alves Faria',
+            'nome_estabelecimento' => 'Comercial Faria LTDA.',
+            'endereco'             => 'Rua Maranhão, 171',
+            'cnaes'                => '4712-1/00 4722-9/01 4724-5/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '02-01/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-01-14',
+            'vencimento_alvara'  => '2027-01-14',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 42
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Danele Françue Vitar Lima',
+            'nome_estabelecimento' => 'Consultorio Danelly Lima',
+            'endereco'             => 'Praça Padre João Lourenço Leite, 47',
+            'cnaes'                => '8650-0/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-01/2026',
+            'nivel_risco'        => '1',
+            'data_alvara'        => '2026-01-19',
+            'vencimento_alvara'  => null,
+            'contato'            => '(35) 98473-2569',
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 43
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Izabelly Lucarini Vilela Carvalho',
+            'nome_estabelecimento' => 'Consultório Izabelle Lucarini',
+            'endereco'             => 'Avenida XV de Novembro, 55',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '03-12/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-12-18',
+            'vencimento_alvara'  => '2026-12-18',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 44
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Frank Luis Martins Graneiro CRM/MG 38485',
+            'nome_estabelecimento' => 'Consultório Médico Dr. Frank',
+            'endereco'             => 'Avenida Xv de Novembro, 155',
+            'cnaes'                => '8630-5/03 8610-1/02 8630-5/01 8630-5/02 8640-2/05 8650-0/05 8650-0/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-01/2026',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2026-01-28',
+            'vencimento_alvara'  => '2027-01-28',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 45
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Aluany Luisa de Sousa Alvarenga',
+            'nome_estabelecimento' => 'Consultório Odontológico Aluany',
+            'endereco'             => 'Rua Áurea, 670',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '03-09/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-09-11',
+            'vencimento_alvara'  => '2026-09-11',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 46
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Angelo de Oliveira Junior Dias',
+            'nome_estabelecimento' => 'Consultório Odontológico Angelo',
+            'endereco'             => 'Avenida 15 de Novembro, 8 - Centro',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '06-07/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-07-11',
+            'vencimento_alvara'  => '2026-07-11',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 47
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Gabriela Alvarenga Vilela',
+            'nome_estabelecimento' => 'Consultório Odontológico Gabriela',
+            'endereco'             => 'Rua Direita, 34',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-06/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-06-30',
+            'vencimento_alvara'  => '2026-06-30',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 48
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maria Gisele Damasceno',
+            'nome_estabelecimento' => 'Consultório Odontológico Gisele',
+            'endereco'             => 'Rua Francisco de Ouro, 104',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '02-05/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-04-27',
+            'vencimento_alvara'  => '2026-04-27',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 49
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Gisele Arco Verde',
+            'nome_estabelecimento' => 'Consultório Odontológico Giséle Arco Verde',
+            'endereco'             => 'Rua Boa Esperança, 267',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-07/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-07-15',
+            'vencimento_alvara'  => '2026-07-15',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 50
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maria Regina Oliveira Silva',
+            'nome_estabelecimento' => 'Consultório Odontológico RG',
+            'endereco'             => 'Rua do Comércio, 116 - Centro',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '09-07/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-07-28',
+            'vencimento_alvara'  => '2026-07-28',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 51
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Viviane Vilela Oliveira',
+            'nome_estabelecimento' => 'Consultório Odontológico Viviane',
+            'endereco'             => 'Rua Direita, 85',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '03-05/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-05-25',
+            'vencimento_alvara'  => '2026-05-25',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 52
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ciciana Almeida Silva',
+            'nome_estabelecimento' => 'CRAS (centro de assistência)',
+            'endereco'             => 'Avenida 15 de novembro, 690',
+            'cnaes'                => '8730-1/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-03/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-03-25',
+            'vencimento_alvara'  => '2026-03-25',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 53
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maria Helena Carvalho',
+            'nome_estabelecimento' => 'Creche Cemei Luriane Rosalves Ribeiro',
+            'endereco'             => 'Rua Querubino Vilela Moscardini, 210',
+            'cnaes'                => '8411-2/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-03/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-03-31',
+            'vencimento_alvara'  => '2026-03-31',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 54
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Cristiane de Paula Silva',
+            'nome_estabelecimento' => 'Cristiane Bolos',
+            'endereco'             => 'Zona Rural Comunidade Grotão',
+            'cnaes'                => '5611-2/03 5620-1/04 4721-1/03 1092-9/00 1091-1/01 4724-5/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-02/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-02-25',
+            'vencimento_alvara'  => '2027-02-25',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 55
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Gabriel Henrique da Cunha',
+            'nome_estabelecimento' => 'Distibuidora Conveniencia SM.',
+            'endereco'             => 'Avenida Jose Vilela da Costa, 204',
+            'cnaes'                => '4723-7/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 56
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Rafael Oliveira Damasceno',
+            'nome_estabelecimento' => 'Docê Hamburgueria e Confeitaria',
+            'endereco'             => 'Rua Santa Catarina, 70 - Centro',
+            'cnaes'                => '5611-2/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 57
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Otávio Henrique Rezende A.',
+            'nome_estabelecimento' => 'Droga 100',
+            'endereco'             => 'Rua Comércio, 855',
+            'cnaes'                => '4771-7/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 58
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Daine Aparecida Lima',
+            'nome_estabelecimento' => 'Drogaria Dias - ME (Filial)',
+            'endereco'             => 'Praça Sete de Setembro, 50',
+            'cnaes'                => '4471-7/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-02/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2026-02-03',
+            'vencimento_alvara'  => '2027-02-03',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 59
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Jaqueline Dayane da Silva CRF/MG31.695',
+            'nome_estabelecimento' => 'Drogaria Dias Ltda. Rede Mais Minas (Matriz)',
+            'endereco'             => 'Avenida José Vilela da Costa, 514',
+            'cnaes'                => '00.00-0/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 60
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Denis Rafael Vilela de Sousa CRF 44623',
+            'nome_estabelecimento' => 'Drogaria Minas Master (Filial)',
+            'endereco'             => 'Avenida 15 de Novembro, 316',
+            'cnaes'                => '00.00-0/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 61
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Deliani Aparecida Oliveira',
+            'nome_estabelecimento' => 'Drogaria Minas Master (Matriz)',
+            'endereco'             => 'Rua Do Comércio, 111',
+            'cnaes'                => '4771-7/01-02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 62
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Otávio Junqueira Silva',
+            'nome_estabelecimento' => 'Drogaria Minas Super Farma',
+            'endereco'             => 'Avenida 15 de Novembro, 300',
+            'cnaes'                => '4771-7/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '02-04/2026',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-05-21',
+            'vencimento_alvara'  => '2026-05-21',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 63
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Marilia Ranieli de Sousa',
+            'nome_estabelecimento' => 'Drogaria Nossa Senhora Aparecida',
+            'endereco'             => 'Rua Boa Esperança, 788',
+            'cnaes'                => '4771-7/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 64
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Mateus Faustino de Carvalho',
+            'nome_estabelecimento' => 'Drogaria Nossa Senhora Aparecida (Filial)',
+            'endereco'             => 'Rua Francisco de Ouro, 90',
+            'cnaes'                => '4771-7/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 65
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Adriano da Silva Pires',
+            'nome_estabelecimento' => 'EDSON SILVA BORGES (Funerária Santa Rita)',
+            'endereco'             => 'Rua 2 de novembro, 112',
+            'cnaes'                => '9603-3/04 4789-0/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-11/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-11-03',
+            'vencimento_alvara'  => '2026-11-03',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 66
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Andrelisa Aparecida de Andrade Carrijo',
+            'nome_estabelecimento' => 'EMPORIO J.N LTDA',
+            'endereco'             => 'Rua Maranhão, 03',
+            'cnaes'                => '4712-1/00 5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-09/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-09-01',
+            'vencimento_alvara'  => '2026-09-01',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 67
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Claudia Aparecida Nunes',
+            'nome_estabelecimento' => 'Escola Estadual Nossa Senhora Aparecida',
+            'endereco'             => 'Rua Doze de Outúbro, 198',
+            'cnaes'                => '8513-9',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '14-03/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-03-31',
+            'vencimento_alvara'  => '2026-03-31',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 68
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Elaine Carvalho',
+            'nome_estabelecimento' => 'Escola Municiapal Maria Elma Firmino',
+            'endereco'             => 'Praça do Rosario,',
+            'cnaes'                => '8412-4/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-03/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-03-27',
+            'vencimento_alvara'  => '2026-03-27',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 69
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Izabel Aparecida Oliveira',
+            'nome_estabelecimento' => 'Escola Municipal Neiva Maria Mendes',
+            'endereco'             => 'Rua Aurea, 448',
+            'cnaes'                => '8412-4/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 70
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Germana Isabel Misseno',
+            'nome_estabelecimento' => 'Escola Municipal Professor Ismael Silva',
+            'endereco'             => 'Rua Francisco Augusto Passos Maia, 120',
+            'cnaes'                => '8412-4/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '09-03/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-03-25',
+            'vencimento_alvara'  => '2026-03-25',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 71
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Vera Lucia Marciano',
+            'nome_estabelecimento' => 'Espaço Diola',
+            'endereco'             => 'Rodovia Br 265, km 0',
+            'cnaes'                => '8230-0/01 8230-0/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '06-01/2026',
+            'nivel_risco'        => '1',
+            'data_alvara'        => '2026-01-19',
+            'vencimento_alvara'  => null,
+            'contato'            => '(35) 9 8438-0778',
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 72
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Bruniely Aparecida Belineli',
+            'nome_estabelecimento' => 'Estética Bruniely',
+            'endereco'             => 'Rua Aurea, 70 - Centro',
+            'cnaes'                => '9602-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-07/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-07-01',
+            'vencimento_alvara'  => '2026-07-01',
+            'contato'            => '(35) 9 8469-0507',
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 73
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Erica Fernanda de Paulo',
+            'nome_estabelecimento' => 'Estética Erica Fernanda',
+            'endereco'             => 'Rua do Comércio, 111 - sala 01',
+            'cnaes'                => '9602-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-06/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-06-03',
+            'vencimento_alvara'  => '2026-06-03',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 74
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Lilian Oliveira Dutra Costa',
+            'nome_estabelecimento' => 'Farmácia de Minas',
+            'endereco'             => 'Rua 12 do Outubro,  345',
+            'cnaes'                => '4771-7/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '14-01/2026',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2026-01-30',
+            'vencimento_alvara'  => '2027-01-30',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 75
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Dijan Vitor Freire',
+            'nome_estabelecimento' => 'Festa do Peão de Ilicínea',
+            'endereco'             => 'Centro de Eventos Rodolfo Bernardes Ferreira',
+            'cnaes'                => '8230-0/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 76
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Evani Alvarenga Vilela',
+            'nome_estabelecimento' => 'Festa Junina Creche',
+            'endereco'             => 'Rua Dois de Novembro',
+            'cnaes'                => '8230-0/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 77
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Naiane Fonseca',
+            'nome_estabelecimento' => 'Festa Junina na Praça',
+            'endereco'             => 'Praça Padre João Lourenço Leite',
+            'cnaes'                => '8230-0/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 78
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Lucilei Dias Rocha',
+            'nome_estabelecimento' => 'Hortigranjeiro',
+            'endereco'             => 'Praça Padre João Lourenço Leite',
+            'cnaes'                => '4724-5/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-04/2025',
+            'nivel_risco'        => '1',
+            'data_alvara'        => '2025-04-08',
+            'vencimento_alvara'  => null,
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 79
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Aliny Bruniely Amaral',
+            'nome_estabelecimento' => 'Instituição de Longa Permanência para Idosos Vila Vicentina',
+            'endereco'             => 'Rua São Vicente, 100',
+            'cnaes'                => '8711-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-08/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-08-15',
+            'vencimento_alvara'  => '2026-08-15',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 80
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Jaqueline Alves',
+            'nome_estabelecimento' => 'Jaqueline Alves',
+            'endereco'             => 'Rua do Comércio, 1050',
+            'cnaes'                => '8650-0/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-09/2025',
+            'nivel_risco'        => '1',
+            'data_alvara'        => '2025-09-25',
+            'vencimento_alvara'  => null,
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 81
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Joyce Maria Leopoldino',
+            'nome_estabelecimento' => 'JOYCE MARIA LEOPOLDINO (Banho e tosa)',
+            'endereco'             => 'Rua Áurea, 417',
+            'cnaes'                => '9609-2/08',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 82
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Fabricio Faria de Oliveira',
+            'nome_estabelecimento' => 'KAROLAINE APARECIDA CASSIANO OLIVEIRA (Mascote)',
+            'endereco'             => 'Rua Brasil, 407',
+            'cnaes'                => '4712-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 83
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ricardo Luiz Pereira Sergio',
+            'nome_estabelecimento' => 'Kspetos Bar - Ricardo do Espeto',
+            'endereco'             => 'Avenida XV de Novembro, 1240',
+            'cnaes'                => '5611-2/04 4723-7/00 5611-2/01 5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 84
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Waldir José de Assis',
+            'nome_estabelecimento' => 'Laboratório Biológica',
+            'endereco'             => 'Rua Coqueiral, 10',
+            'cnaes'                => '8640-2/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '18-08/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-08-29',
+            'vencimento_alvara'  => '2026-08-29',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 85
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'João Marcos Siqueira',
+            'nome_estabelecimento' => 'Lanchonete D`Guste',
+            'endereco'             => 'Rua Brasil, 03',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-03/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-03-10',
+            'vencimento_alvara'  => '2026-03-10',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 86
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ana Paula Alves de Assis',
+            'nome_estabelecimento' => 'Lanchonete Espaço Burger',
+            'endereco'             => 'Rua Sebastião Cardoso, 71',
+            'cnaes'                => '5611-2/03 5620-1/04 4723-7/00 1033-3/01 4729-6/99 4721-1/02 1091-1/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 87
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Laís Correia Araújo',
+            'nome_estabelecimento' => 'Lanchonete House Burger',
+            'endereco'             => 'Avenida José Vilela da Costa, 325',
+            'cnaes'                => '5611-2/03 4729-6/99 5320-2/02 5611-2/01 5611-2/04 5620-1/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 88
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Claudio Cesar Vaneli',
+            'nome_estabelecimento' => 'Lanchonete Los Vaneli',
+            'endereco'             => 'Rua Boa Esperança, 526',
+            'cnaes'                => '5611-2/03 4729-6/99 5611-2/01 5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 89
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Luiz Henrique Pereira Sergio',
+            'nome_estabelecimento' => 'Lanchonete Mega Lanche',
+            'endereco'             => 'Rua Boa Esperança, 156',
+            'cnaes'                => '5611-2/03 5611-2/01 5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 90
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Letícia Sabrino Francisco/ Hudson Ramos da Cunha',
+            'nome_estabelecimento' => 'Lanchonete Mek Dog e Açai',
+            'endereco'             => 'Rua Joaquim Marciano de Carvalho',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 91
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Neymar Pereira Guedes',
+            'nome_estabelecimento' => 'Lanchonete P. Café da Praça',
+            'endereco'             => 'Praça Padre João Lourenço Leite, 21A',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 92
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Tallys Bricio Morais Silva',
+            'nome_estabelecimento' => 'Lanchonete Sabor na Chapa',
+            'endereco'             => 'Praça Padre João Lourenço Leite, 212',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 93
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Livia Aparecida de Souza',
+            'nome_estabelecimento' => 'Lanconete THE FRUIT',
+            'endereco'             => 'Praça 7 de setembro, 51 Loja03',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 94
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Adenilson Ferreira',
+            'nome_estabelecimento' => 'Mercado Adenilson',
+            'endereco'             => 'Rua Doze de Outúbro, 116',
+            'cnaes'                => '4711-3/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '15-04/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-04-29',
+            'vencimento_alvara'  => '2026-04-29',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 95
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Antônio José Martins Murta',
+            'nome_estabelecimento' => 'Mercado CARLINHOS SUPERMERCADOS LTDA',
+            'endereco'             => 'Rua Salvador Procópio, 290',
+            'cnaes'                => '4711-3/02 4722-9/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '16-08/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-08-22',
+            'vencimento_alvara'  => '2026-08-22',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 96
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Luciano Francisco de Assis',
+            'nome_estabelecimento' => 'Mercado e Bar do Luciano',
+            'endereco'             => 'Rua Tiradentes, 840',
+            'cnaes'                => '4712-1/00 4721-1/02 4722-9/01 4723-7/00 4724-5/00 5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '09-11/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-11-25',
+            'vencimento_alvara'  => '2026-11-25',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 97
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Carlos Vilela',
+            'nome_estabelecimento' => 'Mercado Matheus Thieres',
+            'endereco'             => 'Avenida José Vilela da Costa',
+            'cnaes'                => '4711-3/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-07/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-07-09',
+            'vencimento_alvara'  => '2026-07-09',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 98
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Stefani Cristina Silva',
+            'nome_estabelecimento' => 'Mercado Padre Vitor - Filial',
+            'endereco'             => 'Rua Boa Esperança, 340',
+            'cnaes'                => '4711-3/02 4722-9/01 4721-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '02-09/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-09-09',
+            'vencimento_alvara'  => '2026-09-09',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 99
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Lucimara Amaral Oliveira',
+            'nome_estabelecimento' => 'Mercado Padre Vitor (Matriz)',
+            'endereco'             => 'Rua do Comércio, 582',
+            'cnaes'                => '4711-3/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '08-02/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-02-11',
+            'vencimento_alvara'  => '2026-02-11',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 100
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Wendel Rodrigo Alves Pinheiro',
+            'nome_estabelecimento' => 'Mercado Pinheiro',
+            'endereco'             => 'Avenida 15 de Novembro, 675 - Gloria',
+            'cnaes'                => '4712-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '25-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-30',
+            'vencimento_alvara'  => '2026-07-30',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 101
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Luzia de Lourdes Vilela',
+            'nome_estabelecimento' => 'Mercado Rainha da Paz',
+            'endereco'             => 'Avenida 15 de Novembro - Gloria',
+            'cnaes'                => '4712-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '02-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-03',
+            'vencimento_alvara'  => '2026-07-03',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 102
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maria Lúcia Vilela Damasceno',
+            'nome_estabelecimento' => 'Mercado São Geraldo',
+            'endereco'             => 'Rua Doze de Outubro',
+            'cnaes'                => '4772-5/00 4711-3/02 4722-9/01 4724-5/00 4723-7/00 4721-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '11-02/2026',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2026-02-19',
+            'vencimento_alvara'  => '2027-02-19',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 103
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Israel Benedito da Silva',
+            'nome_estabelecimento' => 'Mercearia do Israel',
+            'endereco'             => 'Rua Arildo Vilela Moscardine, 346',
+            'cnaes'                => '4712-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '12-08/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-08-15',
+            'vencimento_alvara'  => '2026-08-15',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 104
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Silvia Regina Resende da Silva',
+            'nome_estabelecimento' => 'Mini Padaria da Silva',
+            'endereco'             => 'Avenida Xv de Novembro, 580',
+            'cnaes'                => '1091-1/02 4721-1/03 4721-1/04 4723-7/00 4729-6/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '03-01/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-01-21',
+            'vencimento_alvara'  => '2027-01-21',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 105
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Marcelo Montijo Teixeira',
+            'nome_estabelecimento' => 'Montijo Odontologia LTDA',
+            'endereco'             => 'Rua do CoMÉRCIO, 465',
+            'cnaes'                => '8635-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 106
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Núbia Alves Belineli',
+            'nome_estabelecimento' => 'Movimento e Saúde',
+            'endereco'             => 'Rua Boa Esperança, 470 - Centro',
+            'cnaes'                => '8650-0/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-12/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-12-22',
+            'vencimento_alvara'  => '2026-12-22',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 107
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Janizia Adriana Silva',
+            'nome_estabelecimento' => 'Mercado Jc Faria Comercio de Alimentos LTDA.',
+            'endereco'             => 'Rua do Comercio, 322',
+            'cnaes'                => '4711-3/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '12-02/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-02-24',
+            'vencimento_alvara'  => '2026-02-24',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 108
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Larissa Borges Costa',
+            'nome_estabelecimento' => 'Oliva Granel',
+            'endereco'             => 'Rua Santa Catarina,  42',
+            'cnaes'                => '4729-6/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-08/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-08-05',
+            'vencimento_alvara'  => '2026-08-05',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 109
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Fabrício Figueiredo Mendes',
+            'nome_estabelecimento' => 'Ortoclínicas',
+            'endereco'             => 'Rua do Comércio, 141 - Centro',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '11-07/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-07-15',
+            'vencimento_alvara'  => '2026-07-15',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 110
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ana Clara Silva Nunes',
+            'nome_estabelecimento' => 'Padaria Ana Clara',
+            'endereco'             => 'Rua Oiapoque, 122',
+            'cnaes'                => '4721-1/02 5620-1/04 5620-1/03 4729-6/99 4724-5/00 5611-2/01  5611-2/04 5611-2/03 1091-1/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '02-03/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-03-03',
+            'vencimento_alvara'  => '2027-03-03',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 111
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Edivânia Aparecida Pereira',
+            'nome_estabelecimento' => 'Padaria Bagueteria Ilicínea',
+            'endereco'             => 'Rua Direita, 20 - Centro',
+            'cnaes'                => '4721-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-17/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-07-15',
+            'vencimento_alvara'  => '2026-07-15',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 112
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maria de Fatima Oliveira',
+            'nome_estabelecimento' => 'Padaria da Fatinha',
+            'endereco'             => 'Rua Boa Esperança, 112',
+            'cnaes'                => '1091-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 113
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Sueli Andrade Alves',
+            'nome_estabelecimento' => 'Padaria da Sueli',
+            'endereco'             => 'Rua Brasil, 756',
+            'cnaes'                => '1091-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 114
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ricardo Alberto Fernandes',
+            'nome_estabelecimento' => 'Padaria do Ricardo',
+            'endereco'             => 'Rua do Comércio, 306',
+            'cnaes'                => '4721-1/02 4712-1/00 4789-0/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 115
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Antônio Marcos Durval',
+            'nome_estabelecimento' => 'Padaria Pão e CIA',
+            'endereco'             => 'Rua Aurea, 892',
+            'cnaes'                => '5611-2/03 4729-6/99 1091-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '09-01/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-01-29',
+            'vencimento_alvara'  => '2027-01-29',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 116
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Neimar Pereira Guedes',
+            'nome_estabelecimento' => 'Pães e Bolos Central',
+            'endereco'             => 'Rua Direita, 72 - Centro',
+            'cnaes'                => '1091-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 117
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Paula de Oliveira Figueiredo Lima',
+            'nome_estabelecimento' => 'Pastelaria da Paula',
+            'endereco'             => 'Avenida XV de novembro, 140',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-02/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-02-03',
+            'vencimento_alvara'  => '2027-02-03',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 118
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Christian Luis Gois de Melo',
+            'nome_estabelecimento' => 'Pastelaria do Christião',
+            'endereco'             => 'Avenida José Vilela da Costa, 211',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 119
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maikel Pereira Sérgio',
+            'nome_estabelecimento' => 'Pastelaria Rei do Salgado',
+            'endereco'             => 'Rua Direita, 81 - Centro',
+            'cnaes'                => '5611/2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 120
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Patrícia Magalhães',
+            'nome_estabelecimento' => 'Patricciah M Studio Personal',
+            'endereco'             => 'Rua 12 de Outúbro, 44 - Centro',
+            'cnaes'                => '9313-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 121
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'A informar',
+            'nome_estabelecimento' => 'Patty Odontologia',
+            'endereco'             => 'Endereço a informar.',
+            'cnaes'                => '00.00-0/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 122
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Pedro Domiciano Vieira',
+            'nome_estabelecimento' => 'Pedro do Zeca',
+            'endereco'             => 'Rua do Comércio, 530',
+            'cnaes'                => '4712-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 123
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Markeline Garcia Silva',
+            'nome_estabelecimento' => 'Peixaria Empório do Peixe',
+            'endereco'             => 'Avenida José Vilela da Costa',
+            'cnaes'                => '4722-9/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '07-06/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-06-17',
+            'vencimento_alvara'  => '2026-06-17',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 124
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Leonice Aparecida Souza Oliveira',
+            'nome_estabelecimento' => 'Peixaria Santa Maria',
+            'endereco'             => 'Avenida José Vilela da Costa, 133',
+            'cnaes'                => '4722-9/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-03/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-03-10',
+            'vencimento_alvara'  => '2026-03-10',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 125
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Rozimeire Aparecida Andrade Rezende',
+            'nome_estabelecimento' => 'Pizzaria Bella Italia',
+            'endereco'             => 'Avenida XV de Novembro, 479',
+            'cnaes'                => '5611-2/01 5611-2/03 5620-1/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '11-09/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-09-30',
+            'vencimento_alvara'  => '2026-09-30',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 126
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Henrique Vilela Amaral',
+            'nome_estabelecimento' => 'Polpa de frutas',
+            'endereco'             => 'Rua Doze de Outubro, 371',
+            'cnaes'                => '1031-7/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-06/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-01-27',
+            'vencimento_alvara'  => '2026-01-27',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 127
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Paulo Gonçalves do Amaral',
+            'nome_estabelecimento' => 'Polpa de frutas',
+            'endereco'             => 'Rua Doze de Outubro, 371',
+            'cnaes'                => '1031-7/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '10-01/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-01-27',
+            'vencimento_alvara'  => '2026-01-27',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 128
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Marcio Vinícius Vilela',
+            'nome_estabelecimento' => 'Posto de Coleta Messora e Vilela Ltda.',
+            'endereco'             => 'Rua do Comércio, 40',
+            'cnaes'                => '8640-2/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '08-01/2026',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2026-01-21',
+            'vencimento_alvara'  => '2027-01-21',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 129
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Alda de Oliveira',
+            'nome_estabelecimento' => 'PSF Central',
+            'endereco'             => 'Rua Francisco de Ouro, 50',
+            'cnaes'                => '8411-6/00 8690-9/99 8630-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '09-10/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-10-14',
+            'vencimento_alvara'  => '2026-10-14',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 130
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Beatriz Aparecida Alves',
+            'nome_estabelecimento' => 'PSF Rosário',
+            'endereco'             => 'Rua Ly de Oliveira, 06',
+            'cnaes'                => '8411-6/00 869-9/99 8630-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '05-10/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-10-05',
+            'vencimento_alvara'  => '2026-10-05',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 131
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Gisele Aparecida de Carvalho Bueno',
+            'nome_estabelecimento' => 'PSF Rural',
+            'endereco'             => 'Praça do Rosario, 09',
+            'cnaes'                => '8411-6/00 8690-9/99 8630-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-10/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-10-13',
+            'vencimento_alvara'  => '2026-10-13',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 132
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Josyane Costa Conde Ferreira',
+            'nome_estabelecimento' => 'Restaurante D`Guste',
+            'endereco'             => 'Rua do Comércio, 665',
+            'cnaes'                => '5611-2/11',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '08-10/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-02-12',
+            'vencimento_alvara'  => '2026-02-12',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 133
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Maria Aparecida Alves',
+            'nome_estabelecimento' => 'Restaurante da Nenem',
+            'endereco'             => 'Praça Padre João Loureço Leite, 15',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-03/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-02-01',
+            'vencimento_alvara'  => '2026-02-01',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 134
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Emerson Luiz de Souza',
+            'nome_estabelecimento' => 'Restaurante disk Rango',
+            'endereco'             => 'Rua Boa Esperança',
+            'cnaes'                => '5611-2/01 5320-2/02 4723-7/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '03-10/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-10-08',
+            'vencimento_alvara'  => '2026-10-08',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 135
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Tayrine Oliveira',
+            'nome_estabelecimento' => 'Restaurante e Lanchonete Sabor Nobre',
+            'endereco'             => 'Rua do Comércio, 270 - Centro',
+            'cnaes'                => '5611-2/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '16-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-17',
+            'vencimento_alvara'  => '2026-07-17',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 136
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Régia de Fátima Machado',
+            'nome_estabelecimento' => 'Restaurante e Pousada Recanto dos Araças',
+            'endereco'             => 'Rua Goiás, 15',
+            'cnaes'                => '5590-6/99 5620-1/04 8230-0/02 5611-2/01 1091-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '12-01/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-10-31',
+            'vencimento_alvara'  => '2026-10-31',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 137
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Taíza Amanda Rodrigues',
+            'nome_estabelecimento' => 'Restaurante Porcolino Grill',
+            'endereco'             => 'Avenida 15 de Novembro, 1721 - Monsenhor Francisco Figueiredo',
+            'cnaes'                => '5611-2/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 138
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Claudia Aurica de Oliveira',
+            'nome_estabelecimento' => 'Restaurante Tradição Mineira',
+            'endereco'             => 'Rua Rita de Cassia, 48',
+            'cnaes'                => '5611-2/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '09-06/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-06-24',
+            'vencimento_alvara'  => '2026-06-24',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 139
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Adriana da Silveira Vitor',
+            'nome_estabelecimento' => 'Restaurante Vitor/ Mathias Choperia',
+            'endereco'             => 'Praça Padre João Lourenço Leite, 15',
+            'cnaes'                => '5611-2/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-04/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-04-03',
+            'vencimento_alvara'  => '2026-04-03',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 140
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Robson Moscardini',
+            'nome_estabelecimento' => 'Robinho Dentista',
+            'endereco'             => 'Praça Padre João Lourenço Leite, 9',
+            'cnaes'                => '8630-5/04',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '03-08/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-08-05',
+            'vencimento_alvara'  => '2026-08-05',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 141
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Karine de Freitas Silva',
+            'nome_estabelecimento' => 'Salão beleza e estetica',
+            'endereco'             => 'Rua Tiradentes, 02',
+            'cnaes'                => '9602-5/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '11-02/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-02-18',
+            'vencimento_alvara'  => '2026-02-18',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 142
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Conceição Aparecida Alves',
+            'nome_estabelecimento' => 'Salão Cidinha Alves',
+            'endereco'             => 'Rua Rita de Cássia, 101 - Centro',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '23-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-24',
+            'vencimento_alvara'  => '2026-07-24',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 143
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ana Flávia Silvestre Silva',
+            'nome_estabelecimento' => 'Salão da Ana Flávia',
+            'endereco'             => 'Rua São Paulo, 212',
+            'cnaes'                => '9602-5/01 4772-5/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-10/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-10-20',
+            'vencimento_alvara'  => '2026-10-20',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 144
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Jaqueline Margaria de Lima',
+            'nome_estabelecimento' => 'Salão da Jaque Lima',
+            'endereco'             => 'Rua Direita, 104, Sala 16 - Centro',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '19-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-18',
+            'vencimento_alvara'  => '2026-07-18',
+            'contato'            => '(35) 9 9827-1912',
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 145
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Samara Santos da Silva',
+            'nome_estabelecimento' => 'Salão da Samara',
+            'endereco'             => 'Rua Direita, 104 - Centro',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '20-07/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-07-18',
+            'vencimento_alvara'  => '2026-07-18',
+            'contato'            => '(35) 9 8436-3659',
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 146
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Histefani Pereira Ferreira',
+            'nome_estabelecimento' => 'Salão Espaço Renovar',
+            'endereco'             => 'Rua Alfredo Pio, 203',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '01-01/2026',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2026-01-07',
+            'vencimento_alvara'  => '2027-01-07',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 147
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Eduardo José de Oliveira',
+            'nome_estabelecimento' => 'SAO BENTO COMERCIO E PRESTAÇOES DE SERVICO LTDA (Lava rápido, borracharia e oficina)',
+            'endereco'             => 'Avenida XV de Novembro, 685',
+            'cnaes'                => '4520-0/01 4520-0/03 4520-0/04 4520-0/05 4520-0/06 4520-0/07  4530-7/05 4543-9/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '04-09/2025',
+            'nivel_risco'        => null,
+            'data_alvara'        => '2025-09-11',
+            'vencimento_alvara'  => '2026-09-11',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 148
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Adriana Miranda de Alcântara',
+            'nome_estabelecimento' => 'Saúde Mental',
+            'endereco'             => 'Avenida José Vilela da Costa, 565',
+            'cnaes'                => '8720-4/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '06-09/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-09-22',
+            'vencimento_alvara'  => '2026-09-22',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 149
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Vitor Tadeu Alves de Jesus',
+            'nome_estabelecimento' => 'Sorveteria 4 Estações',
+            'endereco'             => 'Avenida XV de Novembro, 565',
+            'cnaes'                => '4729-6/99 5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '06-10/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-10-16',
+            'vencimento_alvara'  => '2026-10-16',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 150
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Wallison Fernando de Oliveira',
+            'nome_estabelecimento' => 'Sorveteria e Açai',
+            'endereco'             => 'Praça 7 de setembro, 05',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 151
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Cleudes Oswaldo de Souza',
+            'nome_estabelecimento' => 'Sorveteria Fino Sabor',
+            'endereco'             => 'Rua do Comércio, 50',
+            'cnaes'                => '4729-6/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 152
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Amanda Dias',
+            'nome_estabelecimento' => 'Sorveteria PONTO 265',
+            'endereco'             => 'Avenida 15 de Novembro',
+            'cnaes'                => '4729-6/99',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 153
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Patrícia Conceição Alves Barbosa',
+            'nome_estabelecimento' => 'Studio de Cabelos Phaty',
+            'endereco'             => 'Rua Ituriel Viana Lemos, 45',
+            'cnaes'                => '9602-5/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '11-08/2025',
+            'nivel_risco'        => '2',
+            'data_alvara'        => '2025-08-11',
+            'vencimento_alvara'  => '2026-08-11',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 154
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Ailton Rodrigues da Cunha',
+            'nome_estabelecimento' => 'Trailer do Ailton',
+            'endereco'             => 'Praça Padre João Lourenço Leite/ Parque João A.',
+            'cnaes'                => '5611-2/03',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 155
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Luis Fernando Mathias',
+            'nome_estabelecimento' => 'Trem Bão Restaurante',
+            'endereco'             => 'Praça Padre João Lourenço Leite, 15',
+            'cnaes'                => '5611-2/01',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
+        // Linha 156
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Eduardo Miranda de Carvalho',
+            'nome_estabelecimento' => 'Veterinário e Pet Shop CENTER VET.',
+            'endereco'             => 'Rua do Comércio, 770',
+            'cnaes'                => '7500-1/00',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+        DB::table('alvaras')->insertOrIgnore([
+            'estabelecimento_id' => $estId,
+            'numero_alvara'      => '13-04/2025',
+            'nivel_risco'        => '3',
+            'data_alvara'        => '2025-04-28',
+            'vencimento_alvara'  => '2026-04-28',
+            'contato'            => null,
+            'status'             => 'Não requerido',
+            'created_at'         => $agora,
+            'updated_at'         => $agora,
+        ]);
+
+        // Linha 157
+        $estId = DB::table('estabelecimentos')->insertGetId([
+            'nome_responsavel'     => 'Eandra Brunielli Oliveira Barbosa',
+            'nome_estabelecimento' => 'Vita Care Serviços em Saúde',
+            'endereco'             => 'Rua Dois de Novembro, 30 - Centro',
+            'cnaes'                => '8610-1/02',
+            'created_at'           => $agora,
+            'updated_at'           => $agora,
+        ]);
+
     }
 }
