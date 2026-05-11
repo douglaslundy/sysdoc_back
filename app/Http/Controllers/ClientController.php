@@ -6,6 +6,7 @@ use App\Http\Requests\ClientRequest;
 use Illuminate\Http\Request;
 use App\Models\Client;
 use App\Models\Addresses;
+use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
@@ -67,6 +68,7 @@ class ClientController extends Controller
                 'error' => 'Client not found'
             ], 404);
         }
+        AuditService::record('VIEW', $client);
         return response()->json($client);
     }
 
