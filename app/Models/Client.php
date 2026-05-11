@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PedidoExame;
 
 class Client extends Model
 {
@@ -35,5 +36,10 @@ class Client extends Model
             'client_id',
             'trip_id'
         );
+    }
+
+    public function pedidosExame()
+    {
+        return $this->hasMany(PedidoExame::class, 'client_id', 'id');
     }
 }

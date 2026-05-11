@@ -196,6 +196,10 @@ class ClientController extends Controller
             'trips.route',
             'queue.speciality',
             'queue.user',
+            'pedidosExame.exames',
+            'pedidosExame.medicoSolicitante',
+            'pedidosExame.criadoPor',
+            'pedidosExame.resultado.liberadoPor',
         ])
             ->where(function ($query) use ($value) {
                 $query->where('cpf', $value)
