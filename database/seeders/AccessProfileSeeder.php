@@ -47,6 +47,10 @@ class AccessProfileSeeder extends Seeder
             // Rota base para sub-rotas de resultados (não aparece no menu, mas controla
             // o acesso à página dinâmica /laboratorio/resultados/[resultadoId] via prefix matching)
             ['titulo' => 'Lab — Resultados',     'path' => '/laboratorio/resultados',    'icone' => 'file-text',    'categoria' => 'Laboratório'],
+            // Vigilância Sanitária
+            ['titulo' => 'Estabelecimentos',     'path' => '/estabelecimentos',          'icone' => 'home',         'categoria' => 'Vigilância Sanitária'],
+            ['titulo' => 'Alvarás',              'path' => '/alvaras',                   'icone' => 'award',        'categoria' => 'Vigilância Sanitária'],
+            ['titulo' => 'Vigilância — Config',  'path' => '/vigilancia/configuracoes',  'icone' => 'settings',     'categoria' => 'Vigilância Sanitária'],
         ];
 
         foreach ($pages as &$page) {
@@ -77,8 +81,8 @@ class AccessProfileSeeder extends Seeder
 
         // Permissões por perfil (baseado em MenuItems.js)
         $permissoes = [
-            'admin'   => ['/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/errorlogs', '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria'],
-            'manager' => ['/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance'],
+            'admin'   => ['/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/errorlogs', '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes'],
+            'manager' => ['/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance', '/estabelecimentos', '/alvaras'],
             'user'    => ['/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
             'tfd'     => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
             'driver'  => ['/panel', '/trips'],
