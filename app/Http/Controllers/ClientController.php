@@ -204,6 +204,7 @@ class ClientController extends Controller
             ], 404);
         }
 
+        AuditService::record('VIEW', $client);
         return response()->json([
             'client' => $client
         ]);
