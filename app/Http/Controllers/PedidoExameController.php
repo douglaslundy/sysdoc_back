@@ -109,6 +109,13 @@ class PedidoExameController extends Controller
         if (!$pedido) {
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
+
+        AuditService::record('VIEW', $pedido, null, [
+            'cliente' => $pedido->cliente?->name,
+            'status'  => $pedido->status,
+            'exames'  => $pedido->exames->pluck('nome')->toArray(),
+        ]);
+
         return response()->json($pedido);
     }
 
