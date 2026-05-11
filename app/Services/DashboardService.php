@@ -88,7 +88,11 @@ class DashboardService
     public function getResultadosStatus(): array
     {
         return [
-            'liberados' => ResultadoExame::where('ativo', true)->whereNotNull('data_liberacao')->count(),
+            'liberados' => ResultadoExame::where('resultado_exames.ativo', true)
+                ->whereNotNull('resultado_exames.data_liberacao')
+                ->join('pedidos_exame', 'resultado_exames.pedido_exame_id', '=', 'pedidos_exame.id')
+                ->whereNull('pedidos_exame.deleted_at')
+                ->count(),
             'pendentes' => PedidoExame::whereNull('deleted_at')
                 ->whereIn('status', ['solicitado', 'coletado', 'em_analise'])
                 ->count(),

@@ -189,6 +189,9 @@ class PedidoExameController extends Controller
         if (!$pedido) {
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
+        if ($pedido->status === 'liberado') {
+            return response()->json(['error' => 'Pedido liberado não pode ser excluído.'], 422);
+        }
         $pedido->delete();
         return response()->json(['message' => 'Pedido removido com sucesso!']);
     }

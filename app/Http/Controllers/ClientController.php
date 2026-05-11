@@ -68,7 +68,13 @@ class ClientController extends Controller
                 'error' => 'Client not found'
             ], 404);
         }
-        AuditService::record('VIEW', $client);
+        AuditService::record('VIEW', $client, null, [
+            'nome'  => $client->name,
+            'cpf'   => $client->cpf,
+            'cns'   => $client->cns,
+            'email' => $client->email,
+            'phone' => $client->phone,
+        ]);
         return response()->json($client);
     }
 
@@ -204,7 +210,17 @@ class ClientController extends Controller
             ], 404);
         }
 
-        AuditService::record('VIEW', $client);
+        AuditService::record('VIEW_REPORT', $client,
+            ['termo_pesquisado' => $value],
+            [
+                'nome'          => $client->name,
+                'cpf'           => $client->cpf,
+                'cns'           => $client->cns,
+                'phone'         => $client->phone,
+                'total_viagens' => $client->trips ? $client->trips->count() : 0,
+                'total_filas'   => $client->queue ? $client->queue->count() : 0,
+            ]
+        );
         return response()->json([
             'client' => $client
         ]);
