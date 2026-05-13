@@ -15,67 +15,76 @@ class AccessProfileSeeder extends Seeder
 
         $pages = [
             ['titulo' => 'Dashboard', 'path' => '/dashboard', 'icone' => 'pie-chart', 'categoria' => 'Geral'],
-            ['titulo' => 'Usuários', 'path' => '/users', 'icone' => 'user', 'categoria' => 'Administração'],
+            ['titulo' => 'UsuÃ¡rios', 'path' => '/users', 'icone' => 'user', 'categoria' => 'AdministraÃ§Ã£o'],
             ['titulo' => 'Clientes', 'path' => '/clients', 'icone' => 'users', 'categoria' => 'Cadastros'],
-            ['titulo' => 'Relatório Clientes', 'path' => '/client_report', 'icone' => 'bar-chart-2', 'categoria' => 'Relatórios'],
-            ['titulo' => 'Lab - Exames', 'path' => '/laboratorio/exames', 'icone' => 'thermometer', 'categoria' => 'Laboratório'],
-            ['titulo' => 'Lab - Pedidos', 'path' => '/laboratorio/pedidos', 'icone' => 'clipboard', 'categoria' => 'Laboratório'],
-            ['titulo' => 'Lab - Categorias', 'path' => '/laboratorio/categorias', 'icone' => 'tag', 'categoria' => 'Laboratório'],
-            ['titulo' => 'Lab - Médicos', 'path' => '/laboratorio/medicos', 'icone' => 'user-check', 'categoria' => 'Laboratório'],
-            ['titulo' => 'Lab - Agenda', 'path' => '/laboratorio/agenda', 'icone' => 'calendar', 'categoria' => 'Laboratório'],
+            ['titulo' => 'RelatÃ³rio Clientes', 'path' => '/client_report', 'icone' => 'bar-chart-2', 'categoria' => 'RelatÃ³rios'],
+            ['titulo' => 'Lab - Exames', 'path' => '/laboratorio/exames', 'icone' => 'thermometer', 'categoria' => 'LaboratÃ³rio'],
+            ['titulo' => 'Lab - Pedidos', 'path' => '/laboratorio/pedidos', 'icone' => 'clipboard', 'categoria' => 'LaboratÃ³rio'],
+            ['titulo' => 'Lab - Categorias', 'path' => '/laboratorio/categorias', 'icone' => 'tag', 'categoria' => 'LaboratÃ³rio'],
+            ['titulo' => 'Lab - MÃ©dicos', 'path' => '/laboratorio/medicos', 'icone' => 'user-check', 'categoria' => 'LaboratÃ³rio'],
+            ['titulo' => 'Lab - Agenda', 'path' => '/laboratorio/agenda', 'icone' => 'calendar', 'categoria' => 'LaboratÃ³rio'],
             ['titulo' => 'Especialidades', 'path' => '/specialities', 'icone' => 'award', 'categoria' => 'Cadastros'],
             ['titulo' => 'Fila', 'path' => '/queue', 'icone' => 'layers', 'categoria' => 'Atendimento'],
-            ['titulo' => 'Veículos', 'path' => '/vehicles', 'icone' => 'truck', 'categoria' => 'TFD'],
+            ['titulo' => 'VeÃ­culos', 'path' => '/vehicles', 'icone' => 'truck', 'categoria' => 'TFD'],
             ['titulo' => 'Rotas', 'path' => '/routes', 'icone' => 'map', 'categoria' => 'TFD'],
             ['titulo' => 'Viagens', 'path' => '/trips', 'icone' => 'map-pin', 'categoria' => 'TFD'],
-            ['titulo' => 'Ofícios', 'path' => '/letters', 'icone' => 'send', 'categoria' => 'Documentos'],
+            ['titulo' => 'OfÃ­cios', 'path' => '/letters', 'icone' => 'send', 'categoria' => 'Documentos'],
             ['titulo' => 'Portarias', 'path' => '/ordinance', 'icone' => 'file-text', 'categoria' => 'Documentos'],
-            ['titulo' => 'Modelos IA', 'path' => '/models', 'icone' => 'cpu', 'categoria' => 'Administração'],
-            ['titulo' => 'Serviços', 'path' => '/service_calls', 'icone' => 'tool', 'categoria' => 'Administração'],
+            ['titulo' => 'Modelos IA', 'path' => '/models', 'icone' => 'cpu', 'categoria' => 'AdministraÃ§Ã£o'],
+            ['titulo' => 'ServiÃ§os', 'path' => '/service_calls', 'icone' => 'tool', 'categoria' => 'AdministraÃ§Ã£o'],
             ['titulo' => 'Salas', 'path' => '/rooms', 'icone' => 'grid', 'categoria' => 'Atendimento'],
             ['titulo' => 'Minha Sala', 'path' => '/listing_calls', 'icone' => 'monitor', 'categoria' => 'Atendimento'],
             ['titulo' => 'Em Atendimento', 'path' => '/attending', 'icone' => 'activity', 'categoria' => 'Atendimento'],
             ['titulo' => 'Novo Atendimento', 'path' => '/call', 'icone' => 'plus-circle', 'categoria' => 'Atendimento'],
-            ['titulo' => 'Painel', 'path' => '/panel', 'icone' => 'layout', 'categoria' => 'Administração'],
-            ['titulo' => 'Logs de Erro', 'path' => '/errorlogs', 'icone' => 'alert-triangle', 'categoria' => 'Administração'],
-            ['titulo' => 'Logs de QRCODE', 'path' => '/qrcodelogs', 'icone' => 'maximize', 'categoria' => 'Administração'],
-            ['titulo' => 'Perfis de Acesso', 'path' => '/perfis', 'icone' => 'shield', 'categoria' => 'Administração'],
-            ['titulo' => 'Páginas do Sistema', 'path' => '/paginas-sistema', 'icone' => 'layout', 'categoria' => 'Administração'],
-            ['titulo' => 'Auditoria', 'path' => '/auditoria', 'icone' => 'eye', 'categoria' => 'Administração'],
-            ['titulo' => 'Lab - Resultados', 'path' => '/laboratorio/resultados', 'icone' => 'file-text', 'categoria' => 'Laboratório'],
-            ['titulo' => 'Estabelecimentos', 'path' => '/estabelecimentos', 'icone' => 'home', 'categoria' => 'Vigilância Sanitária'],
-            ['titulo' => 'Alvarás', 'path' => '/alvaras', 'icone' => 'award', 'categoria' => 'Vigilância Sanitária'],
-            ['titulo' => 'Vigilância - Config', 'path' => '/vigilancia/configuracoes', 'icone' => 'settings', 'categoria' => 'Vigilância Sanitária'],
-            ['titulo' => 'Farmácia - Medicamentos', 'path' => '/pharmacy/medicines', 'icone' => 'archive', 'categoria' => 'Farmácia'],
-            ['titulo' => 'Farmácia - Status Diário', 'path' => '/pharmacy/daily-status', 'icone' => 'calendar', 'categoria' => 'Farmácia'],
-            ['titulo' => 'Farmácia - Aquisições Mensais', 'path' => '/pharmacy/monthly-acquisitions', 'icone' => 'bar-chart-2', 'categoria' => 'Farmácia'],
-            ['titulo' => 'Farmácia - Conformidade', 'path' => '/pharmacy/compliance', 'icone' => 'check-square', 'categoria' => 'Farmácia'],
+            ['titulo' => 'Painel', 'path' => '/panel', 'icone' => 'layout', 'categoria' => 'AdministraÃ§Ã£o'],
+            ['titulo' => 'Logs de Erro', 'path' => '/errorlogs', 'icone' => 'alert-triangle', 'categoria' => 'AdministraÃ§Ã£o'],
+            ['titulo' => 'Logs de QRCODE', 'path' => '/qrcodelogs', 'icone' => 'maximize', 'categoria' => 'AdministraÃ§Ã£o'],
+            ['titulo' => 'Perfis de Acesso', 'path' => '/perfis', 'icone' => 'shield', 'categoria' => 'AdministraÃ§Ã£o'],
+            ['titulo' => 'PÃ¡ginas do Sistema', 'path' => '/paginas-sistema', 'icone' => 'layout', 'categoria' => 'AdministraÃ§Ã£o'],
+            ['titulo' => 'Auditoria', 'path' => '/auditoria', 'icone' => 'eye', 'categoria' => 'AdministraÃ§Ã£o'],
+            ['titulo' => 'Lab - Resultados', 'path' => '/laboratorio/resultados', 'icone' => 'file-text', 'categoria' => 'LaboratÃ³rio'],
+            ['titulo' => 'Estabelecimentos', 'path' => '/estabelecimentos', 'icone' => 'home', 'categoria' => 'VigilÃ¢ncia SanitÃ¡ria'],
+            ['titulo' => 'AlvarÃ¡s', 'path' => '/alvaras', 'icone' => 'award', 'categoria' => 'VigilÃ¢ncia SanitÃ¡ria'],
+            ['titulo' => 'VigilÃ¢ncia - Config', 'path' => '/vigilancia/configuracoes', 'icone' => 'settings', 'categoria' => 'VigilÃ¢ncia SanitÃ¡ria'],
+            ['titulo' => 'FarmÃ¡cia - Medicamentos', 'path' => '/pharmacy/medicines', 'icone' => 'archive', 'categoria' => 'FarmÃ¡cia'],
+            ['titulo' => 'FarmÃ¡cia - Status DiÃ¡rio', 'path' => '/pharmacy/daily-status', 'icone' => 'calendar', 'categoria' => 'FarmÃ¡cia'],
+            ['titulo' => 'FarmÃ¡cia - AquisiÃ§Ãµes Mensais', 'path' => '/pharmacy/monthly-acquisitions', 'icone' => 'bar-chart-2', 'categoria' => 'FarmÃ¡cia'],
+            ['titulo' => 'FarmÃ¡cia - Conformidade', 'path' => '/pharmacy/compliance', 'icone' => 'check-square', 'categoria' => 'FarmÃ¡cia'],
         ];
 
-        foreach ($pages as &$page) {
-            $page['ativo'] = true;
-            $page['created_at'] = now();
-            $page['updated_at'] = now();
+        foreach ($pages as $page) {
+            DB::table('system_pages')->updateOrInsert(
+                ['path' => $page['path']],
+                [
+                    'titulo' => $page['titulo'],
+                    'icone' => $page['icone'],
+                    'categoria' => $page['categoria'],
+                    'ativo' => true,
+                    'updated_at' => now(),
+                ]
+            );
         }
-
-        DB::table('system_pages')->insertOrIgnore($pages);
 
         $profiles = [
             ['nome' => 'Administrador', 'slug' => 'admin', 'descricao' => 'Acesso total ao sistema'],
-            ['nome' => 'Gerente', 'slug' => 'manager', 'descricao' => 'Acesso ao laboratório e documentos'],
-            ['nome' => 'Usuário', 'slug' => 'user', 'descricao' => 'Acesso básico a clientes e pedidos'],
+            ['nome' => 'Gerente', 'slug' => 'manager', 'descricao' => 'Acesso ao laboratÃ³rio e documentos'],
+            ['nome' => 'UsuÃ¡rio', 'slug' => 'user', 'descricao' => 'Acesso bÃ¡sico a clientes e pedidos'],
             ['nome' => 'TFD', 'slug' => 'tfd', 'descricao' => 'Acesso a TFD, viagens e documentos'],
             ['nome' => 'Motorista', 'slug' => 'driver', 'descricao' => 'Acesso ao painel e viagens'],
             ['nome' => 'Parceiro', 'slug' => 'partner', 'descricao' => 'Acesso apenas a clientes'],
         ];
 
-        foreach ($profiles as &$profile) {
-            $profile['ativo'] = true;
-            $profile['created_at'] = now();
-            $profile['updated_at'] = now();
+        foreach ($profiles as $profile) {
+            DB::table('access_profiles')->updateOrInsert(
+                ['slug' => $profile['slug']],
+                [
+                    'nome' => $profile['nome'],
+                    'descricao' => $profile['descricao'],
+                    'ativo' => true,
+                    'updated_at' => now(),
+                ]
+            );
         }
-
-        DB::table('access_profiles')->insertOrIgnore($profiles);
 
         $permissoes = [
             'admin' => [
@@ -108,12 +117,15 @@ class AccessProfileSeeder extends Seeder
                     continue;
                 }
 
-                DB::table('profile_page_permissions')->insertOrIgnore([
-                    'access_profile_id' => $profile->id,
-                    'system_page_id' => $page->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                DB::table('profile_page_permissions')->updateOrInsert(
+                    [
+                        'access_profile_id' => $profile->id,
+                        'system_page_id' => $page->id,
+                    ],
+                    [
+                        'updated_at' => now(),
+                    ]
+                );
             }
         }
     }
