@@ -9,48 +9,47 @@ class AccessProfileSeeder extends Seeder
 {
     public function run(): void
     {
-        // Migra paths renomeados em bancos jÃ¡ existentes
         DB::table('system_pages')
             ->where('path', '/dashboards')
             ->update(['titulo' => 'Dashboard', 'path' => '/dashboard', 'updated_at' => now()]);
 
-        // PÃ¡ginas do sistema (baseado em MenuItems.js)
         $pages = [
-            ['titulo' => 'Dashboard',           'path' => '/dashboard',                 'icone' => 'pie-chart',    'categoria' => 'Geral'],
-            ['titulo' => 'UsuÃ¡rios',             'path' => '/users',                     'icone' => 'user',         'categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'Clientes',             'path' => '/clients',                   'icone' => 'users',        'categoria' => 'Cadastros'],
-            ['titulo' => 'RelatÃ³rio Clientes',   'path' => '/client_report',             'icone' => 'bar-chart-2',  'categoria' => 'RelatÃ³rios'],
-            ['titulo' => 'Lab â€” Exames',         'path' => '/laboratorio/exames',        'icone' => 'thermometer',  'categoria' => 'LaboratÃ³rio'],
-            ['titulo' => 'Lab â€” Pedidos',        'path' => '/laboratorio/pedidos',       'icone' => 'clipboard',    'categoria' => 'LaboratÃ³rio'],
-            ['titulo' => 'Lab â€” Categorias',     'path' => '/laboratorio/categorias',    'icone' => 'tag',          'categoria' => 'LaboratÃ³rio'],
-            ['titulo' => 'Lab â€” MÃ©dicos',        'path' => '/laboratorio/medicos',       'icone' => 'user-check',   'categoria' => 'LaboratÃ³rio'],
-            ['titulo' => 'Lab â€” Agenda',         'path' => '/laboratorio/agenda',        'icone' => 'calendar',     'categoria' => 'LaboratÃ³rio'],
-            ['titulo' => 'Especialidades',       'path' => '/specialities',              'icone' => 'award',        'categoria' => 'Cadastros'],
-            ['titulo' => 'Fila',                 'path' => '/queue',                     'icone' => 'layers',       'categoria' => 'Atendimento'],
-            ['titulo' => 'VeÃ­culos',             'path' => '/vehicles',                  'icone' => 'truck',        'categoria' => 'TFD'],
-            ['titulo' => 'Rotas',                'path' => '/routes',                    'icone' => 'map',          'categoria' => 'TFD'],
-            ['titulo' => 'Viagens',              'path' => '/trips',                     'icone' => 'map-pin',      'categoria' => 'TFD'],
-            ['titulo' => 'OfÃ­cios',              'path' => '/letters',                   'icone' => 'send',         'categoria' => 'Documentos'],
-            ['titulo' => 'Portarias',            'path' => '/ordinance',                 'icone' => 'file-text',    'categoria' => 'Documentos'],
-            ['titulo' => 'Modelos IA',           'path' => '/models',                    'icone' => 'cpu',          'categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'ServiÃ§os',             'path' => '/service_calls',             'icone' => 'tool',         'categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'Salas',                'path' => '/rooms',                     'icone' => 'grid',         'categoria' => 'Atendimento'],
-            ['titulo' => 'Minha Sala',           'path' => '/listing_calls',             'icone' => 'monitor',      'categoria' => 'Atendimento'],
-            ['titulo' => 'Em Atendimento',       'path' => '/attending',                 'icone' => 'activity',     'categoria' => 'Atendimento'],
-            ['titulo' => 'Novo Atendimento',     'path' => '/call',                      'icone' => 'plus-circle',  'categoria' => 'Atendimento'],
-            ['titulo' => 'Painel',               'path' => '/panel',                     'icone' => 'layout',       'categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'Logs de Erro',         'path' => '/errorlogs',                 'icone' => 'alert-triangle','categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'Logs de QRCODE',       'path' => '/qrcodelogs',               'icone' => 'maximize',     'categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'Perfis de Acesso',     'path' => '/perfis',                    'icone' => 'shield',       'categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'PÃ¡ginas do Sistema',   'path' => '/paginas-sistema',           'icone' => 'layout',       'categoria' => 'AdministraÃ§Ã£o'],
-            ['titulo' => 'Auditoria',            'path' => '/auditoria',                 'icone' => 'eye',          'categoria' => 'AdministraÃ§Ã£o'],
-            // Rota base para sub-rotas de resultados (nÃ£o aparece no menu, mas controla
-            // o acesso Ã  pÃ¡gina dinÃ¢mica /laboratorio/resultados/[resultadoId] via prefix matching)
-            ['titulo' => 'Lab â€” Resultados',     'path' => '/laboratorio/resultados',    'icone' => 'file-text',    'categoria' => 'LaboratÃ³rio'],
-            // VigilÃ¢ncia SanitÃ¡ria
-            ['titulo' => 'Estabelecimentos',     'path' => '/estabelecimentos',          'icone' => 'home',         'categoria' => 'VigilÃ¢ncia SanitÃ¡ria'],
-            ['titulo' => 'AlvarÃ¡s',              'path' => '/alvaras',                   'icone' => 'award',        'categoria' => 'VigilÃ¢ncia SanitÃ¡ria'],
-            ['titulo' => 'VigilÃ¢ncia â€” Config',  'path' => '/vigilancia/configuracoes',  'icone' => 'settings',     'categoria' => 'VigilÃ¢ncia SanitÃ¡ria'],
+            ['titulo' => 'Dashboard', 'path' => '/dashboard', 'icone' => 'pie-chart', 'categoria' => 'Geral'],
+            ['titulo' => 'Usuários', 'path' => '/users', 'icone' => 'user', 'categoria' => 'Administração'],
+            ['titulo' => 'Clientes', 'path' => '/clients', 'icone' => 'users', 'categoria' => 'Cadastros'],
+            ['titulo' => 'Relatório Clientes', 'path' => '/client_report', 'icone' => 'bar-chart-2', 'categoria' => 'Relatórios'],
+            ['titulo' => 'Lab - Exames', 'path' => '/laboratorio/exames', 'icone' => 'thermometer', 'categoria' => 'Laboratório'],
+            ['titulo' => 'Lab - Pedidos', 'path' => '/laboratorio/pedidos', 'icone' => 'clipboard', 'categoria' => 'Laboratório'],
+            ['titulo' => 'Lab - Categorias', 'path' => '/laboratorio/categorias', 'icone' => 'tag', 'categoria' => 'Laboratório'],
+            ['titulo' => 'Lab - Médicos', 'path' => '/laboratorio/medicos', 'icone' => 'user-check', 'categoria' => 'Laboratório'],
+            ['titulo' => 'Lab - Agenda', 'path' => '/laboratorio/agenda', 'icone' => 'calendar', 'categoria' => 'Laboratório'],
+            ['titulo' => 'Especialidades', 'path' => '/specialities', 'icone' => 'award', 'categoria' => 'Cadastros'],
+            ['titulo' => 'Fila', 'path' => '/queue', 'icone' => 'layers', 'categoria' => 'Atendimento'],
+            ['titulo' => 'Veículos', 'path' => '/vehicles', 'icone' => 'truck', 'categoria' => 'TFD'],
+            ['titulo' => 'Rotas', 'path' => '/routes', 'icone' => 'map', 'categoria' => 'TFD'],
+            ['titulo' => 'Viagens', 'path' => '/trips', 'icone' => 'map-pin', 'categoria' => 'TFD'],
+            ['titulo' => 'Ofícios', 'path' => '/letters', 'icone' => 'send', 'categoria' => 'Documentos'],
+            ['titulo' => 'Portarias', 'path' => '/ordinance', 'icone' => 'file-text', 'categoria' => 'Documentos'],
+            ['titulo' => 'Modelos IA', 'path' => '/models', 'icone' => 'cpu', 'categoria' => 'Administração'],
+            ['titulo' => 'Serviços', 'path' => '/service_calls', 'icone' => 'tool', 'categoria' => 'Administração'],
+            ['titulo' => 'Salas', 'path' => '/rooms', 'icone' => 'grid', 'categoria' => 'Atendimento'],
+            ['titulo' => 'Minha Sala', 'path' => '/listing_calls', 'icone' => 'monitor', 'categoria' => 'Atendimento'],
+            ['titulo' => 'Em Atendimento', 'path' => '/attending', 'icone' => 'activity', 'categoria' => 'Atendimento'],
+            ['titulo' => 'Novo Atendimento', 'path' => '/call', 'icone' => 'plus-circle', 'categoria' => 'Atendimento'],
+            ['titulo' => 'Painel', 'path' => '/panel', 'icone' => 'layout', 'categoria' => 'Administração'],
+            ['titulo' => 'Logs de Erro', 'path' => '/errorlogs', 'icone' => 'alert-triangle', 'categoria' => 'Administração'],
+            ['titulo' => 'Logs de QRCODE', 'path' => '/qrcodelogs', 'icone' => 'maximize', 'categoria' => 'Administração'],
+            ['titulo' => 'Perfis de Acesso', 'path' => '/perfis', 'icone' => 'shield', 'categoria' => 'Administração'],
+            ['titulo' => 'Páginas do Sistema', 'path' => '/paginas-sistema', 'icone' => 'layout', 'categoria' => 'Administração'],
+            ['titulo' => 'Auditoria', 'path' => '/auditoria', 'icone' => 'eye', 'categoria' => 'Administração'],
+            ['titulo' => 'Lab - Resultados', 'path' => '/laboratorio/resultados', 'icone' => 'file-text', 'categoria' => 'Laboratório'],
+            ['titulo' => 'Estabelecimentos', 'path' => '/estabelecimentos', 'icone' => 'home', 'categoria' => 'Vigilância Sanitária'],
+            ['titulo' => 'Alvarás', 'path' => '/alvaras', 'icone' => 'award', 'categoria' => 'Vigilância Sanitária'],
+            ['titulo' => 'Vigilância - Config', 'path' => '/vigilancia/configuracoes', 'icone' => 'settings', 'categoria' => 'Vigilância Sanitária'],
+            ['titulo' => 'Farmácia - Medicamentos', 'path' => '/pharmacy/medicines', 'icone' => 'archive', 'categoria' => 'Farmácia'],
+            ['titulo' => 'Farmácia - Status Diário', 'path' => '/pharmacy/daily-status', 'icone' => 'calendar', 'categoria' => 'Farmácia'],
+            ['titulo' => 'Farmácia - Aquisições Mensais', 'path' => '/pharmacy/monthly-acquisitions', 'icone' => 'bar-chart-2', 'categoria' => 'Farmácia'],
+            ['titulo' => 'Farmácia - Conformidade', 'path' => '/pharmacy/compliance', 'icone' => 'check-square', 'categoria' => 'Farmácia'],
         ];
 
         foreach ($pages as &$page) {
@@ -61,14 +60,13 @@ class AccessProfileSeeder extends Seeder
 
         DB::table('system_pages')->insertOrIgnore($pages);
 
-        // Perfis de acesso
         $profiles = [
-            ['nome' => 'Administrador', 'slug' => 'admin',   'descricao' => 'Acesso total ao sistema'],
-            ['nome' => 'Gerente',       'slug' => 'manager', 'descricao' => 'Acesso ao laboratÃ³rio e documentos'],
-            ['nome' => 'UsuÃ¡rio',       'slug' => 'user',    'descricao' => 'Acesso bÃ¡sico a clientes e pedidos'],
-            ['nome' => 'TFD',           'slug' => 'tfd',     'descricao' => 'Acesso a TFD, viagens e documentos'],
-            ['nome' => 'Motorista',     'slug' => 'driver',  'descricao' => 'Acesso ao painel e viagens'],
-            ['nome' => 'Parceiro',      'slug' => 'partner', 'descricao' => 'Acesso apenas a clientes'],
+            ['nome' => 'Administrador', 'slug' => 'admin', 'descricao' => 'Acesso total ao sistema'],
+            ['nome' => 'Gerente', 'slug' => 'manager', 'descricao' => 'Acesso ao laboratório e documentos'],
+            ['nome' => 'Usuário', 'slug' => 'user', 'descricao' => 'Acesso básico a clientes e pedidos'],
+            ['nome' => 'TFD', 'slug' => 'tfd', 'descricao' => 'Acesso a TFD, viagens e documentos'],
+            ['nome' => 'Motorista', 'slug' => 'driver', 'descricao' => 'Acesso ao painel e viagens'],
+            ['nome' => 'Parceiro', 'slug' => 'partner', 'descricao' => 'Acesso apenas a clientes'],
         ];
 
         foreach ($profiles as &$profile) {
@@ -79,29 +77,42 @@ class AccessProfileSeeder extends Seeder
 
         DB::table('access_profiles')->insertOrIgnore($profiles);
 
-        // PermissÃµes por perfil (baseado em MenuItems.js)
         $permissoes = [
-            'admin'   => ['/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/errorlogs', '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes'],
-            'manager' => ['/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance', '/estabelecimentos', '/alvaras'],
-            'user'    => ['/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
-            'tfd'     => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
-            'driver'  => ['/panel', '/trips'],
+            'admin' => [
+                '/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados',
+                '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips',
+                '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/errorlogs',
+                '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes',
+                '/pharmacy/medicines', '/pharmacy/daily-status', '/pharmacy/monthly-acquisitions', '/pharmacy/compliance',
+            ],
+            'manager' => [
+                '/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados',
+                '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance',
+                '/estabelecimentos', '/alvaras', '/pharmacy/medicines', '/pharmacy/daily-status', '/pharmacy/monthly-acquisitions', '/pharmacy/compliance',
+            ],
+            'user' => ['/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
+            'tfd' => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
+            'driver' => ['/panel', '/trips'],
             'partner' => ['/clients'],
         ];
 
         foreach ($permissoes as $slug => $paths) {
             $profile = DB::table('access_profiles')->where('slug', $slug)->first();
-            if (!$profile) continue;
+            if (! $profile) {
+                continue;
+            }
 
             foreach ($paths as $path) {
                 $page = DB::table('system_pages')->where('path', $path)->first();
-                if (!$page) continue;
+                if (! $page) {
+                    continue;
+                }
 
                 DB::table('profile_page_permissions')->insertOrIgnore([
                     'access_profile_id' => $profile->id,
-                    'system_page_id'    => $page->id,
-                    'created_at'        => now(),
-                    'updated_at'        => now(),
+                    'system_page_id' => $page->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
         }

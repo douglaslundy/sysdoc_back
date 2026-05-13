@@ -40,6 +40,15 @@ use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\EstabelecimentoController;
 use App\Http\Controllers\AlvaraController;
 use App\Http\Controllers\VigilanciaConfigController;
+use App\Http\Controllers\MedicineItemController;
+use App\Http\Controllers\MedicineDailyStatusController;
+use App\Http\Controllers\MedicineMonthlyAcquisitionController;
+use App\Http\Controllers\MedicinePublicationController;
+use App\Http\Controllers\MedicineTransparencyPublicController;
+use App\Http\Controllers\MedicineComplianceController;
+use App\Http\Controllers\PharmacyCatalogController;
+use App\Http\Controllers\PharmacyCatalogAdminController;
+use App\Http\Controllers\PageViewAuditController;
 
 
 Route::get('/ping', function () {
@@ -64,6 +73,11 @@ Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']
 Route::middleware('throttle:10,1')->post('/consulta-exame', [ConsultaPublicaController::class, 'consultar']);
 Route::middleware('throttle:10,1')->post('/consulta-exame/pdf/{protocolo}', [ConsultaPublicaController::class, 'downloadPdf']);
 
+// Transparência pública - Farmácia básica (Lei 2488)
+Route::get('/public/pharmacy/medicines/daily', [MedicineTransparencyPublicController::class, 'daily']);
+Route::get('/public/pharmacy/medicines/panel', [MedicineTransparencyPublicController::class, 'panel']);
+Route::get('/public/pharmacy/medicines/monthly-acquisitions', [MedicineTransparencyPublicController::class, 'monthly']);
+
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:3,1')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
 Route::middleware('throttle:5,1')->post('/reset-password', [PasswordResetController::class, 'reset']);
@@ -74,6 +88,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate', [AuthController::class, 'validateToken']);
+    Route::post('/audit/page-view', [PageViewAuditController::class, 'store']);
 
     // Dashboard analítico — throttle: 20 req/min + controle de acesso por perfil
     Route::middleware('throttle:20,1')->group(function () {
@@ -92,6 +107,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('admin')->group(function () {
         Route::get('/laboratorio/config', [LabConfigController::class, 'show']);
         Route::put('/laboratorio/config', [LabConfigController::class, 'update']);
+        Route::get('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'index']);
+        Route::post('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'store']);
+        Route::put('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'update']);
+        Route::delete('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'destroy']);
     });
 
     // Auditoria + perfis de acesso e páginas do sistema (somente admin)
@@ -192,6 +211,25 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/vigilancia/config', [VigilanciaConfigController::class, 'show']);
         Route::put('/vigilancia/config', [VigilanciaConfigController::class, 'update']);
     });
+
+    // Pharmacy / medicines transparency
+    Route::get('/pharmacy/medicines/select', [MedicineItemController::class, 'select']);
+    Route::apiResource('medicines', MedicineItemController::class);
+    Route::get('/pharmacy/medicines/daily-statuses', [MedicineDailyStatusController::class, 'index']);
+    Route::post('/pharmacy/medicines/daily-statuses', [MedicineDailyStatusController::class, 'store']);
+    Route::put('/pharmacy/medicines/daily-statuses/{id}', [MedicineDailyStatusController::class, 'update']);
+    Route::delete('/pharmacy/medicines/daily-statuses/{id}', [MedicineDailyStatusController::class, 'destroy']);
+
+    Route::get('/pharmacy/medicines/monthly-acquisitions', [MedicineMonthlyAcquisitionController::class, 'index']);
+    Route::post('/pharmacy/medicines/monthly-acquisitions', [MedicineMonthlyAcquisitionController::class, 'store']);
+    Route::put('/pharmacy/medicines/monthly-acquisitions/{id}', [MedicineMonthlyAcquisitionController::class, 'update']);
+    Route::delete('/pharmacy/medicines/monthly-acquisitions/{id}', [MedicineMonthlyAcquisitionController::class, 'destroy']);
+
+    Route::get('/pharmacy/medicines/publications', [MedicinePublicationController::class, 'index']);
+    Route::post('/pharmacy/medicines/publications', [MedicinePublicationController::class, 'store']);
+    Route::delete('/pharmacy/medicines/publications/{id}', [MedicinePublicationController::class, 'destroy']);
+    Route::get('/pharmacy/medicines/compliance', [MedicineComplianceController::class, 'index']);
+    Route::get('/pharmacy/catalogs', [PharmacyCatalogController::class, 'index']);
 
     // Laboratório
     Route::prefix('laboratorio')->group(function () {

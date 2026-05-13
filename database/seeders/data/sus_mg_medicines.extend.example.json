@@ -1,0 +1,23 @@
+[
+  {
+    "code": "MG-CEAF-9001",
+    "ingredient": "NOME DO PRINCIPIO ATIVO",
+    "concentration": "CONCENTRACAO",
+    "form": "FORMA FARMACEUTICA",
+    "presentation": "APRESENTACAO",
+    "unit": "cp",
+    "component": "CEAF",
+    "controlled": false
+  },
+  {
+    "code": "MG-CBAF-9001",
+    "ingredient": "OUTRO PRINCIPIO ATIVO",
+    "concentration": "10 mg",
+    "form": "comprimido",
+    "presentation": "caixa",
+    "unit": "cp",
+    "component": "CBAF",
+    "controlled": false
+  }
+]
+

@@ -1,0 +1,14 @@
+login: 201
+GET /api/medicines: 200
+POST /api/medicines: 201
+POST /api/pharmacy/medicines/daily-statuses: 200
+PUT /api/pharmacy/medicines/daily-statuses/{id}: 200
+POST /api/pharmacy/medicines/monthly-acquisitions: 200
+POST /api/pharmacy/medicines/publications (daily): 201
+POST /api/pharmacy/medicines/publications (monthly): 201
+GET /api/pharmacy/medicines/compliance: 200
+GET /api/public/pharmacy/medicines/daily: 200
+GET /api/public/pharmacy/medicines/monthly-acquisitions: 200
+---
+daily-body:{"reference_date":"2026-05-13","last_update_at":"2026-05-13 13:18:15","items":[{"medicine_id":2,"internal_code":"MED-131813","brand_name":null,"active_ingredient":"Paracetamol","concentration":"500mg","pharmaceutical_for
+monthly-body:{"reference_month":"2026-05","last_update_at":"2026-05-13 13:18:16","items":[{"medicine_id":1,"internal_code":"MED-131257","brand_name":null,"active_ingredient":"Paracetamol","acquired_quantity":"120.00","unit_measure":"
