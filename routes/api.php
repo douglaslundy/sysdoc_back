@@ -96,6 +96,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
         Route::get('/dashboard/fila',        [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
         Route::get('/dashboard/tfd',         [DashboardController::class, 'tfd'])->middleware('can:dashboard-tfd');
+        Route::get('/dashboard/farmacia',    [DashboardController::class, 'farmacia']);
         Route::get('/dashboard/logs',        [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
         Route::get('/dashboard/vigilancia',  [DashboardController::class, 'vigilancia']);
     });

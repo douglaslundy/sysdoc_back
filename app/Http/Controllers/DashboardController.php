@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
@@ -288,6 +289,168 @@ class DashboardController extends Controller
         }
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=300');
+    }
+
+    public function farmacia()
+    {
+        $janelaDias = (int) request()->input('janela_dias', 30);
+        if (!in_array($janelaDias, [7, 30, 90], true)) {
+            $janelaDias = 30;
+        }
+        $janelaMeses = (int) request()->input('janela_meses', 12);
+        if (!in_array($janelaMeses, [3, 6, 12], true)) {
+            $janelaMeses = 12;
+        }
+
+        $empty = [
+            'totais' => [
+                'medicamentos_ativos' => 0,
+                'registros_status_hoje' => 0,
+                'disponiveis_hoje' => 0,
+                'indisponiveis_hoje' => 0,
+                'taxa_disponibilidade_hoje' => 0,
+                'aquisicoes_mes_atual' => 0,
+                'qtd_adquirida_mes_atual' => 0,
+            ],
+            'status_por_dia' => [],
+            'aquisicoes_por_mes' => [],
+            'top_indisponiveis' => [],
+            'fontes_aquisicao_mes' => [],
+        ];
+
+        $today = now()->toDateString();
+        $currentMonth = now()->format('Y-m');
+
+        try {
+            $cacheKey = 'dashboard.farmacia.' . $janelaDias . '.' . $janelaMeses . '.' . now()->format('Y-m-d');
+            $data = Cache::remember($cacheKey, 180, function () use ($empty, $today, $currentMonth, $janelaDias, $janelaMeses) {
+                try {
+                    $medicamentosAtivos = (int) DB::table('medicine_items')
+                        ->whereNull('deleted_at')
+                        ->where('active', true)
+                        ->count();
+
+                    $statusHoje = DB::table('medicine_daily_statuses')
+                        ->whereDate('reference_date', $today);
+
+                    $registrosStatusHoje = (int) (clone $statusHoje)->count();
+                    $disponiveisHoje = (int) (clone $statusHoje)->where('availability_status', 'available')->count();
+                    $indisponiveisHoje = (int) (clone $statusHoje)->where('availability_status', 'unavailable')->count();
+                    $taxaDisponibilidade = $registrosStatusHoje > 0
+                        ? round(($disponiveisHoje / $registrosStatusHoje) * 100, 1)
+                        : 0;
+
+                    $aquisicoesMesAtualQuery = DB::table('medicine_monthly_acquisitions')
+                        ->where('reference_month', $currentMonth);
+
+                    $aquisicoesMesAtual = (int) (clone $aquisicoesMesAtualQuery)->count();
+                    $qtdAdquiridaMesAtual = (float) (clone $aquisicoesMesAtualQuery)->sum('acquired_quantity');
+                } catch (\Throwable $e) {
+                    Log::error('DashboardFarmacia totais: ' . $e->getMessage());
+                    $medicamentosAtivos = 0;
+                    $registrosStatusHoje = 0;
+                    $disponiveisHoje = 0;
+                    $indisponiveisHoje = 0;
+                    $taxaDisponibilidade = 0;
+                    $aquisicoesMesAtual = 0;
+                    $qtdAdquiridaMesAtual = 0;
+                }
+
+                try {
+                    $statusPorDia = DB::table('medicine_daily_statuses')
+                        ->select(
+                            'reference_date as dia',
+                            DB::raw("SUM(CASE WHEN availability_status = 'available' THEN 1 ELSE 0 END) as disponiveis"),
+                            DB::raw("SUM(CASE WHEN availability_status = 'unavailable' THEN 1 ELSE 0 END) as indisponiveis"),
+                            DB::raw('COUNT(*) as total')
+                        )
+                        ->whereDate('reference_date', '>=', now()->subDays($janelaDias - 1)->toDateString())
+                        ->groupBy('reference_date')
+                        ->orderBy('reference_date')
+                        ->get();
+                } catch (\Throwable $e) {
+                    Log::error('DashboardFarmacia status_por_dia: ' . $e->getMessage());
+                    $statusPorDia = collect();
+                }
+
+                try {
+                    $aquisicoesPorMes = DB::table('medicine_monthly_acquisitions')
+                        ->select(
+                            'reference_month as mes',
+                            DB::raw('COUNT(*) as registros'),
+                            DB::raw('COALESCE(SUM(acquired_quantity), 0) as quantidade_total')
+                        )
+                        ->where('reference_month', '>=', now()->subMonths($janelaMeses - 1)->format('Y-m'))
+                        ->groupBy('reference_month')
+                        ->orderBy('reference_month')
+                        ->get();
+                } catch (\Throwable $e) {
+                    Log::error('DashboardFarmacia aquisicoes_por_mes: ' . $e->getMessage());
+                    $aquisicoesPorMes = collect();
+                }
+
+                try {
+                    $topIndisponiveis = DB::table('medicine_daily_statuses as s')
+                        ->join('medicine_items as m', 'm.id', '=', 's.medicine_item_id')
+                        ->select(
+                            'm.id',
+                            'm.active_ingredient',
+                            'm.internal_code',
+                            DB::raw('COUNT(*) as dias_indisponivel')
+                        )
+                        ->whereDate('s.reference_date', '>=', now()->subDays($janelaDias - 1)->toDateString())
+                        ->where('s.availability_status', 'unavailable')
+                        ->whereNull('m.deleted_at')
+                        ->groupBy('m.id', 'm.active_ingredient', 'm.internal_code')
+                        ->orderByDesc('dias_indisponivel')
+                        ->limit(10)
+                        ->get();
+                } catch (\Throwable $e) {
+                    Log::error('DashboardFarmacia top_indisponiveis: ' . $e->getMessage());
+                    $topIndisponiveis = collect();
+                }
+
+                try {
+                    $fontesAquisicaoMes = DB::table('medicine_monthly_acquisitions')
+                        ->select('source_document', DB::raw('COUNT(*) as total'))
+                        ->where('reference_month', $currentMonth)
+                        ->groupBy('source_document')
+                        ->orderByDesc('total')
+                        ->limit(8)
+                        ->get()
+                        ->map(function ($row) {
+                            $row->source_document = $row->source_document ?: 'Sem origem';
+                            return $row;
+                        });
+                } catch (\Throwable $e) {
+                    Log::error('DashboardFarmacia fontes_aquisicao_mes: ' . $e->getMessage());
+                    $fontesAquisicaoMes = collect();
+                }
+
+                return [
+                    'janela_dias' => $janelaDias,
+                    'janela_meses' => $janelaMeses,
+                    'totais' => [
+                        'medicamentos_ativos' => $medicamentosAtivos,
+                        'registros_status_hoje' => $registrosStatusHoje,
+                        'disponiveis_hoje' => $disponiveisHoje,
+                        'indisponiveis_hoje' => $indisponiveisHoje,
+                        'taxa_disponibilidade_hoje' => $taxaDisponibilidade,
+                        'aquisicoes_mes_atual' => $aquisicoesMesAtual,
+                        'qtd_adquirida_mes_atual' => round($qtdAdquiridaMesAtual, 2),
+                    ],
+                    'status_por_dia' => $statusPorDia,
+                    'aquisicoes_por_mes' => $aquisicoesPorMes,
+                    'top_indisponiveis' => $topIndisponiveis,
+                    'fontes_aquisicao_mes' => $fontesAquisicaoMes,
+                ];
+            });
+        } catch (\Throwable $e) {
+            Log::error('DashboardFarmacia cache: ' . $e->getMessage());
+            $data = $empty;
+        }
+
+        return response()->json($data)->header('Cache-Control', 'private, max-age=180');
     }
 
     public function inicio()
