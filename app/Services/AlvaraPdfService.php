@@ -25,7 +25,8 @@ class AlvaraPdfService
             'brasaoB64' => $brasaoB64,
         ])->setPaper('a4', 'portrait');
 
-        $filename = 'alvara-' . $alvara->numero_alvara . '.pdf';
+        $safeNumber = preg_replace('/[\\\\\\/]+/', '-', (string) $alvara->numero_alvara);
+        $filename = 'alvara-' . ($safeNumber ?: 'sem-numero') . '.pdf';
 
         return response()->streamDownload(
             fn () => print($pdf->output()),

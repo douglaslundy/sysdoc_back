@@ -2,18 +2,15 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Throwable;
-
 use App\Models\ErrorLog;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class Handler extends ExceptionHandler
 {
     /**
-     * A list of the exception types that are not reported.
-     *
      * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
@@ -21,8 +18,6 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * A list of the inputs that are never flashed for validation exceptions.
-     *
      * @var array<int, string>
      */
     protected $dontFlash = [
@@ -31,11 +26,6 @@ class Handler extends ExceptionHandler
         'password_confirmation',
     ];
 
-    /**
-     * Register the exception handling callbacks for the application.
-     *
-     * @return void
-     */
     public function register()
     {
         $this->reportable(function (Throwable $e) {
@@ -45,31 +35,27 @@ class Handler extends ExceptionHandler
 
     public function report(Throwable $exception)
     {
-        // Chame o método pai para o logging padrão do Laravel
         parent::report($exception);
 
-        // Captura o ID do usuário logado, se estiver autenticado
-        $userId = Auth::check() ? Auth::id() : 0;
+        // Nunca use 0 para user_id: em casos não autenticados deve ser null,
+        // evitando violação de FK em error_logs.user_id.
+        $userId = Auth::check() ? Auth::id() : null;
 
-        // Verifica se o ambiente é de produção para evitar capturas desnecessárias
-        // if (app()->environment('production')) {
         try {
-            // Salva o log no banco de dados
             ErrorLog::create([
                 'type' => get_class($exception),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
-                'user_id' => $userId, // Loga o ID do usuário
+                'user_id' => $userId,
                 'message' => $exception->getMessage(),
                 'trace' => $exception->getTraceAsString(),
                 'context' => $this->context(),
             ]);
-        } catch (\Exception $e) {
-            // Loga um erro caso o salvamento do log falhe
+        } catch (Throwable $e) {
+            // O logger de erro nunca deve derrubar/mascarar a exceção original.
             Log::error('Erro ao salvar log de exceção: ' . $e->getMessage());
         }
     }
-    // }
 
     protected function context()
     {
@@ -80,3 +66,4 @@ class Handler extends ExceptionHandler
         ]);
     }
 }
+
