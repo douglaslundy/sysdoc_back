@@ -62,4 +62,9 @@ class Queue extends Model
     {
         return $this->belongsTo(Speciality::class, 'id_specialities');
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(QueueAttachment::class, 'queue_id');
+    }
 }

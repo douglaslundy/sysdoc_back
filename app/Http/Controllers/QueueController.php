@@ -16,7 +16,7 @@ class QueueController extends Controller
     public function index()
     {
         // Buscar todos os registros com as relações necessárias (independente de 'done')
-        $queues = Queue::with(['client', 'user', 'speciality'])
+        $queues = Queue::with(['client', 'user', 'speciality'])->withCount('attachments')
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc') // Garante ordenação consistente em caso de created_at iguais
             ->get();
@@ -45,7 +45,7 @@ class QueueController extends Controller
 
     public function show($id)
     {
-        $queue = Queue::with(['client', 'user', 'speciality'])->find($id);
+        $queue = Queue::with(['client', 'user', 'speciality'])->withCount('attachments')->find($id);
 
         if (!$queue) {
             return response()->json(['error' => 'Registro não encontrado'], 404);
@@ -145,7 +145,7 @@ class QueueController extends Controller
         AuditService::record('CREATE', $queue, null, $queue->toArray());
 
         // Carrega as relações client e speciality
-        $queue->load('client', 'speciality');
+        $queue->load('client', 'speciality', 'user')->loadCount('attachments');
 
         // Retorna a fila com as relações carregadas
         return response()->json($queue, 201);
@@ -183,7 +183,7 @@ class QueueController extends Controller
         }
 
         // Carrega as relações client e speciality
-        $queue->load('client', 'speciality');
+        $queue->load('client', 'speciality', 'user')->loadCount('attachments');
 
         return response()->json($queue, 200);
     }

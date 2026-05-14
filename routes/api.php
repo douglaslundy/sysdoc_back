@@ -14,6 +14,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\SpecialityController;
 use App\Http\Controllers\QueueController;
+use App\Http\Controllers\QueueAttachmentController;
 use App\Http\Controllers\ErrorLogController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\TripController;
@@ -177,6 +178,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // QueueCall
     Route::apiResource('queues', QueueController::class);
+    Route::get('/queues/{queue}/attachments', [QueueAttachmentController::class, 'index']);
+    Route::post('/queues/{queue}/attachments', [QueueAttachmentController::class, 'store']);
+    Route::get('/queues/{queue}/attachments/{attachment}/download', [QueueAttachmentController::class, 'download']);
+    Route::delete('/queues/{queue}/attachments/{attachment}', [QueueAttachmentController::class, 'destroy']);
 
     // Logs de Erro
     Route::apiResource('errorlogs', ErrorLogController::class);
