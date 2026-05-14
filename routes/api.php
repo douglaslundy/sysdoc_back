@@ -90,8 +90,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/validate', [AuthController::class, 'validateToken']);
     Route::post('/audit/page-view', [PageViewAuditController::class, 'store']);
 
-    // Dashboard analítico — throttle: 20 req/min + controle de acesso por perfil
-    Route::middleware('throttle:20,1')->group(function () {
+    // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
+    Route::middleware('throttle:120,1')->group(function () {
         Route::get('/dashboard/inicio',       [DashboardController::class, 'inicio']);
         Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
         Route::get('/dashboard/fila',        [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
@@ -277,3 +277,4 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/resultados/{resultado}/pdf', [ResultadoExameController::class, 'downloadPdf']);
     });
 });
+
