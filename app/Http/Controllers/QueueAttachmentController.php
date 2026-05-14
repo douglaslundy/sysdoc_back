@@ -70,12 +70,16 @@ class QueueAttachmentController extends Controller
 
     public function download(Queue $queue, QueueAttachment $attachment)
     {
-        if ($attachment->queue_id !== $queue->id) {
+        if (!$this->belongsToQueue($queue, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
-        if (!Storage::disk($attachment->disk)->exists($attachment->path)) {
-            return response()->json(['message' => 'Arquivo nao encontrado no armazenamento.'], 404);
+        [$disk, $path] = $this->resolveReadableLocation($attachment);
+
+        if (!$disk || !$path) {
+            return response()->json([
+                'message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'
+            ], 404);
         }
 
         AuditService::record('DOWNLOAD_ATTACHMENT', $queue, null, [
@@ -83,15 +87,15 @@ class QueueAttachmentController extends Controller
             'original_name' => $attachment->original_name,
         ]);
 
-        return Storage::disk($attachment->disk)->download(
-            $attachment->path,
+        return Storage::disk($disk)->download(
+            $path,
             $this->sanitizeFilename($attachment->original_name)
         );
     }
 
     public function destroy(Queue $queue, QueueAttachment $attachment): JsonResponse
     {
-        if ($attachment->queue_id !== $queue->id) {
+        if (!$this->belongsToQueue($queue, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
@@ -115,5 +119,41 @@ class QueueAttachmentController extends Controller
         $sanitized = trim($sanitized);
 
         return $sanitized !== '' ? $sanitized : 'arquivo';
+    }
+
+    private function resolveReadableLocation(QueueAttachment $attachment): array
+    {
+        $candidates = [];
+
+        if ($attachment->disk && $attachment->path) {
+            $candidates[] = [$attachment->disk, $attachment->path];
+        }
+
+        if ($attachment->path) {
+            $normalizedPath = ltrim(str_replace('\\', '/', $attachment->path), '/');
+            $candidates[] = ['private', $normalizedPath];
+            $candidates[] = ['public', $normalizedPath];
+        }
+
+        foreach ($candidates as [$disk, $path]) {
+            if (!$disk || !$path) {
+                continue;
+            }
+
+            try {
+                if (Storage::disk($disk)->exists($path)) {
+                    return [$disk, $path];
+                }
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
+
+        return [null, null];
+    }
+
+    private function belongsToQueue(Queue $queue, QueueAttachment $attachment): bool
+    {
+        return (int) $attachment->queue_id === (int) $queue->id;
     }
 }
