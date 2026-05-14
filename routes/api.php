@@ -35,6 +35,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\AccessProfileController;
 use App\Http\Controllers\SystemPageController;
+use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\EstabelecimentoController;
@@ -123,6 +124,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/system-pages', [SystemPageController::class, 'store']);
         Route::put('/system-pages/{id}', [SystemPageController::class, 'update']);
         Route::delete('/system-pages/{id}', [SystemPageController::class, 'destroy']);
+        Route::get('/page-categories', [PageCategoryController::class, 'index']);
+        Route::post('/page-categories', [PageCategoryController::class, 'store']);
+        Route::put('/page-categories/{id}', [PageCategoryController::class, 'update']);
+        Route::delete('/page-categories/{id}', [PageCategoryController::class, 'destroy']);
     });
 
     // sector

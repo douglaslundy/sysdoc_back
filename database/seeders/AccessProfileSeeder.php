@@ -41,6 +41,7 @@ class AccessProfileSeeder extends Seeder
             ['titulo' => 'Logs de QRCODE', 'path' => '/qrcodelogs', 'icone' => 'maximize', 'categoria' => 'Administração'],
             ['titulo' => 'Perfis de Acesso', 'path' => '/perfis', 'icone' => 'shield', 'categoria' => 'Administração'],
             ['titulo' => 'Páginas do Sistema', 'path' => '/paginas-sistema', 'icone' => 'layout', 'categoria' => 'Administração'],
+            ['titulo' => 'Categorias de Páginas', 'path' => '/paginas-categorias', 'icone' => 'tag', 'categoria' => 'Administração'],
             ['titulo' => 'Auditoria', 'path' => '/auditoria', 'icone' => 'eye', 'categoria' => 'Administração'],
             ['titulo' => 'Lab - Resultados', 'path' => '/laboratorio/resultados', 'icone' => 'file-text', 'categoria' => 'Laboratório'],
             ['titulo' => 'Estabelecimentos', 'path' => '/estabelecimentos', 'icone' => 'home', 'categoria' => 'Vigilância Sanitária'],
@@ -91,7 +92,7 @@ class AccessProfileSeeder extends Seeder
                 '/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados',
                 '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips',
                 '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/errorlogs',
-                '/qrcodelogs', '/perfis', '/paginas-sistema', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes',
+                '/qrcodelogs', '/perfis', '/paginas-sistema', '/paginas-categorias', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes',
                 '/pharmacy/medicines', '/pharmacy/daily-status', '/pharmacy/monthly-acquisitions', '/pharmacy/compliance',
             ],
             'manager' => [
