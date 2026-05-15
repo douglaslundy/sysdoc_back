@@ -18,13 +18,14 @@ class OrdinanceController extends Controller
     public function index()
     {
         return Ordinance::with(['user'])
+            ->withCount('attachments')
             ->orderBy('id', 'desc')
             ->get();
     }
 
     public function show(Ordinance $ordinance)
     {
-        return $ordinance->load('user');
+        return $ordinance->load('user')->loadCount('attachments');
     }
 
     public function store(StoreOrdinanceRequest $request)
@@ -68,7 +69,7 @@ class OrdinanceController extends Controller
             $ordinance->save();
             AuditService::record('CREATE', $ordinance, null, $ordinance->toArray());
 
-            $array['ordinance'] = $ordinance->load('user');
+            $array['ordinance'] = $ordinance->load('user')->loadCount('attachments');
 
             return response()->json($array, 201);
         } catch (Exception $e) {
@@ -109,7 +110,7 @@ class OrdinanceController extends Controller
             $ordinance->save();
             AuditService::record('UPDATE', $ordinance, $old, $ordinance->toArray());
 
-            $array['ordinance'] = $ordinance->load('user');
+            $array['ordinance'] = $ordinance->load('user')->loadCount('attachments');
 
             return response()->json($array);
         } catch (Exception $e) {

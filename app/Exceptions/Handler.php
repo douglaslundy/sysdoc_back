@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Models\ErrorLog;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -37,9 +38,29 @@ class Handler extends ExceptionHandler
     {
         parent::report($exception);
 
-        // Nunca use 0 para user_id: em casos não autenticados deve ser null,
-        // evitando violação de FK em error_logs.user_id.
-        $userId = Auth::check() ? Auth::id() : null;
+        // Evita poluir error_logs com tentativas sem credencial em rotas protegidas.
+        if ($exception instanceof AuthenticationException) {
+            return;
+        }
+
+        $requestUserId = null;
+        $requestUserEmail = null;
+        $requestUserName = null;
+
+        if (request()) {
+            $reqUser = request()->user();
+            if ($reqUser) {
+                $requestUserId = $reqUser->id ?? null;
+                $requestUserEmail = $reqUser->email ?? null;
+                $requestUserName = $reqUser->name ?? null;
+            }
+        }
+
+        $authUserId = Auth::id();
+        $sanctumUserId = auth('sanctum')->id();
+
+        // Mantem user_id nulo quando nao for possivel identificar usuario autenticado.
+        $userId = $requestUserId ?? $authUserId ?? $sanctumUserId ?? null;
 
         try {
             ErrorLog::create([
@@ -49,21 +70,30 @@ class Handler extends ExceptionHandler
                 'user_id' => $userId,
                 'message' => $exception->getMessage(),
                 'trace' => $exception->getTraceAsString(),
-                'context' => $this->context(),
+                'context' => $this->context($requestUserId, $requestUserName, $requestUserEmail),
             ]);
         } catch (Throwable $e) {
-            // O logger de erro nunca deve derrubar/mascarar a exceção original.
-            Log::error('Erro ao salvar log de exceção: ' . $e->getMessage());
+            // O logger de erro nunca deve derrubar/mascarar a excecao original.
+            Log::error('Erro ao salvar log de excecao: ' . $e->getMessage());
         }
     }
 
-    protected function context()
+    protected function context($requestUserId = null, $requestUserName = null, $requestUserEmail = null)
     {
+        $path = request() ? request()->path() : null;
+        $method = request() ? request()->method() : null;
+        $ip = request() ? request()->ip() : null;
+
         return array_merge(parent::context(), [
+            'actor_id' => $requestUserId,
+            'actor_name' => $requestUserName,
+            'actor_email' => $requestUserEmail,
+            'method' => $method,
+            'path' => $path,
+            'ip' => $ip,
             'user' => auth()->check() ? auth()->user()->only(['id', 'email']) : null,
-            'url' => request()->fullUrl(),
-            'input' => request()->except(['password', 'password_confirmation']),
+            'url' => request() ? request()->fullUrl() : null,
+            'input' => request() ? request()->except(['password', 'password_confirmation']) : [],
         ]);
     }
 }
-

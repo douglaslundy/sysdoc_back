@@ -37,4 +37,9 @@ class Ordinance extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(OrdinanceAttachment::class, 'ordinance_id');
+    }
 }

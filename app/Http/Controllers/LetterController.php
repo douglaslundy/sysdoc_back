@@ -17,7 +17,7 @@ class LetterController extends Controller
 {
     public function index()
     {
-        return Letter::with(['user'])->orderBy('id', 'desc')->get();
+        return Letter::with(['user'])->withCount('attachments')->orderBy('id', 'desc')->get();
     }
 
     public function store(Request $request)
@@ -55,7 +55,7 @@ class LetterController extends Controller
             $letter->fileurl = $request->input('fileurl');
             $letter->save();
             AuditService::record('CREATE', $letter, null, $letter->toArray());
-            $array['letter'] = $letter;
+            $array['letter'] = $letter->load('user')->loadCount('attachments');
         } else {
             $array['errors'] = $validator->errors()->first();
             return $array;
@@ -90,6 +90,7 @@ class LetterController extends Controller
             $letter->fileurl = $request->input('fileurl') ? $request->input('fileurl') : $letter->fileurl;
             $letter->save();
             AuditService::record('UPDATE', $letter, $old, $letter->toArray());
+            $array['letter'] = $letter->load('user')->loadCount('attachments');
         } else {
             $array['errors'] = $validator->errors()->first();
             return $array;

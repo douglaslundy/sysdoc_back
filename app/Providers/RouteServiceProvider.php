@@ -59,5 +59,19 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(120)->by(optional($request->user())->id ?: $request->ip());
         });
+
+        RateLimiter::for('forgot-password', function (Request $request) {
+            $email = (string) $request->input('email', '');
+            $key = sprintf('forgot-password|%s|%s', mb_strtolower(trim($email)), $request->ip());
+
+            return Limit::perMinutes(5, 5)
+                ->by($key)
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Muitas tentativas de envio. Aguarde alguns minutos e tente novamente.',
+                        'reason' => 'Proteção contra abuso para recuperação de senha.',
+                    ], 429);
+                });
+        });
     }
 }

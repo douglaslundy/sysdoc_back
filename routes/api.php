@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\LetterController;
+use App\Http\Controllers\LetterAttachmentController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\RouteController;
 use App\Http\Controllers\QRCodeLogController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\OrdinanceController;
+use App\Http\Controllers\OrdinanceAttachmentController;
 use App\Http\Controllers\ExameController;
 use App\Http\Controllers\ExameCampoController;
 use App\Http\Controllers\CampoReferenciaController;
@@ -81,7 +83,7 @@ Route::get('/public/pharmacy/medicines/panel', [MedicineTransparencyPublicContro
 Route::get('/public/pharmacy/medicines/monthly-acquisitions', [MedicineTransparencyPublicController::class, 'monthly']);
 
 // Redefinição de senha (throttle: 3 req/min por IP)
-Route::middleware('throttle:3,1')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
+Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
 Route::middleware('throttle:5,1')->post('/reset-password', [PasswordResetController::class, 'reset']);
 
 
@@ -141,6 +143,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // letters
     Route::apiResource('letters', LetterController::class);
     Route::post('/letters/newLetter', [LetterController::class, 'createLetterAi'])->name('newLetter');
+    Route::get('/letters/{letter}/attachments', [LetterAttachmentController::class, 'index']);
+    Route::post('/letters/{letter}/attachments', [LetterAttachmentController::class, 'store']);
+    Route::get('/letters/{letter}/attachments/{attachment}/download', [LetterAttachmentController::class, 'download']);
+    Route::delete('/letters/{letter}/attachments/{attachment}', [LetterAttachmentController::class, 'destroy']);
 
     // users
     Route::apiResource('users', UserController::class);
@@ -209,6 +215,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //rota para portarias
     Route::apiResource('ordinances', OrdinanceController::class);
     Route::post('/ordinances/newOrdinance', [OrdinanceController::class, 'createOrdinanceAi'])->name('newOrdinance');
+    Route::get('/ordinances/{ordinance}/attachments', [OrdinanceAttachmentController::class, 'index']);
+    Route::post('/ordinances/{ordinance}/attachments', [OrdinanceAttachmentController::class, 'store']);
+    Route::get('/ordinances/{ordinance}/attachments/{attachment}/download', [OrdinanceAttachmentController::class, 'download']);
+    Route::delete('/ordinances/{ordinance}/attachments/{attachment}', [OrdinanceAttachmentController::class, 'destroy']);
 
     // Alvarás e Estabelecimentos (Vigilância Sanitária)
     // ATENÇÃO: rotas estáticas ANTES de apiResource para não conflitar com {id}
