@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use App\Models\ErrorLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -40,6 +41,11 @@ class Handler extends ExceptionHandler
 
         // Evita poluir error_logs com tentativas sem credencial em rotas protegidas.
         if ($exception instanceof AuthenticationException) {
+            return;
+        }
+
+        // Evita ruído de scanners/crawlers em sistema privado.
+        if ($this->shouldIgnoreNotFound($exception)) {
             return;
         }
 
@@ -95,5 +101,36 @@ class Handler extends ExceptionHandler
             'url' => request() ? request()->fullUrl() : null,
             'input' => request() ? request()->except(['password', 'password_confirmation']) : [],
         ]);
+    }
+
+    protected function shouldIgnoreNotFound(Throwable $exception): bool
+    {
+        if (!$exception instanceof NotFoundHttpException || !request()) {
+            return false;
+        }
+
+        $path = trim((string) request()->path(), '/');
+        if ($path === '') {
+            return false;
+        }
+
+        $ignorePatterns = [
+            'sitemap.xml',
+            'robots.txt',
+            'favicon.ico',
+            'file-manager/*',
+            'wp-*',
+            'wordpress/*',
+            '.env',
+            '.git/*',
+        ];
+
+        foreach ($ignorePatterns as $pattern) {
+            if (fnmatch($pattern, $path, FNM_CASEFOLD)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
