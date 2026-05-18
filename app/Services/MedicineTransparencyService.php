@@ -69,6 +69,7 @@ class MedicineTransparencyService
                     'internal_code' => $row->medicineItem?->internal_code,
                     'brand_name' => $row->medicineItem?->brand_name,
                     'active_ingredient' => $row->medicineItem?->active_ingredient,
+                    'concentration' => $row->medicineItem?->concentration,
                     'acquired_quantity' => $row->acquired_quantity,
                     'unit_measure' => $row->unit_measure,
                     'source_document' => $row->source_document,

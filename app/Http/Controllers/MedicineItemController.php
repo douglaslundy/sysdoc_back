@@ -32,7 +32,7 @@ class MedicineItemController extends Controller
         $limit = (int) ($validated['limit'] ?? 300);
 
         return response()->json(
-            $query->limit($limit)->get(['id', 'internal_code', 'active_ingredient', 'active'])
+            $query->limit($limit)->get(['id', 'internal_code', 'active_ingredient', 'concentration', 'active'])
         );
     }
 
