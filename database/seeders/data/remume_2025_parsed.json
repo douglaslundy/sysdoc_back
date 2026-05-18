@@ -1,0 +1,967 @@
+[
+  {
+    "num": 1,
+    "raw": "Acido Acetilsalicílico",
+    "presentation": "Comprimido 100 mg"
+  },
+  {
+    "num": 2,
+    "raw": "Dipirona Sódica solução oral 500mg/ml",
+    "presentation": ""
+  },
+  {
+    "num": 3,
+    "raw": "Dipirona Sódica",
+    "presentation": "Comprimido 500mg"
+  },
+  {
+    "num": 4,
+    "raw": "Paracetamol",
+    "presentation": "solução oral 200mg/ml"
+  },
+  {
+    "num": 5,
+    "raw": "Paracetamol",
+    "presentation": "Comprimido 500 mg"
+  },
+  {
+    "num": 6,
+    "raw": "Diclofenaco Potássico",
+    "presentation": "Comprimido 50 mg"
+  },
+  {
+    "num": 7,
+    "raw": "Diclofenaco sódico",
+    "presentation": "Comprimido 50 mg"
+  },
+  {
+    "num": 8,
+    "raw": "Ibuprofeno",
+    "presentation": "Comprimido 600 mg"
+  },
+  {
+    "num": 9,
+    "raw": "Ibuprofeno",
+    "presentation": "Sups. Oral 50 mg/ml"
+  },
+  {
+    "num": 10,
+    "raw": "Dexametasona",
+    "presentation": "Tópico Creme Tubo 0,1%"
+  },
+  {
+    "num": 11,
+    "raw": "Dexametasona",
+    "presentation": "Comprimido 4mg"
+  },
+  {
+    "num": 12,
+    "raw": "Prednisolona",
+    "presentation": "Solução Oral Frasco. 3mg/ml"
+  },
+  {
+    "num": 13,
+    "raw": "Prednisona",
+    "presentation": "Comprimido 5 mg"
+  },
+  {
+    "num": 14,
+    "raw": "Prednisona",
+    "presentation": "Comprimido 20 mg"
+  },
+  {
+    "num": 15,
+    "raw": "Amoxicilina",
+    "presentation": "Cápsula 500 mg"
+  },
+  {
+    "num": 16,
+    "raw": "Amoxicilina suspensão oral Frasco 50mg/ml",
+    "presentation": ""
+  },
+  {
+    "num": 17,
+    "raw": "Amoxicilina+Clavulanato de",
+    "presentation": "Potássio"
+  },
+  {
+    "num": 18,
+    "raw": "Amoxicilina+Clavulanato de",
+    "presentation": "Potássio"
+  },
+  {
+    "num": 19,
+    "raw": "Azitromicina",
+    "presentation": "Comprimido 500 mg"
+  },
+  {
+    "num": 20,
+    "raw": "Azitromicina",
+    "presentation": "suspensão oral Frasco 40 mg/ml"
+  },
+  {
+    "num": 21,
+    "raw": "Benzilpenicilina benzatina",
+    "presentation": "Frasco-Ampola 1.200.000 UI"
+  },
+  {
+    "num": 22,
+    "raw": "Benzoilmetronidazol Frasco suspensão oral",
+    "presentation": "40mg/ml"
+  },
+  {
+    "num": 23,
+    "raw": "Cefalexina",
+    "presentation": "Comprimido 500 mg"
+  },
+  {
+    "num": 24,
+    "raw": "Cefalexina",
+    "presentation": "suspensão oral Frasco 250mg/5ml"
+  },
+  {
+    "num": 25,
+    "raw": "Ceftriaxona",
+    "presentation": "1g IV injetavel"
+  },
+  {
+    "num": 26,
+    "raw": "Ceftriaxona",
+    "presentation": "500mg IV injetável"
+  },
+  {
+    "num": 27,
+    "raw": "Ciprofloxacino cloridrato Comprimido 500mg",
+    "presentation": ""
+  },
+  {
+    "num": 28,
+    "raw": "Claritromicina cloridrato 50mg/ml suspensão oral",
+    "presentation": ""
+  },
+  {
+    "num": 29,
+    "raw": "Clorexidina Solução bucal 0,12%",
+    "presentation": ""
+  },
+  {
+    "num": 30,
+    "raw": "Claritromicina cloridrato Comprimido 500mg",
+    "presentation": ""
+  },
+  {
+    "num": 31,
+    "raw": "Metronidazol",
+    "presentation": "Comprimido 250 mg"
+  },
+  {
+    "num": 32,
+    "raw": "Nitrofurantoína",
+    "presentation": "Cápsula 100mg"
+  },
+  {
+    "num": 33,
+    "raw": "Sulfametoxazol + trimetoprima",
+    "presentation": "Comprimido 400 mg + 80 mg"
+  },
+  {
+    "num": 34,
+    "raw": "Sulfametoxazol + trimetoprima",
+    "presentation": "suspensão oral Frasco 40 mg + 8mg/ml"
+  },
+  {
+    "num": 35,
+    "raw": "Neomicina + Bacitracina",
+    "presentation": "Pomada 10 g"
+  },
+  {
+    "num": 36,
+    "raw": "Albendazol",
+    "presentation": "Comprimido 400 mg"
+  },
+  {
+    "num": 37,
+    "raw": "Albendazol",
+    "presentation": "suspensão oral Frasco 40 mg/ml"
+  },
+  {
+    "num": 38,
+    "raw": "Mebendazol",
+    "presentation": "100mg comprimido"
+  },
+  {
+    "num": 39,
+    "raw": "Mebendazol",
+    "presentation": "suspensão oral Frasco 20mg/ml"
+  },
+  {
+    "num": 40,
+    "raw": "Ivermectina Comprimido 6mg",
+    "presentation": ""
+  },
+  {
+    "num": 41,
+    "raw": "Permetrina 5% frasco loção",
+    "presentation": ""
+  },
+  {
+    "num": 42,
+    "raw": "Cetoconazol",
+    "presentation": "Comprimido 200 mg"
+  },
+  {
+    "num": 43,
+    "raw": "Cetoconazol",
+    "presentation": "creme 20 mg/g"
+  },
+  {
+    "num": 44,
+    "raw": "Fluconazol",
+    "presentation": "Cápsula 150 mg"
+  },
+  {
+    "num": 45,
+    "raw": "Metronidazol Geleia vaginal 10%",
+    "presentation": ""
+  },
+  {
+    "num": 46,
+    "raw": "Miconazol creme vaginal 2%",
+    "presentation": ""
+  },
+  {
+    "num": 47,
+    "raw": "Miconazol loção 2% Frasco",
+    "presentation": ""
+  },
+  {
+    "num": 48,
+    "raw": "Nistatina Suspensão oral 100.000 ui",
+    "presentation": ""
+  },
+  {
+    "num": 49,
+    "raw": "Nistatina",
+    "presentation": "Creme vaginal 25000UI/g"
+  },
+  {
+    "num": 50,
+    "raw": "Sulfadiazina de prata",
+    "presentation": "pasta 1% (uso UBS)"
+  },
+  {
+    "num": 51,
+    "raw": "Colagenase sem cloranfenicol Pomada (uso UBS)",
+    "presentation": ""
+  },
+  {
+    "num": 52,
+    "raw": "Colagenase com cloranfenicol",
+    "presentation": "Pomada (uso UBS)"
+  },
+  {
+    "num": 53,
+    "raw": "Metoclopramida",
+    "presentation": "Comprimido 10 mg"
+  },
+  {
+    "num": 54,
+    "raw": "Metoclopramida solução oral Frasco 4mg/ml",
+    "presentation": ""
+  },
+  {
+    "num": 55,
+    "raw": "Ondansetrona",
+    "presentation": "Comprimido 4 mg"
+  },
+  {
+    "num": 56,
+    "raw": "Ondansetrona",
+    "presentation": "Comprimido 8 mg"
+  },
+  {
+    "num": 57,
+    "raw": "Anlodipino",
+    "presentation": "Comprimido 5 mg (Farm. Popular)"
+  },
+  {
+    "num": 58,
+    "raw": "Anlodipino Comprimido 10 mg",
+    "presentation": ""
+  },
+  {
+    "num": 59,
+    "raw": "Atenolol Comprimido 50 mg",
+    "presentation": ""
+  },
+  {
+    "num": 60,
+    "raw": "Atenolol",
+    "presentation": "Comprimido 25 mg (Farm. Popular)"
+  },
+  {
+    "num": 61,
+    "raw": "Captopril",
+    "presentation": "Comprimido 25 mg (Farm. Popular)"
+  },
+  {
+    "num": 62,
+    "raw": "Carvedilol",
+    "presentation": "Comprimido 3,125 mg"
+  },
+  {
+    "num": 63,
+    "raw": "Carvedilol",
+    "presentation": "Comprimido 12,5 mg"
+  },
+  {
+    "num": 64,
+    "raw": "Carvedilol",
+    "presentation": "Comprimido 6,25mg"
+  },
+  {
+    "num": 65,
+    "raw": "Doxazosina Comprimido 2mg",
+    "presentation": ""
+  },
+  {
+    "num": 66,
+    "raw": "Enalapril",
+    "presentation": "Comprimido 10 mg (Farm. Popular)"
+  },
+  {
+    "num": 67,
+    "raw": "Enalapril",
+    "presentation": "Comprimido 20 mg"
+  },
+  {
+    "num": 68,
+    "raw": "Epironolactona",
+    "presentation": "Comprimido 25 mg (Farm. Popular)"
+  },
+  {
+    "num": 69,
+    "raw": "Epironolactona Comprimido 100mg",
+    "presentation": ""
+  },
+  {
+    "num": 70,
+    "raw": "Furosemida Comprimido 40mg (Farm. Popular)",
+    "presentation": ""
+  },
+  {
+    "num": 71,
+    "raw": "Hidralazina cloridrato Comprimido 50mg",
+    "presentation": ""
+  },
+  {
+    "num": 72,
+    "raw": "Hidroclorotiazida",
+    "presentation": "Comprimido 25 mg (Farm. Popular)"
+  },
+  {
+    "num": 73,
+    "raw": "Isossorbida moninitrato Comprimido 40mg",
+    "presentation": ""
+  },
+  {
+    "num": 74,
+    "raw": "Isossorbida – Sublingual",
+    "presentation": "Comprimido 5 mg"
+  },
+  {
+    "num": 75,
+    "raw": "Losartana potássica",
+    "presentation": "Comprimido 50 mg (Farm. Popular)"
+  },
+  {
+    "num": 76,
+    "raw": "Losartana potássica",
+    "presentation": "Comprimido 25mg"
+  },
+  {
+    "num": 77,
+    "raw": "Metildopa",
+    "presentation": "Comprimido 250 mg"
+  },
+  {
+    "num": 78,
+    "raw": "Metildopa",
+    "presentation": "Comprimido 500mg"
+  },
+  {
+    "num": 79,
+    "raw": "Metropolol succinato Comprimido 25mg lib. Prol. (Farm.",
+    "presentation": "Popular)"
+  },
+  {
+    "num": 80,
+    "raw": "Metropolol succinato Comprimido 50mg lib. Prol.",
+    "presentation": ""
+  },
+  {
+    "num": 81,
+    "raw": "Propanolol cloridrato Comprimido 40mg (Farm. Popular)",
+    "presentation": ""
+  },
+  {
+    "num": 82,
+    "raw": "Amiodarona",
+    "presentation": "Comprimido 200 mg"
+  },
+  {
+    "num": 83,
+    "raw": "Digoxina",
+    "presentation": "Comprimido 0,25 mg"
+  },
+  {
+    "num": 84,
+    "raw": "Alopurinol",
+    "presentation": "Comprimido 100 mg"
+  },
+  {
+    "num": 85,
+    "raw": "Alopurinol",
+    "presentation": "Comprimido 300 mg"
+  },
+  {
+    "num": 86,
+    "raw": "Levodopa + Benzerazida",
+    "presentation": "Comprimido 100 mg+ 25 mg"
+  },
+  {
+    "num": 87,
+    "raw": "Levodopa + Benzerazida Comprimido 200mg+50 mg",
+    "presentation": ""
+  },
+  {
+    "num": 88,
+    "raw": "Glibenclamida",
+    "presentation": "Comprimido 5 mg (Farm. Popular)"
+  },
+  {
+    "num": 89,
+    "raw": "Metformina",
+    "presentation": "Comprimido850 mg (Farm. Popular)"
+  },
+  {
+    "num": 90,
+    "raw": "Metformina Comprimidos 500mg (Farm. Popular)",
+    "presentation": ""
+  },
+  {
+    "num": 91,
+    "raw": "Insulina Regular",
+    "presentation": "Fr/Ampola 100 UI/ml e caneta"
+  },
+  {
+    "num": 92,
+    "raw": "Insulina NPH",
+    "presentation": "Fr/Ampola 100 UI/ml e caneta"
+  },
+  {
+    "num": 93,
+    "raw": "Gliclazida Comprimido 30mg",
+    "presentation": ""
+  },
+  {
+    "num": 94,
+    "raw": "Gliclazida",
+    "presentation": "Comprimido 60 mg"
+  },
+  {
+    "num": 95,
+    "raw": "Omeprazol",
+    "presentation": "Cápsula 20 mg"
+  },
+  {
+    "num": 96,
+    "raw": "Sinvastatina",
+    "presentation": "Comprimido 10 mg"
+  },
+  {
+    "num": 97,
+    "raw": "Sinvastatina",
+    "presentation": "Comprimido 20 mg"
+  },
+  {
+    "num": 98,
+    "raw": "Sinvastatina Comprimido 40mg",
+    "presentation": ""
+  },
+  {
+    "num": 99,
+    "raw": "Medroxiprogesterona",
+    "presentation": "Ampola 150/ml sol. Injetável"
+  },
+  {
+    "num": 100,
+    "raw": "Noretisterona + estradiol",
+    "presentation": "Ampola 50 + 5 mg sol. Injetável"
+  },
+  {
+    "num": 101,
+    "raw": "Medroxiprogesterona +estradiol Ampola 25+5mg sol. Injetável",
+    "presentation": "(mensal)"
+  },
+  {
+    "num": 102,
+    "raw": "Etnilestradiol + Levonorgestrel",
+    "presentation": "Comprimido 0,03 + 0,15 mg"
+  },
+  {
+    "num": 103,
+    "raw": "Noretisterona",
+    "presentation": "Comprimido 0,35 mg"
+  },
+  {
+    "num": 104,
+    "raw": "Estradiol10mg+ algestona Solução injetável ampola 1ml",
+    "presentation": ""
+  },
+  {
+    "num": 105,
+    "raw": "Dexclorfeniramina solução oral Frasco 0,4 mg/ml",
+    "presentation": ""
+  },
+  {
+    "num": 106,
+    "raw": "Dexclorfeniramina",
+    "presentation": "Comprimido 2 mg"
+  },
+  {
+    "num": 107,
+    "raw": "Loratadina",
+    "presentation": "Comprimido 10 mg"
+  },
+  {
+    "num": 108,
+    "raw": "Loratadina",
+    "presentation": "Solução oral Frasco 1mg/ml"
+  },
+  {
+    "num": 109,
+    "raw": "Prometazina Comprimido 25mg",
+    "presentation": ""
+  },
+  {
+    "num": 111,
+    "raw": "Varfarina sódica",
+    "presentation": "Comprimido 5mg"
+  },
+  {
+    "num": 112,
+    "raw": "Pomada oleosa a base de ácidos graxos",
+    "presentation": "(Vitamina A e E + óxido de zinco)"
+  },
+  {
+    "num": 113,
+    "raw": "Oxido de zinco 25%",
+    "presentation": "Pasta d`agua"
+  },
+  {
+    "num": 114,
+    "raw": "Levotiroxina sódica",
+    "presentation": "Comprimido 25 mcg"
+  },
+  {
+    "num": 115,
+    "raw": "Levotiroxina sódica",
+    "presentation": "Comprimido 50 mcg"
+  },
+  {
+    "num": 116,
+    "raw": "Levotiroxina sódica",
+    "presentation": "Comprimido 100 mcg"
+  },
+  {
+    "num": 117,
+    "raw": "Alendronato de sódio",
+    "presentation": "Comprimido 70 mg (Farm. Popular)"
+  },
+  {
+    "num": 118,
+    "raw": "Carbonato de cálcio +",
+    "presentation": "Comprimido 500 mg + 200UI"
+  },
+  {
+    "num": 119,
+    "raw": "Amitriptilina",
+    "presentation": "Comprimido 25 mg"
+  },
+  {
+    "num": 120,
+    "raw": "Amitriptilina Comprimido 75 mg",
+    "presentation": ""
+  },
+  {
+    "num": 121,
+    "raw": "Biperideno",
+    "presentation": "Comprimido 2 mg"
+  },
+  {
+    "num": 122,
+    "raw": "Bromazepam",
+    "presentation": "Comprimido 3mg"
+  },
+  {
+    "num": 123,
+    "raw": "Bromazepam",
+    "presentation": "Comprimido 6mg"
+  },
+  {
+    "num": 124,
+    "raw": "Carbamazepina",
+    "presentation": "Comprimido 200 mg"
+  },
+  {
+    "num": 125,
+    "raw": "Carbamazepina",
+    "presentation": "Comprimido 400 mg"
+  },
+  {
+    "num": 126,
+    "raw": "Carbamazepina",
+    "presentation": "Frasco 20mg/ml"
+  },
+  {
+    "num": 127,
+    "raw": "Carbonato de Lítio",
+    "presentation": "Comprimido 300 mg"
+  },
+  {
+    "num": 128,
+    "raw": "Clomipramina Comprimido 25mg",
+    "presentation": ""
+  },
+  {
+    "num": 129,
+    "raw": "Clonazepam Comprimido 0,5 mg",
+    "presentation": ""
+  },
+  {
+    "num": 130,
+    "raw": "Clonazepam",
+    "presentation": "Comprimido 2,0 mg"
+  },
+  {
+    "num": 131,
+    "raw": "Clonazepam–Solução oral Frasco 2,5 mg/ml",
+    "presentation": ""
+  },
+  {
+    "num": 132,
+    "raw": "Clorpromazina – Comprimido Comprimido 25 mg",
+    "presentation": ""
+  },
+  {
+    "num": 133,
+    "raw": "Clorpromazina",
+    "presentation": "Comprimido 100 mg"
+  },
+  {
+    "num": 134,
+    "raw": "Clorpromazina Sol. oral 40mg/ml",
+    "presentation": ""
+  },
+  {
+    "num": 135,
+    "raw": "Diazepam",
+    "presentation": "Comprimido 5 mg"
+  },
+  {
+    "num": 136,
+    "raw": "Diazepam",
+    "presentation": "Comprimido 10 mg"
+  },
+  {
+    "num": 137,
+    "raw": "Fenitoína",
+    "presentation": "Comprimido 100 mg"
+  },
+  {
+    "num": 138,
+    "raw": "Fenobarbital",
+    "presentation": "Comprimido 100 mg"
+  },
+  {
+    "num": 139,
+    "raw": "Fenobarbital – Solução oral",
+    "presentation": "Frasco 40 mg/ml"
+  },
+  {
+    "num": 140,
+    "raw": "Fluoxetina Cápsula",
+    "presentation": "Cápsula 20 mg"
+  },
+  {
+    "num": 141,
+    "raw": "Haloperidol",
+    "presentation": "Comprimido 1 mg"
+  },
+  {
+    "num": 142,
+    "raw": "Haloperidol",
+    "presentation": "Comprimido 5 mg"
+  },
+  {
+    "num": 143,
+    "raw": "Haloperidol – Solução oral",
+    "presentation": "Frasco 2 mg/ml"
+  },
+  {
+    "num": 144,
+    "raw": "Haloperidol Decanoato – Injetável",
+    "presentation": "Ampola 50 mg/ml"
+  },
+  {
+    "num": 145,
+    "raw": "Imipramina",
+    "presentation": "Comprimido 25mg"
+  },
+  {
+    "num": 146,
+    "raw": "Levomepromazina",
+    "presentation": "Comprimido 25mg"
+  },
+  {
+    "num": 147,
+    "raw": "Levomepromazina",
+    "presentation": "Comprimido100mg"
+  },
+  {
+    "num": 148,
+    "raw": "Metilfenidato Comprimido 10 mg (uso",
+    "presentation": "escolar)"
+  },
+  {
+    "num": 149,
+    "raw": "Naltrexona Comprimido 50mg",
+    "presentation": ""
+  },
+  {
+    "num": 150,
+    "raw": "Nortriptilina",
+    "presentation": "Comprimido 25 mg"
+  },
+  {
+    "num": 151,
+    "raw": "Nortriptilina",
+    "presentation": "Comprimido 50 mg"
+  },
+  {
+    "num": 152,
+    "raw": "Valproato de Sódio - Xarope",
+    "presentation": "Frasco 250 mg/5ml"
+  },
+  {
+    "num": 153,
+    "raw": "Valproato de Sódio",
+    "presentation": "Comprimido 250 mg"
+  },
+  {
+    "num": 154,
+    "raw": "Valproato de Sódio Comprimido 500 mg",
+    "presentation": ""
+  },
+  {
+    "num": 155,
+    "raw": "Ácido fólinico Comprimido 15mg",
+    "presentation": ""
+  },
+  {
+    "num": 156,
+    "raw": "Ácido fólico",
+    "presentation": "Comprimido 5 mg"
+  },
+  {
+    "num": 157,
+    "raw": "Complexo B",
+    "presentation": "Comprimido"
+  },
+  {
+    "num": 158,
+    "raw": "Sais para reidratação oral",
+    "presentation": "Sachê 27,9 g"
+  },
+  {
+    "num": 159,
+    "raw": "Sulfato ferroso",
+    "presentation": "Comprimido 40 mg (ferro elementar)"
+  },
+  {
+    "num": 160,
+    "raw": "Sulfato ferroso – xarope 25mg/ml",
+    "presentation": ""
+  },
+  {
+    "num": 161,
+    "raw": "Sulfato ferroso - gotas 125 mg/ml gotas",
+    "presentation": ""
+  },
+  {
+    "num": 162,
+    "raw": "Compl. Vitamínico Infantil",
+    "presentation": "Pedianutri - 4 a 18 anos"
+  },
+  {
+    "num": 163,
+    "raw": "Compl. Vitamínico Infantil",
+    "presentation": "(protovit) 6 meses- 2 anos"
+  },
+  {
+    "num": 164,
+    "raw": "Cloreto de sódio 0,9 mg/ml Frasco 50ml",
+    "presentation": ""
+  },
+  {
+    "num": 165,
+    "raw": "Bupropiona",
+    "presentation": "Comprimido revestido 150mg"
+  },
+  {
+    "num": 166,
+    "raw": "Nicotina",
+    "presentation": "Adesivo transdermico 21 mg"
+  },
+  {
+    "num": 167,
+    "raw": "Nicotina",
+    "presentation": "Adesivo transdermico 14 mg"
+  },
+  {
+    "num": 168,
+    "raw": "Nicotina",
+    "presentation": "Adesivo transdermico 7 mg"
+  },
+  {
+    "num": 169,
+    "raw": "Nicotina Goma 2mg",
+    "presentation": ""
+  },
+  {
+    "num": 170,
+    "raw": "Isoniazida",
+    "presentation": "Comprimido 100 mg"
+  },
+  {
+    "num": 171,
+    "raw": "Etionamida",
+    "presentation": "Comprimido 250 mg"
+  },
+  {
+    "num": 172,
+    "raw": "Etambutol",
+    "presentation": "Comprimido 400 mg"
+  },
+  {
+    "num": 173,
+    "raw": "Estreptomicina 1 g",
+    "presentation": "PÓ PARA INJETÁVEL"
+  },
+  {
+    "num": 174,
+    "raw": "Isoniazida+rifampicina",
+    "presentation": "Cápsula 75+150 mg+mg"
+  },
+  {
+    "num": 175,
+    "raw": "Isoniazida+rifampicina",
+    "presentation": "Cápsula 100+150 mg"
+  },
+  {
+    "num": 176,
+    "raw": "Isoniazida+rifampicina",
+    "presentation": "Cápsula 200+300 mg+mg"
+  },
+  {
+    "num": 177,
+    "raw": "Pirazinamida",
+    "presentation": "Suspensão oral 30 mg/ml"
+  },
+  {
+    "num": 178,
+    "raw": "Pirazinamida",
+    "presentation": "Comprimido 500 mg"
+  },
+  {
+    "num": 179,
+    "raw": "Rifampicina",
+    "presentation": "Suspensão oral 20 mg/ml"
+  },
+  {
+    "num": 180,
+    "raw": "Rifampicina",
+    "presentation": "Cápsula 300 mg"
+  },
+  {
+    "num": 181,
+    "raw": "Rifampicina+pirazinamida+etambutol+isonia",
+    "presentation": "zida"
+  },
+  {
+    "num": 182,
+    "raw": "Pirimetamina",
+    "presentation": "Comprimido 25mg"
+  },
+  {
+    "num": 183,
+    "raw": "Espiramicina Comprimido 500 mg",
+    "presentation": ""
+  },
+  {
+    "num": 184,
+    "raw": "Sulfadiazina",
+    "presentation": "Comprimido 500 mg"
+  },
+  {
+    "num": 185,
+    "raw": "Rifampicina+dapsona",
+    "presentation": "Comprimido 300+100 (pauci adulto)"
+  },
+  {
+    "num": 186,
+    "raw": "Rifampicina+dapsona",
+    "presentation": "Comprimido 300+150)+50 (pauci"
+  },
+  {
+    "num": 187,
+    "raw": "Rifampicina+clofazimina+dapsona",
+    "presentation": "Comprimido 300+100+100 (multi"
+  },
+  {
+    "num": 188,
+    "raw": "Rifampicina+clofazimina+dapsona",
+    "presentation": "Comprimido 300+150)+50+50 (multi"
+  },
+  {
+    "num": 189,
+    "raw": "Oseltamivir (Influenza A) Comprimido 75mg",
+    "presentation": ""
+  },
+  {
+    "num": 190,
+    "raw": "Oseltamivir (Influenza A) Comprimido 45mg",
+    "presentation": ""
+  },
+  {
+    "num": 191,
+    "raw": "Oseltamivir (Influenza A) Comprimido 30mg",
+    "presentation": ""
+  },
+  {
+    "num": 192,
+    "raw": "TALIDOMIDA",
+    "presentation": "COMPRIMIDO 100MG"
+  },
+  {
+    "num": 193,
+    "raw": "Aciclovir 50mg/g creme",
+    "presentation": ""
+  },
+  {
+    "num": 194,
+    "raw": "Aciclovir Comprimido 200mg",
+    "presentation": ""
+  }
+]
