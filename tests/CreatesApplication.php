@@ -35,7 +35,7 @@ trait CreatesApplication
         $username = getenv('DB_USERNAME') ?: ($_ENV['DB_USERNAME'] ?? 'root');
         $password = getenv('DB_PASSWORD') ?: ($_ENV['DB_PASSWORD'] ?? '');
 
-        if (!$database) {
+        if (! $database) {
             return;
         }
 

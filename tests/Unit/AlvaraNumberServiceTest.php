@@ -24,20 +24,20 @@ class AlvaraNumberServiceTest extends TestCase
         $estabelecimento = Estabelecimento::factory()->create();
 
         Alvara::create([
-            'numero_alvara'      => '01-01/2026',
-            'nivel_risco'        => '1',
+            'numero_alvara' => '01-01/2026',
+            'nivel_risco' => '1',
             'estabelecimento_id' => $estabelecimento->id,
-            'data_alvara'        => '2026-01-10',
+            'data_alvara' => '2026-01-10',
         ]);
 
         $segundo = AlvaraNumberService::gerar('2026-01-20');
         $this->assertSame('02-01/2026', $segundo);
 
         Alvara::create([
-            'numero_alvara'      => $segundo,
-            'nivel_risco'        => '2',
+            'numero_alvara' => $segundo,
+            'nivel_risco' => '2',
             'estabelecimento_id' => $estabelecimento->id,
-            'data_alvara'        => '2026-01-20',
+            'data_alvara' => '2026-01-20',
         ]);
 
         $terceiro = AlvaraNumberService::gerar('2026-01-25');
@@ -49,10 +49,10 @@ class AlvaraNumberServiceTest extends TestCase
         $estabelecimento = Estabelecimento::factory()->create();
 
         Alvara::create([
-            'numero_alvara'      => '05-01/2026',
-            'nivel_risco'        => '1',
+            'numero_alvara' => '05-01/2026',
+            'nivel_risco' => '1',
             'estabelecimento_id' => $estabelecimento->id,
-            'data_alvara'        => '2026-01-31',
+            'data_alvara' => '2026-01-31',
         ]);
 
         $primeiro_fevereiro = AlvaraNumberService::gerar('2026-02-01');

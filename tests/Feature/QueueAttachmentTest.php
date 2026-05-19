@@ -17,6 +17,7 @@ class QueueAttachmentTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private int $queueId;
 
     protected function setUp(): void

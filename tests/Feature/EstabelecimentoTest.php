@@ -49,10 +49,10 @@ class EstabelecimentoTest extends TestCase
     public function test_criacao_de_estabelecimento(): void
     {
         $payload = [
-            'nome_responsavel'     => 'João Silva',
+            'nome_responsavel' => 'João Silva',
             'nome_estabelecimento' => 'Clínica São João',
-            'endereco'             => 'Rua das Flores, 100',
-            'cnaes'                => '86.30-3-04',
+            'endereco' => 'Rua das Flores, 100',
+            'cnaes' => '86.30-3-04',
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -67,15 +67,15 @@ class EstabelecimentoTest extends TestCase
     public function test_criacao_com_campos_opcionais(): void
     {
         $payload = [
-            'nome_responsavel'     => 'Maria Santos',
+            'nome_responsavel' => 'Maria Santos',
             'nome_estabelecimento' => 'Farmácia Popular',
-            'endereco'             => 'Av. Central, 200',
-            'cnaes'                => '47.71-7-01',
-            'razao_social'         => 'Farmácia Popular LTDA',
-            'nome_fantasia'        => 'Farma Pop',
-            'cnpj'                 => '12.345.678/0001-90',
-            'telefone'             => '(11) 98765-4321',
-            'obs'                  => 'Estabelecimento sem pendências.',
+            'endereco' => 'Av. Central, 200',
+            'cnaes' => '47.71-7-01',
+            'razao_social' => 'Farmácia Popular LTDA',
+            'nome_fantasia' => 'Farma Pop',
+            'cnpj' => '12.345.678/0001-90',
+            'telefone' => '(11) 98765-4321',
+            'obs' => 'Estabelecimento sem pendências.',
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -92,11 +92,11 @@ class EstabelecimentoTest extends TestCase
     public function test_cnpj_com_formato_invalido_retorna_422(): void
     {
         $payload = [
-            'nome_responsavel'     => 'Ana Lima',
+            'nome_responsavel' => 'Ana Lima',
             'nome_estabelecimento' => 'Loja Teste',
-            'endereco'             => 'Rua Teste, 1',
-            'cnaes'                => '47.00-0-00',
-            'cnpj'                 => '12345678901234',
+            'endereco' => 'Rua Teste, 1',
+            'cnaes' => '47.00-0-00',
+            'cnpj' => '12345678901234',
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')

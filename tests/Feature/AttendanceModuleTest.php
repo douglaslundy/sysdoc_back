@@ -13,6 +13,7 @@ class AttendanceModuleTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private AttendanceRoom $room;
 
     protected function setUp(): void
@@ -34,7 +35,7 @@ class AttendanceModuleTest extends TestCase
     private function createClient(string $cpf): Client
     {
         return Client::create([
-            'name' => 'Cliente ' . substr($cpf, -3),
+            'name' => 'Cliente '.substr($cpf, -3),
             'mother' => 'Mae Teste',
             'cpf' => $cpf,
             'phone' => '62999999999',
@@ -188,7 +189,7 @@ class AttendanceModuleTest extends TestCase
         $to = now()->addDay()->toDateString();
 
         $response = $this->actingAs($this->user, 'sanctum')
-            ->getJson('/api/attendance/tickets?' . http_build_query([
+            ->getJson('/api/attendance/tickets?'.http_build_query([
                 'status' => 'finalizada',
                 'roomId' => $this->room->id,
                 'assignedUserId' => $this->user->id,

@@ -13,12 +13,13 @@ class AlvaraTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Estabelecimento $estabelecimento;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user            = User::factory()->create(['profile' => 'admin', 'active' => true]);
+        $this->user = User::factory()->create(['profile' => 'admin', 'active' => true]);
         $this->estabelecimento = Estabelecimento::factory()->create();
     }
 
@@ -26,10 +27,10 @@ class AlvaraTest extends TestCase
     {
         return array_merge([
             'estabelecimento_id' => $this->estabelecimento->id,
-            'nivel_risco'        => '1',
-            'data_alvara'        => '2026-05-11',
-            'vencimento_alvara'  => '2027-05-11',
-            'contato'            => '(11) 99999-9999',
+            'nivel_risco' => '1',
+            'data_alvara' => '2026-05-11',
+            'vencimento_alvara' => '2027-05-11',
+            'contato' => '(11) 99999-9999',
         ], $overrides);
     }
 
@@ -45,7 +46,7 @@ class AlvaraTest extends TestCase
 
     public function test_numero_alvara_enviado_pelo_frontend_e_ignorado(): void
     {
-        $payload              = $this->payload();
+        $payload = $this->payload();
         $payload['numero_alvara'] = '99-99/9999';
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -90,7 +91,7 @@ class AlvaraTest extends TestCase
     {
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/alvaras', $this->payload([
-                'data_alvara'       => '2026-05-11',
+                'data_alvara' => '2026-05-11',
                 'vencimento_alvara' => '2026-01-01',
             ]));
 
