@@ -7,6 +7,7 @@ use App\Services\Attendance\AttendancePendingSummaryService;
 use App\Services\Attendance\AttendanceQueueService;
 use App\Services\Attendance\AttendanceServiceFlowService;
 use App\Services\Attendance\AttendanceTicketService;
+use App\Services\AuditService;
 use DomainException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -192,5 +193,91 @@ class AttendanceController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'description', 'active'])
         );
+    }
+
+    public function roomsIndex(): JsonResponse
+    {
+        return response()->json(
+            \App\Models\AttendanceRoom::query()
+                ->orderByDesc('id')
+                ->get(['id', 'name', 'description', 'active', 'created_at', 'updated_at'])
+        );
+    }
+
+    public function roomsStore(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100|unique:attendance_rooms,name',
+            'description' => 'nullable|string|max:255',
+            'active' => 'nullable|boolean',
+        ]);
+
+        $room = \App\Models\AttendanceRoom::query()->create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'active' => (bool)($validated['active'] ?? true),
+        ]);
+
+        AuditService::record('ATTENDANCE_ROOM_CREATED', $room, null, $room->toArray());
+
+        return response()->json($room, 201);
+    }
+
+    public function roomsShow(int $id): JsonResponse
+    {
+        try {
+            $room = \App\Models\AttendanceRoom::query()->findOrFail($id);
+            return response()->json($room);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sala não encontrada.'], 404);
+        }
+    }
+
+    public function roomsUpdate(int $id, Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:100|unique:attendance_rooms,name,' . $id,
+            'description' => 'nullable|string|max:255',
+            'active' => 'nullable|boolean',
+        ]);
+
+        try {
+            $room = \App\Models\AttendanceRoom::query()->findOrFail($id);
+            $old = $room->toArray();
+            $room->update($validated);
+            AuditService::record('ATTENDANCE_ROOM_UPDATED', $room, $old, $room->toArray());
+
+            return response()->json($room);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sala não encontrada.'], 404);
+        }
+    }
+
+    public function roomsInactivate(int $id): JsonResponse
+    {
+        try {
+            $room = \App\Models\AttendanceRoom::query()->findOrFail($id);
+            $old = $room->toArray();
+            $room->update(['active' => false]);
+            AuditService::record('ATTENDANCE_ROOM_INACTIVATED', $room, $old, $room->toArray());
+
+            return response()->json($room);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sala não encontrada.'], 404);
+        }
+    }
+
+    public function roomsDestroy(int $id): JsonResponse
+    {
+        try {
+            $room = \App\Models\AttendanceRoom::query()->findOrFail($id);
+            AuditService::record('ATTENDANCE_ROOM_DELETED', $room, $room->toArray(), null);
+            $room->delete();
+            return response()->json(['message' => 'Sala removida com sucesso.']);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Sala não encontrada.'], 404);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Sala vinculada a atendimentos não pode ser removida.'], 422);
+        }
     }
 }
