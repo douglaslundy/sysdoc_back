@@ -22,7 +22,7 @@ return new class extends Migration
 
         $counter = [];
         foreach ($pages as $page) {
-            $groupKey = $page->category_id ? ('cat:' . $page->category_id) : ('txt:' . ($page->categoria ?? 'Outros'));
+            $groupKey = $page->category_id ? ('cat:'.$page->category_id) : ('txt:'.($page->categoria ?? 'Outros'));
             $counter[$groupKey] = ($counter[$groupKey] ?? 0) + 1;
             DB::table('system_pages')->where('id', $page->id)->update(['ordem' => $counter[$groupKey]]);
         }
@@ -35,4 +35,3 @@ return new class extends Migration
         });
     }
 };
-

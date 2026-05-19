@@ -53,7 +53,7 @@ return new class extends Migration
 
         $pages = DB::table('system_pages')->select('id', 'categoria')->get();
         foreach ($pages as $page) {
-            if (!$page->categoria) {
+            if (! $page->categoria) {
                 continue;
             }
             $categoryId = DB::table('page_categories')
@@ -75,4 +75,3 @@ return new class extends Migration
         Schema::dropIfExists('page_categories');
     }
 };
-

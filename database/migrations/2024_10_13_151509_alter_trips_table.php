@@ -10,7 +10,7 @@ return new class extends Migration
      */
     public function up()
     {
-        DB::statement("ALTER TABLE `trips` MODIFY `user_id` BIGINT UNSIGNED NULL, MODIFY `vehicle_id` BIGINT UNSIGNED NULL, MODIFY `departure_time` TIMESTAMP NULL");
+        DB::statement('ALTER TABLE `trips` MODIFY `user_id` BIGINT UNSIGNED NULL, MODIFY `vehicle_id` BIGINT UNSIGNED NULL, MODIFY `departure_time` TIMESTAMP NULL');
     }
 
     /**
@@ -18,6 +18,6 @@ return new class extends Migration
      */
     public function down()
     {
-        DB::statement("ALTER TABLE `trips` MODIFY `user_id` BIGINT UNSIGNED NOT NULL, MODIFY `vehicle_id` BIGINT UNSIGNED NOT NULL, MODIFY `departure_time` TIMESTAMP NOT NULL");
+        DB::statement('ALTER TABLE `trips` MODIFY `user_id` BIGINT UNSIGNED NOT NULL, MODIFY `vehicle_id` BIGINT UNSIGNED NOT NULL, MODIFY `departure_time` TIMESTAMP NOT NULL');
     }
 };

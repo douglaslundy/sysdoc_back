@@ -13,7 +13,7 @@ class CreateAllTables extends Migration
      */
     public function up()
     {
-        Schema::create('users', function(Blueprint $table){
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
@@ -21,12 +21,12 @@ class CreateAllTables extends Migration
             $table->string('password');
         });
 
-        Schema::create('sectors', function(Blueprint $table){
+        Schema::create('sectors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
         });
 
-        Schema::create('letters', function(Blueprint $table){
+        Schema::create('letters', function (Blueprint $table) {
             $table->id();
             $table->integer('id_user');
             $table->integer('number')->unique();

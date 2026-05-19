@@ -11,12 +11,12 @@ class UserSeeder extends Seeder
     public function run()
     {
         DB::table('users')->insertOrIgnore([
-            'name'    => 'Douglas',
-            'email'   => 'douglaslundy@gmail.com',
-            'cpf'     => '08449222699',
+            'name' => 'Douglas',
+            'email' => 'douglaslundy@gmail.com',
+            'cpf' => '08449222699',
             'password' => Hash::make('12345678'),
             'profile' => 'admin',
-            'active'  => true,
+            'active' => true,
         ]);
     }
 }

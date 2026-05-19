@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::table('pedidos_exame', function (Blueprint $table) {
             $table->unsignedBigInteger('medico_solicitante_id')->nullable()->after('status');
             $table->foreign('medico_solicitante_id')
-                  ->references('id')->on('medicos_solicitantes')
-                  ->onDelete('set null');
+                ->references('id')->on('medicos_solicitantes')
+                ->onDelete('set null');
         });
     }
 

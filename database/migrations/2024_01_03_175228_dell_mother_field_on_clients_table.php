@@ -22,9 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('clients', function (Blueprint $table) {            
-            $table->string('cpf', 18)->nullable()->after('name');            
-            $table->string('mother', 100)->nullable()->after('name');       
+        Schema::table('clients', function (Blueprint $table) {
+            $table->string('cpf', 18)->nullable()->after('name');
+            $table->string('mother', 100)->nullable()->after('name');
         });
     }
 };

@@ -9,7 +9,7 @@ return new class extends Migration
     {
         // ENUM original só tinha LOGIN, LOGOUT, CREATE, UPDATE, DELETE.
         // VIEW, VIEW_REPORT, LIBERAR, DOWNLOAD eram rejeitados silenciosamente.
-        DB::statement("ALTER TABLE audit_logs MODIFY COLUMN action VARCHAR(30) NOT NULL");
+        DB::statement('ALTER TABLE audit_logs MODIFY COLUMN action VARCHAR(30) NOT NULL');
     }
 
     public function down(): void

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -30,11 +30,11 @@ return new class extends Migration
 
         Schema::table('campo_referencias', function (Blueprint $table) {
             $table->enum('sexo', ['M', 'F'])->nullable()->after('perfil')
-                  ->comment('M=masculino, F=feminino, null=ambos');
+                ->comment('M=masculino, F=feminino, null=ambos');
             $table->unsignedInteger('idade_min_dias')->nullable()->after('sexo')
-                  ->comment('Limite inferior de idade em dias (null=sem limite)');
+                ->comment('Limite inferior de idade em dias (null=sem limite)');
             $table->unsignedInteger('idade_max_dias')->nullable()->after('idade_min_dias')
-                  ->comment('Limite superior de idade em dias (null=sem limite)');
+                ->comment('Limite superior de idade em dias (null=sem limite)');
         });
     }
 

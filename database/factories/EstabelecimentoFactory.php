@@ -12,15 +12,15 @@ class EstabelecimentoFactory extends Factory
     public function definition(): array
     {
         return [
-            'nome_responsavel'     => $this->faker->name(),
+            'nome_responsavel' => $this->faker->name(),
             'nome_estabelecimento' => $this->faker->company(),
-            'razao_social'         => $this->faker->optional()->company(),
-            'nome_fantasia'        => $this->faker->optional()->company(),
-            'cnpj'                 => null,
-            'telefone'             => $this->faker->optional()->numerify('(##) #####-####'),
-            'endereco'             => $this->faker->address(),
-            'cnaes'                => $this->faker->numerify('##.##-#-##'),
-            'obs'                  => $this->faker->optional()->sentence(),
+            'razao_social' => $this->faker->optional()->company(),
+            'nome_fantasia' => $this->faker->optional()->company(),
+            'cnpj' => null,
+            'telefone' => $this->faker->optional()->numerify('(##) #####-####'),
+            'endereco' => $this->faker->address(),
+            'cnaes' => $this->faker->numerify('##.##-#-##'),
+            'obs' => $this->faker->optional()->sentence(),
         ];
     }
 }

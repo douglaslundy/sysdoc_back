@@ -49,8 +49,8 @@ class CategoriaExameSeeder extends Seeder
 
         foreach ($categorias as $nome) {
             DB::table('categoria_exames')->insertOrIgnore([
-                'nome'       => $nome,
-                'ativo'      => true,
+                'nome' => $nome,
+                'ativo' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

@@ -17,9 +17,9 @@ class FixAdminUserSeeder extends Seeder
         if ($existing) {
             DB::table('users')->where('cpf', $cpf)->update([
                 'profile' => 'admin',
-                'active'  => true,
-                'name'    => 'Douglas',
-                'email'   => 'douglaslundy@gmail.com',
+                'active' => true,
+                'name' => 'Douglas',
+                'email' => 'douglaslundy@gmail.com',
             ]);
 
             // Invalidar todos os tokens Sanctum do usuário para forçar novo login
@@ -31,15 +31,15 @@ class FixAdminUserSeeder extends Seeder
             $this->command->info("Usuário CPF {$cpf} atualizado: profile=admin, active=true. Faça login novamente.");
         } else {
             DB::table('users')->insert([
-                'name'     => 'Douglas',
-                'email'    => 'douglaslundy@gmail.com',
-                'cpf'      => $cpf,
+                'name' => 'Douglas',
+                'email' => 'douglaslundy@gmail.com',
+                'cpf' => $cpf,
                 'password' => Hash::make('12345678'),
-                'profile'  => 'admin',
-                'active'   => true,
+                'profile' => 'admin',
+                'active' => true,
             ]);
 
-            $this->command->info("Usuário admin criado: profile=admin, active=true. Senha inicial: 12345678");
+            $this->command->info('Usuário admin criado: profile=admin, active=true. Senha inicial: 12345678');
         }
     }
 }

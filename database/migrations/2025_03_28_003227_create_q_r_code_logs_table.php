@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamp('accessed_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamps();
         });
-        
+
     }
 
     /**

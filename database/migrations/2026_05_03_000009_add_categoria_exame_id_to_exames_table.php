@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::table('exames', function (Blueprint $table) {
             $table->unsignedBigInteger('categoria_exame_id')->nullable()->after('codigo');
             $table->foreign('categoria_exame_id')
-                  ->references('id')->on('categoria_exames')
-                  ->onDelete('set null');
+                ->references('id')->on('categoria_exames')
+                ->onDelete('set null');
             $table->dropColumn('categoria');
         });
     }

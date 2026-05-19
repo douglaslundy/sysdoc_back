@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('referer')->nullable();
             $table->timestamp('accessed_at')->useCurrent();
         });
-        
+
     }
 
     /**

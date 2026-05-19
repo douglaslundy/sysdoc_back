@@ -19,7 +19,7 @@ class UpdateTripTable extends Migration
             $table->date('departure_date')->nullable()->after('departure_time');
         });
 
-        DB::statement("ALTER TABLE `trips` MODIFY `departure_time` TIME NULL");
+        DB::statement('ALTER TABLE `trips` MODIFY `departure_time` TIME NULL');
     }
 
     /**
@@ -34,6 +34,6 @@ class UpdateTripTable extends Migration
             $table->dropColumn('departure_date');
         });
 
-        DB::statement("ALTER TABLE `trips` MODIFY `departure_time` TIMESTAMP NOT NULL");
+        DB::statement('ALTER TABLE `trips` MODIFY `departure_time` TIMESTAMP NOT NULL');
     }
 }

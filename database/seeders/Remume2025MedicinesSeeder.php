@@ -45,7 +45,7 @@ class Remume2025MedicinesSeeder extends Seeder
     {
         $path = database_path('seeders/data/remume_2025_parsed.json');
         if (! file_exists($path)) {
-            throw new \RuntimeException('Arquivo de dados REMUME não encontrado: ' . $path);
+            throw new \RuntimeException('Arquivo de dados REMUME não encontrado: '.$path);
         }
 
         $decoded = json_decode((string) file_get_contents($path), true);
@@ -66,7 +66,7 @@ class Remume2025MedicinesSeeder extends Seeder
             throw new \RuntimeException("Item REMUME inválido na linha {$line}.");
         }
 
-        $fullText = trim($raw . ' ' . $presentationRaw);
+        $fullText = trim($raw.' '.$presentationRaw);
         $fullText = preg_replace('/\s+/', ' ', (string) $fullText) ?? $fullText;
 
         $forms = [
@@ -157,17 +157,39 @@ class Remume2025MedicinesSeeder extends Seeder
     private function inferUnitMeasure(string $text): string
     {
         $lower = mb_strtolower($text);
-        if (str_contains($lower, 'comprim')) return 'cp';
-        if (str_contains($lower, 'cáps') || str_contains($lower, 'caps')) return 'cap';
-        if (str_contains($lower, 'ml')) return 'mL';
-        if (str_contains($lower, 'ui')) return 'UI';
-        if (str_contains($lower, 'ampola')) return 'amp';
-        if (str_contains($lower, 'frasco-ampola')) return 'FA';
-        if (str_contains($lower, 'frasco')) return 'fr';
-        if (str_contains($lower, 'sach')) return 'un';
-        if (str_contains($lower, 'goma')) return 'un';
-        if (str_contains($lower, 'adesivo')) return 'un';
-        if (str_contains($lower, 'creme') || str_contains($lower, 'pomada') || str_contains($lower, 'gel')) return 'g';
+        if (str_contains($lower, 'comprim')) {
+            return 'cp';
+        }
+        if (str_contains($lower, 'cáps') || str_contains($lower, 'caps')) {
+            return 'cap';
+        }
+        if (str_contains($lower, 'ml')) {
+            return 'mL';
+        }
+        if (str_contains($lower, 'ui')) {
+            return 'UI';
+        }
+        if (str_contains($lower, 'ampola')) {
+            return 'amp';
+        }
+        if (str_contains($lower, 'frasco-ampola')) {
+            return 'FA';
+        }
+        if (str_contains($lower, 'frasco')) {
+            return 'fr';
+        }
+        if (str_contains($lower, 'sach')) {
+            return 'un';
+        }
+        if (str_contains($lower, 'goma')) {
+            return 'un';
+        }
+        if (str_contains($lower, 'adesivo')) {
+            return 'un';
+        }
+        if (str_contains($lower, 'creme') || str_contains($lower, 'pomada') || str_contains($lower, 'gel')) {
+            return 'g';
+        }
 
         return 'un';
     }
@@ -246,4 +268,3 @@ class Remume2025MedicinesSeeder extends Seeder
         return mb_convert_case($value, MB_CASE_TITLE, 'UTF-8');
     }
 }
-

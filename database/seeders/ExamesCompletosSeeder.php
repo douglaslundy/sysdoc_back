@@ -46,13 +46,13 @@ class ExamesCompletosSeeder extends Seeder
     private function resolverCategorias(): void
     {
         $nomes = [
-            'HEMATOLOGIA','BIOQUÍMICA','LIPIDOGRAMA','FUNÇÃO HEPÁTICA',
-            'FUNÇÃO RENAL','COAGULAÇÃO / HEMOSTASIA','URIANÁLISE',
-            'FUNÇÃO TIREOIDIANA','HORMÔNIOS','MARCADORES CARDÍACOS',
-            'MARCADORES TUMORAIS','SOROLOGIAS','IST / DST',
-            'DOENÇAS INFECCIOSAS','DOENÇAS AUTOIMUNES','DIABETES',
-            'MICROBIOLOGIA / BACTERIOLOGIA','PARASITOLOGIA','GASOMETRIA',
-            'IMUNOLOGIA','VITAMINAS E MICRONUTRIENTES','MINERAIS E ELETRÓLITOS',
+            'HEMATOLOGIA', 'BIOQUÍMICA', 'LIPIDOGRAMA', 'FUNÇÃO HEPÁTICA',
+            'FUNÇÃO RENAL', 'COAGULAÇÃO / HEMOSTASIA', 'URIANÁLISE',
+            'FUNÇÃO TIREOIDIANA', 'HORMÔNIOS', 'MARCADORES CARDÍACOS',
+            'MARCADORES TUMORAIS', 'SOROLOGIAS', 'IST / DST',
+            'DOENÇAS INFECCIOSAS', 'DOENÇAS AUTOIMUNES', 'DIABETES',
+            'MICROBIOLOGIA / BACTERIOLOGIA', 'PARASITOLOGIA', 'GASOMETRIA',
+            'IMUNOLOGIA', 'VITAMINAS E MICRONUTRIENTES', 'MINERAIS E ELETRÓLITOS',
         ];
         foreach ($nomes as $nome) {
             DB::table('categoria_exames')->insertOrIgnore([
@@ -76,6 +76,7 @@ class ExamesCompletosSeeder extends Seeder
             'categoria_exame_id' => $catId, 'descricao' => $desc ?: null,
             'ativo' => true, 'created_at' => now(), 'updated_at' => now(),
         ]);
+
         return DB::table('exames')->where('codigo', $codigo)->value('id');
     }
 
@@ -87,6 +88,7 @@ class ExamesCompletosSeeder extends Seeder
             'obrigatorio' => $obrigatorio, 'ativo' => true,
             'created_at' => now(), 'updated_at' => now(),
         ]);
+
         return DB::table('exame_campos')
             ->where('exame_id', $exId)->where('nome', $nome)->value('id');
     }
@@ -109,17 +111,23 @@ class ExamesCompletosSeeder extends Seeder
             'Eritrograma, leucograma e plaquetas com diferencial');
 
         $c = $this->campo($exId, 'Eritrócitos', 'numerico', 'milhões/mm³', 1);
-        $this->ref($c, 'adulto_m', 4.5, 6.0); $this->ref($c, 'adulto_f', 4.0, 5.5);
-        $this->ref($c, 'crianca', 4.0, 5.3); $this->ref($c, 'recem_nascido', 4.1, 6.7);
+        $this->ref($c, 'adulto_m', 4.5, 6.0);
+        $this->ref($c, 'adulto_f', 4.0, 5.5);
+        $this->ref($c, 'crianca', 4.0, 5.3);
+        $this->ref($c, 'recem_nascido', 4.1, 6.7);
 
         $c = $this->campo($exId, 'Hemoglobina', 'numerico', 'g/dL', 2);
-        $this->ref($c, 'adulto_m', 13.0, 17.0); $this->ref($c, 'adulto_f', 12.0, 16.0);
-        $this->ref($c, 'crianca', 11.5, 14.5); $this->ref($c, 'recem_nascido', 15.0, 24.0);
+        $this->ref($c, 'adulto_m', 13.0, 17.0);
+        $this->ref($c, 'adulto_f', 12.0, 16.0);
+        $this->ref($c, 'crianca', 11.5, 14.5);
+        $this->ref($c, 'recem_nascido', 15.0, 24.0);
         $this->ref($c, 'gestante', 11.0, 14.0);
 
         $c = $this->campo($exId, 'Hematócrito', 'numerico', '%', 3);
-        $this->ref($c, 'adulto_m', 40.0, 54.0); $this->ref($c, 'adulto_f', 35.0, 45.0);
-        $this->ref($c, 'crianca', 33.0, 43.0); $this->ref($c, 'recem_nascido', 44.0, 70.0);
+        $this->ref($c, 'adulto_m', 40.0, 54.0);
+        $this->ref($c, 'adulto_f', 35.0, 45.0);
+        $this->ref($c, 'crianca', 33.0, 43.0);
+        $this->ref($c, 'recem_nascido', 44.0, 70.0);
 
         $c = $this->campo($exId, 'VCM', 'numerico', 'fL', 4);
         $this->ref($c, 'geral', 80.0, 100.0);
@@ -134,14 +142,17 @@ class ExamesCompletosSeeder extends Seeder
         $this->ref($c, 'geral', 11.0, 15.0);
 
         $c = $this->campo($exId, 'Leucócitos', 'numerico', '/mm³', 8);
-        $this->ref($c, 'adulto_m', 4000.0, 11000.0); $this->ref($c, 'adulto_f', 4000.0, 11000.0);
-        $this->ref($c, 'crianca', 5000.0, 14500.0); $this->ref($c, 'recem_nascido', 10000.0, 26000.0);
+        $this->ref($c, 'adulto_m', 4000.0, 11000.0);
+        $this->ref($c, 'adulto_f', 4000.0, 11000.0);
+        $this->ref($c, 'crianca', 5000.0, 14500.0);
+        $this->ref($c, 'recem_nascido', 10000.0, 26000.0);
 
         $c = $this->campo($exId, 'Neutrófilos', 'numerico', '%', 9);
         $this->ref($c, 'geral', 45.0, 75.0);
 
         $c = $this->campo($exId, 'Linfócitos', 'numerico', '%', 10);
-        $this->ref($c, 'adulto_m', 20.0, 45.0); $this->ref($c, 'adulto_f', 20.0, 45.0);
+        $this->ref($c, 'adulto_m', 20.0, 45.0);
+        $this->ref($c, 'adulto_f', 20.0, 45.0);
         $this->ref($c, 'crianca', 25.0, 60.0);
 
         $c = $this->campo($exId, 'Monócitos', 'numerico', '%', 11);
@@ -169,8 +180,10 @@ class ExamesCompletosSeeder extends Seeder
         // Velocidade de Hemossedimentação
         $exId = $this->exame('VHS — VELOCIDADE DE HEMOSSEDIMENTAÇÃO', '40301400', 'HEMATOLOGIA');
         $c = $this->campo($exId, 'VHS (1ª hora)', 'numerico', 'mm/h', 1);
-        $this->ref($c, 'adulto_m', 0.0, 15.0); $this->ref($c, 'adulto_f', 0.0, 20.0);
-        $this->ref($c, 'idoso_m', 0.0, 20.0); $this->ref($c, 'idoso_f', 0.0, 30.0);
+        $this->ref($c, 'adulto_m', 0.0, 15.0);
+        $this->ref($c, 'adulto_f', 0.0, 20.0);
+        $this->ref($c, 'idoso_m', 0.0, 20.0);
+        $this->ref($c, 'idoso_f', 0.0, 30.0);
     }
 
     // ─── BIOQUÍMICA ───────────────────────────────────────────────────────────
@@ -190,20 +203,26 @@ class ExamesCompletosSeeder extends Seeder
         // Ureia
         $exId = $this->exame('UREIA', '40302580', 'FUNÇÃO RENAL');
         $c = $this->campo($exId, 'Ureia', 'numerico', 'mg/dL', 1);
-        $this->ref($c, 'adulto_m', 10.0, 50.0); $this->ref($c, 'adulto_f', 10.0, 50.0);
-        $this->ref($c, 'crianca', 10.0, 40.0); $this->ref($c, 'idoso', 10.0, 55.0);
+        $this->ref($c, 'adulto_m', 10.0, 50.0);
+        $this->ref($c, 'adulto_f', 10.0, 50.0);
+        $this->ref($c, 'crianca', 10.0, 40.0);
+        $this->ref($c, 'idoso', 10.0, 55.0);
 
         // Creatinina
         $exId = $this->exame('CREATININA', '40301630', 'FUNÇÃO RENAL');
         $c = $this->campo($exId, 'Creatinina', 'numerico', 'mg/dL', 1);
-        $this->ref($c, 'adulto_m', 0.6, 1.2); $this->ref($c, 'adulto_f', 0.5, 1.1);
-        $this->ref($c, 'crianca', 0.3, 0.7); $this->ref($c, 'idoso', 0.6, 1.3);
+        $this->ref($c, 'adulto_m', 0.6, 1.2);
+        $this->ref($c, 'adulto_f', 0.5, 1.1);
+        $this->ref($c, 'crianca', 0.3, 0.7);
+        $this->ref($c, 'idoso', 0.6, 1.3);
 
         // Ácido Úrico
         $exId = $this->exame('ÁCIDO ÚRICO', '40300038', 'BIOQUÍMICA');
         $c = $this->campo($exId, 'Ácido Úrico', 'numerico', 'mg/dL', 1);
-        $this->ref($c, 'adulto_m', 2.4, 6.0); $this->ref($c, 'adulto_f', 1.4, 5.8);
-        $this->ref($c, 'crianca', 2.0, 5.5); $this->ref($c, 'idoso', 2.4, 7.0);
+        $this->ref($c, 'adulto_m', 2.4, 6.0);
+        $this->ref($c, 'adulto_f', 1.4, 5.8);
+        $this->ref($c, 'crianca', 2.0, 5.5);
+        $this->ref($c, 'idoso', 2.4, 7.0);
 
         // Albumina
         $exId = $this->exame('ALBUMINA', '40300100', 'BIOQUÍMICA');
@@ -246,7 +265,8 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('FÓSFORO', '40301001', 'MINERAIS E ELETRÓLITOS');
         $c = $this->campo($exId, 'Fósforo', 'numerico', 'mg/dL', 1);
-        $this->ref($c, 'adulto_m', 2.5, 4.5); $this->ref($c, 'adulto_f', 2.5, 4.5);
+        $this->ref($c, 'adulto_m', 2.5, 4.5);
+        $this->ref($c, 'adulto_f', 2.5, 4.5);
         $this->ref($c, 'crianca', 4.0, 6.5);
 
         // LDH
@@ -289,7 +309,8 @@ class ExamesCompletosSeeder extends Seeder
         $this->ref($c, 'geral', null, 30.0);
 
         $c = $this->campo($exId, 'Triglicerídeos', 'numerico', 'mg/dL', 5);
-        $this->ref($c, 'adulto_m', null, 150.0); $this->ref($c, 'adulto_f', null, 150.0);
+        $this->ref($c, 'adulto_m', null, 150.0);
+        $this->ref($c, 'adulto_f', null, 150.0);
         $this->ref($c, 'crianca', null, 75.0, null, '0–9 anos');
         $this->ref($c, 'adolescente', null, 90.0, null, '10–19 anos');
     }
@@ -300,22 +321,26 @@ class ExamesCompletosSeeder extends Seeder
     {
         $exId = $this->exame('TGO (AST — ASPARTATO AMINOTRANSFERASE)', '40300530', 'FUNÇÃO HEPÁTICA');
         $c = $this->campo($exId, 'TGO (AST)', 'numerico', 'U/L', 1);
-        $this->ref($c, 'adulto_m', 10.0, 40.0); $this->ref($c, 'adulto_f', 10.0, 35.0);
+        $this->ref($c, 'adulto_m', 10.0, 40.0);
+        $this->ref($c, 'adulto_f', 10.0, 35.0);
         $this->ref($c, 'crianca', 10.0, 55.0);
 
         $exId = $this->exame('TGP (ALT — ALANINA AMINOTRANSFERASE)', '40300523', 'FUNÇÃO HEPÁTICA');
         $c = $this->campo($exId, 'TGP (ALT)', 'numerico', 'U/L', 1);
-        $this->ref($c, 'adulto_m', 7.0, 56.0); $this->ref($c, 'adulto_f', 7.0, 35.0);
+        $this->ref($c, 'adulto_m', 7.0, 56.0);
+        $this->ref($c, 'adulto_f', 7.0, 35.0);
         $this->ref($c, 'crianca', 7.0, 45.0);
 
         $exId = $this->exame('GAMA GT (GGT)', '40301036', 'FUNÇÃO HEPÁTICA');
         $c = $this->campo($exId, 'GGT', 'numerico', 'U/L', 1);
-        $this->ref($c, 'adulto_m', 9.0, 48.0); $this->ref($c, 'adulto_f', 7.0, 32.0);
+        $this->ref($c, 'adulto_m', 9.0, 48.0);
+        $this->ref($c, 'adulto_f', 7.0, 32.0);
         $this->ref($c, 'crianca', 2.0, 30.0);
 
         $exId = $this->exame('FOSFATASE ALCALINA', '40300988', 'FUNÇÃO HEPÁTICA');
         $c = $this->campo($exId, 'Fosfatase Alcalina', 'numerico', 'U/L', 1);
-        $this->ref($c, 'adulto_m', 44.0, 147.0); $this->ref($c, 'adulto_f', 44.0, 147.0);
+        $this->ref($c, 'adulto_m', 44.0, 147.0);
+        $this->ref($c, 'adulto_f', 44.0, 147.0);
         $this->ref($c, 'crianca', 100.0, 400.0, null, 'Valores maiores por crescimento ósseo');
 
         $exId = $this->exame('BILIRRUBINAS TOTAIS E FRAÇÕES', '40300457', 'FUNÇÃO HEPÁTICA');
@@ -337,7 +362,8 @@ class ExamesCompletosSeeder extends Seeder
     {
         $exId = $this->exame('CLEARANCE DE CREATININA', '40301003', 'FUNÇÃO RENAL');
         $c = $this->campo($exId, 'Clearance de Creatinina', 'numerico', 'mL/min/1,73m²', 1);
-        $this->ref($c, 'adulto_m', 90.0, 130.0); $this->ref($c, 'adulto_f', 80.0, 120.0);
+        $this->ref($c, 'adulto_m', 90.0, 130.0);
+        $this->ref($c, 'adulto_f', 80.0, 120.0);
 
         $exId = $this->exame('MICROALBUMINÚRIA', '40301004', 'FUNÇÃO RENAL');
         $c = $this->campo($exId, 'Albumina na Urina', 'numerico', 'mg/g creatinina', 1);
@@ -345,7 +371,8 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('CISTATINA C', '40301005', 'FUNÇÃO RENAL');
         $c = $this->campo($exId, 'Cistatina C', 'numerico', 'mg/L', 1);
-        $this->ref($c, 'adulto_m', 0.56, 0.98); $this->ref($c, 'adulto_f', 0.50, 0.96);
+        $this->ref($c, 'adulto_m', 0.56, 0.98);
+        $this->ref($c, 'adulto_f', 0.50, 0.96);
     }
 
     // ─── COAGULAÇÃO ───────────────────────────────────────────────────────────
@@ -368,7 +395,8 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('FIBRINOGÊNIO', '40300994', 'COAGULAÇÃO / HEMOSTASIA');
         $c = $this->campo($exId, 'Fibrinogênio', 'numerico', 'mg/dL', 1);
-        $this->ref($c, 'geral', 200.0, 400.0); $this->ref($c, 'gestante', 300.0, 600.0);
+        $this->ref($c, 'geral', 200.0, 400.0);
+        $this->ref($c, 'gestante', 300.0, 600.0);
 
         $exId = $this->exame('D-DÍMERO', '40301006', 'COAGULAÇÃO / HEMOSTASIA');
         $c = $this->campo($exId, 'D-Dímero', 'numerico', 'µg/L FEU', 1);
@@ -418,7 +446,9 @@ class ExamesCompletosSeeder extends Seeder
         $exId = $this->exame('T4 LIVRE (T4L)', '40302703', 'FUNÇÃO TIREOIDIANA');
         $c = $this->campo($exId, 'T4 Livre', 'numerico', 'ng/dL', 1);
         $this->ref($c, 'geral', 0.8, 1.8);
-        $this->ref($c, 'gestante_t1', 0.8, 1.5); $this->ref($c, 'gestante_t2', 0.7, 1.5); $this->ref($c, 'gestante_t3', 0.5, 1.3);
+        $this->ref($c, 'gestante_t1', 0.8, 1.5);
+        $this->ref($c, 'gestante_t2', 0.7, 1.5);
+        $this->ref($c, 'gestante_t3', 0.5, 1.3);
 
         $exId = $this->exame('T3 LIVRE (T3L)', '40302697', 'FUNÇÃO TIREOIDIANA');
         $c = $this->campo($exId, 'T3 Livre', 'numerico', 'pg/mL', 1);
@@ -447,8 +477,10 @@ class ExamesCompletosSeeder extends Seeder
     {
         $exId = $this->exame('TESTOSTERONA TOTAL', '40302722', 'HORMÔNIOS');
         $c = $this->campo($exId, 'Testosterona Total', 'numerico', 'ng/dL', 1);
-        $this->ref($c, 'adulto_m', 300.0, 1000.0); $this->ref($c, 'adulto_f', 15.0, 70.0);
-        $this->ref($c, 'adolescente_m', 100.0, 1200.0); $this->ref($c, 'idoso_m', 200.0, 900.0);
+        $this->ref($c, 'adulto_m', 300.0, 1000.0);
+        $this->ref($c, 'adulto_f', 15.0, 70.0);
+        $this->ref($c, 'adolescente_m', 100.0, 1200.0);
+        $this->ref($c, 'idoso_m', 200.0, 900.0);
 
         $exId = $this->exame('ESTRADIOL', '40300918', 'HORMÔNIOS');
         $c = $this->campo($exId, 'Estradiol', 'numerico', 'pg/mL', 1);
@@ -469,14 +501,17 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('PROLACTINA', '40301351', 'HORMÔNIOS');
         $c = $this->campo($exId, 'Prolactina', 'numerico', 'ng/mL', 1);
-        $this->ref($c, 'adulto_m', 2.0, 18.0); $this->ref($c, 'adulto_f', 2.0, 29.0);
+        $this->ref($c, 'adulto_m', 2.0, 18.0);
+        $this->ref($c, 'adulto_f', 2.0, 29.0);
         $this->ref($c, 'gestante', 10.0, 300.0);
 
         $exId = $this->exame('PROGESTERONA', '40301335', 'HORMÔNIOS');
         $c = $this->campo($exId, 'Progesterona', 'numerico', 'ng/mL', 1);
         $this->ref($c, 'adulto_m', 0.2, 1.4);
         $this->ref($c, 'adulto_f', 0.1, 0.8, null, 'Fase folicular');
-        $this->ref($c, 'gestante_t1', 11.0, 90.0); $this->ref($c, 'gestante_t2', 25.0, 90.0); $this->ref($c, 'gestante_t3', 48.0, 300.0);
+        $this->ref($c, 'gestante_t1', 11.0, 90.0);
+        $this->ref($c, 'gestante_t2', 25.0, 90.0);
+        $this->ref($c, 'gestante_t3', 48.0, 300.0);
 
         $exId = $this->exame('CORTISOL', '40300782', 'HORMÔNIOS');
         $c = $this->campo($exId, 'Cortisol (8h)', 'numerico', 'µg/dL', 1);
@@ -486,8 +521,10 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('DHEA-S (SULFATO DE DEIDROEPIANDROSTERONA)', '40300820', 'HORMÔNIOS');
         $c = $this->campo($exId, 'DHEA-S', 'numerico', 'µg/dL', 1);
-        $this->ref($c, 'adulto_m', 100.0, 617.0); $this->ref($c, 'adulto_f', 98.0, 340.0);
-        $this->ref($c, 'idoso_m', 51.0, 295.0); $this->ref($c, 'idoso_f', 17.0, 90.0);
+        $this->ref($c, 'adulto_m', 100.0, 617.0);
+        $this->ref($c, 'adulto_f', 98.0, 340.0);
+        $this->ref($c, 'idoso_m', 51.0, 295.0);
+        $this->ref($c, 'idoso_f', 17.0, 90.0);
 
         $exId = $this->exame('INSULINA', '40301133', 'DIABETES');
         $c = $this->campo($exId, 'Insulina em Jejum', 'numerico', 'µUI/mL', 1);
@@ -505,7 +542,8 @@ class ExamesCompletosSeeder extends Seeder
     {
         $exId = $this->exame('FERRO SÉRICO', '40300978', 'VITAMINAS E MICRONUTRIENTES');
         $c = $this->campo($exId, 'Ferro Sérico', 'numerico', 'µg/dL', 1);
-        $this->ref($c, 'adulto_m', 65.0, 175.0); $this->ref($c, 'adulto_f', 50.0, 170.0);
+        $this->ref($c, 'adulto_m', 65.0, 175.0);
+        $this->ref($c, 'adulto_f', 50.0, 170.0);
         $this->ref($c, 'crianca', 50.0, 120.0);
 
         $exId = $this->exame('CTLF — CAPACIDADE TOTAL DE LIGAÇÃO DO FERRO', '40301007', 'VITAMINAS E MICRONUTRIENTES');
@@ -518,7 +556,8 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('FERRITINA', '40300981', 'VITAMINAS E MICRONUTRIENTES');
         $c = $this->campo($exId, 'Ferritina', 'numerico', 'ng/mL', 1);
-        $this->ref($c, 'adulto_m', 22.0, 322.0); $this->ref($c, 'adulto_f', 10.0, 291.0);
+        $this->ref($c, 'adulto_m', 22.0, 322.0);
+        $this->ref($c, 'adulto_f', 10.0, 291.0);
         $this->ref($c, 'crianca', 7.0, 140.0);
 
         $exId = $this->exame('VITAMINA B12 (COBALAMINA)', '40302860', 'VITAMINAS E MICRONUTRIENTES');
@@ -560,12 +599,14 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('NT-PROBNP', '40300452', 'MARCADORES CARDÍACOS');
         $c = $this->campo($exId, 'NT-proBNP', 'numerico', 'pg/mL', 1);
-        $this->ref($c, 'adulto_m', null, 125.0); $this->ref($c, 'adulto_f', null, 125.0);
+        $this->ref($c, 'adulto_m', null, 125.0);
+        $this->ref($c, 'adulto_f', null, 125.0);
         $this->ref($c, 'idoso', null, 450.0, null, '≥ 75 anos');
 
         $exId = $this->exame('CK — CREATINO QUINASE TOTAL', '40300779', 'MARCADORES CARDÍACOS');
         $c = $this->campo($exId, 'CK Total', 'numerico', 'U/L', 1);
-        $this->ref($c, 'adulto_m', 26.0, 192.0); $this->ref($c, 'adulto_f', 26.0, 140.0);
+        $this->ref($c, 'adulto_m', 26.0, 192.0);
+        $this->ref($c, 'adulto_f', 26.0, 140.0);
 
         $exId = $this->exame('CK-MB', '40300780', 'MARCADORES CARDÍACOS');
         $c = $this->campo($exId, 'CK-MB massa', 'numerico', 'ng/mL', 1);
@@ -609,7 +650,9 @@ class ExamesCompletosSeeder extends Seeder
         $exId = $this->exame('AFP — ALFA-FETOPROTEÍNA', '40300115', 'MARCADORES TUMORAIS');
         $c = $this->campo($exId, 'AFP', 'numerico', 'ng/mL', 1);
         $this->ref($c, 'geral', null, 10.0);
-        $this->ref($c, 'gestante_t1', 10.0, 150.0); $this->ref($c, 'gestante_t2', 15.0, 250.0); $this->ref($c, 'gestante_t3', 20.0, 350.0);
+        $this->ref($c, 'gestante_t1', 10.0, 150.0);
+        $this->ref($c, 'gestante_t2', 15.0, 250.0);
+        $this->ref($c, 'gestante_t3', 20.0, 350.0);
     }
 
     // ─── SOROLOGIAS ───────────────────────────────────────────────────────────
@@ -825,7 +868,8 @@ class ExamesCompletosSeeder extends Seeder
 
         $exId = $this->exame('IgE TOTAL', '40301117', 'IMUNOLOGIA');
         $c = $this->campo($exId, 'IgE Total', 'numerico', 'UI/mL', 1);
-        $this->ref($c, 'adulto_m', null, 100.0); $this->ref($c, 'adulto_f', null, 100.0);
+        $this->ref($c, 'adulto_m', null, 100.0);
+        $this->ref($c, 'adulto_f', null, 100.0);
         $this->ref($c, 'crianca', null, 60.0);
 
         $exId = $this->exame('COMPLEMENTO C3', '40300770', 'IMUNOLOGIA');
