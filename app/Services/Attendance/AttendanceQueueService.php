@@ -68,12 +68,19 @@ class AttendanceQueueService
         $now = Carbon::now();
         $old = $ticket->toArray();
 
-        $ticket->update([
+        $updatedRows = AttendanceTicket::query()
+            ->where('id', $ticket->id)
+            ->where('status', AttendanceTicket::STATUS_AGUARDANDO)
+            ->update([
             'status' => AttendanceTicket::STATUS_CHAMADA,
             'called_at' => $now,
             'assigned_user_id' => $userId,
             'room_id' => $roomId,
-        ]);
+            ]);
+
+        if ($updatedRows !== 1) {
+            throw new DomainException('Senha já foi chamada por outro atendente.');
+        }
 
         AttendanceCall::query()->create([
             'attendance_ticket_id' => $ticket->id,
@@ -88,4 +95,3 @@ class AttendanceQueueService
         return $ticket->fresh(['client', 'room', 'assignedUser']);
     }
 }
-
