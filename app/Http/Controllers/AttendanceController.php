@@ -183,4 +183,14 @@ class AttendanceController extends Controller
     {
         return response()->json($this->panelService->state());
     }
+
+    public function rooms(): JsonResponse
+    {
+        return response()->json(
+            \App\Models\AttendanceRoom::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'description', 'active'])
+        );
+    }
 }

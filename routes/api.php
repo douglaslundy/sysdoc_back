@@ -102,6 +102,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/attendance/tickets/{id}', [AttendanceController::class, 'showTicket']);
     Route::patch('/attendance/tickets/{id}/cancel', [AttendanceController::class, 'cancelTicket']);
     Route::patch('/attendance/tickets/{id}/no-show', [AttendanceController::class, 'noShowTicket']);
+    Route::get('/attendance/rooms', [AttendanceController::class, 'rooms']);
     Route::get('/attendance/queue', [AttendanceController::class, 'queue']);
     Route::post('/attendance/queue/call-next', [AttendanceController::class, 'callNext']);
     Route::post('/attendance/queue/{ticketId}/call', [AttendanceController::class, 'callSpecific']);
