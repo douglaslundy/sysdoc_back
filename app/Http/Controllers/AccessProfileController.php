@@ -17,18 +17,18 @@ class AccessProfileController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nome'      => 'required|string|max:60|unique:access_profiles,nome',
-            'slug'      => 'required|string|max:60|unique:access_profiles,slug|alpha_dash',
+            'nome' => 'required|string|max:60|unique:access_profiles,nome',
+            'slug' => 'required|string|max:60|unique:access_profiles,slug|alpha_dash',
             'descricao' => 'nullable|string|max:200',
-            'page_ids'  => 'nullable|array',
-            'page_ids.*'=> 'integer|exists:system_pages,id',
+            'page_ids' => 'nullable|array',
+            'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
 
         $profile = AccessProfile::create([
-            'nome'      => $request->nome,
-            'slug'      => $request->slug,
+            'nome' => $request->nome,
+            'slug' => $request->slug,
             'descricao' => $request->descricao,
-            'ativo'     => true,
+            'ativo' => true,
         ]);
 
         if ($request->has('page_ids')) {
@@ -41,26 +41,27 @@ class AccessProfileController extends Controller
     public function show($id)
     {
         $profile = AccessProfile::with('pages')->find($id);
-        if (!$profile) {
+        if (! $profile) {
             return response()->json(['error' => 'Perfil não encontrado'], 404);
         }
+
         return response()->json($profile);
     }
 
     public function update(Request $request, $id)
     {
         $profile = AccessProfile::find($id);
-        if (!$profile) {
+        if (! $profile) {
             return response()->json(['error' => 'Perfil não encontrado'], 404);
         }
 
         $request->validate([
-            'nome'      => 'sometimes|string|max:60|unique:access_profiles,nome,' . $id,
-            'slug'      => 'sometimes|string|max:60|unique:access_profiles,slug,' . $id . '|alpha_dash',
+            'nome' => 'sometimes|string|max:60|unique:access_profiles,nome,'.$id,
+            'slug' => 'sometimes|string|max:60|unique:access_profiles,slug,'.$id.'|alpha_dash',
             'descricao' => 'nullable|string|max:200',
-            'ativo'     => 'sometimes|boolean',
-            'page_ids'  => 'nullable|array',
-            'page_ids.*'=> 'integer|exists:system_pages,id',
+            'ativo' => 'sometimes|boolean',
+            'page_ids' => 'nullable|array',
+            'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
 
         $profile->update($request->only(['nome', 'slug', 'descricao', 'ativo']));
@@ -75,10 +76,11 @@ class AccessProfileController extends Controller
     public function destroy($id)
     {
         $profile = AccessProfile::find($id);
-        if (!$profile) {
+        if (! $profile) {
             return response()->json(['error' => 'Perfil não encontrado'], 404);
         }
         $profile->delete();
+
         return response()->json(['message' => 'Perfil removido.']);
     }
 
@@ -91,7 +93,7 @@ class AccessProfileController extends Controller
             ->with('pages:id,path')
             ->first();
 
-        if (!$profile) {
+        if (! $profile) {
             return response()->json(['paths' => []]);
         }
 

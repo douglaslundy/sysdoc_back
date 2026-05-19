@@ -14,7 +14,7 @@ class ClientObserver
 
     public function updated(Client $client): void
     {
-        $dirty    = $client->getDirty();
+        $dirty = $client->getDirty();
         $original = array_intersect_key($client->getOriginal(), $dirty);
         AuditService::record('UPDATE', $client, $original, $dirty);
     }

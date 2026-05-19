@@ -18,11 +18,12 @@ class TripClient extends Model
         'departure_location',
         'destination_location',
         'time',
-        'is_confirmed'
+        'is_confirmed',
     ];
 
     // Constantes para os possíveis valores do campo 'person_type'
     const PERSON_TYPE_PASSENGER = 'passenger';
+
     const PERSON_TYPE_COMPANION = 'companion';
 
     /**

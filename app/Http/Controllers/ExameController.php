@@ -21,7 +21,7 @@ class ExameController extends Controller
             $busca = $request->busca;
             $query->where(function ($q) use ($busca) {
                 $q->where('nome', 'like', "%{$busca}%")
-                  ->orWhere('codigo', 'like', "%{$busca}%");
+                    ->orWhere('codigo', 'like', "%{$busca}%");
             });
         }
 
@@ -37,11 +37,11 @@ class ExameController extends Controller
     public function store(StoreExameRequest $request)
     {
         $exame = Exame::create([
-            'nome'               => strtoupper($request->input('nome')),
-            'codigo'             => strtoupper($request->input('codigo')),
+            'nome' => strtoupper($request->input('nome')),
+            'codigo' => strtoupper($request->input('codigo')),
             'categoria_exame_id' => $request->input('categoria_exame_id'),
-            'descricao'          => $request->input('descricao'),
-            'ativo'              => $request->input('ativo', true),
+            'descricao' => $request->input('descricao'),
+            'ativo' => $request->input('ativo', true),
         ]);
 
         AuditService::record('CREATE', $exame, null, $exame->toArray());
@@ -49,32 +49,33 @@ class ExameController extends Controller
 
         return response()->json([
             'message' => 'Exame criado com sucesso!',
-            'exame'   => $exame,
+            'exame' => $exame,
         ], 201);
     }
 
     public function show($id)
     {
         $exame = Exame::with(['campos.referencias', 'categoriaExame'])->find($id);
-        if (!$exame) {
+        if (! $exame) {
             return response()->json(['error' => 'Exame não encontrado'], 404);
         }
+
         return response()->json($exame);
     }
 
     public function update(StoreExameRequest $request, $id)
     {
         $exame = Exame::find($id);
-        if (!$exame) {
+        if (! $exame) {
             return response()->json(['error' => 'Exame não encontrado'], 404);
         }
 
         $old = $exame->toArray();
-        $exame->nome               = strtoupper($request->input('nome'));
-        $exame->codigo             = strtoupper($request->input('codigo'));
+        $exame->nome = strtoupper($request->input('nome'));
+        $exame->codigo = strtoupper($request->input('codigo'));
         $exame->categoria_exame_id = $request->input('categoria_exame_id');
-        $exame->descricao          = $request->input('descricao');
-        $exame->ativo              = $request->input('ativo', $exame->ativo);
+        $exame->descricao = $request->input('descricao');
+        $exame->ativo = $request->input('ativo', $exame->ativo);
         $exame->save();
         AuditService::record('UPDATE', $exame, $old, $exame->toArray());
 
@@ -82,18 +83,19 @@ class ExameController extends Controller
 
         return response()->json([
             'message' => 'Exame atualizado com sucesso!',
-            'exame'   => $exame,
+            'exame' => $exame,
         ]);
     }
 
     public function destroy($id)
     {
         $exame = Exame::find($id);
-        if (!$exame) {
+        if (! $exame) {
             return response()->json(['error' => 'Exame não encontrado'], 404);
         }
         AuditService::record('DELETE', $exame, $exame->toArray(), null);
         $exame->delete();
+
         return response()->json(['message' => 'Exame removido com sucesso!']);
     }
 }

@@ -9,7 +9,8 @@ class EndedCall extends Model
 {
     use HasFactory;
 
-    public function call(){
+    public function call()
+    {
         return $this->hasOne(Call::class, 'id', 'call_id');
     }
 }

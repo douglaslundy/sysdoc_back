@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class CallService extends Model
 {
     use HasFactory;
+
     protected $fillable = ['name', 'description'];
 
-    public function calls(){
+    public function calls()
+    {
         return $this->hasMany(Call::class, 'call_service_id', 'id');
     }
 }

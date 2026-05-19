@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
-    public function __construct(private DashboardService $service) {}
+    public function __construct(private DashboardService $service)
+    {
+    }
 
     public function laboratorio()
     {
@@ -18,88 +20,88 @@ class DashboardController extends Controller
                 try {
                     $totais = $this->service->getTotais();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab totais: ' . $e->getMessage());
+                    Log::error('DashboardLab totais: '.$e->getMessage());
                     $totais = ['exames' => 0, 'pedidos' => 0, 'clientes' => 0, 'medicos' => 0, 'categorias' => 0, 'usuarios' => 0];
                 }
 
                 try {
                     $pedidosPorStatus = $this->service->getPedidosPorStatus();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab pedidos_por_status: ' . $e->getMessage());
+                    Log::error('DashboardLab pedidos_por_status: '.$e->getMessage());
                     $pedidosPorStatus = [];
                 }
 
                 try {
                     $pedidosPorMes = $this->service->getPedidosPorMes();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab pedidos_por_mes: ' . $e->getMessage());
+                    Log::error('DashboardLab pedidos_por_mes: '.$e->getMessage());
                     $pedidosPorMes = [];
                 }
 
                 try {
                     $topExames = $this->service->getTopExames();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab top_exames: ' . $e->getMessage());
+                    Log::error('DashboardLab top_exames: '.$e->getMessage());
                     $topExames = collect();
                 }
 
                 try {
                     $pedidosPorCategoria = $this->service->getPedidosPorCategoria();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab pedidos_por_categoria: ' . $e->getMessage());
+                    Log::error('DashboardLab pedidos_por_categoria: '.$e->getMessage());
                     $pedidosPorCategoria = collect();
                 }
 
                 try {
                     $clientesPorMes = $this->service->getClientesPorMes();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab clientes_por_mes: ' . $e->getMessage());
+                    Log::error('DashboardLab clientes_por_mes: '.$e->getMessage());
                     $clientesPorMes = [];
                 }
 
                 try {
                     $resultadosStatus = $this->service->getResultadosStatus();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab resultados_status: ' . $e->getMessage());
+                    Log::error('DashboardLab resultados_status: '.$e->getMessage());
                     $resultadosStatus = ['liberados' => 0, 'pendentes' => 0];
                 }
 
                 try {
                     $topMedicos = $this->service->getTopMedicos();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab top_medicos: ' . $e->getMessage());
+                    Log::error('DashboardLab top_medicos: '.$e->getMessage());
                     $topMedicos = collect();
                 }
 
                 try {
                     $realizadosPorMes = $this->service->getResultadosRealizadosPorMes();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab realizados_por_mes: ' . $e->getMessage());
+                    Log::error('DashboardLab realizados_por_mes: '.$e->getMessage());
                     $realizadosPorMes = [];
                 }
 
                 try {
                     $realizadosPorAno = $this->service->getResultadosRealizadosPorAno();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLab realizados_por_ano: ' . $e->getMessage());
+                    Log::error('DashboardLab realizados_por_ano: '.$e->getMessage());
                     $realizadosPorAno = [];
                 }
 
                 return [
-                    'totais'                => $totais,
-                    'pedidos_por_status'    => $pedidosPorStatus,
-                    'pedidos_por_mes'       => $pedidosPorMes,
-                    'top_exames'            => $topExames,
+                    'totais' => $totais,
+                    'pedidos_por_status' => $pedidosPorStatus,
+                    'pedidos_por_mes' => $pedidosPorMes,
+                    'top_exames' => $topExames,
                     'pedidos_por_categoria' => $pedidosPorCategoria,
-                    'clientes_por_mes'      => $clientesPorMes,
-                    'resultados_status'     => $resultadosStatus,
-                    'top_medicos'           => $topMedicos,
-                    'realizados_por_mes'    => $realizadosPorMes,
-                    'realizados_por_ano'    => $realizadosPorAno,
+                    'clientes_por_mes' => $clientesPorMes,
+                    'resultados_status' => $resultadosStatus,
+                    'top_medicos' => $topMedicos,
+                    'realizados_por_mes' => $realizadosPorMes,
+                    'realizados_por_ano' => $realizadosPorAno,
                 ];
             });
         } catch (\Throwable $e) {
-            Log::error('DashboardLab cache: ' . $e->getMessage());
+            Log::error('DashboardLab cache: '.$e->getMessage());
             $data = ['totais' => ['exames' => 0, 'pedidos' => 0, 'clientes' => 0, 'medicos' => 0, 'categorias' => 0, 'usuarios' => 0], 'pedidos_por_status' => [], 'pedidos_por_mes' => [], 'top_exames' => [], 'pedidos_por_categoria' => [], 'clientes_por_mes' => [], 'resultados_status' => ['liberados' => 0, 'pendentes' => 0], 'top_medicos' => [], 'realizados_por_mes' => [], 'realizados_por_ano' => []];
         }
 
@@ -113,53 +115,53 @@ class DashboardController extends Controller
                 try {
                     $totais = $this->service->getFilaTotais();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFila totais: ' . $e->getMessage());
+                    Log::error('DashboardFila totais: '.$e->getMessage());
                     $totais = ['especialidades' => 0, 'total_na_fila' => 0, 'fila_7_dias' => 0, 'total_realizados' => 0];
                 }
 
                 try {
                     $especialidades = $this->service->getFilaPorEspecialidade();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFila especialidades: ' . $e->getMessage());
+                    Log::error('DashboardFila especialidades: '.$e->getMessage());
                     $especialidades = collect();
                 }
 
                 try {
                     $entradasPorMes = $this->service->getFilaPorMes();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFila por_mes: ' . $e->getMessage());
+                    Log::error('DashboardFila por_mes: '.$e->getMessage());
                     $entradasPorMes = [];
                 }
 
                 try {
                     $especialidadesRealizadas = $this->service->getEspecialidadesRealizadas();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFila especialidades_realizadas: ' . $e->getMessage());
+                    Log::error('DashboardFila especialidades_realizadas: '.$e->getMessage());
                     $especialidadesRealizadas = collect();
                 }
 
                 try {
                     $realizadasPorMes = $this->service->getEspecialidadesRealizadasPorMes();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFila realizadas_por_mes: ' . $e->getMessage());
+                    Log::error('DashboardFila realizadas_por_mes: '.$e->getMessage());
                     $realizadasPorMes = [];
                 }
 
                 return [
                     'totais' => [
-                        'especialidades'   => $totais['especialidades'],
-                        'total_fila'       => $totais['total_na_fila'],
-                        'fila_7dias'       => $totais['fila_7_dias'],
+                        'especialidades' => $totais['especialidades'],
+                        'total_fila' => $totais['total_na_fila'],
+                        'fila_7dias' => $totais['fila_7_dias'],
                         'total_realizados' => $totais['total_realizados'],
                     ],
-                    'especialidades'            => $especialidades,
-                    'entradas_por_mes'          => $entradasPorMes,
+                    'especialidades' => $especialidades,
+                    'entradas_por_mes' => $entradasPorMes,
                     'especialidades_realizadas' => $especialidadesRealizadas,
-                    'realizadas_por_mes'        => $realizadasPorMes,
+                    'realizadas_por_mes' => $realizadasPorMes,
                 ];
             });
         } catch (\Throwable $e) {
-            Log::error('DashboardFila cache: ' . $e->getMessage());
+            Log::error('DashboardFila cache: '.$e->getMessage());
             $data = ['totais' => ['especialidades' => 0, 'total_fila' => 0, 'fila_7dias' => 0, 'total_realizados' => 0], 'especialidades' => [], 'entradas_por_mes' => [], 'especialidades_realizadas' => [], 'realizadas_por_mes' => []];
         }
 
@@ -172,75 +174,75 @@ class DashboardController extends Controller
             ? request()->input('periodo')
             : 'mes';
 
-        $cacheKey = 'dashboard.tfd.' . $periodo . '.' . now()->format('Y-m');
+        $cacheKey = 'dashboard.tfd.'.$periodo.'.'.now()->format('Y-m');
         try {
             $data = Cache::remember($cacheKey, 300, function () use ($periodo) {
                 try {
                     $totais = $this->service->getTfdTotais();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardTfd totais: ' . $e->getMessage());
+                    Log::error('DashboardTfd totais: '.$e->getMessage());
                     $totais = ['total_viagens_mes' => 0, 'pessoas_transportadas_mes' => 0, 'km_rodados_mes' => 0];
                 }
 
                 try {
                     $viagensPorDia = $this->service->getViagensPorDia();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardTfd viagens_por_dia: ' . $e->getMessage());
+                    Log::error('DashboardTfd viagens_por_dia: '.$e->getMessage());
                     $viagensPorDia = collect();
                 }
 
                 try {
                     $viagensPorDiaAgendadas = $this->service->getViagensPorDiaAgendadas();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardTfd viagens_por_dia_agendadas: ' . $e->getMessage());
+                    Log::error('DashboardTfd viagens_por_dia_agendadas: '.$e->getMessage());
                     $viagensPorDiaAgendadas = collect();
                 }
 
                 try {
                     $motoristas = $this->service->getTodosMotoristas($periodo);
                 } catch (\Throwable $e) {
-                    Log::error('DashboardTfd motoristas: ' . $e->getMessage());
+                    Log::error('DashboardTfd motoristas: '.$e->getMessage());
                     $motoristas = collect();
                 }
 
                 try {
                     $rotas = $this->service->getTodasRotas($periodo);
                 } catch (\Throwable $e) {
-                    Log::error('DashboardTfd rotas: ' . $e->getMessage());
+                    Log::error('DashboardTfd rotas: '.$e->getMessage());
                     $rotas = collect();
                 }
 
                 try {
                     $viagensPorMes = $this->service->getViagensPorMes();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardTfd viagens_por_mes: ' . $e->getMessage());
+                    Log::error('DashboardTfd viagens_por_mes: '.$e->getMessage());
                     $viagensPorMes = [];
                 }
 
                 try {
                     $viagensPorAno = $this->service->getViagensPorAno();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardTfd viagens_por_ano: ' . $e->getMessage());
+                    Log::error('DashboardTfd viagens_por_ano: '.$e->getMessage());
                     $viagensPorAno = [];
                 }
 
                 return [
                     'totais' => [
-                        'total_viagens'         => $totais['total_viagens_mes'],
+                        'total_viagens' => $totais['total_viagens_mes'],
                         'pessoas_transportadas' => $totais['pessoas_transportadas_mes'],
-                        'km_rodados'            => $totais['km_rodados_mes'],
+                        'km_rodados' => $totais['km_rodados_mes'],
                     ],
-                    'viagens_por_dia'           => $viagensPorDia,
+                    'viagens_por_dia' => $viagensPorDia,
                     'viagens_por_dia_agendadas' => $viagensPorDiaAgendadas,
-                    'motoristas'      => $motoristas,
-                    'rotas'           => $rotas,
+                    'motoristas' => $motoristas,
+                    'rotas' => $rotas,
                     'viagens_por_mes' => $viagensPorMes,
                     'viagens_por_ano' => $viagensPorAno,
-                    'periodo'         => $periodo,
+                    'periodo' => $periodo,
                 ];
             });
         } catch (\Throwable $e) {
-            Log::error('DashboardTfd cache: ' . $e->getMessage());
+            Log::error('DashboardTfd cache: '.$e->getMessage());
             $data = ['totais' => ['total_viagens' => 0, 'pessoas_transportadas' => 0, 'km_rodados' => 0], 'viagens_por_dia' => [], 'viagens_por_dia_agendadas' => [], 'motoristas' => [], 'rotas' => [], 'viagens_por_mes' => [], 'viagens_por_ano' => [], 'periodo' => $periodo];
         }
 
@@ -254,37 +256,37 @@ class DashboardController extends Controller
                 try {
                     $totais = $this->service->getLogsTotais();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLogs totais: ' . $e->getMessage());
+                    Log::error('DashboardLogs totais: '.$e->getMessage());
                     $totais = ['total_qr' => 0, 'total_link_publico' => 0, 'qr_mes' => 0, 'link_publico_mes' => 0];
                 }
 
                 try {
                     $qrPorDia = $this->service->getQrPorDia();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLogs qr_por_dia: ' . $e->getMessage());
+                    Log::error('DashboardLogs qr_por_dia: '.$e->getMessage());
                     $qrPorDia = collect();
                 }
 
                 try {
                     $linkPorDia = $this->service->getLinkPorDia();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardLogs link_por_dia: ' . $e->getMessage());
+                    Log::error('DashboardLogs link_por_dia: '.$e->getMessage());
                     $linkPorDia = collect();
                 }
 
                 return [
                     'totais' => [
-                        'total_qr'   => $totais['total_qr'],
+                        'total_qr' => $totais['total_qr'],
                         'total_link' => $totais['total_link_publico'],
-                        'qr_mes'     => $totais['qr_mes'],
-                        'link_mes'   => $totais['link_publico_mes'],
+                        'qr_mes' => $totais['qr_mes'],
+                        'link_mes' => $totais['link_publico_mes'],
                     ],
-                    'qr_por_dia'   => $qrPorDia,
+                    'qr_por_dia' => $qrPorDia,
                     'link_por_dia' => $linkPorDia,
                 ];
             });
         } catch (\Throwable $e) {
-            Log::error('DashboardLogs cache: ' . $e->getMessage());
+            Log::error('DashboardLogs cache: '.$e->getMessage());
             $data = ['totais' => ['total_qr' => 0, 'total_link' => 0, 'qr_mes' => 0, 'link_mes' => 0], 'qr_por_dia' => [], 'link_por_dia' => []];
         }
 
@@ -294,11 +296,11 @@ class DashboardController extends Controller
     public function farmacia()
     {
         $janelaDias = (int) request()->input('janela_dias', 30);
-        if (!in_array($janelaDias, [7, 30, 90], true)) {
+        if (! in_array($janelaDias, [7, 30, 90], true)) {
             $janelaDias = 30;
         }
         $janelaMeses = (int) request()->input('janela_meses', 12);
-        if (!in_array($janelaMeses, [3, 6, 12], true)) {
+        if (! in_array($janelaMeses, [3, 6, 12], true)) {
             $janelaMeses = 12;
         }
 
@@ -322,8 +324,8 @@ class DashboardController extends Controller
         $currentMonth = now()->format('Y-m');
 
         try {
-            $cacheKey = 'dashboard.farmacia.' . $janelaDias . '.' . $janelaMeses . '.' . now()->format('Y-m-d');
-            $data = Cache::remember($cacheKey, 180, function () use ($empty, $today, $currentMonth, $janelaDias, $janelaMeses) {
+            $cacheKey = 'dashboard.farmacia.'.$janelaDias.'.'.$janelaMeses.'.'.now()->format('Y-m-d');
+            $data = Cache::remember($cacheKey, 180, function () use ($today, $currentMonth, $janelaDias, $janelaMeses) {
                 try {
                     $medicamentosAtivos = (int) DB::table('medicine_items')
                         ->whereNull('deleted_at')
@@ -346,7 +348,7 @@ class DashboardController extends Controller
                     $aquisicoesMesAtual = (int) (clone $aquisicoesMesAtualQuery)->count();
                     $qtdAdquiridaMesAtual = (float) (clone $aquisicoesMesAtualQuery)->sum('acquired_quantity');
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFarmacia totais: ' . $e->getMessage());
+                    Log::error('DashboardFarmacia totais: '.$e->getMessage());
                     $medicamentosAtivos = 0;
                     $registrosStatusHoje = 0;
                     $disponiveisHoje = 0;
@@ -369,7 +371,7 @@ class DashboardController extends Controller
                         ->orderBy('reference_date')
                         ->get();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFarmacia status_por_dia: ' . $e->getMessage());
+                    Log::error('DashboardFarmacia status_por_dia: '.$e->getMessage());
                     $statusPorDia = collect();
                 }
 
@@ -385,7 +387,7 @@ class DashboardController extends Controller
                         ->orderBy('reference_month')
                         ->get();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFarmacia aquisicoes_por_mes: ' . $e->getMessage());
+                    Log::error('DashboardFarmacia aquisicoes_por_mes: '.$e->getMessage());
                     $aquisicoesPorMes = collect();
                 }
 
@@ -406,7 +408,7 @@ class DashboardController extends Controller
                         ->limit(10)
                         ->get();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFarmacia top_indisponiveis: ' . $e->getMessage());
+                    Log::error('DashboardFarmacia top_indisponiveis: '.$e->getMessage());
                     $topIndisponiveis = collect();
                 }
 
@@ -420,10 +422,11 @@ class DashboardController extends Controller
                         ->get()
                         ->map(function ($row) {
                             $row->source_document = $row->source_document ?: 'Sem origem';
+
                             return $row;
                         });
                 } catch (\Throwable $e) {
-                    Log::error('DashboardFarmacia fontes_aquisicao_mes: ' . $e->getMessage());
+                    Log::error('DashboardFarmacia fontes_aquisicao_mes: '.$e->getMessage());
                     $fontesAquisicaoMes = collect();
                 }
 
@@ -446,7 +449,7 @@ class DashboardController extends Controller
                 ];
             });
         } catch (\Throwable $e) {
-            Log::error('DashboardFarmacia cache: ' . $e->getMessage());
+            Log::error('DashboardFarmacia cache: '.$e->getMessage());
             $data = $empty;
         }
 
@@ -458,35 +461,35 @@ class DashboardController extends Controller
         try {
             $totais = $this->service->getInicioTotais();
         } catch (\Throwable $e) {
-            Log::error('DashboardInicio totais: ' . $e->getMessage());
+            Log::error('DashboardInicio totais: '.$e->getMessage());
             $totais = ['clientes' => 0, 'especialidades' => 0, 'oficios' => 0, 'portarias' => 0, 'modelos_ia' => 0];
         }
 
         try {
             $clientesPorMes = $this->service->getClientesPorMes();
         } catch (\Throwable $e) {
-            Log::error('DashboardInicio clientes_por_mes: ' . $e->getMessage());
+            Log::error('DashboardInicio clientes_por_mes: '.$e->getMessage());
             $clientesPorMes = [];
         }
 
         try {
             $oficiosPorMes = $this->service->getOficiosPorMes();
         } catch (\Throwable $e) {
-            Log::error('DashboardInicio oficios_por_mes: ' . $e->getMessage());
+            Log::error('DashboardInicio oficios_por_mes: '.$e->getMessage());
             $oficiosPorMes = [];
         }
 
         try {
             $portariasPorMes = $this->service->getPortariasPorMes();
         } catch (\Throwable $e) {
-            Log::error('DashboardInicio portarias_por_mes: ' . $e->getMessage());
+            Log::error('DashboardInicio portarias_por_mes: '.$e->getMessage());
             $portariasPorMes = [];
         }
 
         return response()->json([
-            'totais'           => $totais,
+            'totais' => $totais,
             'clientes_por_mes' => $clientesPorMes,
-            'oficios_por_mes'  => $oficiosPorMes,
+            'oficios_por_mes' => $oficiosPorMes,
             'portarias_por_mes' => $portariasPorMes,
         ]);
     }
@@ -494,10 +497,10 @@ class DashboardController extends Controller
     public function vigilancia()
     {
         $empty = [
-            'totais'               => ['estabelecimentos' => 0, 'alvaras' => 0, 'vigentes' => 0, 'vencidos' => 0, 'a_vencer' => 0, 'vencendo_em_30' => 0],
-            'por_status'           => [],
-            'por_nivel_risco'      => [],
-            'por_mes'              => [],
+            'totais' => ['estabelecimentos' => 0, 'alvaras' => 0, 'vigentes' => 0, 'vencidos' => 0, 'a_vencer' => 0, 'vencendo_em_30' => 0],
+            'por_status' => [],
+            'por_nivel_risco' => [],
+            'por_mes' => [],
             'proximos_vencimentos' => [],
         ];
 
@@ -506,48 +509,48 @@ class DashboardController extends Controller
                 try {
                     $totais = $this->service->getVigilanciaTotais();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardVigilancia totais: ' . $e->getMessage());
+                    Log::error('DashboardVigilancia totais: '.$e->getMessage());
                     $totais = $empty['totais'];
                 }
 
                 try {
                     $porStatus = $this->service->getAlvarasPorStatus();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardVigilancia por_status: ' . $e->getMessage());
+                    Log::error('DashboardVigilancia por_status: '.$e->getMessage());
                     $porStatus = [];
                 }
 
                 try {
                     $porNivelRisco = $this->service->getAlvarasPorNivelRisco();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardVigilancia por_nivel_risco: ' . $e->getMessage());
+                    Log::error('DashboardVigilancia por_nivel_risco: '.$e->getMessage());
                     $porNivelRisco = [];
                 }
 
                 try {
                     $porMes = $this->service->getAlvarasPorMes();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardVigilancia por_mes: ' . $e->getMessage());
+                    Log::error('DashboardVigilancia por_mes: '.$e->getMessage());
                     $porMes = [];
                 }
 
                 try {
                     $proximosVencimentos = $this->service->getProximosVencimentos();
                 } catch (\Throwable $e) {
-                    Log::error('DashboardVigilancia proximos_vencimentos: ' . $e->getMessage());
+                    Log::error('DashboardVigilancia proximos_vencimentos: '.$e->getMessage());
                     $proximosVencimentos = [];
                 }
 
                 return [
-                    'totais'               => $totais,
-                    'por_status'           => $porStatus,
-                    'por_nivel_risco'      => $porNivelRisco,
-                    'por_mes'              => $porMes,
+                    'totais' => $totais,
+                    'por_status' => $porStatus,
+                    'por_nivel_risco' => $porNivelRisco,
+                    'por_mes' => $porMes,
                     'proximos_vencimentos' => $proximosVencimentos,
                 ];
             });
         } catch (\Throwable $e) {
-            Log::error('DashboardVigilancia cache: ' . $e->getMessage());
+            Log::error('DashboardVigilancia cache: '.$e->getMessage());
             $data = $empty;
         }
 

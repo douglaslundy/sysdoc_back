@@ -18,10 +18,10 @@ class PedidoExameController extends Controller
 {
     private const TRANSICOES_VALIDAS = [
         'solicitado' => ['coletado', 'cancelado'],
-        'coletado'   => ['em_analise', 'cancelado'],
+        'coletado' => ['em_analise', 'cancelado'],
         'em_analise' => ['liberado', 'cancelado'],
-        'liberado'   => [],
-        'cancelado'  => [],
+        'liberado' => [],
+        'cancelado' => [],
     ];
 
     public function index(Request $request)
@@ -48,12 +48,10 @@ class PedidoExameController extends Controller
         if ($request->filled('busca')) {
             $busca = $request->busca;
             $query->where(function ($q) use ($busca) {
-                $q->whereHas('cliente', fn($c) =>
-                    $c->where('name', 'LIKE', "%{$busca}%")
-                      ->orWhere('cns', 'LIKE', "%{$busca}%")
-                      ->orWhere('cpf', 'LIKE', "%{$busca}%")
-                )->orWhereHas('resultado', fn($r) =>
-                    $r->where('protocolo', 'LIKE', "%{$busca}%")
+                $q->whereHas('cliente', fn ($c) => $c->where('name', 'LIKE', "%{$busca}%")
+                    ->orWhere('cns', 'LIKE', "%{$busca}%")
+                    ->orWhere('cpf', 'LIKE', "%{$busca}%")
+                )->orWhereHas('resultado', fn ($r) => $r->where('protocolo', 'LIKE', "%{$busca}%")
                 );
             });
         }
@@ -68,13 +66,13 @@ class PedidoExameController extends Controller
         DB::beginTransaction();
         try {
             $pedido = new PedidoExame;
-            $pedido->client_id             = $request->input('client_id');
-            $pedido->criado_por            = Auth::id();
+            $pedido->client_id = $request->input('client_id');
+            $pedido->criado_por = Auth::id();
             $pedido->medico_solicitante_id = $request->input('medico_solicitante_id');
-            $pedido->data_pedido        = $request->input('data_pedido');
-            $pedido->data_coleta        = $request->input('data_coleta');
-            $pedido->status             = 'solicitado';
-            $pedido->observacoes        = $request->input('observacoes');
+            $pedido->data_pedido = $request->input('data_pedido');
+            $pedido->data_coleta = $request->input('data_coleta');
+            $pedido->status = 'solicitado';
+            $pedido->observacoes = $request->input('observacoes');
             $pedido->save();
 
             $pedido->exames()->sync($request->input('exames'));
@@ -84,9 +82,9 @@ class PedidoExameController extends Controller
 
             ResultadoExame::create([
                 'pedido_exame_id' => $pedido->id,
-                'protocolo'       => $protocolo,
-                'senha_hash'      => Hash::make($senha),
-                'ativo'           => true,
+                'protocolo' => $protocolo,
+                'senha_hash' => Hash::make($senha),
+                'ativo' => true,
             ]);
 
             DB::commit();
@@ -96,24 +94,24 @@ class PedidoExameController extends Controller
         }
 
         return response()->json([
-            'message'   => 'Pedido criado com sucesso!',
-            'pedido'    => $pedido->load(['cliente', 'exames', 'medicoSolicitante']),
+            'message' => 'Pedido criado com sucesso!',
+            'pedido' => $pedido->load(['cliente', 'exames', 'medicoSolicitante']),
             'protocolo' => $protocolo,
-            'senha'     => $senha,
+            'senha' => $senha,
         ], 201);
     }
 
     public function show($id)
     {
         $pedido = PedidoExame::with(['cliente', 'exames.campos.referencias', 'resultado.campos.campo', 'criadoPor'])->find($id);
-        if (!$pedido) {
+        if (! $pedido) {
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
 
         AuditService::record('VIEW', $pedido, null, [
             'cliente' => $pedido->cliente?->name,
-            'status'  => $pedido->status,
-            'exames'  => $pedido->exames->pluck('nome')->toArray(),
+            'status' => $pedido->status,
+            'exames' => $pedido->exames->pluck('nome')->toArray(),
         ]);
 
         return response()->json($pedido);
@@ -126,14 +124,14 @@ class PedidoExameController extends Controller
         ]);
 
         $pedido = PedidoExame::find($id);
-        if (!$pedido) {
+        if (! $pedido) {
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
 
         $statusAtual = $pedido->status;
-        $novoStatus  = $request->input('status');
+        $novoStatus = $request->input('status');
 
-        if (!in_array($novoStatus, self::TRANSICOES_VALIDAS[$statusAtual] ?? [])) {
+        if (! in_array($novoStatus, self::TRANSICOES_VALIDAS[$statusAtual] ?? [])) {
             return response()->json([
                 'error' => "Transição inválida: {$statusAtual} → {$novoStatus}",
             ], 422);
@@ -144,7 +142,7 @@ class PedidoExameController extends Controller
 
         return response()->json([
             'message' => 'Status atualizado com sucesso!',
-            'pedido'  => $pedido,
+            'pedido' => $pedido,
         ]);
     }
 
@@ -152,7 +150,7 @@ class PedidoExameController extends Controller
     {
         // Block editing liberado or cancelado pedidos
         if (in_array($pedido->status, ['liberado', 'cancelado'])) {
-            return response()->json(['error' => 'Pedido com status ' . $pedido->status . ' não pode ser editado.'], 422);
+            return response()->json(['error' => 'Pedido com status '.$pedido->status.' não pode ser editado.'], 422);
         }
 
         DB::beginTransaction();
@@ -166,7 +164,7 @@ class PedidoExameController extends Controller
                 $sync = $pedido->exames()->sync($request->input('exames'));
 
                 // Cascade: delete resultado_campos for removed exames
-                if (!empty($sync['detached'])) {
+                if (! empty($sync['detached'])) {
                     $pedido->load('resultado');
                     if ($pedido->resultado) {
                         ResultadoCampo::where('resultado_exame_id', $pedido->resultado->id)
@@ -186,14 +184,14 @@ class PedidoExameController extends Controller
 
         return response()->json([
             'message' => 'Pedido atualizado com sucesso!',
-            'pedido'  => $pedido->fresh()->load(['cliente', 'exames', 'medicoSolicitante', 'resultado']),
+            'pedido' => $pedido->fresh()->load(['cliente', 'exames', 'medicoSolicitante', 'resultado']),
         ]);
     }
 
     public function destroy($id)
     {
         $pedido = PedidoExame::find($id);
-        if (!$pedido) {
+        if (! $pedido) {
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
         if ($pedido->status === 'liberado') {
@@ -201,6 +199,7 @@ class PedidoExameController extends Controller
         }
 
         $pedido->forceDelete();
+
         return response()->json(['message' => 'Pedido removido com sucesso!']);
     }
 }

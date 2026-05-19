@@ -2,25 +2,27 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Models\User;
+use App\Models\AccessProfile;
 use App\Models\Client;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
-use App\Models\Trip;
-use App\Models\AccessProfile;
 use App\Models\Speciality;
-use App\Observers\UserObserver;
+use App\Models\Trip;
+use App\Models\User;
+use App\Observers\AccessProfileObserver;
 use App\Observers\ClientObserver;
 use App\Observers\PedidoExameObserver;
 use App\Observers\ResultadoExameObserver;
-use App\Observers\TripObserver;
-use App\Observers\AccessProfileObserver;
 use App\Observers\SpecialityObserver;
+use App\Observers\TripObserver;
+use App\Observers\UserObserver;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+    }
 
     public function boot(): void
     {

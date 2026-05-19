@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ClientRequest;
-use Illuminate\Http\Request;
-use App\Models\Client;
 use App\Models\Addresses;
+use App\Models\Client;
 use App\Services\AuditService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
@@ -31,19 +31,18 @@ class ClientController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-
     public function store(ClientRequest $request)
     {
         $client = DB::transaction(function () use ($request) {
             $client = Client::create($request->all());
 
             Addresses::create([
-                'id_client'  => $client->id,
-                'zip_code'   => $request->input('addresses.zip_code'),
-                'city'       => $request->input('addresses.city'),
-                'street'     => $request->input('addresses.street'),
-                'number'     => $request->input('addresses.number'),
-                'district'   => $request->input('addresses.district'),
+                'id_client' => $client->id,
+                'zip_code' => $request->input('addresses.zip_code'),
+                'city' => $request->input('addresses.city'),
+                'street' => $request->input('addresses.street'),
+                'number' => $request->input('addresses.number'),
+                'district' => $request->input('addresses.district'),
                 'complement' => $request->input('addresses.complement'),
             ]);
 
@@ -52,7 +51,6 @@ class ClientController extends Controller
 
         return response()->json(['status' => 'created', 'client' => $client->load('addresses')], 201);
     }
-
 
     /**
      * Display the specified resource.
@@ -63,18 +61,19 @@ class ClientController extends Controller
     public function show($id)
     {
         $client = Client::with(['addresses'])->find($id);
-        if (!$client) {
+        if (! $client) {
             return response()->json([
-                'error' => 'Client not found'
+                'error' => 'Client not found',
             ], 404);
         }
         AuditService::record('VIEW', $client, null, [
-            'nome'  => $client->name,
-            'cpf'   => $client->cpf,
-            'cns'   => $client->cns,
+            'nome' => $client->name,
+            'cpf' => $client->cpf,
+            'cns' => $client->cns,
             'email' => $client->email,
             'phone' => $client->phone,
         ]);
+
         return response()->json($client);
     }
 
@@ -82,7 +81,6 @@ class ClientController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  Client  $client
      * @return \Illuminate\Http\Response
      */
     public function update(ClientRequest $request, Client $client)
@@ -92,19 +90,19 @@ class ClientController extends Controller
 
             $address = Addresses::firstOrNew(['id_client' => $client->id]);
             $address->fill([
-                'id_client'  => $client->id,
-                'zip_code'   => $request->input('addresses.zip_code'),
-                'city'       => $request->input('addresses.city'),
-                'street'     => $request->input('addresses.street'),
-                'number'     => $request->input('addresses.number'),
-                'district'   => $request->input('addresses.district'),
+                'id_client' => $client->id,
+                'zip_code' => $request->input('addresses.zip_code'),
+                'city' => $request->input('addresses.city'),
+                'street' => $request->input('addresses.street'),
+                'number' => $request->input('addresses.number'),
+                'district' => $request->input('addresses.district'),
                 'complement' => $request->input('addresses.complement'),
             ])->save();
         });
 
         return response()->json([
             'message' => 'Client updated successfully!',
-            'client'  => $client->load('addresses'),
+            'client' => $client->load('addresses'),
         ]);
     }
 
@@ -117,18 +115,17 @@ class ClientController extends Controller
     public function destroy($id)
     {
         $client = Client::find($id);
-        if (!$client) {
+        if (! $client) {
             return response()->json([
-                'error' => 'Client not found'
+                'error' => 'Client not found',
             ], 404);
         }
         $client->delete();
 
         return response()->json([
-            'message' => 'Client deleted successfully!'
+            'message' => 'Client deleted successfully!',
         ]);
     }
-
 
     // public function detailedClientReport(Request $request)
     // {
@@ -169,10 +166,10 @@ class ClientController extends Controller
 
         $client = Client::where(function ($q) use ($termo) {
             $q->where('cpf', 'like', "%{$termo}%")
-              ->orWhere('cns', 'like', "%{$termo}%");
+                ->orWhere('cns', 'like', "%{$termo}%");
         })->where('active', true)->first();
 
-        if (!$client) {
+        if (! $client) {
             return response()->json(['message' => 'Paciente não encontrado.'], 404);
         }
 
@@ -185,7 +182,7 @@ class ClientController extends Controller
 
         if ($value === '') {
             return response()->json([
-                'message' => 'Parâmetro value é obrigatório'
+                'message' => 'Parâmetro value é obrigatório',
             ], 400);
         }
 
@@ -208,25 +205,26 @@ class ClientController extends Controller
             })
             ->first();
 
-        if (!$client) {
+        if (! $client) {
             return response()->json([
-                'message' => 'Cliente não encontrado'
+                'message' => 'Cliente não encontrado',
             ], 404);
         }
 
         AuditService::record('VIEW_REPORT', $client,
             ['termo_pesquisado' => $value],
             [
-                'nome'          => $client->name,
-                'cpf'           => $client->cpf,
-                'cns'           => $client->cns,
-                'phone'         => $client->phone,
+                'nome' => $client->name,
+                'cpf' => $client->cpf,
+                'cns' => $client->cns,
+                'phone' => $client->phone,
                 'total_viagens' => $client->trips ? $client->trips->count() : 0,
-                'total_filas'   => $client->queue ? $client->queue->count() : 0,
+                'total_filas' => $client->queue ? $client->queue->count() : 0,
             ]
         );
+
         return response()->json([
-            'client' => $client
+            'client' => $client,
         ]);
     }
 }

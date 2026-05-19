@@ -30,9 +30,9 @@ class AuthServiceProvider extends ServiceProvider
         // Valores conhecidos: 'admin', 'user' (default).
         // Para restringir um dashboard a perfis específicos, adicione o perfil
         // ao array correspondente. Ex: ['admin', 'tfd'] para restringir ao TFD.
-        Gate::define('dashboard-laboratorio', fn($user) => in_array($user->profile, ['admin', 'user']));
-        Gate::define('dashboard-fila',        fn($user) => in_array($user->profile, ['admin', 'user']));
-        Gate::define('dashboard-tfd',         fn($user) => in_array($user->profile, ['admin', 'user']));
-        Gate::define('dashboard-logs',        fn($user) => $user->profile === 'admin');
+        Gate::define('dashboard-laboratorio', fn ($user) => in_array($user->profile, ['admin', 'user']));
+        Gate::define('dashboard-fila', fn ($user) => in_array($user->profile, ['admin', 'user']));
+        Gate::define('dashboard-tfd', fn ($user) => in_array($user->profile, ['admin', 'user']));
+        Gate::define('dashboard-logs', fn ($user) => $user->profile === 'admin');
     }
 }

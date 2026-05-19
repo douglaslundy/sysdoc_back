@@ -32,4 +32,3 @@ class MedicinePublication extends Model
         return $this->belongsTo(User::class, 'published_by_user_id');
     }
 }
-

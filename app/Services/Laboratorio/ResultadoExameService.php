@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Mail;
 
 class ResultadoExameService
 {
-    public function __construct(private LaudoPdfService $laudoPdfService) {}
+    public function __construct(private LaudoPdfService $laudoPdfService)
+    {
+    }
 
     public function salvarCampos(ResultadoExame $resultado, array $campos): void
     {
@@ -47,12 +49,12 @@ class ResultadoExameService
 
                 ResultadoCampo::create([
                     'resultado_exame_id' => $resultado->id,
-                    'exame_campo_id'     => $campo['exame_campo_id'],
-                    'exame_id'           => $campo['exame_id'],
-                    'valor_numerico'     => $campo['valor_numerico'] ?? null,
-                    'valor_texto'        => $campo['valor_texto'] ?? null,
-                    'status_referencia'  => $statusReferencia,
-                    'observacao'         => $campo['observacao'] ?? null,
+                    'exame_campo_id' => $campo['exame_campo_id'],
+                    'exame_id' => $campo['exame_id'],
+                    'valor_numerico' => $campo['valor_numerico'] ?? null,
+                    'valor_texto' => $campo['valor_texto'] ?? null,
+                    'status_referencia' => $statusReferencia,
+                    'observacao' => $campo['observacao'] ?? null,
                 ]);
             }
 
@@ -70,13 +72,13 @@ class ResultadoExameService
         }
 
         $totalCampos = $resultado->load('pedido.exames.camposAtivos')->pedido->exames
-            ->flatMap(fn($e) => $e->camposAtivos)
+            ->flatMap(fn ($e) => $e->camposAtivos)
             ->count();
 
         $camposPreenchidos = $resultado->campos()
             ->where(function ($q) {
                 $q->whereNotNull('valor_numerico')
-                  ->orWhere(fn($q2) => $q2->whereNotNull('valor_texto')->where('valor_texto', '!=', ''));
+                    ->orWhere(fn ($q2) => $q2->whereNotNull('valor_texto')->where('valor_texto', '!=', ''));
             })->count();
 
         if ($totalCampos > 0 && $camposPreenchidos === 0) {
@@ -85,18 +87,18 @@ class ResultadoExameService
 
         DB::beginTransaction();
         try {
-            if (!$resultado->protocolo) {
+            if (! $resultado->protocolo) {
                 $protocolo = ResultadoExame::gerarProtocolo();
                 $senha = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-                $resultado->protocolo  = $protocolo;
+                $resultado->protocolo = $protocolo;
                 $resultado->senha_hash = Hash::make($senha);
             } else {
                 $senha = null;
             }
 
-            $resultado->liberado_por   = $userId;
+            $resultado->liberado_por = $userId;
             $resultado->data_liberacao = now();
-            $resultado->data_validade  = now()->addYear();
+            $resultado->data_validade = now()->addYear();
             $resultado->save();
 
             $pdfPath = $this->laudoPdfService->gerar($resultado);
@@ -128,11 +130,11 @@ class ResultadoExameService
             ->with(['pedido.cliente', 'campos.campo.exame'])
             ->first();
 
-        if (!$resultado || !$resultado->estaValido()) {
+        if (! $resultado || ! $resultado->estaValido()) {
             return null;
         }
 
-        if (!$resultado->verificarSenha($senha)) {
+        if (! $resultado->verificarSenha($senha)) {
             return null;
         }
 
@@ -141,24 +143,32 @@ class ResultadoExameService
 
     private function detectarPerfil($cliente): string
     {
-        if (!$cliente) {
+        if (! $cliente) {
             return 'geral';
         }
 
-        $sexo  = $cliente->sexo ?? null;
+        $sexo = $cliente->sexo ?? null;
         $idade = null;
 
-        if (!empty($cliente->born_date)) {
+        if (! empty($cliente->born_date)) {
             $idade = now()->diffInYears($cliente->born_date);
         }
 
         if ($idade !== null) {
-            if ($idade < 12) return 'crianca';
-            if ($idade >= 60) return 'idoso';
+            if ($idade < 12) {
+                return 'crianca';
+            }
+            if ($idade >= 60) {
+                return 'idoso';
+            }
         }
 
-        if ($sexo === 'MASCULINE') return 'adulto_m';
-        if ($sexo === 'FEMININE')  return 'adulto_f';
+        if ($sexo === 'MASCULINE') {
+            return 'adulto_m';
+        }
+        if ($sexo === 'FEMININE') {
+            return 'adulto_f';
+        }
 
         return 'geral';
     }

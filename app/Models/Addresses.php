@@ -10,7 +10,9 @@ class Addresses extends Model
     use HasFactory;
 
     public $timestamps = false;
-    protected $hidden =['id_client', 'id'];
+
+    protected $hidden = ['id_client', 'id'];
+
     protected $fillable = [
         'city',
         'street',
@@ -19,6 +21,6 @@ class Addresses extends Model
         'district',
         'complement',
         'id_client',
-        'active'
+        'active',
     ];
 }

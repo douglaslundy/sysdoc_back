@@ -43,18 +43,19 @@ class PageCategoryController extends Controller
         });
 
         AuditService::record('CREATE', $category, null, $category->toArray());
+
         return response()->json($category, 201);
     }
 
     public function update(Request $request, $id)
     {
         $category = PageCategory::find($id);
-        if (!$category) {
+        if (! $category) {
             return response()->json(['error' => 'Categoria não encontrada'], 404);
         }
 
         $request->validate([
-            'nome' => 'sometimes|string|max:60|unique:page_categories,nome,' . $id,
+            'nome' => 'sometimes|string|max:60|unique:page_categories,nome,'.$id,
             'icone' => 'nullable|string|max:40',
             'ordem' => 'nullable|integer|min:0',
             'ativo' => 'nullable|boolean',
@@ -91,13 +92,14 @@ class PageCategoryController extends Controller
 
         $category->refresh();
         AuditService::record('UPDATE', $category, $old, $category->toArray());
+
         return response()->json($category);
     }
 
     public function destroy($id)
     {
         $category = PageCategory::find($id);
-        if (!$category) {
+        if (! $category) {
             return response()->json(['error' => 'Categoria não encontrada'], 404);
         }
 
@@ -107,7 +109,7 @@ class PageCategoryController extends Controller
 
         AuditService::record('DELETE', $category, $category->toArray(), null);
         $category->delete();
+
         return response()->json(['message' => 'Categoria removida.']);
     }
 }
-

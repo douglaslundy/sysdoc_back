@@ -23,11 +23,11 @@ class StoreCallServicelRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:50',
-            'description' => 'required|string|max:200'
+            'description' => 'required|string|max:200',
         ];
     }
 
-     public function messages()
+    public function messages()
     {
         return [
             'name.required' => 'O campo nome é obrigatório.',

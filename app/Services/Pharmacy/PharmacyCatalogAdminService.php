@@ -7,7 +7,6 @@ use App\Models\PharmacyPharmaceuticalForm;
 use App\Models\PharmacyPresentation;
 use App\Models\PharmacyUnit;
 use App\Services\AuditService;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PharmacyCatalogAdminService

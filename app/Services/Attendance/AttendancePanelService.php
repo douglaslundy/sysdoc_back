@@ -43,13 +43,13 @@ class AttendancePanelService
                     'startedAt' => optional($ticket->started_at)->toISOString(),
                 ];
             })->values()->all(),
-            'lastCalls' => $lastCalls->map(fn(AttendanceCall $call) => $this->mapCall($call))->values()->all(),
+            'lastCalls' => $lastCalls->map(fn (AttendanceCall $call) => $this->mapCall($call))->values()->all(),
         ];
     }
 
     private function mapCall(?AttendanceCall $call): ?array
     {
-        if (!$call) {
+        if (! $call) {
             return null;
         }
 
@@ -62,4 +62,3 @@ class AttendancePanelService
         ];
     }
 }
-

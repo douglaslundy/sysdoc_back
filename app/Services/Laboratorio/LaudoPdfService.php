@@ -23,26 +23,26 @@ class LaudoPdfService
 
         $config = LabConfig::get();
 
-        $brasaoPath  = public_path('files/brasao.png');
+        $brasaoPath = public_path('files/brasao.png');
         $logoSusPath = public_path('files/logosus.png');
 
-        $brasaoB64  = file_exists($brasaoPath)
-            ? 'data:image/png;base64,' . base64_encode(file_get_contents($brasaoPath))
+        $brasaoB64 = file_exists($brasaoPath)
+            ? 'data:image/png;base64,'.base64_encode(file_get_contents($brasaoPath))
             : null;
 
         $logoSusB64 = file_exists($logoSusPath)
-            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoSusPath))
+            ? 'data:image/png;base64,'.base64_encode(file_get_contents($logoSusPath))
             : null;
 
         $pdf = Pdf::loadView('pdf.laudo', [
-            'resultado'      => $resultado,
+            'resultado' => $resultado,
             'camposPorExame' => $camposPorExame,
-            'config'         => $config,
-            'brasaoB64'      => $brasaoB64,
-            'logoSusB64'     => $logoSusB64,
+            'config' => $config,
+            'brasaoB64' => $brasaoB64,
+            'logoSusB64' => $logoSusB64,
         ])->setPaper('a4', 'portrait');
 
-        $path = 'lab/resultados/' . $resultado->protocolo . '.pdf';
+        $path = 'lab/resultados/'.$resultado->protocolo.'.pdf';
         Storage::put($path, $pdf->output());
 
         return $path;

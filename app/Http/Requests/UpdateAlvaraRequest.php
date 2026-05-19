@@ -15,24 +15,24 @@ class UpdateAlvaraRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'estabelecimento_id'  => ['sometimes', 'required', 'integer', 'exists:estabelecimentos,id'],
-            'nivel_risco'         => ['sometimes', 'required', Rule::in(['1', '2', '3', 'N/A'])],
-            'status'              => ['nullable', Rule::in([
+            'estabelecimento_id' => ['sometimes', 'required', 'integer', 'exists:estabelecimentos,id'],
+            'nivel_risco' => ['sometimes', 'required', Rule::in(['1', '2', '3', 'N/A'])],
+            'status' => ['nullable', Rule::in([
                 'Não requerido', 'Dispensado', 'Protocolado', 'Em análise', 'Em exigência',
                 'Vigente', 'Vencido', 'Em renovação',
                 'Suspenso', 'Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado',
             ])],
-            'data_alvara'         => ['sometimes', 'required', 'date'],
-            'vencimento_alvara'   => ['nullable', 'date', 'after_or_equal:data_alvara'],
-            'contato'             => ['nullable', 'string', 'max:1000'],
+            'data_alvara' => ['sometimes', 'required', 'date'],
+            'vencimento_alvara' => ['nullable', 'date', 'after_or_equal:data_alvara'],
+            'contato' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'nivel_risco.in'                   => 'O nível de risco deve ser 1 (Baixo), 2 (Médio), 3 (Alto) ou N/A.',
-            'vencimento_alvara.after_or_equal'  => 'O vencimento não pode ser anterior à data do alvará.',
+            'nivel_risco.in' => 'O nível de risco deve ser 1 (Baixo), 2 (Médio), 3 (Alto) ou N/A.',
+            'vencimento_alvara.after_or_equal' => 'O vencimento não pode ser anterior à data do alvará.',
         ];
     }
 

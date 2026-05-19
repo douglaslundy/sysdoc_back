@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCallServicelRequest;
 use App\Models\CallService;
 use App\Services\AuditService;
-use Illuminate\Http\Request;
 
 class CallServiceController extends Controller
 {
     public function index()
     {
         $callServices = CallService::with(['calls'])->get();
+
         return response()->json($callServices);
     }
 
@@ -25,13 +25,10 @@ class CallServiceController extends Controller
 
         return response()->json([
             'message' => 'Call service created successfully!',
-            'call_service' => $callService
+            'call_service' => $callService,
         ], 201);
     }
 
-    /**
-     * @param  CallService  $callService
-     */
     public function show(CallService $callService)
     {
         return response()->json($callService);
@@ -40,9 +37,9 @@ class CallServiceController extends Controller
     public function update(StoreCallServicelRequest $request, $id)
     {
         $callService = callService::find($id);
-        if (!$callService) {
+        if (! $callService) {
             return response()->json([
-                'error' => 'Room not found'
+                'error' => 'Room not found',
             ], 404);
         }
         $old = $callService->toArray();
@@ -53,7 +50,7 @@ class CallServiceController extends Controller
 
         return response()->json([
             'message' => 'Call service updated successfully!',
-            'call_service' => $callService
+            'call_service' => $callService,
         ]);
     }
 

@@ -14,7 +14,7 @@ class PedidoExameObserver
 
     public function updated(PedidoExame $pedido): void
     {
-        $dirty    = $pedido->getDirty();
+        $dirty = $pedido->getDirty();
         $original = array_intersect_key($pedido->getOriginal(), $dirty);
         AuditService::record('UPDATE', $pedido, $original, $dirty);
     }

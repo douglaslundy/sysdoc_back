@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\AuditService;
 use Closure;
 use Illuminate\Http\Request;
-use App\Services\AuditService;
 
 class LogUserAction
 {

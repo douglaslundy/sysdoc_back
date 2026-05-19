@@ -44,4 +44,3 @@ class AttendanceRecord extends Model
         return $this->belongsTo(AttendanceRoom::class, 'room_id');
     }
 }
-

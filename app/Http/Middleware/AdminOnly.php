@@ -11,7 +11,7 @@ class AdminOnly
     {
         $user = $request->user();
 
-        if (!$user || $user->profile !== 'admin') {
+        if (! $user || $user->profile !== 'admin') {
             return response()->json(['message' => 'Acesso restrito a administradores.'], 403);
         }
 

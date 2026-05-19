@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Models\Vehicle;
 use App\Services\AuditService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class VehicleController extends Controller
@@ -48,10 +47,9 @@ class VehicleController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  Vehicle  $vehicle
      * @return \Illuminate\Http\Response
      */
-    public function update(StoreVehicleRequest $request, Vehicle  $vehicle)
+    public function update(StoreVehicleRequest $request, Vehicle $vehicle)
     {
         DB::beginTransaction();
         try {
@@ -65,7 +63,7 @@ class VehicleController extends Controller
 
             return response()->json([
                 'message' => 'Vehicle updated successfully!',
-                'vehicle' => $vehicle
+                'vehicle' => $vehicle,
             ]);
         } catch (\Exception $e) {
             DB::rollback();

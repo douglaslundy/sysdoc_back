@@ -24,7 +24,6 @@ class SpecialityController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
@@ -45,7 +44,6 @@ class SpecialityController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Speciality  $speciality
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(Speciality $speciality)
@@ -57,8 +55,6 @@ class SpecialityController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Speciality  $speciality
      * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Speciality $speciality)
@@ -79,7 +75,6 @@ class SpecialityController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Speciality  $speciality
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Speciality $speciality)

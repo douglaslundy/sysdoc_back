@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class QueueAttachmentController extends Controller
 {
     private const ATTACHMENT_DISK = 'private';
+
     private const ATTACHMENT_DIR = 'queue-attachments';
 
     public function index(Queue $queue): JsonResponse
@@ -33,11 +34,11 @@ class QueueAttachmentController extends Controller
         $created = [];
 
         foreach ($files as $file) {
-            if (!$file) {
+            if (! $file) {
                 continue;
             }
 
-            $path = $file->store(self::ATTACHMENT_DIR . '/' . $queue->id, self::ATTACHMENT_DISK);
+            $path = $file->store(self::ATTACHMENT_DIR.'/'.$queue->id, self::ATTACHMENT_DISK);
 
             $attachment = QueueAttachment::create([
                 'queue_id' => $queue->id,
@@ -54,7 +55,7 @@ class QueueAttachmentController extends Controller
 
         AuditService::record('CREATE_ATTACHMENT', $queue, null, [
             'count' => count($created),
-            'attachments' => collect($created)->map(fn($item) => [
+            'attachments' => collect($created)->map(fn ($item) => [
                 'attachment_id' => $item->id,
                 'original_name' => $item->original_name,
                 'mime_type' => $item->mime_type,
@@ -70,15 +71,15 @@ class QueueAttachmentController extends Controller
 
     public function download(Queue $queue, QueueAttachment $attachment)
     {
-        if (!$this->belongsToQueue($queue, $attachment)) {
+        if (! $this->belongsToQueue($queue, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
         [$disk, $path] = $this->resolveReadableLocation($attachment);
 
-        if (!$disk || !$path) {
+        if (! $disk || ! $path) {
             return response()->json([
-                'message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'
+                'message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.',
             ], 404);
         }
 
@@ -95,7 +96,7 @@ class QueueAttachmentController extends Controller
 
     public function destroy(Queue $queue, QueueAttachment $attachment): JsonResponse
     {
-        if (!$this->belongsToQueue($queue, $attachment)) {
+        if (! $this->belongsToQueue($queue, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
@@ -136,7 +137,7 @@ class QueueAttachmentController extends Controller
         }
 
         foreach ($candidates as [$disk, $path]) {
-            if (!$disk || !$path) {
+            if (! $disk || ! $path) {
                 continue;
             }
 

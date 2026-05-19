@@ -11,15 +11,18 @@ class Room extends Model
 
     protected $fillable = ['name', 'description', 'status'];
 
-    public function call_service(){
+    public function call_service()
+    {
         return $this->hasOne(CallService::class, 'id', 'call_service_id');
     }
 
-    public function calls_per_room(){
+    public function calls_per_room()
+    {
         return $this->hasMany(Call::class, 'room_id', 'id');
     }
 
-    public function calls_per_service(){
+    public function calls_per_service()
+    {
         return $this->hasMany(Call::class, 'call_service_id', 'call_service_id');
     }
 }

@@ -17,4 +17,3 @@ class PageCategory extends Model
         return $this->hasMany(SystemPage::class, 'category_id');
     }
 }
-

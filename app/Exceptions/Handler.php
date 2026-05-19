@@ -5,9 +5,9 @@ namespace App\Exceptions;
 use App\Models\ErrorLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -80,7 +80,7 @@ class Handler extends ExceptionHandler
             ]);
         } catch (Throwable $e) {
             // O logger de erro nunca deve derrubar/mascarar a excecao original.
-            Log::error('Erro ao salvar log de excecao: ' . $e->getMessage());
+            Log::error('Erro ao salvar log de excecao: '.$e->getMessage());
         }
     }
 
@@ -105,7 +105,7 @@ class Handler extends ExceptionHandler
 
     protected function shouldIgnoreNotFound(Throwable $exception): bool
     {
-        if (!$exception instanceof NotFoundHttpException || !request()) {
+        if (! $exception instanceof NotFoundHttpException || ! request()) {
             return false;
         }
 

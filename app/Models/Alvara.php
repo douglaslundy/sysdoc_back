@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Alvara extends Model
 {
@@ -28,7 +28,7 @@ class Alvara extends Model
     ];
 
     protected $casts = [
-        'data_alvara'       => 'date:Y-m-d',
+        'data_alvara' => 'date:Y-m-d',
         'vencimento_alvara' => 'date:Y-m-d',
     ];
 

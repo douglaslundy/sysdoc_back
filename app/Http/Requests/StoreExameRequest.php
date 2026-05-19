@@ -15,11 +15,11 @@ class StoreExameRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'nome'               => 'required|string|max:100',
-            'codigo'             => 'required|string|max:30',
+            'nome' => 'required|string|max:100',
+            'codigo' => 'required|string|max:30',
             'categoria_exame_id' => 'nullable|exists:categoria_exames,id',
-            'descricao'          => 'nullable|string',
-            'ativo'              => 'boolean',
+            'descricao' => 'nullable|string',
+            'ativo' => 'boolean',
         ];
 
         if ($this->method() === 'PUT') {
@@ -34,11 +34,11 @@ class StoreExameRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nome.required'   => 'O campo nome é obrigatório.',
-            'nome.max'        => 'O campo nome não pode ter mais de :max caracteres.',
+            'nome.required' => 'O campo nome é obrigatório.',
+            'nome.max' => 'O campo nome não pode ter mais de :max caracteres.',
             'codigo.required' => 'O campo código é obrigatório.',
-            'codigo.unique'   => 'Este código já está em uso.',
-            'codigo.max'      => 'O campo código não pode ter mais de :max caracteres.',
+            'codigo.unique' => 'Este código já está em uso.',
+            'codigo.max' => 'O campo código não pode ter mais de :max caracteres.',
         ];
     }
 }

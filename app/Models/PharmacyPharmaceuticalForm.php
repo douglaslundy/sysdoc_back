@@ -8,4 +8,3 @@ class PharmacyPharmaceuticalForm extends Model
 {
     protected $fillable = ['name', 'active'];
 }
-

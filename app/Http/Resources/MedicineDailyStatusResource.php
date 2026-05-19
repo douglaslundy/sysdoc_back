@@ -26,4 +26,3 @@ class MedicineDailyStatusResource extends JsonResource
         ];
     }
 }
-

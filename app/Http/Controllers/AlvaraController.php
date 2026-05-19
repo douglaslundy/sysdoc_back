@@ -26,9 +26,8 @@ class AlvaraController extends Controller
             $busca = $request->busca;
             $query->where(function ($q) use ($busca) {
                 $q->where('numero_alvara', 'LIKE', "%{$busca}%")
-                  ->orWhereHas('estabelecimento', fn($e) =>
-                      $e->where('nome_estabelecimento', 'LIKE', "%{$busca}%")
-                  );
+                    ->orWhereHas('estabelecimento', fn ($e) => $e->where('nome_estabelecimento', 'LIKE', "%{$busca}%")
+                    );
             });
         }
 
@@ -69,12 +68,12 @@ class AlvaraController extends Controller
     {
         $alvara = Alvara::with('estabelecimento')->find($id);
 
-        if (!$alvara) {
+        if (! $alvara) {
             return response()->json(['error' => 'Alvará não encontrado'], 404);
         }
 
         AuditService::record('VIEW', $alvara, null, [
-            'numero_alvara'        => $alvara->numero_alvara,
+            'numero_alvara' => $alvara->numero_alvara,
             'nome_estabelecimento' => $alvara->estabelecimento?->nome_estabelecimento,
         ]);
 
@@ -103,7 +102,7 @@ class AlvaraController extends Controller
     {
         $alvara = Alvara::with('estabelecimento')->find($id);
 
-        if (!$alvara) {
+        if (! $alvara) {
             return response()->json(['error' => 'Alvará não encontrado'], 404);
         }
 
@@ -119,7 +118,7 @@ class AlvaraController extends Controller
     {
         $alvara = Alvara::find($id);
 
-        if (!$alvara) {
+        if (! $alvara) {
             return response()->json(['error' => 'Alvará não encontrado'], 404);
         }
 
@@ -133,7 +132,7 @@ class AlvaraController extends Controller
     {
         $alvara = Alvara::with('estabelecimento')->find($id);
 
-        if (!$alvara) {
+        if (! $alvara) {
             return response()->json(['error' => 'Alvará não encontrado'], 404);
         }
 

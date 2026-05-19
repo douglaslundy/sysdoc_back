@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TripClientRequest;
 use App\Http\Requests\TripRequest;
-use Illuminate\Http\Request;
 use App\Models\Trip;
 use App\Models\TripClient;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
-    
     public function index(Request $request)
     {
         $query = Trip::query();
@@ -31,7 +30,7 @@ class TripController extends Controller
         if ($request->has('date_end')) {
             $query->whereDate('departure_date', '<=', $request->date_end);
         }
-        if ($request->has('date_begin') && !$request->has('date_end')) {
+        if ($request->has('date_begin') && ! $request->has('date_end')) {
             // Caso tenha apenas o 'date_begin'
             $query->whereDate('departure_date', '=', $request->date_begin);
         }
@@ -41,7 +40,6 @@ class TripController extends Controller
             ->orderBy('departure_date', 'asc') // ou 'desc' se quiser ordem decrescente
             ->get();
 
-
         // Adicionar o campo is_ok com base na confirmação dos clientes
         $trips->transform(function ($trip) {
             // Se a viagem não tiver clientes, define is_ok como false
@@ -49,15 +47,15 @@ class TripController extends Controller
                 $trip->is_ok = false;
             } else {
                 // Verifica se todos os clientes confirmaram
-                $allConfirmed = $trip->clients->every(fn($client) => (bool) $client->pivot->is_confirmed);
+                $allConfirmed = $trip->clients->every(fn ($client) => (bool) $client->pivot->is_confirmed);
                 $trip->is_ok = $allConfirmed;
             }
+
             return $trip;
         });
 
         return $trips;
     }
-
 
     /**
      * Update the specified resource in storage.
@@ -69,6 +67,7 @@ class TripController extends Controller
     {
         $trip = DB::transaction(function () use ($request) {
             $trip = Trip::create($request->all());
+
             return $trip->load('driver', 'route', 'vehicle', 'user', 'clients');
         });
 
@@ -84,7 +83,6 @@ class TripController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  Trip  $trip
      * @return \Illuminate\Http\Response
      */
     public function update(TripRequest $request, Trip $trip)
@@ -105,12 +103,12 @@ class TripController extends Controller
         return response()->json(null, 204);
     }
 
-
     public function deleteTripClient($id)
     {
         $tripId = DB::transaction(function () use ($id) {
             $cli = TripClient::findOrFail($id);
             $cli->delete();
+
             return $cli->trip_id;
         });
 
@@ -118,7 +116,6 @@ class TripController extends Controller
 
         return response()->json(['status' => 'client deleted', 'trip' => $trip], 201);
     }
-
 
     public function insertTripClient(TripClientRequest $request)
     {
@@ -129,7 +126,6 @@ class TripController extends Controller
         return response()->json(['status' => 'created', 'trip_client' => $tripClient, 'trip' => $trip], 201);
     }
 
-
     public function editTripClient(TripClientRequest $request, $id)
     {
         $tripClient = DB::transaction(function () use ($request, $id) {
@@ -137,6 +133,7 @@ class TripController extends Controller
             $tripClient->update($request->only([
                 'person_type', 'phone', 'departure_location', 'destination_location', 'time',
             ]));
+
             return $tripClient;
         });
 
@@ -156,19 +153,18 @@ class TripController extends Controller
         // Busca o cliente na tabela trip_clients
         $tripClient = TripClient::find($id);
 
-        if (!$tripClient) {
+        if (! $tripClient) {
             return response()->json(['error' => 'Cliente não encontrado'], 404);
         }
 
         // Atualiza a coluna is_confirmed para true
         $tripClient->update(['is_confirmed' => true]);
 
-
         $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripClient->trip_id);
 
         // Verificar se todos os clientes da viagem estão confirmados
-        if (!$trip->clients->isEmpty()) {
-            $allConfirmed = $trip->clients->every(fn($client) => (bool) $client->pivot->is_confirmed);
+        if (! $trip->clients->isEmpty()) {
+            $allConfirmed = $trip->clients->every(fn ($client) => (bool) $client->pivot->is_confirmed);
             $trip->is_ok = $allConfirmed;
         } else {
             $trip->is_ok = false;
@@ -182,15 +178,12 @@ class TripController extends Controller
         // Busca o cliente na tabela trip_clients
         $tripClient = TripClient::find($id);
 
-        if (!$tripClient) {
+        if (! $tripClient) {
             return response()->json(['error' => 'Cliente não encontrado'], 404);
         }
 
         // Atualiza a coluna is_confirmed para false
         $tripClient->update(['is_confirmed' => false]);
-
-
-
 
         $trip = Trip::with(['driver', 'vehicle', 'route', 'clients'])->findOrFail($tripClient->trip_id);
 

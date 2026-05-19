@@ -22,33 +22,33 @@ class AgendaColetaController extends Controller
             ->get()
             ->map(function ($pedido) {
                 return [
-                    'id'                  => $pedido->id,
-                    'status'              => $pedido->status,
-                    'data_coleta'         => $pedido->data_coleta,
-                    'data_pedido'         => $pedido->data_pedido,
-                    'observacoes'         => $pedido->observacoes,
-                    'paciente'            => [
-                        'id'   => $pedido->cliente?->id,
+                    'id' => $pedido->id,
+                    'status' => $pedido->status,
+                    'data_coleta' => $pedido->data_coleta,
+                    'data_pedido' => $pedido->data_pedido,
+                    'observacoes' => $pedido->observacoes,
+                    'paciente' => [
+                        'id' => $pedido->cliente?->id,
                         'nome' => $pedido->cliente?->name,
-                        'cpf'  => $pedido->cliente?->cpf,
-                        'cns'  => $pedido->cliente?->cns,
+                        'cpf' => $pedido->cliente?->cpf,
+                        'cns' => $pedido->cliente?->cns,
                     ],
-                    'medico'              => $pedido->medicoSolicitante ? [
+                    'medico' => $pedido->medicoSolicitante ? [
                         'nome' => $pedido->medicoSolicitante->nome,
-                        'crm'  => $pedido->medicoSolicitante->crm,
-                        'uf'   => $pedido->medicoSolicitante->uf_crm,
+                        'crm' => $pedido->medicoSolicitante->crm,
+                        'uf' => $pedido->medicoSolicitante->uf_crm,
                     ] : null,
-                    'exames'              => $pedido->exames->map(fn($e) => [
-                        'id'     => $e->id,
+                    'exames' => $pedido->exames->map(fn ($e) => [
+                        'id' => $e->id,
                         'codigo' => $e->codigo,
-                        'nome'   => $e->nome,
+                        'nome' => $e->nome,
                     ]),
                 ];
             });
 
         return response()->json([
-            'data'   => $data,
-            'total'  => $pedidos->count(),
+            'data' => $data,
+            'total' => $pedidos->count(),
             'pedidos' => $pedidos,
         ]);
     }

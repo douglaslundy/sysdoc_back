@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class OrdinanceAttachmentController extends Controller
 {
     private const ATTACHMENT_DISK = 'private';
+
     private const ATTACHMENT_DIR = 'ordinance-attachments';
 
     public function index(Ordinance $ordinance): JsonResponse
@@ -30,11 +31,11 @@ class OrdinanceAttachmentController extends Controller
         $created = [];
 
         foreach ($files as $file) {
-            if (!$file) {
+            if (! $file) {
                 continue;
             }
 
-            $path = $file->store(self::ATTACHMENT_DIR . '/' . $ordinance->id, self::ATTACHMENT_DISK);
+            $path = $file->store(self::ATTACHMENT_DIR.'/'.$ordinance->id, self::ATTACHMENT_DISK);
 
             $attachment = OrdinanceAttachment::create([
                 'ordinance_id' => $ordinance->id,
@@ -67,13 +68,13 @@ class OrdinanceAttachmentController extends Controller
 
     public function download(Ordinance $ordinance, OrdinanceAttachment $attachment)
     {
-        if (!$this->belongsToOrdinance($ordinance, $attachment)) {
+        if (! $this->belongsToOrdinance($ordinance, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
         [$disk, $path] = $this->resolveReadableLocation($attachment);
 
-        if (!$disk || !$path) {
+        if (! $disk || ! $path) {
             return response()->json(['message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'], 404);
         }
 
@@ -87,7 +88,7 @@ class OrdinanceAttachmentController extends Controller
 
     public function destroy(Ordinance $ordinance, OrdinanceAttachment $attachment): JsonResponse
     {
-        if (!$this->belongsToOrdinance($ordinance, $attachment)) {
+        if (! $this->belongsToOrdinance($ordinance, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
@@ -128,7 +129,7 @@ class OrdinanceAttachmentController extends Controller
         }
 
         foreach ($candidates as [$disk, $path]) {
-            if (!$disk || !$path) {
+            if (! $disk || ! $path) {
                 continue;
             }
 

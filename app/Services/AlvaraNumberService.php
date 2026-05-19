@@ -16,8 +16,8 @@ class AlvaraNumberService
     {
         return DB::transaction(function () use ($dataAlvara) {
             $data = Carbon::parse($dataAlvara);
-            $mes  = $data->month;
-            $ano  = $data->year;
+            $mes = $data->month;
+            $ano = $data->year;
 
             $ultimo = Alvara::whereYear('data_alvara', $ano)
                 ->whereMonth('data_alvara', $mes)
@@ -26,7 +26,7 @@ class AlvaraNumberService
                 ->first();
 
             if ($ultimo) {
-                $partes     = explode('-', $ultimo->numero_alvara);
+                $partes = explode('-', $ultimo->numero_alvara);
                 $sequencial = intval($partes[0]) + 1;
             } else {
                 $sequencial = 1;

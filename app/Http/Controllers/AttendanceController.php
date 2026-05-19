@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\Attendance\AttendancePanelService;
 use App\Services\Attendance\AttendancePendingSummaryService;
 use App\Services\Attendance\AttendanceQueueService;
@@ -12,7 +13,6 @@ use DomainException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Models\User;
 
 class AttendanceController extends Controller
 {
@@ -102,6 +102,7 @@ class AttendanceController extends Controller
     {
         $queue = $this->queueService->getQueue()->map(function ($ticket) {
             $ticket->waitingMinutes = (int) now()->diffInMinutes($ticket->issued_at);
+
             return $ticket;
         });
 
@@ -116,6 +117,7 @@ class AttendanceController extends Controller
 
         try {
             $ticket = $this->queueService->callNext((int) auth()->id(), (int) $validated['roomId']);
+
             return response()->json($ticket);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Sala não encontrada ou inativa.'], 404);
@@ -132,6 +134,7 @@ class AttendanceController extends Controller
 
         try {
             $ticket = $this->queueService->callSpecific($ticketId, (int) auth()->id(), (int) $validated['roomId']);
+
             return response()->json($ticket);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Senha ou sala não encontrada.'], 404);
@@ -230,7 +233,7 @@ class AttendanceController extends Controller
         $room = \App\Models\AttendanceRoom::query()->create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'active' => (bool)($validated['active'] ?? true),
+            'active' => (bool) ($validated['active'] ?? true),
         ]);
 
         AuditService::record('ATTENDANCE_ROOM_CREATED', $room, null, $room->toArray());
@@ -242,6 +245,7 @@ class AttendanceController extends Controller
     {
         try {
             $room = \App\Models\AttendanceRoom::query()->findOrFail($id);
+
             return response()->json($room);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Sala não encontrada.'], 404);
@@ -251,7 +255,7 @@ class AttendanceController extends Controller
     public function roomsUpdate(int $id, Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:100|unique:attendance_rooms,name,' . $id,
+            'name' => 'sometimes|required|string|max:100|unique:attendance_rooms,name,'.$id,
             'description' => 'nullable|string|max:255',
             'active' => 'nullable|boolean',
         ]);
@@ -288,6 +292,7 @@ class AttendanceController extends Controller
             $room = \App\Models\AttendanceRoom::query()->findOrFail($id);
             AuditService::record('ATTENDANCE_ROOM_DELETED', $room, $room->toArray(), null);
             $room->delete();
+
             return response()->json(['message' => 'Sala removida com sucesso.']);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Sala não encontrada.'], 404);

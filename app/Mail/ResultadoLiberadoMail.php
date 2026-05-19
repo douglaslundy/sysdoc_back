@@ -17,7 +17,8 @@ class ResultadoLiberadoMail extends Mailable implements ShouldQueue
     public function __construct(
         public ResultadoExame $resultado,
         public string $senha = '',
-    ) {}
+    ) {
+    }
 
     public function envelope(): Envelope
     {

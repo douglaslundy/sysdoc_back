@@ -44,4 +44,3 @@ class MedicineItem extends Model
         return $this->hasMany(MedicineMonthlyAcquisition::class);
     }
 }
-

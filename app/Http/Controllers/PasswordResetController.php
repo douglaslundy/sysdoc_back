@@ -6,8 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -25,7 +25,7 @@ class PasswordResetController extends Controller
         $user = User::where('email', $request->email)->where('active', true)->first();
 
         // Resposta generica para nao revelar se email existe
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'Se o e-mail estiver cadastrado, voce recebera o link de redefinicao.',
             ]);
@@ -39,11 +39,11 @@ class PasswordResetController extends Controller
         );
 
         $resetUrl = config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000'))
-            . '/redefinir-senha?token=' . $token . '&email=' . urlencode($user->email);
+            .'/redefinir-senha?token='.$token.'&email='.urlencode($user->email);
 
         try {
             Mail::send('emails.password-reset', [
-                'user'     => $user,
+                'user' => $user,
                 'resetUrl' => $resetUrl,
             ], function ($message) use ($user) {
                 $message->to($user->email, $user->name)
@@ -84,22 +84,23 @@ class PasswordResetController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (!$registro) {
+        if (! $registro) {
             return response()->json(['message' => 'Token invalido ou expirado.'], 422);
         }
 
         $criacao = \Carbon\Carbon::parse($registro->created_at);
         if ($criacao->diffInMinutes(now()) > 60) {
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
             return response()->json(['message' => 'Token expirado. Solicite um novo link.'], 422);
         }
 
-        if (!Hash::check($request->token, $registro->token)) {
+        if (! Hash::check($request->token, $registro->token)) {
             return response()->json(['message' => 'Token invalido.'], 422);
         }
 
         $user = User::where('email', $request->email)->where('active', true)->first();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Usuario nao encontrado.'], 404);
         }
 

@@ -14,15 +14,15 @@ class StoreExameCampoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome'            => 'required|string|max:100',
-            'descricao'       => 'nullable|string|max:200',
-            'tipo_valor'      => 'required|in:numerico,texto,booleano,selecao',
-            'unidade'         => 'nullable|string|max:30',
-            'opcoes_selecao'  => 'nullable|array',
-            'opcoes_selecao.*'=> 'string',
-            'ordem'           => 'integer|min:0',
-            'obrigatorio'     => 'boolean',
-            'ativo'           => 'boolean',
+            'nome' => 'required|string|max:100',
+            'descricao' => 'nullable|string|max:200',
+            'tipo_valor' => 'required|in:numerico,texto,booleano,selecao',
+            'unidade' => 'nullable|string|max:30',
+            'opcoes_selecao' => 'nullable|array',
+            'opcoes_selecao.*' => 'string',
+            'ordem' => 'integer|min:0',
+            'obrigatorio' => 'boolean',
+            'ativo' => 'boolean',
         ];
     }
 
@@ -38,9 +38,9 @@ class StoreExameCampoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nome.required'       => 'O campo nome é obrigatório.',
+            'nome.required' => 'O campo nome é obrigatório.',
             'tipo_valor.required' => 'O campo tipo de valor é obrigatório.',
-            'tipo_valor.in'       => 'O tipo de valor deve ser: numerico, texto, booleano ou selecao.',
+            'tipo_valor.in' => 'O tipo de valor deve ser: numerico, texto, booleano ou selecao.',
         ];
     }
 }

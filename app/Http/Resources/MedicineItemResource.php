@@ -28,4 +28,3 @@ class MedicineItemResource extends JsonResource
         ];
     }
 }
-

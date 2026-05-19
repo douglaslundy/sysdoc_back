@@ -21,7 +21,7 @@ class Queue extends Model
         'done',
         'date_of_realized',
         'urgency',
-        'obs'
+        'obs',
     ];
 
     /**

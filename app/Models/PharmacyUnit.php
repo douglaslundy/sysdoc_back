@@ -8,4 +8,3 @@ class PharmacyUnit extends Model
 {
     protected $fillable = ['code', 'name', 'active'];
 }
-

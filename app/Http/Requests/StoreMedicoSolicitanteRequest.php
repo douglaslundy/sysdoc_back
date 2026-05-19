@@ -17,15 +17,15 @@ class StoreMedicoSolicitanteRequest extends FormRequest
         $ignorId = $this->route('medico');
 
         return [
-            'nome'          => 'required|string|max:100',
-            'crm'           => [
+            'nome' => 'required|string|max:100',
+            'crm' => [
                 'nullable', 'string', 'max:20',
                 Rule::unique('medicos_solicitantes', 'crm')->ignore($ignorId),
             ],
-            'uf_crm'        => 'nullable|string|size:2',
+            'uf_crm' => 'nullable|string|size:2',
             'especialidade' => 'nullable|string|max:80',
-            'telefone'      => 'nullable|string|max:20',
-            'ativo'         => 'boolean',
+            'telefone' => 'nullable|string|max:20',
+            'ativo' => 'boolean',
         ];
     }
 
@@ -33,7 +33,7 @@ class StoreMedicoSolicitanteRequest extends FormRequest
     {
         return [
             'nome.required' => 'O nome do médico é obrigatório.',
-            'crm.unique'    => 'Este CRM já está cadastrado.',
+            'crm.unique' => 'Este CRM já está cadastrado.',
         ];
     }
 }

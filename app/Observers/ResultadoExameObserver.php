@@ -14,7 +14,7 @@ class ResultadoExameObserver
 
     public function updated(ResultadoExame $resultado): void
     {
-        $dirty    = $resultado->getDirty();
+        $dirty = $resultado->getDirty();
         $original = array_intersect_key($resultado->getOriginal(), $dirty);
         AuditService::record('UPDATE', $resultado, $original, $dirty);
     }

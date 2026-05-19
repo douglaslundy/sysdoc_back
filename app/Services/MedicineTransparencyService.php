@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\MedicineDailyStatus;
 use App\Models\MedicineMonthlyAcquisition;
-use App\Services\AuditService;
 use Carbon\Carbon;
 
 class MedicineTransparencyService
@@ -15,7 +14,7 @@ class MedicineTransparencyService
 
         $rows = MedicineDailyStatus::with('medicineItem')
             ->whereDate('reference_date', $referenceDate)
-            ->whereHas('medicineItem', fn($q) => $q->where('active', true))
+            ->whereHas('medicineItem', fn ($q) => $q->where('active', true))
             ->orderByDesc('availability_status')
             ->orderBy('reference_date')
             ->get();
@@ -56,7 +55,7 @@ class MedicineTransparencyService
 
         $rows = MedicineMonthlyAcquisition::with('medicineItem')
             ->where('reference_month', $referenceMonth)
-            ->whereHas('medicineItem', fn($q) => $q->where('active', true))
+            ->whereHas('medicineItem', fn ($q) => $q->where('active', true))
             ->orderBy('reference_month')
             ->get();
 
@@ -88,7 +87,7 @@ class MedicineTransparencyService
 
     private function formatLastUpdate(mixed $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
 

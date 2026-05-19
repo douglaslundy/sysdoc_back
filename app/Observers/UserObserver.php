@@ -14,7 +14,7 @@ class UserObserver
 
     public function updated(User $user): void
     {
-        $dirty    = $user->getDirty();
+        $dirty = $user->getDirty();
         $original = array_intersect_key($user->getOriginal(), $dirty);
         AuditService::record('UPDATE', $user, $original, $dirty);
     }

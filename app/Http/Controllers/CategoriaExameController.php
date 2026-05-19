@@ -18,7 +18,7 @@ class CategoriaExameController extends Controller
         }
 
         if ($request->filled('busca')) {
-            $query->where('nome', 'like', '%' . $request->busca . '%');
+            $query->where('nome', 'like', '%'.$request->busca.'%');
         }
 
         if ($request->boolean('all')) {
@@ -31,13 +31,13 @@ class CategoriaExameController extends Controller
     public function store(StoreCategoriaExameRequest $request)
     {
         $categoria = CategoriaExame::create([
-            'nome'  => strtoupper($request->input('nome')),
+            'nome' => strtoupper($request->input('nome')),
             'ativo' => $request->input('ativo', true),
         ]);
         AuditService::record('CREATE', $categoria, null, $categoria->toArray());
 
         return response()->json([
-            'message'   => 'Categoria criada com sucesso!',
+            'message' => 'Categoria criada com sucesso!',
             'categoria' => $categoria,
         ], 201);
     }
@@ -45,18 +45,18 @@ class CategoriaExameController extends Controller
     public function update(StoreCategoriaExameRequest $request, $id)
     {
         $categoria = CategoriaExame::find($id);
-        if (!$categoria) {
+        if (! $categoria) {
             return response()->json(['error' => 'Categoria não encontrada'], 404);
         }
 
         $old = $categoria->toArray();
-        $categoria->nome  = strtoupper($request->input('nome'));
+        $categoria->nome = strtoupper($request->input('nome'));
         $categoria->ativo = $request->input('ativo', $categoria->ativo);
         $categoria->save();
         AuditService::record('UPDATE', $categoria, $old, $categoria->toArray());
 
         return response()->json([
-            'message'   => 'Categoria atualizada com sucesso!',
+            'message' => 'Categoria atualizada com sucesso!',
             'categoria' => $categoria,
         ]);
     }
@@ -64,7 +64,7 @@ class CategoriaExameController extends Controller
     public function destroy($id)
     {
         $categoria = CategoriaExame::find($id);
-        if (!$categoria) {
+        if (! $categoria) {
             return response()->json(['error' => 'Categoria não encontrada'], 404);
         }
 

@@ -30,7 +30,7 @@ class StoreClientRequest extends FormRequest
             'obs' => 'nullable|string|max:200',
             'born_date' => 'nullable|date',
             'sexo' => 'required|in:MASCULINE,FEMININE,INDETERMINATE',
-            'active' => 'boolean'
+            'active' => 'boolean',
         ];
     }
 

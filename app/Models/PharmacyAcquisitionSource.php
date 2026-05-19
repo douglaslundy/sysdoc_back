@@ -8,4 +8,3 @@ class PharmacyAcquisitionSource extends Model
 {
     protected $fillable = ['name', 'active'];
 }
-

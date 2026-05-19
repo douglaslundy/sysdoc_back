@@ -48,28 +48,28 @@ class AttendanceTicketService
             ->with(['client', 'assignedUser', 'room'])
             ->orderByDesc('id');
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
-        if (!empty($filters['clientId'])) {
+        if (! empty($filters['clientId'])) {
             $query->where('client_id', $filters['clientId']);
         }
-        if (!empty($filters['roomId'])) {
+        if (! empty($filters['roomId'])) {
             $query->where('room_id', $filters['roomId']);
         }
-        if (!empty($filters['assignedUserId'])) {
+        if (! empty($filters['assignedUserId'])) {
             $query->where('assigned_user_id', $filters['assignedUserId']);
         }
-        if (!empty($filters['issuedFrom'])) {
+        if (! empty($filters['issuedFrom'])) {
             $query->where('issued_at', '>=', $filters['issuedFrom']);
         }
-        if (!empty($filters['issuedTo'])) {
+        if (! empty($filters['issuedTo'])) {
             $query->where('issued_at', '<=', $filters['issuedTo']);
         }
-        if (!empty($filters['serviceFrom'])) {
+        if (! empty($filters['serviceFrom'])) {
             $query->whereRaw('DATE(COALESCE(finished_at, started_at, called_at, issued_at)) >= ?', [$filters['serviceFrom']]);
         }
-        if (!empty($filters['serviceTo'])) {
+        if (! empty($filters['serviceTo'])) {
             $query->whereRaw('DATE(COALESCE(finished_at, started_at, called_at, issued_at)) <= ?', [$filters['serviceTo']]);
         }
 

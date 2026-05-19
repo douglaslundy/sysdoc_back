@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class LetterAttachmentController extends Controller
 {
     private const ATTACHMENT_DISK = 'private';
+
     private const ATTACHMENT_DIR = 'letter-attachments';
 
     public function index(Letter $letter): JsonResponse
@@ -30,11 +31,11 @@ class LetterAttachmentController extends Controller
         $created = [];
 
         foreach ($files as $file) {
-            if (!$file) {
+            if (! $file) {
                 continue;
             }
 
-            $path = $file->store(self::ATTACHMENT_DIR . '/' . $letter->id, self::ATTACHMENT_DISK);
+            $path = $file->store(self::ATTACHMENT_DIR.'/'.$letter->id, self::ATTACHMENT_DISK);
 
             $attachment = LetterAttachment::create([
                 'letter_id' => $letter->id,
@@ -67,13 +68,13 @@ class LetterAttachmentController extends Controller
 
     public function download(Letter $letter, LetterAttachment $attachment)
     {
-        if (!$this->belongsToLetter($letter, $attachment)) {
+        if (! $this->belongsToLetter($letter, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
         [$disk, $path] = $this->resolveReadableLocation($attachment);
 
-        if (!$disk || !$path) {
+        if (! $disk || ! $path) {
             return response()->json(['message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'], 404);
         }
 
@@ -87,7 +88,7 @@ class LetterAttachmentController extends Controller
 
     public function destroy(Letter $letter, LetterAttachment $attachment): JsonResponse
     {
-        if (!$this->belongsToLetter($letter, $attachment)) {
+        if (! $this->belongsToLetter($letter, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
 
@@ -128,7 +129,7 @@ class LetterAttachmentController extends Controller
         }
 
         foreach ($candidates as [$disk, $path]) {
-            if (!$disk || !$path) {
+            if (! $disk || ! $path) {
                 continue;
             }
 

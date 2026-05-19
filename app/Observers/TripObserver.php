@@ -14,7 +14,7 @@ class TripObserver
 
     public function updated(Trip $trip): void
     {
-        $dirty    = $trip->getDirty();
+        $dirty = $trip->getDirty();
         $original = array_intersect_key($trip->getOriginal(), $dirty);
         AuditService::record('UPDATE', $trip, $original, $dirty);
     }

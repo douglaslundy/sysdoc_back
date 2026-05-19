@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PublicQueueLog;
+use App\Models\QRCodeLog;
+use App\Models\Queue;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use App\Models\Queue;
-use App\Models\QRCodeLog;
-use App\Services\AuditService;
-use Illuminate\Support\Facades\DB;
-use App\Models\PublicQueueLog;
 
 class QueueController extends Controller
 {
-
     public function index()
     {
         // Buscar todos os registros com as relações necessárias (independente de 'done')
@@ -47,15 +45,15 @@ class QueueController extends Controller
     {
         $queue = Queue::with(['client', 'user', 'speciality'])->withCount('attachments')->find($id);
 
-        if (!$queue) {
+        if (! $queue) {
             return response()->json(['error' => 'Registro não encontrado'], 404);
         }
 
         AuditService::record('VIEW', $queue, null, [
-            'cliente'       => $queue->client?->name,
-            'cpf'           => $queue->client?->cpf,
+            'cliente' => $queue->client?->name,
+            'cpf' => $queue->client?->cpf,
             'especialidade' => $queue->speciality?->name,
-            'status'        => $queue->done ? 'realizado' : 'aguardando',
+            'status' => $queue->done ? 'realizado' : 'aguardando',
         ]);
 
         if ($queue->done == 1) {
@@ -102,7 +100,7 @@ class QueueController extends Controller
         }
 
         // Agrupar por especialidade
-        $agrupadas = $queues->groupBy(fn($q) => $q->speciality->name ?? 'Sem Especialidade')
+        $agrupadas = $queues->groupBy(fn ($q) => $q->speciality->name ?? 'Sem Especialidade')
             ->map(function ($fila) {
                 return [
                     'comum' => $fila->where('urgency', 0)->values(),
@@ -118,7 +116,6 @@ class QueueController extends Controller
             'referer' => request()->header('referer'),
             'accessed_at' => now(),
         ]);
-
 
         return view('queue', [
             'agrupadas' => $agrupadas,
@@ -155,7 +152,7 @@ class QueueController extends Controller
     {
         $queue = Queue::find($id);
 
-        if (!$queue) {
+        if (! $queue) {
             return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
@@ -195,7 +192,7 @@ class QueueController extends Controller
     {
         $queue = Queue::find($id);
 
-        if (!$queue) {
+        if (! $queue) {
             return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
@@ -205,14 +202,13 @@ class QueueController extends Controller
         return response()->json(['message' => 'Registro deletado com sucesso'], 200);
     }
 
-
     public function showByUuid($uuid, Request $request)
     {
         $queue = Queue::with(['client', 'user', 'speciality'])
             ->where('uuid', $uuid)
             ->first();
 
-        if (!$queue) {
+        if (! $queue) {
             return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
@@ -261,10 +257,9 @@ class QueueController extends Controller
 
         // Passando diretamente os dados para a view
         return view('qrcode', [
-            'queue' => $queue
+            'queue' => $queue,
         ]);
     }
-
 
     public function storeLocationLog(Request $request)
     {
@@ -278,7 +273,7 @@ class QueueController extends Controller
         QRCodeLog::where('uuid', $data['uuid'])
             ->latest()
             ->first()
-                ?->update([
+            ?->update([
                 'location' => json_encode([
                     'latitude' => $data['latitude'],
                     'longitude' => $data['longitude'],
@@ -287,6 +282,4 @@ class QueueController extends Controller
 
         return response()->json(['message' => 'Localização salva com sucesso']);
     }
-
-
 }

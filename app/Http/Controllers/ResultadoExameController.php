@@ -8,7 +8,6 @@ use App\Models\ResultadoExame;
 use App\Services\AuditService;
 use App\Services\Laboratorio\LaudoPdfService;
 use App\Services\Laboratorio\ResultadoExameService;
-use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -16,12 +15,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ResultadoExameController extends Controller
 {
-    public function __construct(private ResultadoExameService $service) {}
+    public function __construct(private ResultadoExameService $service)
+    {
+    }
 
     public function store($pedidoId)
     {
         $pedido = PedidoExame::find($pedidoId);
-        if (!$pedido) {
+        if (! $pedido) {
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
 
@@ -32,12 +33,12 @@ class ResultadoExameController extends Controller
 
             return $existing ?? ResultadoExame::create([
                 'pedido_exame_id' => $pedidoId,
-                'ativo'           => true,
+                'ativo' => true,
             ]);
         });
 
         return response()->json([
-            'message'   => 'Resultado iniciado!',
+            'message' => 'Resultado iniciado!',
             'resultado' => $resultado->load([
                 'campos.campo',
                 'pedido.cliente',
@@ -55,7 +56,7 @@ class ResultadoExameController extends Controller
             'liberadoPor',
         ])->find($id);
 
-        if (!$resultado) {
+        if (! $resultado) {
             return response()->json(['error' => 'Resultado não encontrado'], 404);
         }
 
@@ -67,7 +68,7 @@ class ResultadoExameController extends Controller
     public function salvarCampos(SalvarCamposResultadoRequest $request, $id)
     {
         $resultado = ResultadoExame::find($id);
-        if (!$resultado) {
+        if (! $resultado) {
             return response()->json(['error' => 'Resultado não encontrado'], 404);
         }
 
@@ -82,7 +83,7 @@ class ResultadoExameController extends Controller
         }
 
         return response()->json([
-            'message'   => 'Campos salvos com sucesso!',
+            'message' => 'Campos salvos com sucesso!',
             'resultado' => $resultado->load('campos.campo'),
         ]);
     }
@@ -90,7 +91,7 @@ class ResultadoExameController extends Controller
     public function liberar($id)
     {
         $resultado = ResultadoExame::find($id);
-        if (!$resultado) {
+        if (! $resultado) {
             return response()->json(['error' => 'Resultado não encontrado'], 404);
         }
 
@@ -103,32 +104,32 @@ class ResultadoExameController extends Controller
         AuditService::record('LIBERAR', $resultado);
 
         return response()->json([
-            'message'    => 'Resultado liberado com sucesso!',
-            'protocolo'  => $resultado->protocolo,
-            'senha'      => $senha,
-            'resultado'  => $resultado,
+            'message' => 'Resultado liberado com sucesso!',
+            'protocolo' => $resultado->protocolo,
+            'senha' => $senha,
+            'resultado' => $resultado,
         ]);
     }
 
     public function downloadPdf($id): StreamedResponse|array
     {
         $resultado = ResultadoExame::find($id);
-        if (!$resultado) {
+        if (! $resultado) {
             return response()->json(['error' => 'PDF não disponível'], 404);
         }
 
-        if (!$resultado->pdf_path || !Storage::exists($resultado->pdf_path)) {
+        if (! $resultado->pdf_path || ! Storage::exists($resultado->pdf_path)) {
             try {
                 $pdfPath = app(LaudoPdfService::class)->gerar($resultado);
                 $resultado->pdf_path = $pdfPath;
                 $resultado->save();
             } catch (\Throwable $e) {
-                return response()->json(['error' => 'Erro ao gerar PDF: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Erro ao gerar PDF: '.$e->getMessage()], 500);
             }
         }
 
         AuditService::record('DOWNLOAD', $resultado);
 
-        return Storage::download($resultado->pdf_path, 'laudo-' . $resultado->protocolo . '.pdf');
+        return Storage::download($resultado->pdf_path, 'laudo-'.$resultado->protocolo.'.pdf');
     }
 }

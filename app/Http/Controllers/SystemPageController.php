@@ -36,7 +36,7 @@ class SystemPageController extends Controller
             $data = $request->only(['titulo', 'path', 'icone', 'categoria', 'category_id']);
             $targetCategoryId = $data['category_id'] ?? null;
 
-            if (!empty($targetCategoryId)) {
+            if (! empty($targetCategoryId)) {
                 $category = PageCategory::find($targetCategoryId);
                 if ($category) {
                     $data['categoria'] = $category->nome;
@@ -57,23 +57,25 @@ class SystemPageController extends Controller
                 ->increment('ordem');
 
             $data['ordem'] = $targetOrder;
+
             return SystemPage::create($data);
         });
 
         AuditService::record('CREATE', $page, null, $page->toArray());
+
         return response()->json($page->load('category:id,nome,icone,ordem,ativo'), 201);
     }
 
     public function update(Request $request, $id)
     {
         $page = SystemPage::find($id);
-        if (!$page) {
+        if (! $page) {
             return response()->json(['error' => 'Página não encontrada'], 404);
         }
 
         $request->validate([
             'titulo' => 'sometimes|string|max:80',
-            'path' => 'sometimes|string|max:120|unique:system_pages,path,' . $id,
+            'path' => 'sometimes|string|max:120|unique:system_pages,path,'.$id,
             'icone' => 'nullable|string|max:40',
             'categoria' => 'nullable|string|max:60',
             'category_id' => 'nullable|integer|exists:page_categories,id',
@@ -87,7 +89,7 @@ class SystemPageController extends Controller
             $data = $request->only(['titulo', 'path', 'icone', 'categoria', 'category_id', 'ativo']);
 
             $newCategoryId = array_key_exists('category_id', $data) ? $data['category_id'] : $page->category_id;
-            if (!empty($newCategoryId)) {
+            if (! empty($newCategoryId)) {
                 $category = PageCategory::find($newCategoryId);
                 if ($category) {
                     $data['categoria'] = $category->nome;
@@ -138,13 +140,14 @@ class SystemPageController extends Controller
 
         $page->refresh();
         AuditService::record('UPDATE', $page, $old, $page->toArray());
+
         return response()->json($page->load('category:id,nome,icone,ordem,ativo'));
     }
 
     public function destroy($id)
     {
         $page = SystemPage::find($id);
-        if (!$page) {
+        if (! $page) {
             return response()->json(['error' => 'Página não encontrada'], 404);
         }
 
@@ -162,4 +165,3 @@ class SystemPageController extends Controller
         return response()->json(['message' => 'Página removida.']);
     }
 }
-

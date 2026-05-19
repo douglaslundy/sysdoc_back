@@ -31,8 +31,8 @@ class StoreCategoriaExameRequest extends FormRequest
     {
         return [
             'nome.required' => 'O campo nome é obrigatório.',
-            'nome.unique'   => 'Esta categoria já está cadastrada.',
-            'nome.max'      => 'O nome não pode ter mais de :max caracteres.',
+            'nome.unique' => 'Esta categoria já está cadastrada.',
+            'nome.max' => 'O nome não pode ter mais de :max caracteres.',
         ];
     }
 }

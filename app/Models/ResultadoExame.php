@@ -40,19 +40,20 @@ class ResultadoExame extends Model
 
     public function estaValido(): bool
     {
-        if (!$this->ativo || !$this->data_liberacao) {
+        if (! $this->ativo || ! $this->data_liberacao) {
             return false;
         }
         if ($this->data_validade && now()->gt($this->data_validade)) {
             return false;
         }
+
         return true;
     }
 
     public static function gerarProtocolo(): string
     {
         do {
-            $protocolo = 'LAB-' . strtoupper(Str::random(8));
+            $protocolo = 'LAB-'.strtoupper(Str::random(8));
         } while (self::where('protocolo', $protocolo)->exists());
 
         return $protocolo;

@@ -19,21 +19,25 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
-    private const TOP_EXAMES     = 10;
+    private const TOP_EXAMES = 10;
+
     private const TOP_CATEGORIAS = 8;
-    private const TOP_MEDICOS    = 5;
+
+    private const TOP_MEDICOS = 5;
+
     private const TOP_MOTORISTAS = 10;
-    private const TOP_ROTAS      = 10;
+
+    private const TOP_ROTAS = 10;
 
     public function getTotais(): array
     {
         return [
-            'exames'     => Exame::where('ativo', true)->count(),
-            'pedidos'    => PedidoExame::whereNull('deleted_at')->count(),
-            'clientes'   => Client::where('active', true)->count(),
-            'medicos'    => MedicoSolicitante::where('ativo', true)->count(),
+            'exames' => Exame::where('ativo', true)->count(),
+            'pedidos' => PedidoExame::whereNull('deleted_at')->count(),
+            'clientes' => Client::where('active', true)->count(),
+            'medicos' => MedicoSolicitante::where('ativo', true)->count(),
             'categorias' => CategoriaExame::where('ativo', true)->count(),
-            'usuarios'   => User::where('active', true)->count(),
+            'usuarios' => User::where('active', true)->count(),
         ];
     }
 
@@ -135,6 +139,7 @@ class DashboardService
             $key = now()->subMonths($i)->format('Y-m');
             $resultado[$key] = (int) ($dados[$key] ?? 0);
         }
+
         return $resultado;
     }
 
@@ -163,10 +168,10 @@ class DashboardService
     public function getFilaTotais(): array
     {
         return [
-            'total_na_fila'    => DB::table('queue')->where('done', 0)->count(),
-            'fila_7_dias'      => DB::table('queue')->where('created_at', '>=', now()->subDays(7))->count(),
+            'total_na_fila' => DB::table('queue')->where('done', 0)->count(),
+            'fila_7_dias' => DB::table('queue')->where('created_at', '>=', now()->subDays(7))->count(),
             'total_realizados' => DB::table('queue')->where('done', 1)->count(),
-            'especialidades'   => Speciality::count(),
+            'especialidades' => Speciality::count(),
         ];
     }
 
@@ -185,9 +190,9 @@ class DashboardService
             ->orderByDesc(DB::raw('COUNT(*)'))
             ->limit(10)
             ->get()
-            ->map(fn($row) => [
-                'nome'    => $row->nome,
-                'normal'  => (int) $row->qtd_normal,
+            ->map(fn ($row) => [
+                'nome' => $row->nome,
+                'normal' => (int) $row->qtd_normal,
                 'urgente' => (int) $row->qtd_urgente,
             ]);
     }
@@ -220,7 +225,7 @@ class DashboardService
             ->orderByDesc('total')
             ->limit(10)
             ->get()
-            ->map(fn($r) => ['nome' => $r->nome, 'total' => (int) $r->total]);
+            ->map(fn ($r) => ['nome' => $r->nome, 'total' => (int) $r->total]);
     }
 
     public function getEspecialidadesRealizadasPorMes(): array
@@ -245,6 +250,7 @@ class DashboardService
             $key = now()->subMonths($i)->format('Y-m');
             $resultado[$key] = (int) ($dados[$key] ?? 0);
         }
+
         return $resultado;
     }
 
@@ -260,7 +266,7 @@ class DashboardService
     public function getTfdTotais(): array
     {
         $inicioDomes = now()->startOfMonth();
-        $fimDomes    = now()->endOfMonth();
+        $fimDomes = now()->endOfMonth();
 
         $totalViagens = DB::table('trips')
             ->whereBetween('departure_date', [$inicioDomes, $fimDomes])
@@ -280,9 +286,9 @@ class DashboardService
             ->sum('routes.distance');
 
         return [
-            'total_viagens_mes'         => $totalViagens,
+            'total_viagens_mes' => $totalViagens,
             'pessoas_transportadas_mes' => $pessoasTransportadas,
-            'km_rodados_mes'            => (int) $kmRodados,
+            'km_rodados_mes' => (int) $kmRodados,
         ];
     }
 
@@ -406,12 +412,13 @@ class DashboardService
         for ($i = 11; $i >= 0; $i--) {
             $key = now()->subMonths($i)->format('Y-m');
             $resultado[] = [
-                'mes'     => $key,
+                'mes' => $key,
                 'viagens' => (int) ($viagens[$key] ?? 0),
                 'pessoas' => (int) ($pessoas[$key] ?? 0),
-                'km'      => (int) ($km[$key] ?? 0),
+                'km' => (int) ($km[$key] ?? 0),
             ];
         }
+
         return $resultado;
     }
 
@@ -443,16 +450,17 @@ class DashboardService
             ->pluck('total', 'ano');
 
         $resultado = [];
-        $anoAtual  = now()->year;
+        $anoAtual = now()->year;
         for ($i = 4; $i >= 0; $i--) {
             $ano = $anoAtual - $i;
             $resultado[] = [
-                'ano'     => (string) $ano,
+                'ano' => (string) $ano,
                 'viagens' => (int) ($viagens[$ano] ?? 0),
                 'pessoas' => (int) ($pessoas[$ano] ?? 0),
-                'km'      => (int) ($km[$ano] ?? 0),
+                'km' => (int) ($km[$ano] ?? 0),
             ];
         }
+
         return $resultado;
     }
 
@@ -466,15 +474,15 @@ class DashboardService
     public function getLogsTotais(): array
     {
         $inicioDomes = now()->startOfMonth();
-        $fimDomes    = now()->endOfMonth();
+        $fimDomes = now()->endOfMonth();
 
         return [
-            'total_qr'           => DB::table('qrcode_logs')->count(),
+            'total_qr' => DB::table('qrcode_logs')->count(),
             'total_link_publico' => DB::table('public_queue_logs')->count(),
-            'qr_mes'             => DB::table('qrcode_logs')
+            'qr_mes' => DB::table('qrcode_logs')
                 ->whereBetween('accessed_at', [$inicioDomes, $fimDomes])
                 ->count(),
-            'link_publico_mes'   => DB::table('public_queue_logs')
+            'link_publico_mes' => DB::table('public_queue_logs')
                 ->whereBetween('accessed_at', [$inicioDomes, $fimDomes])
                 ->count(),
         ];
@@ -507,11 +515,11 @@ class DashboardService
     public function getInicioTotais(): array
     {
         return [
-            'clientes'      => Client::where('active', true)->count(),
+            'clientes' => Client::where('active', true)->count(),
             'especialidades' => Speciality::count(),
-            'oficios'       => Letter::count(),
-            'portarias'     => Ordinance::count(),
-            'modelos_ia'    => Models::count(),
+            'oficios' => Letter::count(),
+            'portarias' => Ordinance::count(),
+            'modelos_ia' => Models::count(),
         ];
     }
 
@@ -529,6 +537,7 @@ class DashboardService
             $chave = now()->subMonths($i)->format('Y-m');
             $resultado[$chave] = (int) ($rows[$chave] ?? 0);
         }
+
         return $resultado;
     }
 
@@ -546,6 +555,7 @@ class DashboardService
             $chave = now()->subMonths($i)->format('Y-m');
             $resultado[$chave] = (int) ($rows[$chave] ?? 0);
         }
+
         return $resultado;
     }
 
@@ -561,15 +571,15 @@ class DashboardService
 
         return [
             'estabelecimentos' => Estabelecimento::count(),
-            'alvaras'          => Alvara::count(),
-            'vigentes'         => Alvara::whereNotNull('vencimento_alvara')
+            'alvaras' => Alvara::count(),
+            'vigentes' => Alvara::whereNotNull('vencimento_alvara')
                 ->whereDate('vencimento_alvara', '>=', $hoje)
                 ->whereNotIn('status', $encerrados)
                 ->count(),
-            'vencidos'         => Alvara::whereNotNull('vencimento_alvara')
+            'vencidos' => Alvara::whereNotNull('vencimento_alvara')
                 ->whereDate('vencimento_alvara', '<', $hoje)
                 ->count(),
-            'vencendo_em_30'   => Alvara::whereNotNull('vencimento_alvara')
+            'vencendo_em_30' => Alvara::whereNotNull('vencimento_alvara')
                 ->whereDate('vencimento_alvara', '>=', $hoje)
                 ->whereDate('vencimento_alvara', '<=', $em30)
                 ->whereNotIn('status', $encerrados)
@@ -608,6 +618,7 @@ class DashboardService
             $chave = now()->subMonths($i)->format('Y-m');
             $resultado[$chave] = (int) ($rows[$chave] ?? 0);
         }
+
         return $resultado;
     }
 

@@ -10,10 +10,15 @@ class AttendanceTicket extends Model
     use HasFactory;
 
     public const STATUS_AGUARDANDO = 'aguardando';
+
     public const STATUS_CHAMADA = 'chamada';
+
     public const STATUS_EM_ATENDIMENTO = 'em_atendimento';
+
     public const STATUS_FINALIZADA = 'finalizada';
+
     public const STATUS_CANCELADA = 'cancelada';
+
     public const STATUS_NAO_COMPARECEU = 'nao_compareceu';
 
     protected $fillable = [
@@ -73,4 +78,3 @@ class AttendanceTicket extends Model
         return $this->hasOne(AttendanceRecord::class, 'attendance_ticket_id');
     }
 }
-

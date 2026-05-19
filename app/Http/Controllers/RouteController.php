@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRouteRequest;
 use App\Models\Route;
 use App\Services\AuditService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class RouteController extends Controller
@@ -31,6 +30,7 @@ class RouteController extends Controller
             AuditService::record('CREATE', $route, null, $route->toArray());
             $array['route'] = $route;
             DB::commit();
+
             return response()->json($array, 201);
         } catch (\Exception $e) {
             DB::rollback();
@@ -50,7 +50,7 @@ class RouteController extends Controller
      * @param  Route  $vehicle
      * @return \Illuminate\Http\Response
      */
-    public function update(StoreRouteRequest $request, Route  $route)
+    public function update(StoreRouteRequest $request, Route $route)
     {
         DB::beginTransaction();
         try {
@@ -64,7 +64,7 @@ class RouteController extends Controller
 
             return response()->json([
                 'message' => 'Route updated successfully!',
-                'route' => $route
+                'route' => $route,
             ]);
         } catch (\Exception $e) {
             DB::rollback();

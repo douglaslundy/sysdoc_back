@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use App\Models\Trip;
 use App\Models\TripClient;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class TripClientRequest extends FormRequest
 {
@@ -45,37 +45,36 @@ class TripClientRequest extends FormRequest
     //     ];
     // }
 
-public function rules()
-{
-    return [
-        'id' => 'nullable|int',
-        'trip_id' => 'required|exists:trips,id',
-        'client_id' => [
-            'required',
-            'exists:clients,id',
-            function ($attribute, $value, $fail) {
-                if ($this->id) {
-                    return; // Se o ID for válido, ignora a regra de unicidade
-                }
-                
-                $exists = \DB::table('trip_clients')
-                    ->where('trip_id', $this->trip_id)
-                    ->where('client_id', $value)
-                    ->exists();
-                
-                if ($exists) {
-                    $fail('O cliente já está cadastrado nesta viagem.');
-                }
-            },
-        ],
-        'person_type' => 'required|in:passenger,companion',
-        'phone' => 'nullable|string|max:20', // Corrigido "ohone" para "phone"
-        'departure_location' => 'nullable|string|max:50',
-        'destination_location' => 'nullable|string|max:50',
-        'time' => 'required|date_format:H:i',
-    ];
-}
+    public function rules()
+    {
+        return [
+            'id' => 'nullable|int',
+            'trip_id' => 'required|exists:trips,id',
+            'client_id' => [
+                'required',
+                'exists:clients,id',
+                function ($attribute, $value, $fail) {
+                    if ($this->id) {
+                        return; // Se o ID for válido, ignora a regra de unicidade
+                    }
 
+                    $exists = \DB::table('trip_clients')
+                        ->where('trip_id', $this->trip_id)
+                        ->where('client_id', $value)
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('O cliente já está cadastrado nesta viagem.');
+                    }
+                },
+            ],
+            'person_type' => 'required|in:passenger,companion',
+            'phone' => 'nullable|string|max:20', // Corrigido "ohone" para "phone"
+            'departure_location' => 'nullable|string|max:50',
+            'destination_location' => 'nullable|string|max:50',
+            'time' => 'required|date_format:H:i',
+        ];
+    }
 
     /**
      * Mensagens de erro personalizadas para a validação.
@@ -123,7 +122,7 @@ public function rules()
     /**
      * Validação adicional no método withValidator.
      *
-     * @param \Illuminate\Validation\Validator $validator
+     * @param  \Illuminate\Validation\Validator  $validator
      * @return void
      */
     public function withValidator($validator)

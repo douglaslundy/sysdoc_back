@@ -22,8 +22,8 @@ class EstabelecimentoController extends Controller
             $busca = $request->busca;
             $query->where(function ($q) use ($busca) {
                 $q->where('nome_estabelecimento', 'LIKE', "%{$busca}%")
-                  ->orWhere('nome_responsavel', 'LIKE', "%{$busca}%")
-                  ->orWhere('cnaes', 'LIKE', "%{$busca}%");
+                    ->orWhere('nome_responsavel', 'LIKE', "%{$busca}%")
+                    ->orWhere('cnaes', 'LIKE', "%{$busca}%");
             });
         }
 
@@ -47,7 +47,7 @@ class EstabelecimentoController extends Controller
     {
         $estabelecimento = Estabelecimento::withCount('alvaras')->find($id);
 
-        if (!$estabelecimento) {
+        if (! $estabelecimento) {
             return response()->json(['error' => 'Estabelecimento não encontrado'], 404);
         }
 
@@ -70,7 +70,7 @@ class EstabelecimentoController extends Controller
     {
         $estabelecimento = Estabelecimento::find($id);
 
-        if (!$estabelecimento) {
+        if (! $estabelecimento) {
             return response()->json(['error' => 'Estabelecimento não encontrado'], 404);
         }
 
@@ -85,7 +85,7 @@ class EstabelecimentoController extends Controller
     {
         $estabelecimento = Estabelecimento::find($id);
 
-        if (!$estabelecimento) {
+        if (! $estabelecimento) {
             return response()->json(['error' => 'Estabelecimento não encontrado'], 404);
         }
 

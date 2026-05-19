@@ -2,14 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
 use DateTime;
 use Illuminate\Support\Facades\Hash;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-
 
 class UserController extends Controller
 {
@@ -39,6 +35,7 @@ class UserController extends Controller
         $user['password'] = Hash::make($user['password']);
         User::create($user);
         $array['user'] = $user;
+
         return $array;
     }
 
@@ -58,7 +55,6 @@ class UserController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  User  $user
      * @return \Illuminate\Http\Response
      */
     public function update(UserRequest $request, User $user)
@@ -73,16 +69,15 @@ class UserController extends Controller
             $data['password'] = $user->password;
         }
 
-
         $user->update($data);
         $array['user'] = $user;
+
         return $array;
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  User  $user
      * @return \Illuminate\Http\Response
      */
     public function destroy(User $user)

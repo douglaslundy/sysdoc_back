@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Rules\ValidCpf;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -18,17 +18,17 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name'             => 'required|string|max:100',
-            'email'            => 'required|email|unique:users,email',
-            'cpf'              => ['required', 'digits:11', 'unique:users,cpf', new ValidCpf()],
-            'password'         => 'required|string|min:8',
+            'name' => 'required|string|max:100',
+            'email' => 'required|email|unique:users,email',
+            'cpf' => ['required', 'digits:11', 'unique:users,cpf', new ValidCpf()],
+            'password' => 'required|string|min:8',
             'password_confirm' => 'required|same:password',
         ]);
 
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'cpf'      => $request->cpf,
+            'name' => $request->name,
+            'email' => $request->email,
+            'cpf' => $request->cpf,
             'password' => Hash::make($request->password),
         ]);
 
@@ -36,20 +36,20 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => $this->userPayload($user),
+            'user' => $this->userPayload($user),
         ], 201);
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'cpf'      => 'required|string',
+            'cpf' => 'required|string',
             'password' => 'required',
         ]);
 
         $user = User::where('cpf', $request->cpf)->where('active', true)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Usuário ou senha inválidos.'], 401);
         }
 
@@ -59,7 +59,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => $this->userPayload($user),
+            'user' => $this->userPayload($user),
         ], 201);
     }
 
@@ -69,7 +69,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Authenticated',
-            'user'    => $this->userPayload($user),
+            'user' => $this->userPayload($user),
         ]);
     }
 
@@ -83,9 +83,9 @@ class AuthController extends Controller
     private function userPayload(User $user): array
     {
         return [
-            'id'      => $user->id,
-            'name'    => $user->name,
-            'email'   => $user->email,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
             'profile' => $user->profile,
         ];
     }

@@ -22,7 +22,6 @@ class AttendanceTicketNumberService
 
     public function buildDisplayCode(int $number, string $prefix = 'A'): string
     {
-        return strtoupper($prefix) . str_pad((string) $number, 3, '0', STR_PAD_LEFT);
+        return strtoupper($prefix).str_pad((string) $number, 3, '0', STR_PAD_LEFT);
     }
 }
-

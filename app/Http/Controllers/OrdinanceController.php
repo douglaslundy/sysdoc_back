@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrdinanceRequest;
 use App\Http\Requests\UpdateOrdinanceRequest;
+use App\Models\Models;
 use App\Models\Ordinance;
 use App\Services\AuditService;
 use Exception;
@@ -11,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use OpenAI\Laravel\Facades\OpenAI;
-use App\Models\Models;
 
 class OrdinanceController extends Controller
 {
@@ -62,7 +62,7 @@ class OrdinanceController extends Controller
 
             if ($request->hasFile('file')) {
                 $ordinance->file_path = $request->file('file')->store('ordinances', 'public');
-            } elseif (!empty($data['file_path'])) {
+            } elseif (! empty($data['file_path'])) {
                 $ordinance->file_path = $data['file_path'];
             }
 
@@ -74,6 +74,7 @@ class OrdinanceController extends Controller
             return response()->json($array, 201);
         } catch (Exception $e) {
             $array['errors'] = $e->getMessage();
+
             return response()->json($array, 500);
         }
     }
@@ -103,7 +104,7 @@ class OrdinanceController extends Controller
                 }
 
                 $ordinance->file_path = $request->file('file')->store('ordinances', 'public');
-            } elseif (array_key_exists('file_path', $data) && !empty($data['file_path'])) {
+            } elseif (array_key_exists('file_path', $data) && ! empty($data['file_path'])) {
                 $ordinance->file_path = $data['file_path'];
             }
 
@@ -115,6 +116,7 @@ class OrdinanceController extends Controller
             return response()->json($array);
         } catch (Exception $e) {
             $array['errors'] = $e->getMessage();
+
             return response()->json($array, 500);
         }
     }
@@ -126,7 +128,7 @@ class OrdinanceController extends Controller
         try {
             $lastOrdinance = Ordinance::latest()->first();
 
-            if (!$lastOrdinance || $ordinance->id !== $lastOrdinance->id) {
+            if (! $lastOrdinance || $ordinance->id !== $lastOrdinance->id) {
                 throw new Exception('É permitido excluir somente a última portaria');
             }
 
@@ -140,6 +142,7 @@ class OrdinanceController extends Controller
             return response()->json($array);
         } catch (Exception $e) {
             $array['errors'] = $e->getMessage();
+
             return response()->json($array, 422);
         }
     }
@@ -170,7 +173,7 @@ class OrdinanceController extends Controller
                 - Setor responsável: Secretaria Municipal de Saúde
                 - Signatário: {$request->signatory_name}
                 - Cargo do signatário: {$request->signatory_role}
-                - Data de publicação: " . date('d/m/Y') . "
+                - Data de publicação: ".date('d/m/Y')."
 
                 Resumo base informado pelo usuário:
                 {$request->summary}
@@ -185,10 +188,10 @@ class OrdinanceController extends Controller
                 - O texto deve ser coeso, sem prolixidade e sem expressões vagas.
                 - Sempre que couber, inclua considerandos antes da parte dispositiva.
                 - Estruture os comandos em artigos, parágrafos ou incisos quando fizer sentido.
-                - Finalize com data atual e assinatura institucional de {$request->signatory_name}" .
-                ($request->signatory_role ? " ({$request->signatory_role})" : "") . ".
-                " . ($request->additional_instructions ? "Instruções adicionais: {$request->additional_instructions}" : "") . "
-            "
+                - Finalize com data atual e assinatura institucional de {$request->signatory_name}".
+                ($request->signatory_role ? " ({$request->signatory_role})" : '').'.
+                '.($request->additional_instructions ? "Instruções adicionais: {$request->additional_instructions}" : '').'
+            ',
         ]];
 
         try {
@@ -200,20 +203,19 @@ class OrdinanceController extends Controller
 
             $content = $result->choices[0]->message->content ?? null;
 
-            if (!$content) {
+            if (! $content) {
                 throw new Exception('A IA não retornou conteúdo para a portaria.');
             }
 
             $model = new Models();
-            $model->id_user   = $request->user_id;
-            $model->sender    = $request->signatory_name;
+            $model->id_user = $request->user_id;
+            $model->sender = $request->signatory_name;
             $model->recipient = $request->type;
-            $model->subject   = $request->subject;
-            $model->summary   = $request->summary;
-            $model->prompt    = implode(' ', array_column($prompt, 'content'));
-            $model->model     = $content;
+            $model->subject = $request->subject;
+            $model->summary = $request->summary;
+            $model->prompt = implode(' ', array_column($prompt, 'content'));
+            $model->model = $content;
             $model->save();
-
 
             return response()->json([
                 'errors' => '',
@@ -221,7 +223,7 @@ class OrdinanceController extends Controller
             ]);
         } catch (Exception $e) {
             return response()->json([
-                'errors' => 'Erro ao conectar com a Inteligência Artificial, tente novamente. ' . $e->getMessage(),
+                'errors' => 'Erro ao conectar com a Inteligência Artificial, tente novamente. '.$e->getMessage(),
             ], 500);
         }
     }

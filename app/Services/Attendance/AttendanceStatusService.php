@@ -16,14 +16,14 @@ class AttendanceStatusService
 
     public function assertCanStart(string $status): void
     {
-        if (!in_array($status, [AttendanceTicket::STATUS_CHAMADA, AttendanceTicket::STATUS_EM_ATENDIMENTO], true)) {
+        if (! in_array($status, [AttendanceTicket::STATUS_CHAMADA, AttendanceTicket::STATUS_EM_ATENDIMENTO], true)) {
             throw new DomainException('Senha não pode iniciar atendimento neste status.');
         }
     }
 
     public function assertCanFinish(string $status): void
     {
-        if (!in_array($status, [AttendanceTicket::STATUS_CHAMADA, AttendanceTicket::STATUS_EM_ATENDIMENTO], true)) {
+        if (! in_array($status, [AttendanceTicket::STATUS_CHAMADA, AttendanceTicket::STATUS_EM_ATENDIMENTO], true)) {
             throw new DomainException('Senha não pode ser finalizada neste status.');
         }
     }
@@ -42,4 +42,3 @@ class AttendanceStatusService
         }
     }
 }
-

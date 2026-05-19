@@ -14,7 +14,7 @@ class AccessProfileObserver
 
     public function updated(AccessProfile $profile): void
     {
-        $dirty    = $profile->getDirty();
+        $dirty = $profile->getDirty();
         $original = array_intersect_key($profile->getOriginal(), $dirty);
         AuditService::record('UPDATE', $profile, $original, $dirty);
     }

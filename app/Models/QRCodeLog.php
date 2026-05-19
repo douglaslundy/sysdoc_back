@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class QRCodeLog extends Model
 {
-
     protected $table = 'qrcode_logs';
+
     protected $fillable = [
         'uuid',
         'queue_id',
@@ -25,5 +24,4 @@ class QRCodeLog extends Model
     {
         return $this->belongsTo(Queue::class, 'queue_id');
     }
-
 }

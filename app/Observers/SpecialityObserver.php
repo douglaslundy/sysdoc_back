@@ -14,7 +14,7 @@ class SpecialityObserver
 
     public function updated(Speciality $speciality): void
     {
-        $dirty    = $speciality->getDirty();
+        $dirty = $speciality->getDirty();
         $original = array_intersect_key($speciality->getOriginal(), $dirty);
         AuditService::record('UPDATE', $speciality, $original, $dirty);
     }

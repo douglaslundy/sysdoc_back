@@ -4,14 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\PedidoExame;
 
 class Client extends Model
 {
     use HasFactory;
 
     protected $fillable = ['name', 'mother',  'father', 'cns', 'born_date', 'sexo', 'cpf', 'email', 'phone', 'obs', 'active'];
-
 
     // public function addresses()
     // {

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\AuditService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\Call;
 use App\Models\CallService;
 use App\Models\EndedCall;
 use App\Models\Room;
+use App\Services\AuditService;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CallController extends Controller
 {
@@ -21,6 +21,7 @@ class CallController extends Controller
     public function index()
     {
         $calls = Call::with(['client'])->orderBy('id', 'desc')->get();
+
         return response()->json($calls);
     }
 
@@ -29,6 +30,7 @@ class CallController extends Controller
         $calls = Call::with(['client'])
             ->whereRaw('DATE(created_at) = ?', [now()->toDateString()])
             ->orderBy('id', 'asc')->get();
+
         return response()->json($calls);
     }
 
@@ -38,7 +40,6 @@ class CallController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-
     public function last_call_number_per_prefix($prefix)
     {
 
@@ -47,7 +48,6 @@ class CallController extends Controller
             ->orderBy('id', 'desc')
             ->value('call_number');
     }
-
 
     public function store(Request $request)
     {
@@ -71,10 +71,9 @@ class CallController extends Controller
 
         return response()->json([
             'message' => 'Call created successfully!',
-            'call' => $call
+            'call' => $call,
         ], 201);
     }
-
 
     /**
      * Display the specified resource.
@@ -85,27 +84,27 @@ class CallController extends Controller
     public function show($id)
     {
         $call = Call::with('client')->find($id);
-        if (!$call) {
+        if (! $call) {
             return response()->json([
-                'error' => 'Call not found'
+                'error' => 'Call not found',
             ], 404);
         }
+
         return response()->json($call);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
         $call = Call::find($id);
-        if (!$call) {
+        if (! $call) {
             return response()->json([
-                'error' => 'Call not found'
+                'error' => 'Call not found',
             ], 404);
         }
 
@@ -122,7 +121,7 @@ class CallController extends Controller
 
         return response()->json([
             'message' => 'Call updated successfully!',
-            'call' => $call
+            'call' => $call,
         ]);
     }
 
@@ -135,7 +134,7 @@ class CallController extends Controller
     public function destroy($id)
     {
         return response()->json([
-            'message' => 'method not was implemented!'
+            'message' => 'method not was implemented!',
         ]);
     }
 
@@ -143,7 +142,6 @@ class CallController extends Controller
      * Start the specified call.
      *
      * @param  int  $id
-     * @param  Request  $request
      * @return \Illuminate\Http\Response
      */
     public function start_time(Request $request, $id)
@@ -151,30 +149,30 @@ class CallController extends Controller
         $userId = $request->input('user_id');
         $call = Call::find($id);
 
-        if (!$call) {
+        if (! $call) {
             return response()->json([
-                'error' => 'Call not found'
+                'error' => 'Call not found',
             ], 404);
         }
 
-        if ($call->status != "NOT_STARTED" && $call->status != "ABANDONED") {
+        if ($call->status != 'NOT_STARTED' && $call->status != 'ABANDONED') {
             return response()->json([
-                'error' => 'Call cannot be started'
+                'error' => 'Call cannot be started',
             ], 422);
         }
 
         $room = Room::find($request->room_id);
 
         // Verifica se a sala está aberta
-        if (!$room) {
+        if (! $room) {
             return response()->json([
-                'error' => 'Room not found'
+                'error' => 'Room not found',
             ], 404);
         }
 
         if ($room->status != 'OPEN' && $room->status != 'BUSY') {
             return response()->json([
-                'error' => 'Room is closed.'
+                'error' => 'Room is closed.',
             ], 400);
         }
 
@@ -182,7 +180,7 @@ class CallController extends Controller
         // $room = Room::where('id', $request->room_id)->first();
         if ($room->status !== 'OPEN') {
             return response()->json([
-                'error' => 'The room is currently busy'
+                'error' => 'The room is currently busy',
             ], 422);
         }
 
@@ -192,12 +190,12 @@ class CallController extends Controller
             ->count();
         if ($callsInProgress > 0) {
             return response()->json([
-                'error' => 'This user is already attending a call.'
+                'error' => 'This user is already attending a call.',
             ], 400);
         }
 
         $call->start_datetime = now();
-        $call->status = "IN_PROGRESS";
+        $call->status = 'IN_PROGRESS';
         $call->room_id = $request->input('room_id');
         $call->user_id = $userId;
         $call->save();
@@ -210,10 +208,9 @@ class CallController extends Controller
 
         return response()->json([
             'message' => 'Call started successfully!',
-            'call' => $call
+            'call' => $call,
         ]);
     }
-
 
     public function saveEndedCall(Request $request)
     {
@@ -236,6 +233,7 @@ class CallController extends Controller
         $call->is_called = 'NO';
         $call->call_service_id = $idCallServiceForwardedId;
         $call->save();
+
         return $call;
     }
 
@@ -246,7 +244,6 @@ class CallController extends Controller
         $room->status = 'OPEN';
         $room->save();
     }
-
 
     // metodo utilizado quando a chamada for encaminhada
     public function forwardCall($id, Request $request)
@@ -272,15 +269,13 @@ class CallController extends Controller
             throw $e;
         }
 
-
         return response()->json([
             'message' => 'EndedCall created successfully!',
             'call' => $call,
-            'endedCall' => $endedCall
+            'endedCall' => $endedCall,
         ], 201);
     }
-    // 
-
+    //
 
     /**
      * End the specified call.
@@ -288,17 +283,17 @@ class CallController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-
     public function end_time($id, Request $request)
     {
-        if ($request->input('service_status') == 'forwarded')
+        if ($request->input('service_status') == 'forwarded') {
             return $this->forwardCall($id, $request);
+        }
 
         // falta salvar o ended call aqui
-        if ($request->input('service_status') == 'finished')
+        if ($request->input('service_status') == 'finished') {
             return $this->end_call($id, $request);
+        }
     }
-
 
     public function end_call($id, Request $request)
     {
@@ -308,40 +303,40 @@ class CallController extends Controller
         try {
 
             $call = Call::find($id);
-            if (!$call) {
+            if (! $call) {
                 return response()->json([
-                    'error' => 'Call not found'
+                    'error' => 'Call not found',
                 ], 404);
             }
 
-            if ($call->status != "IN_PROGRESS") {
+            if ($call->status != 'IN_PROGRESS') {
                 return response()->json([
-                    'error' => 'Call cannot be ended'
+                    'error' => 'Call cannot be ended',
                 ], 422);
             }
 
             $call->end_datetime = now();
-            $call->status = "CLOSED";
+            $call->status = 'CLOSED';
             $call->save();
 
             // atualiza o status da room para open
 
             $room = Room::where('id', $call->room_id)->first();
 
-            if (!$room) {
+            if (! $room) {
                 return response()->json([
-                    'error' => 'Room not found'
+                    'error' => 'Room not found',
                 ], 404);
             }
 
             if ($room->status !== 'BUSY' && $room->status !== 'CLOSED') {
                 return response()->json([
-                    'error' => 'The room is already empty'
+                    'error' => 'The room is already empty',
                 ], 422);
             }
 
             if ($room) {
-                $room->status = "OPEN";
+                $room->status = 'OPEN';
                 $room->save();
             }
 
@@ -358,10 +353,9 @@ class CallController extends Controller
         return response()->json([
             'message' => 'Call ended successfully!',
             'call' => $call,
-            'endedCall' => $endedCall
+            'endedCall' => $endedCall,
         ]);
     }
-
 
     /**
      * Mark the specified call as abandoned.
@@ -369,20 +363,18 @@ class CallController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-
-
     public function abandon(Request $request, $id)
     {
         $call = Call::find($id);
-        if (!$call) {
+        if (! $call) {
             return response()->json([
-                'error' => 'Call not found'
+                'error' => 'Call not found',
             ], 404);
         }
 
-        if ($call->status != "NOT_STARTED") {
+        if ($call->status != 'NOT_STARTED') {
             return response()->json([
-                'error' => 'Call cannot be ended'
+                'error' => 'Call cannot be ended',
             ], 422);
         }
 
@@ -392,7 +384,7 @@ class CallController extends Controller
 
         return response()->json([
             'message' => 'Call marked as abandoned successfully!',
-            'call' => $call
+            'call' => $call,
         ]);
     }
 
@@ -401,7 +393,6 @@ class CallController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-
     public function called_call()
     {
         $getCall = Call::where('is_called', 'NOW')
@@ -417,7 +408,6 @@ class CallController extends Controller
 
         return response()->json($getCall);
     }
-
 
     public function lasts_calls()
     {

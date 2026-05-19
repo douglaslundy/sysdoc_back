@@ -19,6 +19,7 @@ class ValidCpf implements ValidationRule
         // Tamanho incorreto ou sequência repetida (ex: 111.111.111-11)
         if (strlen($cpf) !== 11 || preg_match('/^(\d)\1{10}$/', $cpf)) {
             $fail('O :attribute informado é inválido.');
+
             return;
         }
 
@@ -31,6 +32,7 @@ class ValidCpf implements ValidationRule
             $digit = ((10 * $sum) % 11) % 10;
             if ((int) $cpf[$t] !== $digit) {
                 $fail('O :attribute informado é inválido.');
+
                 return;
             }
         }

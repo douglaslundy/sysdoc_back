@@ -37,6 +37,7 @@ class MedicoSolicitanteController extends Controller
     {
         $medico = MedicoSolicitante::create($request->validated());
         AuditService::record('CREATE', $medico, null, $medico->toArray());
+
         return response()->json($medico, 201);
     }
 
@@ -50,6 +51,7 @@ class MedicoSolicitanteController extends Controller
         $old = $medico->toArray();
         $medico->update($request->validated());
         AuditService::record('UPDATE', $medico, $old, $medico->toArray());
+
         return response()->json($medico);
     }
 
@@ -61,6 +63,7 @@ class MedicoSolicitanteController extends Controller
 
         AuditService::record('DELETE', $medico, $medico->toArray(), null);
         $medico->delete();
+
         return response()->json(null, 204);
     }
 }

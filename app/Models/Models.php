@@ -9,7 +9,8 @@ class Models extends Model
 {
     use HasFactory;
 
-    public function user(){
+    public function user()
+    {
         return $this->hasOne(User::class, 'id', 'id_user');
     }
 }

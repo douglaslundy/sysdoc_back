@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRoomRequest;
-use App\Models\Call;
-use App\Services\AuditService;
-use Illuminate\Http\Request;
 use App\Models\Room;
+use App\Services\AuditService;
 use Carbon\Carbon;
 
 class RoomController extends Controller
@@ -28,18 +26,16 @@ class RoomController extends Controller
         // return Room::orderBy('id', 'desc')->get();
     }
 
-
-// Ao utilizar a função de fechamento (Closure) no relacionamento calls_per_service, 
-// eu posso aplicar uma condição específica a esse relacionamento. 
-// Dessa forma, o código abaixo trará todas as rooms, mas os relacionamentos calls_per_service 
-// associados a cada room serão filtrados para incluir apenas aqueles criados na data de hoje.
+    // Ao utilizar a função de fechamento (Closure) no relacionamento calls_per_service,
+    // eu posso aplicar uma condição específica a esse relacionamento.
+    // Dessa forma, o código abaixo trará todas as rooms, mas os relacionamentos calls_per_service
+    // associados a cada room serão filtrados para incluir apenas aqueles criados na data de hoje.
 
     public function rooms_with_today_calls()
     {
         $today = Carbon::today();
 
-        $rooms = Room::with(['call_service', 'calls_per_service' => 
-        function ($query) use ($today) {
+        $rooms = Room::with(['call_service', 'calls_per_service' => function ($query) use ($today) {
             $query->whereDate('created_at', $today);
         }])
             ->orderBy('id', 'desc')
@@ -66,7 +62,7 @@ class RoomController extends Controller
 
         return response()->json([
             'message' => 'Room created successfully!',
-            'room' => $room
+            'room' => $room,
         ], 201);
     }
 
@@ -79,11 +75,12 @@ class RoomController extends Controller
     public function show($id)
     {
         $room = Room::find($id);
-        if (!$room) {
+        if (! $room) {
             return response()->json([
-                'error' => 'Room not found'
+                'error' => 'Room not found',
             ], 404);
         }
+
         return response()->json($room);
     }
 
@@ -97,9 +94,9 @@ class RoomController extends Controller
     public function update(StoreRoomRequest $request, $id)
     {
         $room = Room::find($id);
-        if (!$room) {
+        if (! $room) {
             return response()->json([
-                'error' => 'Room not found'
+                'error' => 'Room not found',
             ], 404);
         }
         $old = $room->toArray();
@@ -112,7 +109,7 @@ class RoomController extends Controller
 
         return response()->json([
             'message' => 'Room updated successfully!',
-            'room' => $room
+            'room' => $room,
         ]);
     }
 
@@ -125,16 +122,16 @@ class RoomController extends Controller
     public function destroy($id)
     {
         $room = Room::find($id);
-        if (!$room) {
+        if (! $room) {
             return response()->json([
-                'error' => 'Room not found'
+                'error' => 'Room not found',
             ], 404);
         }
         AuditService::record('DELETE', $room, $room->toArray(), null);
         $room->delete();
 
         return response()->json([
-            'message' => 'Room deleted successfully!'
+            'message' => 'Room deleted successfully!',
         ]);
     }
 }

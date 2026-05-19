@@ -29,10 +29,10 @@ class UserRequest extends FormRequest
         $validSlugs = AccessProfile::where('ativo', true)->pluck('slug')->toArray();
 
         return [
-            "profile" => ['required', 'string', 'max:50', Rule::in($validSlugs)],
+            'profile' => ['required', 'string', 'max:50', Rule::in($validSlugs)],
             'name' => 'required|string|max:50',
-            'email' => 'string|required|max:100|unique:users,email,' . request()->id,
-            'cpf' => ['string', 'required', 'max:18', 'unique:users,cpf,' . request()->id, new ValidCpf()],
+            'email' => 'string|required|max:100|unique:users,email,'.request()->id,
+            'cpf' => ['string', 'required', 'max:18', 'unique:users,cpf,'.request()->id, new ValidCpf()],
             'email_verified_at' => ['nullable', 'date'],
             'active' => ['Boolean'],
             'inactive_date' => ['nullable', 'date'],

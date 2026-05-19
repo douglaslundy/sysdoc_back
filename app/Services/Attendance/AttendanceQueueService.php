@@ -42,7 +42,7 @@ class AttendanceQueueService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$ticket) {
+            if (! $ticket) {
                 throw new DomainException('Nenhuma senha aguardando atendimento.');
             }
 
@@ -72,10 +72,10 @@ class AttendanceQueueService
             ->where('id', $ticket->id)
             ->where('status', AttendanceTicket::STATUS_AGUARDANDO)
             ->update([
-            'status' => AttendanceTicket::STATUS_CHAMADA,
-            'called_at' => $now,
-            'assigned_user_id' => $userId,
-            'room_id' => $roomId,
+                'status' => AttendanceTicket::STATUS_CHAMADA,
+                'called_at' => $now,
+                'assigned_user_id' => $userId,
+                'room_id' => $roomId,
             ]);
 
         if ($updatedRows !== 1) {

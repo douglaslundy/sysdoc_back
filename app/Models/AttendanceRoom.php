@@ -20,4 +20,3 @@ class AttendanceRoom extends Model
         return $this->hasMany(AttendanceTicket::class, 'room_id');
     }
 }
-
