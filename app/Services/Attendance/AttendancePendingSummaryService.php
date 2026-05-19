@@ -26,7 +26,7 @@ class AttendancePendingSummaryService
 
         if (Schema::hasTable('trip_clients')) {
             $pendingTrips = DB::table('trip_clients')
-                ->where('id_client', $clientId)
+                ->where('client_id', $clientId)
                 ->where(function ($q) {
                     $q->whereNull('is_confirmed')->orWhere('is_confirmed', false);
                 })
@@ -55,4 +55,3 @@ class AttendancePendingSummaryService
         return $summary;
     }
 }
-
