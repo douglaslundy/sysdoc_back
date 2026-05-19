@@ -53,6 +53,7 @@ use App\Http\Controllers\MedicineComplianceController;
 use App\Http\Controllers\PharmacyCatalogController;
 use App\Http\Controllers\PharmacyCatalogAdminController;
 use App\Http\Controllers\PageViewAuditController;
+use App\Http\Controllers\AttendanceController;
 
 
 Route::get('/ping', function () {
@@ -81,6 +82,7 @@ Route::middleware('throttle:10,1')->post('/consulta-exame/pdf/{protocolo}', [Con
 Route::get('/public/pharmacy/medicines/daily', [MedicineTransparencyPublicController::class, 'daily']);
 Route::get('/public/pharmacy/medicines/panel', [MedicineTransparencyPublicController::class, 'panel']);
 Route::get('/public/pharmacy/medicines/monthly-acquisitions', [MedicineTransparencyPublicController::class, 'monthly']);
+Route::get('/attendance/panel/state', [AttendanceController::class, 'panelState']);
 
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
@@ -93,6 +95,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate', [AuthController::class, 'validateToken']);
     Route::post('/audit/page-view', [PageViewAuditController::class, 'store']);
+
+    // Atendimento ao cliente por senha
+    Route::post('/attendance/tickets', [AttendanceController::class, 'createTicket']);
+    Route::get('/attendance/tickets', [AttendanceController::class, 'listTickets']);
+    Route::get('/attendance/tickets/{id}', [AttendanceController::class, 'showTicket']);
+    Route::patch('/attendance/tickets/{id}/cancel', [AttendanceController::class, 'cancelTicket']);
+    Route::patch('/attendance/tickets/{id}/no-show', [AttendanceController::class, 'noShowTicket']);
+    Route::get('/attendance/queue', [AttendanceController::class, 'queue']);
+    Route::post('/attendance/queue/call-next', [AttendanceController::class, 'callNext']);
+    Route::post('/attendance/queue/{ticketId}/call', [AttendanceController::class, 'callSpecific']);
+    Route::get('/attendance/service/{ticketId}', [AttendanceController::class, 'serviceData']);
+    Route::post('/attendance/service/{ticketId}/start', [AttendanceController::class, 'serviceStart']);
+    Route::patch('/attendance/service/{ticketId}/notes', [AttendanceController::class, 'serviceNotes']);
+    Route::post('/attendance/service/{ticketId}/finish', [AttendanceController::class, 'serviceFinish']);
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
     Route::middleware('throttle:120,1')->group(function () {
@@ -297,4 +313,3 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/resultados/{resultado}/pdf', [ResultadoExameController::class, 'downloadPdf']);
     });
 });
-
