@@ -163,5 +163,41 @@ class AttendanceModuleTest extends TestCase
         $this->assertCount(3, $panel->json('lastCalls'));
         $this->assertNotEmpty($panel->json('currentInService'));
     }
-}
 
+    public function test_lista_atendimentos_com_filtros_de_sala_usuario_status_e_periodo(): void
+    {
+        $client = $this->createClient('100.000.000-21');
+
+        $ticketId = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/attendance/tickets', ['clientId' => $client->id])
+            ->json('id');
+
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/attendance/queue/{$ticketId}/call", ['roomId' => $this->room->id])
+            ->assertStatus(200);
+
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/attendance/service/{$ticketId}/start")
+            ->assertStatus(200);
+
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/attendance/service/{$ticketId}/finish", ['notes' => 'ok'])
+            ->assertStatus(200);
+
+        $from = now()->subDay()->toDateString();
+        $to = now()->addDay()->toDateString();
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson('/api/attendance/tickets?' . http_build_query([
+                'status' => 'finalizada',
+                'roomId' => $this->room->id,
+                'assignedUserId' => $this->user->id,
+                'serviceFrom' => $from,
+                'serviceTo' => $to,
+            ]));
+
+        $response->assertStatus(200);
+        $this->assertNotEmpty($response->json());
+        $this->assertSame($ticketId, $response->json('0.id'));
+    }
+}

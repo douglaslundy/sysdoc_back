@@ -109,6 +109,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::patch('/attendance/rooms-admin/{id}/inactivate', [AttendanceController::class, 'roomsInactivate']);
     Route::delete('/attendance/rooms-admin/{id}', [AttendanceController::class, 'roomsDestroy']);
     Route::get('/attendance/rooms', [AttendanceController::class, 'rooms']);
+    Route::get('/attendance/attendants', [AttendanceController::class, 'attendants']);
     Route::get('/attendance/queue', [AttendanceController::class, 'queue']);
     Route::post('/attendance/queue/call-next', [AttendanceController::class, 'callNext']);
     Route::post('/attendance/queue/{ticketId}/call', [AttendanceController::class, 'callSpecific']);

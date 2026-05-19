@@ -12,6 +12,7 @@ use DomainException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class AttendanceController extends Controller
 {
@@ -45,11 +46,25 @@ class AttendanceController extends Controller
         $validated = $request->validate([
             'status' => 'nullable|in:aguardando,chamada,em_atendimento,finalizada,cancelada,nao_compareceu',
             'clientId' => 'nullable|integer|exists:clients,id',
+            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
+            'assignedUserId' => 'nullable|integer|exists:users,id',
             'issuedFrom' => 'nullable|date',
             'issuedTo' => 'nullable|date',
+            'serviceFrom' => 'nullable|date',
+            'serviceTo' => 'nullable|date',
         ]);
 
         return response()->json($this->ticketService->listTickets($validated));
+    }
+
+    public function attendants(): JsonResponse
+    {
+        return response()->json(
+            User::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email'])
+        );
     }
 
     public function showTicket(int $id): JsonResponse
