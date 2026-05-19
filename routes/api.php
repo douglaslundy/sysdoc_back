@@ -1,66 +1,62 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\LetterController;
-use App\Http\Controllers\LetterAttachmentController;
-use App\Http\Controllers\SectorController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\AccessProfileController;
+use App\Http\Controllers\AgendaColetaController;
+use App\Http\Controllers\AlvaraController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CallController;
 use App\Http\Controllers\CallServiceController;
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\ModelController;
-use App\Http\Controllers\RoomController;
-use App\Http\Controllers\EndedController;
-use App\Http\Controllers\SpecialityController;
-use App\Http\Controllers\QueueController;
-use App\Http\Controllers\QueueAttachmentController;
-use App\Http\Controllers\ErrorLogController;
-use Illuminate\Http\Request;
-use App\Http\Controllers\TripController;
-use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\RouteController;
-use App\Http\Controllers\QRCodeLogController;
-use App\Http\Controllers\StateController;
-use App\Http\Controllers\OrdinanceController;
-use App\Http\Controllers\OrdinanceAttachmentController;
-use App\Http\Controllers\ExameController;
-use App\Http\Controllers\ExameCampoController;
 use App\Http\Controllers\CampoReferenciaController;
-use App\Http\Controllers\PedidoExameController;
-use App\Http\Controllers\ResultadoExameController;
-use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\CategoriaExameController;
-use App\Http\Controllers\MedicoSolicitanteController;
-use App\Http\Controllers\AgendaColetaController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\AccessProfileController;
-use App\Http\Controllers\SystemPageController;
-use App\Http\Controllers\PageCategoryController;
-use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\LabConfigController;
+use App\Http\Controllers\EndedController;
+use App\Http\Controllers\ErrorLogController;
 use App\Http\Controllers\EstabelecimentoController;
-use App\Http\Controllers\AlvaraController;
-use App\Http\Controllers\VigilanciaConfigController;
-use App\Http\Controllers\MedicineItemController;
+use App\Http\Controllers\ExameCampoController;
+use App\Http\Controllers\ExameController;
+use App\Http\Controllers\LabConfigController;
+use App\Http\Controllers\LetterAttachmentController;
+use App\Http\Controllers\LetterController;
+use App\Http\Controllers\MedicineComplianceController;
 use App\Http\Controllers\MedicineDailyStatusController;
+use App\Http\Controllers\MedicineItemController;
 use App\Http\Controllers\MedicineMonthlyAcquisitionController;
 use App\Http\Controllers\MedicinePublicationController;
 use App\Http\Controllers\MedicineTransparencyPublicController;
-use App\Http\Controllers\MedicineComplianceController;
-use App\Http\Controllers\PharmacyCatalogController;
-use App\Http\Controllers\PharmacyCatalogAdminController;
+use App\Http\Controllers\MedicoSolicitanteController;
+use App\Http\Controllers\ModelController;
+use App\Http\Controllers\OrdinanceAttachmentController;
+use App\Http\Controllers\OrdinanceController;
+use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\PageViewAuditController;
-use App\Http\Controllers\AttendanceController;
-
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PedidoExameController;
+use App\Http\Controllers\PharmacyCatalogAdminController;
+use App\Http\Controllers\PharmacyCatalogController;
+use App\Http\Controllers\QRCodeLogController;
+use App\Http\Controllers\QueueAttachmentController;
+use App\Http\Controllers\QueueController;
+use App\Http\Controllers\ResultadoExameController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RouteController;
+use App\Http\Controllers\SectorController;
+use App\Http\Controllers\SpecialityController;
+use App\Http\Controllers\StateController;
+use App\Http\Controllers\SystemPageController;
+use App\Http\Controllers\TripController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VigilanciaConfigController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
     return ['pong' => true];
 });
-
-
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -87,8 +83,6 @@ Route::get('/attendance/panel/state', [AttendanceController::class, 'panelState'
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
 Route::middleware('throttle:5,1')->post('/reset-password', [PasswordResetController::class, 'reset']);
-
-
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
@@ -120,13 +114,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
     Route::middleware('throttle:120,1')->group(function () {
-        Route::get('/dashboard/inicio',       [DashboardController::class, 'inicio']);
+        Route::get('/dashboard/inicio', [DashboardController::class, 'inicio']);
         Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
-        Route::get('/dashboard/fila',        [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
-        Route::get('/dashboard/tfd',         [DashboardController::class, 'tfd'])->middleware('can:dashboard-tfd');
-        Route::get('/dashboard/farmacia',    [DashboardController::class, 'farmacia']);
-        Route::get('/dashboard/logs',        [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
-        Route::get('/dashboard/vigilancia',  [DashboardController::class, 'vigilancia']);
+        Route::get('/dashboard/fila', [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
+        Route::get('/dashboard/tfd', [DashboardController::class, 'tfd'])->middleware('can:dashboard-tfd');
+        Route::get('/dashboard/farmacia', [DashboardController::class, 'farmacia']);
+        Route::get('/dashboard/logs', [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
+        Route::get('/dashboard/vigilancia', [DashboardController::class, 'vigilancia']);
     });
 
     // Permissões do usuário logado
