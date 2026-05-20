@@ -126,22 +126,37 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 ORDER BY table_schema, table_name
             ");
 
+            // Descobre em qual schema dim_equipe existe
+            $schemaDW = null;
+            foreach ($tabelas as $t) {
+                if ($t->tabela === 'dim_equipe') {
+                    $schemaDW = $t->schema;
+                    break;
+                }
+            }
+
             $temDW = false;
             $totalEquipes = 0;
-            try {
-                $result = $conn->select('SELECT COUNT(*) AS total FROM dim_equipe WHERE st_ativo = true');
-                $temDW = true;
-                $totalEquipes = (int) ($result[0]->total ?? 0);
-            } catch (\Throwable) {}
+            if ($schemaDW) {
+                try {
+                    $result = $conn->select("SELECT COUNT(*) AS total FROM \"{$schemaDW}\".dim_equipe WHERE st_ativo = true");
+                    $temDW = true;
+                    $totalEquipes = (int) ($result[0]->total ?? 0);
+                } catch (\Throwable) {}
+            }
+
+            $schemas = collect($tabelas)->pluck('schema')->unique()->values()->toArray();
 
             return response()->json([
                 'success'       => true,
                 'tem_dw'        => $temDW,
+                'schema_dw'     => $schemaDW,
+                'schemas'       => $schemas,
                 'total_equipes' => $totalEquipes,
                 'tabelas'       => $tabelas,
                 'mensagem'      => $temDW
-                    ? "Conectado — {$totalEquipes} equipe(s) ativa(s), " . count($tabelas) . " tabela(s) encontrada(s)."
-                    : 'Conectado, mas o schema DW do eSUS PEC não foi encontrado neste banco. ' . count($tabelas) . ' tabela(s) encontrada(s).',
+                    ? "Conectado — schema DW: {$schemaDW} | {$totalEquipes} equipe(s) ativa(s) | " . count($tabelas) . " tabela(s)."
+                    : 'Conectado — ' . count($tabelas) . ' tabela(s) em ' . count($schemas) . ' schema(s): ' . implode(', ', $schemas) . '. Tabela dim_equipe não localizada.',
             ]);
         } catch (\Throwable $e) {
             $msg = $e->getMessage();
