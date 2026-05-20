@@ -125,6 +125,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::get('/historico',    [MonitorApsController::class, 'historico']);
         });
         Route::get('/config/status',  [MonitorApsConfigController::class, 'status']);
+        Route::get('/config/load',    [MonitorApsConfigController::class, 'load']);
         Route::get('/config/equipes', [MonitorApsConfigController::class, 'equipes']);
         Route::middleware('admin')->group(function () {
             Route::post('/config/test', [MonitorApsConfigController::class, 'testar']);

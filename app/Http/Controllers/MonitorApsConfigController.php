@@ -50,6 +50,18 @@ class MonitorApsConfigController extends MonitorApsBaseController
         }
     }
 
+    // GET /monitor-aps/config/load
+    public function load()
+    {
+        $config = $this->loadConfig();
+        return response()->json([
+            'host'     => $config['host']     ?? env('APS_DB_HOST',     ''),
+            'port'     => $config['port']     ?? env('APS_DB_PORT',     5432),
+            'database' => $config['database'] ?? env('APS_DB_DATABASE', 'esus'),
+            'user'     => $config['user']     ?? env('APS_DB_USERNAME', ''),
+        ]);
+    }
+
     // GET /monitor-aps/config/equipes
     public function equipes()
     {
