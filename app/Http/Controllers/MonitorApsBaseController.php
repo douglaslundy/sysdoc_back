@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
+use PDO;
 
 abstract class MonitorApsBaseController extends Controller
 {
@@ -21,16 +22,17 @@ abstract class MonitorApsBaseController extends Controller
         }
 
         config(['database.connections.pgsql_esus_runtime' => [
-            'driver'   => 'pgsql',
-            'host'     => $host,
-            'port'     => (int) $port,
-            'database' => $database,
-            'username' => $username,
-            'password' => $password,
-            'charset'  => 'utf8',
-            'prefix'   => '',
-            'schema'   => 'public',
-            'sslmode'  => 'prefer',
+            'driver'          => 'pgsql',
+            'host'            => $host,
+            'port'            => (int) $port,
+            'database'        => $database,
+            'username'        => $username,
+            'password'        => $password,
+            'charset'         => 'utf8',
+            'prefix'          => '',
+            'schema'          => 'public',
+            'sslmode'         => 'prefer',
+            'options'         => [PDO::ATTR_TIMEOUT => 8],
         ]]);
 
         return DB::connection('pgsql_esus_runtime');

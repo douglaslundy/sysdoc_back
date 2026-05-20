@@ -9,10 +9,14 @@ class MonitorApsConfigController extends MonitorApsBaseController
 {
     private function row(): ?object
     {
-        return DB::table('monitor_aps_configs')->first();
+        try {
+            return DB::table('monitor_aps_configs')->first();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
-    // GET /monitor-aps/config/status
+    // GET /monitor-aps/config/status  — não tenta conectar ao PostgreSQL (rápido)
     public function status()
     {
         $row  = $this->row();
@@ -21,27 +25,14 @@ class MonitorApsConfigController extends MonitorApsBaseController
         $db   = $row->aps_db_database ?? env('APS_DB_DATABASE', '');
         $user = $row->aps_db_username ?? env('APS_DB_USERNAME', '');
 
-        try {
-            $this->db()->select('SELECT 1');
-            return response()->json([
-                'configured' => true,
-                'connected'  => true,
-                'host'       => $host,
-                'port'       => $port,
-                'database'   => $db,
-                'user'       => $user,
-            ]);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'configured' => (bool) $host,
-                'connected'  => false,
-                'host'       => $host,
-                'port'       => $port,
-                'database'   => $db,
-                'user'       => $user,
-                'error'      => $e->getMessage(),
-            ]);
-        }
+        return response()->json([
+            'configured' => (bool) $host,
+            'connected'  => null,
+            'host'       => $host,
+            'port'       => $port,
+            'database'   => $db,
+            'user'       => $user,
+        ]);
     }
 
     // GET /monitor-aps/config/load
@@ -102,6 +93,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
             'prefix'   => '',
             'schema'   => 'public',
             'sslmode'  => 'prefer',
+            'options'  => [\PDO::ATTR_TIMEOUT => 8],
         ]]);
 
         try {
