@@ -24,12 +24,29 @@ class MonitorApsConfigController extends MonitorApsBaseController
         $config = $this->loadConfig();
         $host   = $config['host']     ?? env('APS_DB_HOST', '');
         $banco  = $config['database'] ?? env('APS_DB_DATABASE', '');
+        $port   = $config['port']     ?? env('APS_DB_PORT', 5432);
+        $user   = $config['user']     ?? env('APS_DB_USERNAME', '');
 
         try {
             $this->db()->select('SELECT 1');
-            return response()->json(['configured' => true, 'connected' => true, 'host' => $host, 'database' => $banco]);
+            return response()->json([
+                'configured' => true,
+                'connected'  => true,
+                'host'       => $host,
+                'port'       => $port,
+                'database'   => $banco,
+                'user'       => $user,
+            ]);
         } catch (\Throwable $e) {
-            return response()->json(['configured' => (bool) $host, 'connected' => false, 'error' => $e->getMessage()]);
+            return response()->json([
+                'configured' => (bool) $host,
+                'connected'  => false,
+                'host'       => $host,
+                'port'       => $port,
+                'database'   => $banco,
+                'user'       => $user,
+                'error'      => $e->getMessage(),
+            ]);
         }
     }
 
