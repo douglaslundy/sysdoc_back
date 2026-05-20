@@ -47,6 +47,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
             'municipio_ibge' => $row->municipio_ibge  ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
             'municipio_nome' => $row->municipio_nome  ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
             'estrato_ied'    => (int) ($row->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
+            'has_password'   => !empty($row->aps_db_password ?? ''),
         ]);
     }
 
