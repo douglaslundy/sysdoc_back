@@ -126,14 +126,21 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 ORDER BY table_schema, table_name
             ");
 
-            // Descobre em qual schema dim_equipe existe
+            $nomes = collect($tabelas)->pluck('tabela');
+
+            // Detecta schema DW (dim_equipe)
             $schemaDW = null;
             foreach ($tabelas as $t) {
-                if ($t->tabela === 'dim_equipe') {
-                    $schemaDW = $t->schema;
-                    break;
-                }
+                if ($t->tabela === 'dim_equipe') { $schemaDW = $t->schema; break; }
             }
+
+            // Conta tabelas dim_ e fat_
+            $qtdDim = $nomes->filter(fn($n) => str_starts_with($n, 'dim_'))->count();
+            $qtdFat = $nomes->filter(fn($n) => str_starts_with($n, 'fat_'))->count();
+
+            // Confirma se é banco eSUS PEC (tabelas operacionais conhecidas)
+            $tabelasEsus = ['tb_cidadao', 'tb_atendimento_individual', 'tb_visita_domiciliar', 'tb_municipio'];
+            $esusEncontradas = $nomes->filter(fn($n) => in_array($n, $tabelasEsus))->values()->toArray();
 
             $temDW = false;
             $totalEquipes = 0;
@@ -147,16 +154,27 @@ class MonitorApsConfigController extends MonitorApsBaseController
 
             $schemas = collect($tabelas)->pluck('schema')->unique()->values()->toArray();
 
+            if ($temDW) {
+                $mensagem = "Conectado — schema DW: {$schemaDW} | {$totalEquipes} equipe(s) ativa(s) | " . count($tabelas) . " tabela(s).";
+            } elseif ($qtdDim > 0 || $qtdFat > 0) {
+                $mensagem = "Conectado — tabelas DW encontradas (dim: {$qtdDim}, fat: {$qtdFat}) mas dim_equipe ausente. Verifique o schema.";
+            } elseif (!empty($esusEncontradas)) {
+                $mensagem = "Conectado ao banco eSUS PEC operacional (" . implode(', ', $esusEncontradas) . "). O módulo DW não está habilitado — ative o Data Warehouse no eSUS PEC para usar o Monitor APS.";
+            } else {
+                $mensagem = "Conectado — " . count($tabelas) . " tabela(s) encontrada(s), mas não parece ser um banco eSUS PEC. Verifique as configurações.";
+            }
+
             return response()->json([
-                'success'       => true,
-                'tem_dw'        => $temDW,
-                'schema_dw'     => $schemaDW,
-                'schemas'       => $schemas,
-                'total_equipes' => $totalEquipes,
-                'tabelas'       => $tabelas,
-                'mensagem'      => $temDW
-                    ? "Conectado — schema DW: {$schemaDW} | {$totalEquipes} equipe(s) ativa(s) | " . count($tabelas) . " tabela(s)."
-                    : 'Conectado — ' . count($tabelas) . ' tabela(s) em ' . count($schemas) . ' schema(s): ' . implode(', ', $schemas) . '. Tabela dim_equipe não localizada.',
+                'success'        => true,
+                'tem_dw'         => $temDW,
+                'schema_dw'      => $schemaDW,
+                'schemas'        => $schemas,
+                'total_equipes'  => $totalEquipes,
+                'qtd_dim'        => $qtdDim,
+                'qtd_fat'        => $qtdFat,
+                'esus_confirmado' => !empty($esusEncontradas),
+                'tabelas'        => $tabelas,
+                'mensagem'       => $mensagem,
             ]);
         } catch (\Throwable $e) {
             $msg = $e->getMessage();
