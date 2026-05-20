@@ -107,13 +107,24 @@ class MonitorApsConfigController extends MonitorApsBaseController
         ]]);
 
         try {
-            $result = DB::connection('pgsql_esus_test')->select(
-                'SELECT COUNT(*) AS total FROM dim_equipe WHERE st_ativo = true'
-            );
+            $conn = DB::connection('pgsql_esus_test');
+            $conn->select('SELECT 1');
+
+            $temDW = false;
+            $totalEquipes = 0;
+            try {
+                $result = $conn->select('SELECT COUNT(*) AS total FROM dim_equipe WHERE st_ativo = true');
+                $temDW = true;
+                $totalEquipes = (int) ($result[0]->total ?? 0);
+            } catch (\Throwable) {}
+
             return response()->json([
                 'success'       => true,
-                'total_equipes' => (int) ($result[0]->total ?? 0),
-                'mensagem'      => 'Conexão estabelecida com sucesso.',
+                'tem_dw'        => $temDW,
+                'total_equipes' => $totalEquipes,
+                'mensagem'      => $temDW
+                    ? "Conectado — {$totalEquipes} equipe(s) ativa(s) encontrada(s)."
+                    : 'Conectado, mas o schema DW do eSUS PEC não foi encontrado neste banco.',
             ]);
         } catch (\Throwable $e) {
             $msg = $e->getMessage();
