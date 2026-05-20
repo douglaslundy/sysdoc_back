@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class MonitorApsConfigController extends Controller
+class MonitorApsConfigController extends MonitorApsBaseController
 {
     private function configPath(): string
     {
@@ -15,10 +15,7 @@ class MonitorApsConfigController extends Controller
     private function loadConfig(): ?array
     {
         $path = $this->configPath();
-        if (file_exists($path)) {
-            return json_decode(file_get_contents($path), true);
-        }
-        return null;
+        return file_exists($path) ? json_decode(file_get_contents($path), true) : null;
     }
 
     // GET /monitor-aps/config/status
@@ -29,10 +26,10 @@ class MonitorApsConfigController extends Controller
         $banco  = $config['database'] ?? env('APS_DB_DATABASE', '');
 
         try {
-            DB::connection('pgsql_esus')->select('SELECT 1');
+            $this->db()->select('SELECT 1');
             return response()->json(['configured' => true, 'connected' => true, 'host' => $host, 'database' => $banco]);
         } catch (\Throwable $e) {
-            return response()->json(['configured' => (bool)$host, 'connected' => false, 'error' => $e->getMessage()]);
+            return response()->json(['configured' => (bool) $host, 'connected' => false, 'error' => $e->getMessage()]);
         }
     }
 
@@ -40,7 +37,7 @@ class MonitorApsConfigController extends Controller
     public function equipes()
     {
         try {
-            $rows = DB::connection('pgsql_esus')->select("
+            $rows = $this->db()->select("
                 SELECT nu_ine, no_equipe,
                   CASE tp_equipe
                     WHEN 70 THEN 'eSF' WHEN 71 THEN 'eAP'
@@ -87,11 +84,11 @@ class MonitorApsConfigController extends Controller
             );
             return response()->json([
                 'success'       => true,
-                'total_equipes' => (int)($equipes[0]->total ?? 0),
+                'total_equipes' => (int) ($equipes[0]->total ?? 0),
                 'mensagem'      => 'Conexão estabelecida com sucesso.',
             ]);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'mensagem' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'mensagem' => $e->getMessage()]);
         }
     }
 
