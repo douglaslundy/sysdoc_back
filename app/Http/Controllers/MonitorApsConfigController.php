@@ -116,7 +116,11 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 'mensagem'      => 'Conexão estabelecida com sucesso.',
             ]);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'mensagem' => $e->getMessage()]);
+            $msg = $e->getMessage();
+            $msg = preg_replace('/\s*\(Connection:.*?\)/i', '', $msg);
+            $msg = preg_replace('/\s*\(SQL:.*\)/is', '', $msg);
+            $msg = preg_replace('/^SQLSTATE\[\w+\]\s*\[\d+\]\s*/i', '', $msg);
+            return response()->json(['success' => false, 'mensagem' => trim($msg)]);
         }
     }
 
