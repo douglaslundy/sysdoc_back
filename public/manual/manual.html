@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual de Uso — Sysdoc</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue: #1e3a5f; --blue-md: #2a5298; --blue-lt: #e8f0fe;
+    --green: #2d9e6b; --green-lt: #e6f7f0;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+    --gray-500: #64748b; --gray-700: #374151; --gray-900: #0f172a;
+  }
+  body { font-family: Georgia, 'Times New Roman', serif; color: var(--gray-700); background: #fff; line-height: 1.7; font-size: 16px; }
+  .page { max-width: 860px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+
+  /* COVER */
+  .cover { text-align: center; padding: 4rem 2rem 3rem; border-bottom: 3px solid var(--blue); margin-bottom: 3rem; }
+  .cover-logo { font-size: 3rem; font-weight: 900; color: var(--blue); letter-spacing: -1px; font-family: system-ui, sans-serif; }
+  .cover-logo span { color: var(--green); }
+  .cover h1 { font-size: 1.6rem; color: var(--gray-900); margin: 1rem 0 .5rem; font-family: system-ui, sans-serif; }
+  .cover-meta { font-size: .9rem; color: var(--gray-500); }
+  .cover-badge { display: inline-block; background: var(--blue-lt); color: var(--blue-md); padding: .3rem .9rem; border-radius: 999px; font-size: .8rem; font-weight: 600; margin-bottom: 1rem; font-family: system-ui, sans-serif; }
+
+  /* TOC */
+  .toc { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 1.5rem 2rem; margin-bottom: 3rem; }
+  .toc h2 { font-size: 1.1rem; color: var(--blue); margin-bottom: 1rem; font-family: system-ui, sans-serif; }
+  .toc ol { padding-left: 1.2rem; }
+  .toc li { margin-bottom: .3rem; }
+  .toc a { color: var(--blue-md); text-decoration: none; font-size: .92rem; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* HEADINGS */
+  h2 { font-size: 1.4rem; color: var(--blue); border-bottom: 2px solid var(--blue-lt); padding-bottom: .5rem; margin: 2.5rem 0 1rem; font-family: system-ui, sans-serif; page-break-after: avoid; }
+  h3 { font-size: 1.1rem; color: var(--gray-900); margin: 1.5rem 0 .6rem; font-family: system-ui, sans-serif; }
+  h4 { font-size: 1rem; color: var(--gray-700); margin: 1rem 0 .4rem; font-family: system-ui, sans-serif; }
+
+  /* CONTENT */
+  p { margin-bottom: .9rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: .9rem; }
+  li { margin-bottom: .3rem; }
+  strong { color: var(--gray-900); }
+  code { background: var(--gray-100); padding: .15rem .4rem; border-radius: 4px; font-size: .88rem; font-family: 'Courier New', monospace; color: var(--blue-md); }
+  pre { background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 6px; padding: 1rem 1.25rem; overflow-x: auto; margin-bottom: 1rem; }
+  pre code { background: none; padding: 0; color: var(--gray-900); }
+  blockquote { border-left: 4px solid var(--blue-md); background: var(--blue-lt); padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+  blockquote p { margin: 0; font-size: .92rem; color: var(--blue-md); }
+
+  /* TABLES */
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: .9rem; }
+  th { background: var(--blue); color: #fff; padding: .6rem .9rem; text-align: left; font-family: system-ui, sans-serif; }
+  td { padding: .55rem .9rem; border-bottom: 1px solid var(--gray-200); }
+  tr:nth-child(even) td { background: var(--gray-50); }
+
+  /* STEPS */
+  .step-block { counter-reset: step; }
+  .step-block li { list-style: none; padding-left: 2.5rem; position: relative; margin-bottom: .5rem; }
+  .step-block li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; width: 1.6rem; height: 1.6rem; background: var(--blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; font-family: system-ui, sans-serif; }
+
+  /* CALLOUT */
+  .callout { background: var(--green-lt); border: 1px solid var(--green); border-radius: 6px; padding: .75rem 1rem; margin: 1rem 0; }
+  .callout p { margin: 0; font-size: .9rem; color: #1a6b47; }
+
+  /* SECTION DIVIDER */
+  .section-divider { border: none; border-top: 1px solid var(--gray-200); margin: 2rem 0; }
+
+  /* FOOTER */
+  .manual-footer { text-align: center; margin-top: 4rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-200); font-size: .82rem; color: var(--gray-500); font-family: system-ui, sans-serif; }
+
+  /* PRINT */
+  @media print {
+    .toc a::after { content: " (pág. " target-counter(attr(href url), page) ")"; }
+    h2 { page-break-before: always; }
+    h2:first-of-type { page-break-before: avoid; }
+  }
+  @media (max-width: 640px) { .page { padding: 1rem 1rem 3rem; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="cover-logo">Sys<span>doc</span></div>
+  <div class="cover-badge">Sistema de Gestão Municipal de Saúde</div>
+  <h1>Manual de Uso</h1>
+  <p class="cover-meta">Versão 1.0 &mdash; Maio 2026 &mdash; Para usuários finais</p>
+</div>
+
+<!-- SUMÁRIO -->
+<nav class="toc" aria-label="Sumário">
+  <h2>Sumário</h2>
+  <ol>
+    <li><a href="#s1">Introdução</a></li>
+    <li><a href="#s2">Acesso e Autenticação</a></li>
+    <li><a href="#s3">Perfis de Acesso</a></li>
+    <li><a href="#s4">Cadastro de Pacientes</a></li>
+    <li><a href="#s5">Laboratório Clínico</a></li>
+    <li><a href="#s6">Fila de Atendimento</a></li>
+    <li><a href="#s7">Farmácia Municipal</a></li>
+    <li><a href="#s8">Vigilância Sanitária</a></li>
+    <li><a href="#s9">TFD &mdash; Transporte Fretado Delegado</a></li>
+    <li><a href="#s10">Documentos com IA</a></li>
+    <li><a href="#s11">Monitor APS</a></li>
+    <li><a href="#s12">Dashboards</a></li>
+    <li><a href="#s13">Auditoria e Logs</a></li>
+    <li><a href="#s14">Administração do Sistema</a></li>
+    <li><a href="#s15">Consultas Públicas</a></li>
+    <li><a href="#s16">Solução de Problemas</a></li>
+    <li><a href="#s17">Glossário</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<section id="s1">
+<h2>1. Introdução</h2>
+<p>O <strong>Sysdoc</strong> é um sistema de gestão municipal de saúde que centraliza os principais serviços da secretaria em uma única plataforma integrada e auditada.</p>
+<p>Módulos disponíveis:</p>
+<ul>
+  <li>🔬 Laboratório clínico com laudos em PDF</li>
+  <li>💊 Farmácia municipal com transparência pública (Lei 2488)</li>
+  <li>🏥 Fila de atendimento com painel TV em tempo real</li>
+  <li>🛡️ Vigilância sanitária e controle de alvarás</li>
+  <li>🚌 TFD &mdash; Transporte Fretado Delegado</li>
+  <li>📄 Documentos com Inteligência Artificial (OpenAI)</li>
+  <li>📊 Monitor APS com indicadores do eSUS PEC</li>
+  <li>📈 Dashboards analíticos por módulo</li>
+  <li>🔐 Auditoria completa de todas as ações</li>
+</ul>
+<p>O sistema é acessado pelo navegador. A interface está disponível em <strong>sysvendas.vercel.app</strong>.</p>
+</section>
+
+<hr class="section-divider">
+
+<!-- 2 -->
+<section id="s2">
+<h2>2. Acesso e Autenticação</h2>
+
+<h3>2.1 Como fazer login</h3>
+<ol class="step-block">
+  <li>Acesse o endereço do sistema no navegador.</li>
+  <li>Informe seu <strong>CPF</strong> (somente números, sem pontos ou traços) e <strong>senha</strong>.</li>
+  <li>Clique em <strong>Entrar</strong>.</li>
+  <li>O sistema valida suas credenciais e redireciona para o painel principal.</li>
+</ol>
+<blockquote><p><strong>Atenção:</strong> O CPF deve ser digitado sem pontos ou traços (somente os 11 dígitos).</p></blockquote>
+
+<h3>2.2 Esqueceu a senha</h3>
+<ol class="step-block">
+  <li>Na tela de login, clique em <strong>"Esqueci minha senha"</strong>.</li>
+  <li>Informe seu e-mail cadastrado no sistema.</li>
+  <li>Você receberá um link de redefinição por e-mail.</li>
+  <li>Clique no link, defina uma nova senha e confirme.</li>
+</ol>
+<blockquote><p>O link de redefinição expira em 60 minutos. Verifique também a caixa de spam.</p></blockquote>
+
+<h3>2.3 Como fazer logout</h3>
+<ol class="step-block">
+  <li>Clique no seu nome ou avatar no canto superior direito.</li>
+  <li>Selecione <strong>Sair</strong>.</li>
+  <li>O sistema encerra a sessão e redireciona para a tela de login.</li>
+</ol>
+</section>
+
+<hr class="section-divider">
+
+<!-- 3 -->
+<section id="s3">
+<h2>3. Perfis de Acesso</h2>
+<p>O Sysdoc possui 6 perfis pré-configurados. Cada perfil acessa apenas os módulos pertinentes à sua função.</p>
+<table>
+  <thead><tr><th>Perfil</th><th>Descrição</th><th>Módulos principais</th></tr></thead>
+  <tbody>
+    <tr><td><strong>admin</strong></td><td>Administrador total</td><td>Todos os módulos + configurações</td></tr>
+    <tr><td><strong>manager</strong></td><td>Gestor</td><td>Laboratório, Documentos, Dashboards</td></tr>
+    <tr><td><strong>user</strong></td><td>Usuário padrão</td><td>Clientes, Pedidos básicos</td></tr>
+    <tr><td><strong>tfd</strong></td><td>Equipe TFD</td><td>Viagens, Veículos, Rotas</td></tr>
+    <tr><td><strong>driver</strong></td><td>Motorista</td><td>Painel de viagens próprias</td></tr>
+    <tr><td><strong>partner</strong></td><td>Parceiro externo</td><td>Somente cadastro de clientes</td></tr>
+  </tbody>
+</table>
+<div class="callout"><p>O administrador pode criar perfis personalizados e configurar exatamente quais páginas cada perfil pode acessar.</p></div>
+</section>
+
+<hr class="section-divider">
+
+<!-- 4 -->
+<section id="s4">
+<h2>4. Cadastro de Pacientes</h2>
+<p>O cadastro de pacientes é a base central. Todos os módulos (laboratório, TFD, atendimento) referenciam este cadastro.</p>
+
+<h3>4.1 Cadastrar novo paciente</h3>
+<ol class="step-block">
+  <li>No menu lateral, acesse <strong>Clientes</strong>.</li>
+  <li>Clique em <strong>Novo Paciente</strong>.</li>
+  <li>Preencha: nome completo, data de nascimento, CPF ou CNS, sexo.</li>
+  <li>Opcionais: mãe, pai, e-mail, telefone, observações.</li>
+  <li>Adicione o <strong>endereço</strong> clicando em "Adicionar Endereço".</li>
+  <li>Clique em <strong>Salvar</strong>.</li>
+</ol>
+
+<h3>4.2 Buscar paciente</h3>
+<p>Use a barra de busca em Clientes para pesquisar por <strong>nome</strong>, <strong>CPF</strong> ou <strong>CNS</strong> (Cartão Nacional de Saúde).</p>
+
+<h3>4.3 Editar dados do paciente</h3>
+<ol class="step-block">
+  <li>Localize o paciente na listagem.</li>
+  <li>Clique em <strong>Editar</strong> (ícone de lápis).</li>
+  <li>Altere os campos necessários e clique em <strong>Salvar</strong>.</li>
+</ol>
+</section>
+
+<hr class="section-divider">
+
+<!-- 5 -->
+<section id="s5">
+<h2>5. Laboratório Clínico</h2>
+<p>Gerencia todo o ciclo laboratorial: do pedido ao laudo liberado.</p>
+
+<h3>5.1 Fluxo de status do pedido</h3>
+<pre><code>Solicitado → Coletado → Em Análise → Liberado
+           ↘ Cancelado ↗ Cancelado</code></pre>
+<p>Apenas transições válidas são permitidas pelo sistema.</p>
+
+<h3>5.2 Criar pedido de exame</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Laboratório &gt; Pedidos</strong> e clique em <strong>Novo Pedido</strong>.</li>
+  <li>Selecione o paciente (busca por nome/CPF).</li>
+  <li>Informe a data do pedido e o médico solicitante.</li>
+  <li>Adicione os exames clicando em "+ Adicionar Exame".</li>
+  <li>Clique em <strong>Salvar Pedido</strong>. Status inicial: <em>Solicitado</em>.</li>
+</ol>
+
+<h3>5.3 Avançar o status do pedido</h3>
+<ol class="step-block">
+  <li>Abra o pedido desejado.</li>
+  <li>Clique em <strong>Atualizar Status</strong>.</li>
+  <li>Selecione o próximo status válido e confirme.</li>
+</ol>
+
+<h3>5.4 Registrar resultado</h3>
+<ol class="step-block">
+  <li>Com o pedido em <em>Em Análise</em>, clique em <strong>Registrar Resultado</strong>.</li>
+  <li>Preencha os valores de cada campo do exame.</li>
+  <li>O sistema indica automaticamente se os valores estão nas faixas de referência.</li>
+  <li>Clique em <strong>Salvar Resultado</strong>.</li>
+</ol>
+
+<h3>5.5 Liberar resultado e gerar laudo PDF</h3>
+<ol class="step-block">
+  <li>Com o resultado registrado, clique em <strong>Liberar</strong>.</li>
+  <li>O sistema gera um <strong>protocolo único</strong> para o resultado.</li>
+  <li>O laudo em PDF fica disponível para download.</li>
+</ol>
+
+<h3>5.6 Consulta pública por protocolo</h3>
+<p>O paciente pode consultar o resultado sem login:</p>
+<ol class="step-block">
+  <li>Acesse a página pública de consulta de exames.</li>
+  <li>Informe o <strong>protocolo</strong> recebido.</li>
+  <li>Visualize ou baixe o laudo em PDF.</li>
+</ol>
+
+<h3>5.7 Médicos solicitantes e agenda</h3>
+<ul>
+  <li><strong>Laboratório &gt; Médicos:</strong> cadastre médicos (nome, CRM, especialidade).</li>
+  <li><strong>Laboratório &gt; Agenda de Coleta:</strong> visualize pedidos por data de coleta.</li>
+</ul>
+</section>
+
+<hr class="section-divider">
+
+<!-- 6 -->
+<section id="s6">
+<h2>6. Fila de Atendimento</h2>
+<p>Sistema de senhas digitais com painel TV em tempo real.</p>
+
+<h3>6.1 Emitir senha</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Atendimento &gt; Emitir Senha</strong>.</li>
+  <li>Selecione o paciente e a sala de atendimento.</li>
+  <li>Clique em <strong>Emitir Senha</strong>. O sistema gera um número sequencial do dia (ex: A-001).</li>
+</ol>
+
+<h3>6.2 Chamar e atender</h3>
+<ol class="step-block">
+  <li>Em <strong>Atendimento &gt; Fila</strong>, clique em <strong>Chamar Próximo</strong> ou selecione uma senha específica.</li>
+  <li>Clique em <strong>Iniciar Atendimento</strong>.</li>
+  <li>Registre notas durante o atendimento.</li>
+  <li>Ao concluir, clique em <strong>Finalizar Atendimento</strong>.</li>
+</ol>
+
+<h3>6.3 Painel TV</h3>
+<p>O painel TV exibe a fila em tempo real e pode ser aberto em qualquer tela sem login. Acesse a URL do painel fornecida pelo administrador.</p>
+
+<h3>6.4 Cancelar / não compareceu</h3>
+<ul>
+  <li>Clique em <strong>Cancelar</strong> para cancelar uma senha.</li>
+  <li>Clique em <strong>Não Compareceu</strong> se o paciente foi chamado mas não atendeu.</li>
+</ul>
+</section>
+
+<hr class="section-divider">
+
+<!-- 7 -->
+<section id="s7">
+<h2>7. Farmácia Municipal</h2>
+
+<h3>7.1 Cadastrar medicamento</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Farmácia &gt; Medicamentos</strong> e clique em <strong>Novo Medicamento</strong>.</li>
+  <li>Preencha: código interno, princípio ativo, concentração, forma farmacêutica, apresentação e unidade.</li>
+  <li>Clique em <strong>Salvar</strong>.</li>
+</ol>
+
+<h3>7.2 Registrar disponibilidade diária</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Farmácia &gt; Disponibilidade Diária</strong>.</li>
+  <li>Para cada medicamento, marque como <strong>Disponível</strong> ou <strong>Indisponível</strong>.</li>
+  <li>Salve o registro. Este dado alimenta o painel público de transparência.</li>
+</ol>
+
+<h3>7.3 Registrar aquisição mensal (Lei 2488)</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Farmácia &gt; Aquisições Mensais</strong> e clique em <strong>Nova Aquisição</strong>.</li>
+  <li>Selecione o medicamento, mês, quantidade, custo unitário e fonte de aquisição.</li>
+  <li>Informe o documento de origem e clique em <strong>Salvar</strong>.</li>
+</ol>
+<div class="callout"><p>As aquisições mensais ficam disponíveis no painel público da farmácia, atendendo à <strong>Lei 2488</strong> de transparência.</p></div>
+</section>
+
+<hr class="section-divider">
+
+<!-- 8 -->
+<section id="s8">
+<h2>8. Vigilância Sanitária</h2>
+
+<h3>8.1 Cadastrar estabelecimento</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Vigilância &gt; Estabelecimentos</strong> e clique em <strong>Novo Estabelecimento</strong>.</li>
+  <li>Preencha: nome, CNAE, responsável, endereço, telefone, e-mail.</li>
+  <li>Clique em <strong>Salvar</strong>.</li>
+</ol>
+
+<h3>8.2 Emitir alvará sanitário</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Vigilância &gt; Alvarás</strong> e clique em <strong>Novo Alvará</strong>.</li>
+  <li>Selecione o estabelecimento.</li>
+  <li>Informe: número, data de emissão, data de vencimento, status e nível de risco.</li>
+  <li>Clique em <strong>Salvar</strong>.</li>
+</ol>
+
+<h3>8.3 Download do alvará em PDF</h3>
+<p>Na listagem de alvarás, clique em <strong>Baixar PDF</strong> para gerar o documento oficial.</p>
+
+<h3>8.4 Controle de vencimentos</h3>
+<p>No <strong>Dashboard de Vigilância</strong>, visualize alvarás vigentes, vencidos e a vencer nos próximos 30 dias.</p>
+</section>
+
+<hr class="section-divider">
+
+<!-- 9 -->
+<section id="s9">
+<h2>9. TFD &mdash; Transporte Fretado Delegado</h2>
+
+<h3>9.1 Cadastrar viagem</h3>
+<ol class="step-block">
+  <li>Acesse <strong>TFD &gt; Viagens</strong> e clique em <strong>Nova Viagem</strong>.</li>
+  <li>Informe: data, destino, rota (opcional) e veículo/motorista.</li>
+  <li>Clique em <strong>Salvar</strong>.</li>
+</ol>
+
+<h3>9.2 Adicionar pacientes e confirmar presença</h3>
+<ol class="step-block">
+  <li>Abra a viagem e clique em <strong>Adicionar Paciente</strong>.</li>
+  <li>Busque o paciente por nome ou CPF.</li>
+  <li>Na listagem, clique em <strong>Confirmar</strong> para confirmar presença ou <strong>Remover</strong> para retirar.</li>
+</ol>
+
+<h3>9.3 Veículos e rotas</h3>
+<ul>
+  <li><strong>TFD &gt; Veículos:</strong> cadastre placa, modelo e motorista responsável.</li>
+  <li><strong>TFD &gt; Rotas:</strong> cadastre rotas com origem, destino e km.</li>
+</ul>
+</section>
+
+<hr class="section-divider">
+
+<!-- 10 -->
+<section id="s10">
+<h2>10. Documentos com IA</h2>
+
+<h3>10.1 Criar ofício</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Documentos &gt; Ofícios</strong> e clique em <strong>Novo Ofício</strong>.</li>
+  <li>Preencha: assunto, remetente, destinatário, resumo e observações.</li>
+  <li>O número é gerado <strong>automaticamente</strong> (sequencial anual).</li>
+  <li>Clique em <strong>Salvar</strong>.</li>
+</ol>
+
+<h3>10.2 Criar ofício com Inteligência Artificial</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Documentos &gt; Ofícios &gt; Criar com IA</strong>.</li>
+  <li>Descreva brevemente o assunto do ofício.</li>
+  <li>O sistema usa a IA para redigir o texto completo.</li>
+  <li>Revise o conteúdo gerado, edite se necessário e salve.</li>
+</ol>
+<div class="callout"><p>O mesmo fluxo se aplica a <strong>Portarias</strong> em <em>Documentos &gt; Portarias</em>.</p></div>
+
+<h3>10.3 Gerenciar anexos</h3>
+<ol class="step-block">
+  <li>Abra o documento desejado.</li>
+  <li>Em <strong>Anexos</strong>, clique em <strong>Adicionar Anexo</strong> e selecione o arquivo.</li>
+  <li>Para baixar: clique em <strong>Download</strong>. Para excluir: clique em <strong>Remover</strong>.</li>
+</ol>
+</section>
+
+<hr class="section-divider">
+
+<!-- 11 -->
+<section id="s11">
+<h2>11. Monitor APS</h2>
+<p>Exibe indicadores de desempenho da Atenção Primária à Saúde, extraídos diretamente do eSUS PEC municipal.</p>
+
+<h3>11.1 Indicadores disponíveis</h3>
+<ul>
+  <li><strong>Vínculo territorial:</strong> dados sobre acompanhamento de famílias pelas equipes de saúde.</li>
+  <li><strong>Qualidade (15 indicadores):</strong> conforme Portaria GM/MS 6.907/2025 — pré-natal no 1º trimestre, hemoglobina glicada em diabéticos, PA aferida em hipertensos, entre outros.</li>
+  <li><strong>Repasse federal:</strong> valores de cofinanciamento por quadrimestre baseados no desempenho.</li>
+  <li><strong>Por equipe:</strong> desempenho individual de cada equipe de saúde.</li>
+</ul>
+
+<h3>11.2 Configuração da conexão (somente admin)</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Monitor APS &gt; Configurações</strong>.</li>
+  <li>Informe: Host (IP do servidor eSUS), Porta, Banco de dados, Usuário e Senha.</li>
+  <li>Clique em <strong>Testar Conexão</strong>.</li>
+  <li>Se bem-sucedido, clique em <strong>Salvar</strong>.</li>
+</ol>
+</section>
+
+<hr class="section-divider">
+
+<!-- 12 -->
+<section id="s12">
+<h2>12. Dashboards</h2>
+<p>Painéis analíticos com métricas em tempo real para apoio à decisão.</p>
+
+<table>
+  <thead><tr><th>Dashboard</th><th>Métricas principais</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Início</strong></td><td>Total de clientes, especialidades, ofícios e portarias</td></tr>
+    <tr><td><strong>Laboratório</strong></td><td>Pedidos por status/mês, top 10 exames, top 5 médicos, resultados por status</td></tr>
+    <tr><td><strong>TFD</strong></td><td>Viagens no mês, pessoas transportadas, km rodados, top motoristas e rotas</td></tr>
+    <tr><td><strong>Farmácia</strong></td><td>Taxa de disponibilidade, top 10 indisponíveis, aquisições do mês</td></tr>
+    <tr><td><strong>Vigilância</strong></td><td>Alvarás vigentes/vencidos/a vencer, por nível de risco, próximos vencimentos</td></tr>
+    <tr><td><strong>Logs</strong></td><td>Acessos via QR code e links públicos por dia e mês</td></tr>
+  </tbody>
+</table>
+</section>
+
+<hr class="section-divider">
+
+<!-- 13 -->
+<section id="s13">
+<h2>13. Auditoria e Logs</h2>
+<p>O Sysdoc registra <strong>todas as ações</strong> realizadas. Acessível apenas para administradores.</p>
+
+<h3>13.1 Consultar logs de auditoria</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Administração &gt; Logs de Auditoria</strong>.</li>
+  <li>Utilize os filtros: usuário, tipo de ação, período e módulo.</li>
+  <li>Cada registro exibe: quem fez, quando, IP, dispositivo, endpoint e valores antes/depois.</li>
+</ol>
+
+<p>Tipos de ação registrados: <code>LOGIN</code>, <code>LOGOUT</code>, <code>CREATE</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>VIEW</code>.</p>
+<div class="callout"><p>Dados sensíveis (senhas, tokens) são automaticamente removidos dos registros de auditoria antes do armazenamento.</p></div>
+</section>
+
+<hr class="section-divider">
+
+<!-- 14 -->
+<section id="s14">
+<h2>14. Administração do Sistema</h2>
+<p>Acessível apenas para o perfil <strong>admin</strong>.</p>
+
+<h3>14.1 Gerenciar usuários</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Administração &gt; Usuários</strong>.</li>
+  <li>Para criar: <strong>Novo Usuário</strong> &rarr; preencha nome, e-mail, CPF, senha e perfil.</li>
+  <li>Para desativar: marque como inativo (o histórico é preservado).</li>
+</ol>
+
+<h3>14.2 Gerenciar perfis e permissões</h3>
+<ol class="step-block">
+  <li>Acesse <strong>Administração &gt; Perfis de Acesso</strong>.</li>
+  <li>Crie novos perfis ou edite os existentes.</li>
+  <li>Selecione quais <strong>páginas do sistema</strong> cada perfil pode acessar.</li>
+</ol>
+</section>
+
+<hr class="section-divider">
+
+<!-- 15 -->
+<section id="s15">
+<h2>15. Consultas Públicas</h2>
+<p>Funcionalidades disponíveis <strong>sem login</strong> para o cidadão:</p>
+
+<table>
+  <thead><tr><th>Recurso</th><th>Como acessar</th></tr></thead>
+  <tbody>
+    <tr><td>Resultado de exame por protocolo</td><td>Página pública &rarr; informe o protocolo</td></tr>
+    <tr><td>Disponibilidade de medicamentos</td><td>Painel público da farmácia</td></tr>
+    <tr><td>Aquisições mensais (Lei 2488)</td><td>Painel público de aquisições</td></tr>
+    <tr><td>Painel TV de atendimento</td><td>URL do painel TV (fornecida pelo admin)</td></tr>
+  </tbody>
+</table>
+</section>
+
+<hr class="section-divider">
+
+<!-- 16 -->
+<section id="s16">
+<h2>16. Solução de Problemas</h2>
+
+<table>
+  <thead><tr><th>Problema</th><th>Solução</th></tr></thead>
+  <tbody>
+    <tr><td>Não consigo fazer login</td><td>CPF sem pontos/traços; verifique Caps Lock; use "Esqueci minha senha"; contate o admin</td></tr>
+    <tr><td>Pedido não avança de status</td><td>Verifique se a transição é válida no fluxo; apenas usuários de lab podem alterar status</td></tr>
+    <tr><td>Não vejo um módulo no menu</td><td>Seu perfil pode não ter acesso. Contate o administrador</td></tr>
+    <tr><td>Monitor APS não carrega</td><td>Conexão com eSUS PEC indisponível. Admin deve verificar configuração de host/porta</td></tr>
+    <tr><td>Painel TV não atualiza</td><td>Verifique internet do dispositivo; pressione F5 para atualizar manualmente</td></tr>
+    <tr><td>Não recebi e-mail de senha</td><td>Verifique spam; confirme o e-mail com o administrador</td></tr>
+  </tbody>
+</table>
+</section>
+
+<hr class="section-divider">
+
+<!-- 17 -->
+<section id="s17">
+<h2>17. Glossário</h2>
+<table>
+  <thead><tr><th>Termo</th><th>Definição</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Admin</strong></td><td>Perfil de administrador com acesso total</td></tr>
+    <tr><td><strong>Alvará</strong></td><td>Documento oficial de autorização de funcionamento de estabelecimento</td></tr>
+    <tr><td><strong>APS</strong></td><td>Atenção Primária à Saúde</td></tr>
+    <tr><td><strong>CNS</strong></td><td>Cartão Nacional de Saúde — identificador único do paciente no SUS</td></tr>
+    <tr><td><strong>CNAE</strong></td><td>Classificação Nacional de Atividades Econômicas</td></tr>
+    <tr><td><strong>CRM</strong></td><td>Registro do médico no Conselho Regional de Medicina</td></tr>
+    <tr><td><strong>eSUS PEC</strong></td><td>Sistema de informação de APS do Ministério da Saúde</td></tr>
+    <tr><td><strong>Laudo</strong></td><td>Documento oficial com resultado de exame laboratorial</td></tr>
+    <tr><td><strong>Lei 2488</strong></td><td>Norma de transparência pública para farmácias municipais</td></tr>
+    <tr><td><strong>Portaria GM/MS 6.907/2025</strong></td><td>Define indicadores de cofinanciamento APS</td></tr>
+    <tr><td><strong>Protocolo</strong></td><td>Código único para consulta pública de resultado de exame</td></tr>
+    <tr><td><strong>REMUME</strong></td><td>Relação Municipal de Medicamentos Essenciais</td></tr>
+    <tr><td><strong>TFD</strong></td><td>Tratamento Fora do Domicílio — transporte de pacientes para outras cidades</td></tr>
+    <tr><td><strong>Throttle</strong></td><td>Limite de requisições por minuto para proteger endpoints públicos</td></tr>
+  </tbody>
+</table>
+</section>
+
+<div class="manual-footer">
+  <p>Sysdoc &mdash; Sistema de Gestão Municipal de Saúde &mdash; Versão 1.0 &mdash; Maio 2026</p>
+  <p>DL Sistemas &mdash; dlsistemas.com.br</p>
+</div>
+
+</div>
+</body>
+</html>
