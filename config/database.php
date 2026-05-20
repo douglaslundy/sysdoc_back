@@ -78,6 +78,20 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'pgsql_esus' => [
+            'driver'         => 'pgsql',
+            'host'           => env('APS_DB_HOST', '127.0.0.1'),
+            'port'           => env('APS_DB_PORT', '5432'),
+            'database'       => env('APS_DB_DATABASE', 'esus'),
+            'username'       => env('APS_DB_USERNAME', 'monitor_aps'),
+            'password'       => env('APS_DB_PASSWORD', ''),
+            'charset'        => 'utf8',
+            'prefix'         => '',
+            'prefix_indexes' => true,
+            'schema'         => 'public',
+            'sslmode'        => 'prefer',
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),

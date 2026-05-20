@@ -47,6 +47,8 @@ use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SpecialityController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\SystemPageController;
+use App\Http\Controllers\MonitorApsConfigController;
+use App\Http\Controllers\MonitorApsController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
@@ -111,6 +113,24 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/attendance/service/{ticketId}/start', [AttendanceController::class, 'serviceStart']);
     Route::patch('/attendance/service/{ticketId}/notes', [AttendanceController::class, 'serviceNotes']);
     Route::post('/attendance/service/{ticketId}/finish', [AttendanceController::class, 'serviceFinish']);
+
+    // Monitor APS — indicadores Portaria GM/MS 6.907/2025
+    Route::prefix('monitor-aps')->middleware('throttle:60,1')->group(function () {
+        Route::prefix('indicadores')->group(function () {
+            Route::get('/resumo',       [MonitorApsController::class, 'resumo']);
+            Route::get('/vinculo',      [MonitorApsController::class, 'vinculo']);
+            Route::get('/qualidade',    [MonitorApsController::class, 'qualidade']);
+            Route::get('/qualidade/{id}', [MonitorApsController::class, 'qualidadeIndicador']);
+            Route::get('/repasse',      [MonitorApsController::class, 'repasse']);
+            Route::get('/historico',    [MonitorApsController::class, 'historico']);
+        });
+        Route::get('/config/status',  [MonitorApsConfigController::class, 'status']);
+        Route::get('/config/equipes', [MonitorApsConfigController::class, 'equipes']);
+        Route::middleware('admin')->group(function () {
+            Route::post('/config/test', [MonitorApsConfigController::class, 'testar']);
+            Route::post('/config/save', [MonitorApsConfigController::class, 'save']);
+        });
+    });
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
     Route::middleware('throttle:120,1')->group(function () {
