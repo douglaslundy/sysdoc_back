@@ -83,13 +83,22 @@ class MonitorApsConfigController extends MonitorApsBaseController
             'password' => 'nullable|string',
         ]);
 
+        $password = $data['password'] ?? '';
+        if ($password === '') {
+            $row = $this->row();
+            $saved = $row->aps_db_password ?? env('APS_DB_PASSWORD', '');
+            if ($saved) {
+                try { $password = decrypt($saved); } catch (\Throwable) { $password = $saved; }
+            }
+        }
+
         config(['database.connections.pgsql_esus_test' => [
             'driver'   => 'pgsql',
             'host'     => $data['host'],
             'port'     => $data['port'] ?? 5432,
             'database' => $data['database'],
             'username' => $data['user'],
-            'password' => $data['password'] ?? '',
+            'password' => $password,
             'charset'  => 'utf8',
             'prefix'   => '',
             'schema'   => 'public',
