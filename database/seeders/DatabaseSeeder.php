@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             EstabelecimentosAlvarasSeeder::class, // Estabelecimentos e alvaras de Ilicinea
             PharmacyCatalogSeeder::class,         // Catalogos auxiliares da Farmacia
             SusMgMedicinesSeeder::class,          // Medicamentos SUS-MG (REMEMG/CEAF + controlados)
+            MonitorApsPageSeeder::class,          // Monitor APS - categorias, paginas e permissoes
         ]);
     }
 }
