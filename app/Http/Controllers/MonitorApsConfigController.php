@@ -20,10 +20,10 @@ class MonitorApsConfigController extends MonitorApsBaseController
     public function status()
     {
         $row  = $this->row();
-        $host = $row->aps_db_host     ?? env('APS_DB_HOST', '');
-        $port = $row->aps_db_port     ?? env('APS_DB_PORT', 5432);
-        $db   = $row->aps_db_database ?? env('APS_DB_DATABASE', '');
-        $user = $row->aps_db_username ?? env('APS_DB_USERNAME', '');
+        $host = $row?->aps_db_host     ?? env('APS_DB_HOST', '');
+        $port = $row?->aps_db_port     ?? env('APS_DB_PORT', 5432);
+        $db   = $row?->aps_db_database ?? env('APS_DB_DATABASE', '');
+        $user = $row?->aps_db_username ?? env('APS_DB_USERNAME', '');
 
         return response()->json([
             'configured' => (bool) $host,
@@ -49,14 +49,14 @@ class MonitorApsConfigController extends MonitorApsBaseController
         }
 
         return response()->json([
-            'host'           => $row->aps_db_host     ?? env('APS_DB_HOST',     ''),
-            'port'           => $row->aps_db_port     ?? env('APS_DB_PORT',     5432),
-            'database'       => $row->aps_db_database ?? env('APS_DB_DATABASE', 'esus'),
-            'user'           => $row->aps_db_username ?? env('APS_DB_USERNAME', ''),
+            'host'           => $row?->aps_db_host     ?? env('APS_DB_HOST',     ''),
+            'port'           => $row?->aps_db_port     ?? env('APS_DB_PORT',     5432),
+            'database'       => $row?->aps_db_database ?? env('APS_DB_DATABASE', 'esus'),
+            'user'           => $row?->aps_db_username ?? env('APS_DB_USERNAME', ''),
             'password'       => $password,
-            'municipio_ibge' => $row->municipio_ibge  ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
-            'municipio_nome' => $row->municipio_nome  ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
-            'estrato_ied'    => (int) ($row->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
+            'municipio_ibge' => $row?->municipio_ibge  ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
+            'municipio_nome' => $row?->municipio_nome  ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
+            'estrato_ied'    => (int) ($row?->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
         ]);
     }
 
@@ -95,7 +95,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
         $password = $data['password'] ?? '';
         if ($password === '') {
             $row = $this->row();
-            $saved = $row->aps_db_password ?? env('APS_DB_PASSWORD', '');
+            $saved = $row?->aps_db_password ?? env('APS_DB_PASSWORD', '');
             if ($saved) {
                 try { $password = decrypt($saved); } catch (\Throwable) { $password = $saved; }
             }

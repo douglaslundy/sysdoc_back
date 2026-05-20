@@ -11,11 +11,11 @@ abstract class MonitorApsBaseController extends Controller
     {
         $row = DB::table('monitor_aps_configs')->first();
 
-        $host     = $row->aps_db_host     ?? env('APS_DB_HOST', '');
-        $port     = $row->aps_db_port     ?? env('APS_DB_PORT', 5432);
-        $database = $row->aps_db_database ?? env('APS_DB_DATABASE', 'esus');
-        $username = $row->aps_db_username ?? env('APS_DB_USERNAME', '');
-        $password = $row->aps_db_password ?? env('APS_DB_PASSWORD', '');
+        $host     = $row?->aps_db_host     ?? env('APS_DB_HOST', '');
+        $port     = $row?->aps_db_port     ?? env('APS_DB_PORT', 5432);
+        $database = $row?->aps_db_database ?? env('APS_DB_DATABASE', 'esus');
+        $username = $row?->aps_db_username ?? env('APS_DB_USERNAME', '');
+        $password = $row?->aps_db_password ?? env('APS_DB_PASSWORD', '');
 
         if ($password) {
             try { $password = decrypt($password); } catch (\Throwable) {}
