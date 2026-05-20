@@ -39,15 +39,24 @@ class MonitorApsConfigController extends MonitorApsBaseController
     public function load()
     {
         $row = $this->row();
+
+        $encrypted = $row ? ($row->aps_db_password ?? '') : '';
+        $password  = '';
+        if ($encrypted) {
+            try { $password = decrypt($encrypted); } catch (\Throwable) { $password = $encrypted; }
+        } elseif (env('APS_DB_PASSWORD', '')) {
+            $password = env('APS_DB_PASSWORD', '');
+        }
+
         return response()->json([
             'host'           => $row->aps_db_host     ?? env('APS_DB_HOST',     ''),
             'port'           => $row->aps_db_port     ?? env('APS_DB_PORT',     5432),
             'database'       => $row->aps_db_database ?? env('APS_DB_DATABASE', 'esus'),
             'user'           => $row->aps_db_username ?? env('APS_DB_USERNAME', ''),
+            'password'       => $password,
             'municipio_ibge' => $row->municipio_ibge  ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
             'municipio_nome' => $row->municipio_nome  ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
             'estrato_ied'    => (int) ($row->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
-            'has_password'   => !empty($row ? ($row->aps_db_password ?? '') : env('APS_DB_PASSWORD', '')),
         ]);
     }
 
@@ -110,6 +119,13 @@ class MonitorApsConfigController extends MonitorApsBaseController
             $conn = DB::connection('pgsql_esus_test');
             $conn->select('SELECT 1');
 
+            $tabelas = $conn->select("
+                SELECT table_schema AS schema, table_name AS tabela, table_type AS tipo
+                FROM information_schema.tables
+                WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
+                ORDER BY table_schema, table_name
+            ");
+
             $temDW = false;
             $totalEquipes = 0;
             try {
@@ -122,9 +138,10 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 'success'       => true,
                 'tem_dw'        => $temDW,
                 'total_equipes' => $totalEquipes,
+                'tabelas'       => $tabelas,
                 'mensagem'      => $temDW
-                    ? "Conectado — {$totalEquipes} equipe(s) ativa(s) encontrada(s)."
-                    : 'Conectado, mas o schema DW do eSUS PEC não foi encontrado neste banco.',
+                    ? "Conectado — {$totalEquipes} equipe(s) ativa(s), " . count($tabelas) . " tabela(s) encontrada(s)."
+                    : 'Conectado, mas o schema DW do eSUS PEC não foi encontrado neste banco. ' . count($tabelas) . ' tabela(s) encontrada(s).',
             ]);
         } catch (\Throwable $e) {
             $msg = $e->getMessage();
