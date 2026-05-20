@@ -7,25 +7,19 @@ use Illuminate\Support\Facades\DB;
 
 class MonitorApsConfigController extends MonitorApsBaseController
 {
-    private function configPath(): string
+    private function row(): ?object
     {
-        return storage_path('app/monitor-aps-config.json');
-    }
-
-    private function loadConfig(): ?array
-    {
-        $path = $this->configPath();
-        return file_exists($path) ? json_decode(file_get_contents($path), true) : null;
+        return DB::table('monitor_aps_configs')->first();
     }
 
     // GET /monitor-aps/config/status
     public function status()
     {
-        $config = $this->loadConfig();
-        $host   = $config['host']     ?? env('APS_DB_HOST', '');
-        $banco  = $config['database'] ?? env('APS_DB_DATABASE', '');
-        $port   = $config['port']     ?? env('APS_DB_PORT', 5432);
-        $user   = $config['user']     ?? env('APS_DB_USERNAME', '');
+        $row  = $this->row();
+        $host = $row->aps_db_host     ?? env('APS_DB_HOST', '');
+        $port = $row->aps_db_port     ?? env('APS_DB_PORT', 5432);
+        $db   = $row->aps_db_database ?? env('APS_DB_DATABASE', '');
+        $user = $row->aps_db_username ?? env('APS_DB_USERNAME', '');
 
         try {
             $this->db()->select('SELECT 1');
@@ -34,7 +28,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 'connected'  => true,
                 'host'       => $host,
                 'port'       => $port,
-                'database'   => $banco,
+                'database'   => $db,
                 'user'       => $user,
             ]);
         } catch (\Throwable $e) {
@@ -43,7 +37,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 'connected'  => false,
                 'host'       => $host,
                 'port'       => $port,
-                'database'   => $banco,
+                'database'   => $db,
                 'user'       => $user,
                 'error'      => $e->getMessage(),
             ]);
@@ -53,12 +47,15 @@ class MonitorApsConfigController extends MonitorApsBaseController
     // GET /monitor-aps/config/load
     public function load()
     {
-        $config = $this->loadConfig();
+        $row = $this->row();
         return response()->json([
-            'host'     => $config['host']     ?? env('APS_DB_HOST',     ''),
-            'port'     => $config['port']     ?? env('APS_DB_PORT',     5432),
-            'database' => $config['database'] ?? env('APS_DB_DATABASE', 'esus'),
-            'user'     => $config['user']     ?? env('APS_DB_USERNAME', ''),
+            'host'           => $row->aps_db_host     ?? env('APS_DB_HOST',     ''),
+            'port'           => $row->aps_db_port     ?? env('APS_DB_PORT',     5432),
+            'database'       => $row->aps_db_database ?? env('APS_DB_DATABASE', 'esus'),
+            'user'           => $row->aps_db_username ?? env('APS_DB_USERNAME', ''),
+            'municipio_ibge' => $row->municipio_ibge  ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
+            'municipio_nome' => $row->municipio_nome  ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
+            'estrato_ied'    => (int) ($row->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
         ]);
     }
 
@@ -108,12 +105,12 @@ class MonitorApsConfigController extends MonitorApsBaseController
         ]]);
 
         try {
-            $equipes = DB::connection('pgsql_esus_test')->select(
+            $result = DB::connection('pgsql_esus_test')->select(
                 'SELECT COUNT(*) AS total FROM dim_equipe WHERE st_ativo = true'
             );
             return response()->json([
                 'success'       => true,
-                'total_equipes' => (int) ($equipes[0]->total ?? 0),
+                'total_equipes' => (int) ($result[0]->total ?? 0),
                 'mensagem'      => 'Conexão estabelecida com sucesso.',
             ]);
         } catch (\Throwable $e) {
@@ -125,21 +122,40 @@ class MonitorApsConfigController extends MonitorApsBaseController
     public function save(Request $request)
     {
         $data = $request->validate([
-            'host'     => 'required|string',
-            'database' => 'required|string',
-            'user'     => 'required|string',
-            'port'     => 'nullable|integer',
-            'password' => 'nullable|string',
+            'host'           => 'required|string',
+            'database'       => 'required|string',
+            'user'           => 'required|string',
+            'port'           => 'nullable|integer',
+            'password'       => 'nullable|string',
+            'municipio_ibge' => 'nullable|string',
+            'municipio_nome' => 'nullable|string',
+            'estrato_ied'    => 'nullable|integer|min:1|max:4',
         ]);
 
+        $payload = [
+            'aps_db_host'     => $data['host'],
+            'aps_db_port'     => $data['port'] ?? 5432,
+            'aps_db_database' => $data['database'],
+            'aps_db_username' => $data['user'],
+            'municipio_ibge'  => $data['municipio_ibge'] ?? '',
+            'municipio_nome'  => $data['municipio_nome'] ?? '',
+            'estrato_ied'     => $data['estrato_ied'] ?? 4,
+            'updated_at'      => now(),
+        ];
+
+        if (!empty($data['password'])) {
+            $payload['aps_db_password'] = encrypt($data['password']);
+        }
+
         try {
-            file_put_contents($this->configPath(), json_encode([
-                'host'     => $data['host'],
-                'port'     => $data['port'] ?? 5432,
-                'database' => $data['database'],
-                'user'     => $data['user'],
-                'password' => $data['password'] ?? '',
-            ], JSON_PRETTY_PRINT));
+            $existing = DB::table('monitor_aps_configs')->first();
+            if ($existing) {
+                DB::table('monitor_aps_configs')->where('id', $existing->id)->update($payload);
+            } else {
+                $payload['created_at'] = now();
+                DB::table('monitor_aps_configs')->insert($payload);
+            }
+            DB::purge('pgsql_esus_runtime');
             return response()->json(['success' => true]);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);

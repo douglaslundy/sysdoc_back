@@ -8,23 +8,31 @@ abstract class MonitorApsBaseController extends Controller
 {
     protected function db(): \Illuminate\Database\ConnectionInterface
     {
-        $path = storage_path('app/monitor-aps-config.json');
-        if (file_exists($path)) {
-            $c = json_decode(file_get_contents($path), true);
-            config(['database.connections.pgsql_esus_runtime' => [
-                'driver'   => 'pgsql',
-                'host'     => $c['host'],
-                'port'     => $c['port'] ?? 5432,
-                'database' => $c['database'],
-                'username' => $c['user'],
-                'password' => $c['password'] ?? '',
-                'charset'  => 'utf8',
-                'prefix'   => '',
-                'schema'   => 'public',
-                'sslmode'  => 'prefer',
-            ]]);
-            return DB::connection('pgsql_esus_runtime');
+        $row = DB::table('monitor_aps_configs')->first();
+
+        $host     = $row->aps_db_host     ?? env('APS_DB_HOST', '');
+        $port     = $row->aps_db_port     ?? env('APS_DB_PORT', 5432);
+        $database = $row->aps_db_database ?? env('APS_DB_DATABASE', 'esus');
+        $username = $row->aps_db_username ?? env('APS_DB_USERNAME', '');
+        $password = $row->aps_db_password ?? env('APS_DB_PASSWORD', '');
+
+        if ($password) {
+            try { $password = decrypt($password); } catch (\Throwable) {}
         }
-        return DB::connection('pgsql_esus');
+
+        config(['database.connections.pgsql_esus_runtime' => [
+            'driver'   => 'pgsql',
+            'host'     => $host,
+            'port'     => (int) $port,
+            'database' => $database,
+            'username' => $username,
+            'password' => $password,
+            'charset'  => 'utf8',
+            'prefix'   => '',
+            'schema'   => 'public',
+            'sslmode'  => 'prefer',
+        ]]);
+
+        return DB::connection('pgsql_esus_runtime');
     }
 }
