@@ -365,7 +365,7 @@ class VisitaAcsController extends MonitorApsBaseController
      */
     public function show(int $id): JsonResponse
     {
-        $row = $this->db()->selectOne("
+        $baseSelect = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
                 v.co_fat_cidadao_pec             AS cidadao_pec,
@@ -379,12 +379,6 @@ class VisitaAcsController extends MonitorApsBaseController
                 d.ds_desfecho_visita             AS outcome_label,
                 v.nu_latitude                    AS lat,
                 v.nu_longitude                   AS lng,
-                a.ds_anotacao                    AS notes,
-                ci.no_cidadao                    AS citizen_name,
-                ci.ds_logradouro                 AS logradouro,
-                ci.nu_numero                     AS num_endereco,
-                ci.ds_complemento                AS complemento,
-                ci.ds_bairro                     AS bairro,
                 v.st_mot_vis_cad_att,
                 v.st_mot_vis_visita_periodica,
                 v.st_mot_vis_busca_ativa,
@@ -412,16 +406,31 @@ class VisitaAcsController extends MonitorApsBaseController
                      THEN true ELSE false END    AS has_geo
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
-            LEFT JOIN tb_visita_domiciliar_acs a  ON a.co_unico_visita_domiciliar = v.nu_uuid_ficha
-            LEFT JOIN LATERAL (
-                SELECT no_cidadao, ds_logradouro, nu_numero, ds_complemento, ds_bairro
-                FROM  tb_fat_cad_individual
-                WHERE co_fat_cidadao_pec = v.co_fat_cidadao_pec AND st_ficha_inativa = 0
-                ORDER BY co_dim_tempo DESC
-                LIMIT 1
-            ) ci ON true
             WHERE v.co_seq_fat_visita_domiciliar = ?
-        ", [$id]);
+        ";
+
+        // Tenta enriquecer com dados do cidadão via LATERAL JOIN
+        try {
+            $row = $this->db()->selectOne("
+                SELECT base.*,
+                       ci.no_cidadao    AS citizen_name,
+                       ci.ds_logradouro AS logradouro,
+                       ci.nu_numero     AS num_endereco,
+                       ci.ds_complemento AS complemento,
+                       ci.ds_bairro     AS bairro
+                FROM ({$baseSelect}) base
+                LEFT JOIN LATERAL (
+                    SELECT no_cidadao, ds_logradouro, nu_numero, ds_complemento, ds_bairro
+                    FROM  tb_fat_cad_individual
+                    WHERE co_fat_cidadao_pec = base.cidadao_pec
+                      AND st_ficha_inativa = 0
+                    ORDER BY co_dim_tempo DESC
+                    LIMIT 1
+                ) ci ON true
+            ", [$id]);
+        } catch (\Throwable) {
+            $row = $this->db()->selectOne($baseSelect, [$id]);
+        }
 
         if (! $row) {
             return response()->json(['message' => 'Visita não encontrada.'], 404);
