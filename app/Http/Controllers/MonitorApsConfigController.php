@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class MonitorApsConfigController extends MonitorApsBaseController
@@ -223,6 +224,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 DB::table('monitor_aps_configs')->insert($payload);
             }
             DB::purge('pgsql_esus_runtime');
+            Cache::forget('aps_db_config');
             return response()->json(['success' => true]);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);

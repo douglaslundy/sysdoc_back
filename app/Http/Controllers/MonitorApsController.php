@@ -54,11 +54,8 @@ class MonitorApsController extends MonitorApsBaseController
                     'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
                 );
                 $vinculos = $this->calcularVinculo($ano, $quad);
+                $indESF   = $this->calcularESFBatch($equipes, $ano, $quad);
 
-                $indESF = [];
-                foreach ($equipes as $e) {
-                    $indESF = array_merge($indESF, $this->calcularESF($e->nu_ine, $ano, $quad));
-                }
                 $classQualidade = $this->mediaClassificacaoPorEquipe($indESF);
 
                 $vincMap = array_column($vinculos, 'classificacao', 'ine');
@@ -103,21 +100,17 @@ class MonitorApsController extends MonitorApsBaseController
         try {
             $cacheKey = 'aps_qualidade_' . $ano . '_' . $quad . '_' . ($ine ?? 'all') . '_' . ($bloco ?? 'esf');
             $indicadores = Cache::remember($cacheKey, 600, function () use ($ano, $quad, $ine, $bloco) {
-                $sql = 'SELECT nu_ine FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
+                $sql = 'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
                 $bindings = [];
                 if ($ine) { $sql .= ' AND nu_ine = ?'; $bindings[] = $ine; }
                 $sql .= ' ORDER BY no_equipe';
 
-                $equipes     = $this->db()->select($sql, $bindings);
-                $indicadores = [];
-                foreach ($equipes as $e) {
-                    if ($bloco === 'esb') {
-                        $indicadores = array_merge($indicadores, $this->calcularESB($e->nu_ine, $ano, $quad));
-                    } else {
-                        $indicadores = array_merge($indicadores, $this->calcularESF($e->nu_ine, $ano, $quad));
-                    }
+                $equipes = $this->db()->select($sql, $bindings);
+
+                if ($bloco === 'esb') {
+                    return $this->calcularESBBatch($equipes, $ano, $quad);
                 }
-                return $indicadores;
+                return $this->calcularESFBatch($equipes, $ano, $quad);
             });
             return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'indicadores' => $indicadores]);
         } catch (\Throwable $e) {
@@ -158,11 +151,8 @@ class MonitorApsController extends MonitorApsBaseController
                     'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
                 );
                 $vinculos = $this->calcularVinculo($ano, $quad);
+                $indESF   = $this->calcularESFBatch($equipes, $ano, $quad);
 
-                $indESF = [];
-                foreach ($equipes as $e) {
-                    $indESF = array_merge($indESF, $this->calcularESF($e->nu_ine, $ano, $quad));
-                }
                 $classQualidade = $this->mediaClassificacaoPorEquipe($indESF);
 
                 $vincMap = array_column($vinculos, 'classificacao', 'ine');
@@ -203,17 +193,22 @@ class MonitorApsController extends MonitorApsBaseController
         if (!$method) return response()->json(['error' => "Indicador {$indicadorId} não encontrado"], 404);
 
         $anos      = array_map('intval', explode(',', $request->query('anos', (string) date('Y'))));
-        $historico = [];
+        $anosKey   = implode('_', $anos);
+        $cacheKey  = "aps_historico_{$ine}_{$indicadorId}_{$anosKey}";
 
         try {
-            foreach ($anos as $ano) {
-                foreach ([1, 2, 3] as $quad) {
-                    try {
-                        $d = $this->$method($ine, $ano, $quad);
-                        if ($d) $historico[] = ['ano' => $ano, 'quadrimestre' => $quad, ...($d['indicador']['resultado'] ?? [])];
-                    } catch (\Throwable) {}
+            $historico = Cache::remember($cacheKey, 600, function () use ($anos, $ine, $method) {
+                $resultado = [];
+                foreach ($anos as $ano) {
+                    foreach ([1, 2, 3] as $quad) {
+                        try {
+                            $d = $this->$method($ine, $ano, $quad);
+                            if ($d) $resultado[] = ['ano' => $ano, 'quadrimestre' => $quad, ...($d['indicador']['resultado'] ?? [])];
+                        } catch (\Throwable) {}
+                    }
                 }
-            }
+                return $resultado;
+            });
             return response()->json(['ine' => $ine, 'indicador_id' => $indicadorId, 'historico' => $historico]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -232,6 +227,12 @@ class MonitorApsController extends MonitorApsBaseController
             'ine'          => $request->query('ine'),
             'bloco'        => $request->query('bloco'),
         ];
+    }
+
+    /** Retorna [mesInicio, mesFim] para o quadrimestre (1→1-4, 2→5-8, 3→9-12). */
+    private function quadMeses(int $quad): array
+    {
+        return [($quad - 1) * 4 + 1, $quad * 4];
     }
 
     private function classificar(float $percentual, array $thresholds): string
@@ -323,14 +324,14 @@ class MonitorApsController extends MonitorApsBaseController
                 THEN fci.co_fat_cidadao_pec END)                                       AS criancas_0_5,
               COUNT(DISTINCT CASE WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, fci.dt_nascimento)) >= 60
                 THEN fci.co_fat_cidadao_pec END)                                       AS idosos_60_mais,
-              COUNT(DISTINCT CASE WHEN dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              COUNT(DISTINCT CASE WHEN dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
                 THEN fci.co_fat_cidadao_pec END)                                       AS atualizados_quad
             FROM tb_fat_cad_individual fci
             JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fci.co_dim_tempo  = dt.co_seq_dim_tempo
             WHERE de.st_registro_valido = 1 AND de.nu_ine != '-' AND fci.st_ficha_inativa = 0
         ";
-        $bindings = [$ano, $quad];
+        $bindings = [$ano, ...$this->quadMeses($quad)];
         if ($ine) { $sql .= ' AND de.nu_ine = ?'; $bindings[] = $ine; }
         $sql .= ' GROUP BY de.nu_ine, de.no_equipe ORDER BY de.no_equipe';
 
@@ -411,6 +412,660 @@ class MonitorApsController extends MonitorApsBaseController
         return $results;
     }
 
+    /**
+     * Calcula todos os indicadores ESF para múltiplas equipes em batch.
+     * Reduz de N×11×3 queries para ~29 queries independentemente do número de equipes.
+     *
+     * @param object[] $equipes  Objetos com nu_ine e no_equipe
+     */
+    private function calcularESFBatch(array $equipes, int $ano, int $quad): array
+    {
+        if (empty($equipes)) return [];
+
+        [$mesInicio, $mesFim] = $this->quadMeses($quad);
+        $ines      = array_column($equipes, 'nu_ine');
+        $nomeMap   = array_column($equipes, 'no_equipe', 'nu_ine');
+        $ph        = implode(',', array_fill(0, count($ines), '?'));
+        $results   = [];
+
+        // ── IND 1: Mais Acesso à Atenção Primária ────────────────────────────
+        try {
+            $rows = $this->db()->select("
+                SELECT de.nu_ine, de.no_equipe,
+                  COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 1 THEN 1 END) AS programados,
+                  COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 2 THEN 1 END) AS espontaneos,
+                  COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 3 THEN 1 END) AS escuta_inicial,
+                  COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 4 THEN 1 END) AS consulta_dia,
+                  COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 5 THEN 1 END) AS urgencia,
+                  COUNT(*) AS total
+                FROM tb_fat_atendimento_individual fai
+                JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                WHERE dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                  AND de.nu_ine IN ({$ph}) AND de.st_registro_valido = 1
+                GROUP BY de.nu_ine, de.no_equipe
+            ", array_merge([$ano, $mesInicio, $mesFim], $ines));
+
+            foreach ($rows as $r) {
+                $total = (int) $r->total ?: 1;
+                $prog  = (int) $r->programados;
+                $pct   = round($prog / $total * 100, 1);
+                $results[] = ['indicador' => [
+                    'id' => 1, 'nome' => 'Mais Acesso à Atenção Primária', 'bloco' => 'eSF_eAP',
+                    'equipe'  => ['ine' => $r->nu_ine, 'nome' => $r->no_equipe],
+                    'periodo' => ['ano' => $ano, 'quadrimestre' => $quad],
+                    'resultado' => ['numerador' => $prog, 'denominador' => $total, 'percentual' => $pct,
+                        'classificacao' => $this->classificarInd1($pct),
+                        'meta_suficiente' => 10, 'meta_bom' => 30, 'meta_otimo' => 50, 'meta_otimo_max' => 70],
+                    'subindicadores' => [
+                        ['nome' => 'Demanda programada',    'valor' => $prog,                   'total' => $total, 'pct' => round($prog / $total * 100, 1)],
+                        ['nome' => 'Demanda espontânea',    'valor' => (int) $r->espontaneos,    'total' => $total, 'pct' => round((int) $r->espontaneos / $total * 100, 1)],
+                        ['nome' => 'Escuta inicial',        'valor' => (int) $r->escuta_inicial, 'total' => $total, 'pct' => round((int) $r->escuta_inicial / $total * 100, 1)],
+                        ['nome' => 'Consulta do dia',       'valor' => (int) $r->consulta_dia,   'total' => $total, 'pct' => round((int) $r->consulta_dia / $total * 100, 1)],
+                        ['nome' => 'Urgência / emergência', 'valor' => (int) $r->urgencia,       'total' => $total, 'pct' => round((int) $r->urgencia / $total * 100, 1)],
+                    ],
+                ]];
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 2: Cuidado Longitudinal da Criança ───────────────────────────
+        try {
+            $dens2 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0
+                  AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $s1 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS v FROM (
+                    SELECT de.nu_ine, fai.co_fat_cidadao_pec
+                    FROM tb_fat_atendimento_individual fai
+                    JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                    JOIN tb_dim_cbo    dc ON fai.co_dim_cbo_1    = dc.co_seq_dim_cbo
+                    JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months' AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                      AND dc.nu_cbo IN ('225142','225125','223505')
+                    GROUP BY de.nu_ine, fai.co_fat_cidadao_pec HAVING COUNT(*) >= 9
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'v', 'nu_ine');
+
+            $s2 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS v FROM (
+                    SELECT de.nu_ine, fai.co_fat_cidadao_pec
+                    FROM tb_fat_atendimento_individual fai
+                    JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                    JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months' AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                      AND fai.nu_peso IS NOT NULL
+                    GROUP BY de.nu_ine, fai.co_fat_cidadao_pec HAVING COUNT(*) >= 9
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'v', 'nu_ine');
+
+            $s3 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS v FROM (
+                    SELECT de.nu_ine, fvd.co_fat_cidadao_pec
+                    FROM tb_fat_visita_domiciliar fvd
+                    JOIN tb_dim_equipe de ON fvd.co_dim_equipe = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fvd.co_dim_tempo  = dt.co_seq_dim_tempo
+                    JOIN tb_dim_cbo    dc ON fvd.co_dim_cbo    = dc.co_seq_dim_cbo
+                    JOIN tb_fat_cad_individual fci ON fvd.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months' AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                      AND dc.nu_cbo IN ('515105','322255') AND fvd.co_dim_desfecho_visita = 1
+                    GROUP BY de.nu_ine, fvd.co_fat_cidadao_pec HAVING COUNT(*) >= 2
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'v', 'nu_ine');
+
+            $s4 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS v FROM (
+                    SELECT de.nu_ine, fv.co_fat_cidadao_pec
+                    FROM tb_fat_vacinacao fv
+                    JOIN tb_dim_equipe de ON fv.co_dim_equipe = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fv.co_dim_tempo  = dt.co_seq_dim_tempo
+                    JOIN tb_fat_cad_individual fci ON fv.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months' AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                    GROUP BY de.nu_ine, fv.co_fat_cidadao_pec
+                    HAVING BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|15|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|14|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|17|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|6|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|16|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|21|%')
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'v', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens2[$ine] ?? 0);
+                if (!$den) continue;
+                $vals = [(int)($s1[$ine] ?? 0), (int)($s2[$ine] ?? 0), (int)($s3[$ine] ?? 0), (int)($s4[$ine] ?? 0)];
+                $num  = min(...$vals);
+                $pct  = round($num / $den * 100, 1);
+                $results[] = $this->resultado(2, 'Cuidado Longitudinal da Criança', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind2_crianca', [
+                        ['nome' => '≥9 consultas médico/enfermeiro', 'valor' => $vals[0], 'total' => $den],
+                        ['nome' => '≥9 registros peso/altura',       'valor' => $vals[1], 'total' => $den],
+                        ['nome' => '≥2 visitas ACS',                 'valor' => $vals[2], 'total' => $den],
+                        ['nome' => 'Vacinação completa',             'valor' => $vals[3], 'total' => $den],
+                    ]);
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 3: Gestante ────────────────────────────────────────────────
+        try {
+            $dens3 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_gestante = 1 AND fci.st_ficha_inativa = 0
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $nums3 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS total FROM (
+                    SELECT de.nu_ine, fai.co_fat_cidadao_pec
+                    FROM tb_fat_atendimento_individual fai
+                    JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                    JOIN tb_dim_cbo    dc ON fai.co_dim_cbo_1    = dc.co_seq_dim_cbo
+                    JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.st_gestante = 1 AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                      AND dc.nu_cbo IN ('225142','225125','223505')
+                    GROUP BY de.nu_ine, fai.co_fat_cidadao_pec HAVING COUNT(*) >= 6
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens3[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums3[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $results[] = $this->resultado(3, 'Cuidado da Gestante e Puérpera', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind3_gestante',
+                    [['nome' => 'Gestantes com ≥6 consultas médico/enfermeiro', 'valor' => $num, 'total' => $den]]);
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 4: Hipertensão ─────────────────────────────────────────────
+        try {
+            $dens4 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_hipertensao_arterial = 1 AND fci.st_ficha_inativa = 0
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $nums4 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS total FROM (
+                    SELECT de.nu_ine, fai.co_fat_cidadao_pec
+                    FROM tb_fat_atendimento_individual fai
+                    JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                    JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.st_hipertensao_arterial = 1 AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                    GROUP BY de.nu_ine, fai.co_fat_cidadao_pec HAVING COUNT(*) >= 2
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens4[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums4[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $results[] = $this->resultado(4, 'Cuidado da Pessoa com Hipertensão', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind4_hipertensao',
+                    [['nome' => 'Hipertensos com ≥2 atendimentos', 'valor' => $num, 'total' => $den]]);
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 5: Diabetes ────────────────────────────────────────────────
+        try {
+            $dens5 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_diabete = 1 AND fci.st_ficha_inativa = 0
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $nums5 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS total FROM (
+                    SELECT de.nu_ine, fai.co_fat_cidadao_pec
+                    FROM tb_fat_atendimento_individual fai
+                    JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                    JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.st_diabete = 1 AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                    GROUP BY de.nu_ine, fai.co_fat_cidadao_pec HAVING COUNT(*) >= 2
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens5[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums5[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $results[] = $this->resultado(5, 'Cuidado da Pessoa com Diabetes', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind5_diabetes',
+                    [['nome' => 'Diabéticos com ≥2 atendimentos', 'valor' => $num, 'total' => $den]]);
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 6: Pessoa Idosa ────────────────────────────────────────────
+        try {
+            $dens6 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0
+                  AND fci.dt_nascimento < CURRENT_DATE - INTERVAL '60 years'
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $nums6 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fai.co_fat_cidadao_pec) AS total
+                FROM tb_fat_atendimento_individual fai
+                JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                    AND fci.dt_nascimento < CURRENT_DATE - INTERVAL '60 years' AND fci.st_ficha_inativa = 0
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens6[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums6[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $results[] = $this->resultado(6, 'Cuidado da Pessoa Idosa', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind6_idoso',
+                    [['nome' => 'Idosos atendidos no quadrimestre', 'valor' => $num, 'total' => $den]]);
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 7: Saúde Mental (complementar) ────────────────────────────
+        try {
+            $tots7 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS total
+                FROM tb_fat_atendimento_individual fai
+                JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            $nums7 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS total
+                FROM tb_fat_atendimento_individual fai
+                JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                  AND (fai.ds_filtro_ciaps ~ '\\|(P76|P77|P78|P79|P80|P81|P82|P85|P86|P98|P99)\\|'
+                       OR fai.ds_filtro_cids ~ '\\|F[0-9]')
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($tots7[$ine] ?? 0) ?: 1;
+                $num = (int) ($nums7[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $r   = $this->resultado(7, 'Saúde Mental na APS', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind7_saude_mental',
+                    [['nome' => 'Atendimentos de saúde mental', 'valor' => $num, 'total' => $den]]);
+                $r['indicador']['complementar'] = true;
+                $results[] = $r;
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 8: Visita ACS/TACS (complementar) ─────────────────────────
+        try {
+            $dens8 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $nums8 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fvd.co_fat_cidadao_pec) AS total
+                FROM tb_fat_visita_domiciliar fvd
+                JOIN tb_dim_equipe de ON fvd.co_dim_equipe = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fvd.co_dim_tempo  = dt.co_seq_dim_tempo
+                JOIN tb_dim_cbo    dc ON fvd.co_dim_cbo    = dc.co_seq_dim_cbo
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                  AND dc.nu_cbo IN ('515105','322255') AND fvd.co_dim_desfecho_visita = 1
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens8[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums8[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $r   = $this->resultado(8, 'Visita Domiciliar por ACS/TACS', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind8_visita_acs',
+                    [['nome' => 'Pessoas com ≥1 visita ACS no quadrimestre', 'valor' => $num, 'total' => $den]]);
+                $r['indicador']['complementar'] = true;
+                $results[] = $r;
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 9: Vacinação (complementar) ───────────────────────────────
+        try {
+            $dens9 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0
+                  AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '2 years'
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $nums9 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS total FROM (
+                    SELECT de.nu_ine, fv.co_fat_cidadao_pec
+                    FROM tb_fat_vacinacao fv
+                    JOIN tb_dim_equipe de ON fv.co_dim_equipe = de.co_seq_dim_equipe
+                    JOIN tb_dim_tempo  dt ON fv.co_dim_tempo  = dt.co_seq_dim_tempo
+                    JOIN tb_fat_cad_individual fci ON fv.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                        AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '2 years' AND fci.st_ficha_inativa = 0
+                    WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                    GROUP BY de.nu_ine, fv.co_fat_cidadao_pec
+                    HAVING BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|15|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|14|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|17|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|6|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|16|%')
+                       AND BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|21|%')
+                ) sq GROUP BY nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens9[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums9[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $r   = $this->resultado(9, 'Vacinação na APS', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind9_vacinacao',
+                    [['nome' => 'Crianças <2 anos com calendário básico completo', 'valor' => $num, 'total' => $den]]);
+                $r['indicador']['complementar'] = true;
+                $results[] = $r;
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 10: Ações Interprofissionais (complementar) ────────────────
+        try {
+            $ativs = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS atividades, COALESCE(SUM(fac.nu_participantes), 0) AS participantes
+                FROM tb_fat_atividade_coletiva fac
+                JOIN tb_dim_equipe de ON fac.co_dim_equipe = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fac.co_dim_tempo  = dt.co_seq_dim_tempo
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), null, 'nu_ine');
+
+            $dens10 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den  = (int) ($dens10[$ine] ?? 0) ?: 1;
+                $atv  = $ativs[$ine] ?? null;
+                $part = (int) ($atv?->participantes ?? 0);
+                $pct  = round($part / $den * 100, 1);
+                $r    = $this->resultado(10, 'Ações Interprofissionais', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $part, $den, $pct, 'ind10_interprofissional', [
+                        ['nome' => 'Total de atividades coletivas', 'valor' => (int) ($atv?->atividades ?? 0), 'total' => '-'],
+                        ['nome' => 'Total de participantes',        'valor' => $part, 'total' => $den],
+                    ]);
+                $r['indicador']['complementar'] = true;
+                $results[] = $r;
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 11: Cuidado da Mulher — Prevenção do Câncer ───────────────
+        try {
+            $mesRef = $quad * 4;
+            $refDate = date('Y-m-d', mktime(0, 0, 0, $mesRef + 1, 0, $ano));
+            $refYM   = $ano * 12 + $mesRef;
+
+            $d1 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                  AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 25 AND 64
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$refDate])), 'total', 'nu_ine');
+
+            $n1 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT p.co_fat_cidadao_pec) AS total
+                FROM tb_fat_atd_ind_procedimentos p
+                JOIN tb_dim_equipe de ON p.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON p.co_dim_tempo    = dt.co_seq_dim_tempo
+                JOIN tb_fat_cad_individual fci ON p.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                    AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                    AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 25 AND 64
+                WHERE de.nu_ine IN ({$ph})
+                  AND p.co_dim_procedimento_avaliado IN (21,105,106,175,328)
+                  AND (dt.nu_ano * 12 + dt.nu_mes) BETWEEN ? AND ?
+                GROUP BY de.nu_ine
+            ", array_merge([$refDate], $ines, [$refYM - 36, $refYM])), 'total', 'nu_ine');
+
+            $d2 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                  AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 9 AND 14
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$refDate])), 'total', 'nu_ine');
+
+            $n2 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fv.co_fat_cidadao_pec) AS total
+                FROM tb_fat_vacinacao fv
+                JOIN tb_dim_equipe de ON fv.co_dim_equipe = de.co_seq_dim_equipe
+                JOIN tb_fat_cad_individual fci ON fv.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                    AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                    AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 9 AND 14
+                WHERE de.nu_ine IN ({$ph}) AND fv.ds_filtro_imunobiologico LIKE '%|13|%'
+                GROUP BY de.nu_ine
+            ", array_merge([$refDate], $ines)), 'total', 'nu_ine');
+
+            $d3 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                  AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 14 AND 69
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$refDate])), 'total', 'nu_ine');
+
+            $n3 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fai.co_fat_cidadao_pec) AS total
+                FROM tb_fat_atendimento_individual fai
+                JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
+                JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                    AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                    AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 14 AND 69
+                WHERE de.nu_ine IN ({$ph}) AND fai.ds_filtro_ciaps ~ '\\|X'
+                  AND (dt.nu_ano * 12 + dt.nu_mes) BETWEEN ? AND ?
+                GROUP BY de.nu_ine
+            ", array_merge([$refDate], $ines, [$refYM - 12, $refYM])), 'total', 'nu_ine');
+
+            $d4 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                  AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 50 AND 69
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$refDate])), 'total', 'nu_ine');
+
+            $n4 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT p.co_fat_cidadao_pec) AS total
+                FROM tb_fat_atd_ind_procedimentos p
+                JOIN tb_dim_equipe de ON p.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON p.co_dim_tempo    = dt.co_seq_dim_tempo
+                JOIN tb_fat_cad_individual fci ON p.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                    AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+                    AND EXTRACT(YEAR FROM AGE(?::date, fci.dt_nascimento)) BETWEEN 50 AND 69
+                WHERE de.nu_ine IN ({$ph})
+                  AND p.co_dim_procedimento_avaliado IN (16,46,120,51)
+                  AND (dt.nu_ano * 12 + dt.nu_mes) BETWEEN ? AND ?
+                GROUP BY de.nu_ine
+            ", array_merge([$refDate], $ines, [$refYM - 24, $refYM])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den1v = (int)($d1[$ine] ?? 0); $num1v = (int)($n1[$ine] ?? 0);
+                $den2v = (int)($d2[$ine] ?? 0); $num2v = (int)($n2[$ine] ?? 0);
+                $den3v = (int)($d3[$ine] ?? 0); $num3v = (int)($n3[$ine] ?? 0);
+                $den4v = (int)($d4[$ine] ?? 0); $num4v = (int)($n4[$ine] ?? 0);
+                $p1 = $den1v > 0 ? round($num1v / $den1v * 100, 1) : 0.0;
+                $p2 = $den2v > 0 ? round($num2v / $den2v * 100, 1) : 0.0;
+                $p3 = $den3v > 0 ? round($num3v / $den3v * 100, 1) : 0.0;
+                $p4 = $den4v > 0 ? round($num4v / $den4v * 100, 1) : 0.0;
+                $pct = round($p1 * 0.20 + $p2 * 0.30 + $p3 * 0.30 + $p4 * 0.20, 1);
+                $results[] = $this->resultado(11, 'Cuidado da Mulher na Prevenção do Câncer', 'eSF_eAP',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, null, null, $pct, 'ind11_mulher_cancer', [
+                        ['nome' => 'Citopatológico cervical (25–64 anos)', 'valor' => $num1v, 'total' => $den1v],
+                        ['nome' => 'Vacina HPV (9–14 anos)',               'valor' => $num2v, 'total' => $den2v],
+                        ['nome' => 'Atenção sexual/reprodutiva (14–69)',   'valor' => $num3v, 'total' => $den3v],
+                        ['nome' => 'Mamografia (50–69 anos)',              'valor' => $num4v, 'total' => $den4v],
+                    ]);
+            }
+        } catch (\Throwable) {}
+
+        return $results;
+    }
+
+    /**
+     * Calcula indicadores ESB (13-15) para múltiplas equipes em batch.
+     *
+     * @param object[] $equipes  Objetos com nu_ine e no_equipe
+     */
+    private function calcularESBBatch(array $equipes, int $ano, int $quad): array
+    {
+        if (empty($equipes)) return [];
+
+        [$mesInicio, $mesFim] = $this->quadMeses($quad);
+        $ines    = array_column($equipes, 'nu_ine');
+        $nomeMap = array_column($equipes, 'no_equipe', 'nu_ine');
+        $ph      = implode(',', array_fill(0, count($ines), '?'));
+        $results = [];
+
+        // ── IND 13: Acesso à Saúde Bucal ──────────────────────────────────
+        try {
+            $dens13 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            $nums13 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS total
+                FROM tb_fat_atendimento_odonto fao
+                JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                  AND fao.co_dim_tipo_consulta = 1
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens13[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums13[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $results[] = $this->resultado(13, 'Acesso à Saúde Bucal', 'eSB',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind13_acesso_bucal',
+                    [['nome' => 'Primeiras consultas odontológicas', 'valor' => $num, 'total' => $den]]);
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 14: Conclusão de Tratamento Odontológico ──────────────────
+        try {
+            $dens14 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fao.co_fat_cidadao_pec) AS total
+                FROM tb_fat_atendimento_odonto fao
+                JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                  AND fao.co_dim_tipo_consulta = 1
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            $nums14 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fao.co_fat_cidadao_pec) AS total
+                FROM tb_fat_atendimento_odonto fao
+                JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                  AND fao.st_conduta_tratamento_concluid = 1
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den = (int) ($dens14[$ine] ?? 0); if (!$den) continue;
+                $num = (int) ($nums14[$ine] ?? 0);
+                $pct = round($num / $den * 100, 1);
+                $results[] = $this->resultado(14, 'Conclusão de Tratamento Odontológico', 'eSB',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind14_conclusao',
+                    [['nome' => 'Tratamentos concluídos', 'valor' => $num, 'total' => $den]]);
+            }
+        } catch (\Throwable) {}
+
+        // ── IND 15: Ações Coletivas em Saúde Bucal ────────────────────────
+        try {
+            $ativs15 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(*) AS atividades, COALESCE(SUM(fac.nu_participantes), 0) AS participantes
+                FROM tb_fat_atividade_coletiva fac
+                JOIN tb_dim_equipe           de   ON fac.co_dim_equipe           = de.co_seq_dim_equipe
+                JOIN tb_dim_tempo            dt   ON fac.co_dim_tempo            = dt.co_seq_dim_tempo
+                JOIN tb_dim_tema_saude_bucal dtsb ON fac.co_dim_tema_saude_bucal = dtsb.co_seq_dim_tema_saude_bucal
+                WHERE de.nu_ine IN ({$ph}) AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+                  AND LOWER(dtsb.ds_tema_saude_bucal) LIKE '%escova%'
+                GROUP BY de.nu_ine
+            ", array_merge($ines, [$ano, $mesInicio, $mesFim])), null, 'nu_ine');
+
+            $dens15 = array_column($this->db()->select("
+                SELECT de.nu_ine, COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+                WHERE de.nu_ine IN ({$ph}) AND fci.st_ficha_inativa = 0
+                  AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, fci.dt_nascimento)) BETWEEN 6 AND 12
+                GROUP BY de.nu_ine
+            ", $ines), 'total', 'nu_ine');
+
+            foreach ($ines as $ine) {
+                $den  = (int) ($dens15[$ine] ?? 0) ?: 1;
+                $atv  = $ativs15[$ine] ?? null;
+                $part = (int) ($atv?->participantes ?? 0);
+                $pct  = round($part / $den * 100, 1);
+                $results[] = $this->resultado(15, 'Ações Coletivas em Saúde Bucal', 'eSB',
+                    $ine, $nomeMap[$ine] ?? '', $ano, $quad, $part, $den, $pct, 'ind15_coletivas', [
+                        ['nome' => 'Atividades de escovação supervisionada', 'valor' => (int) ($atv?->atividades ?? 0), 'total' => '-'],
+                        ['nome' => 'Participantes em escovação supervisionada', 'valor' => $part, 'total' => $den],
+                    ]);
+            }
+        } catch (\Throwable) {}
+
+        return $results;
+    }
+
     // ---------------------------------------------------------------
     // Indicadores ESF (1-10)
     // ---------------------------------------------------------------
@@ -430,10 +1085,10 @@ class MonitorApsController extends MonitorApsBaseController
             FROM tb_fat_atendimento_individual fai
             JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
-            WHERE dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ? AND de.nu_ine = ?
+            WHERE dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ? AND de.nu_ine = ?
               AND de.st_registro_valido = 1
             GROUP BY de.nu_ine, de.no_equipe
-        ", [$ano, $quad, $ine]);
+        ", [$ano, ...$this->quadMeses($quad), $ine]);
 
         if (!$rows) return null;
         $r          = $rows[0];
@@ -491,11 +1146,11 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
                 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
                 AND dc.nu_cbo IN ('225142','225125','223505')
               GROUP BY fai.co_fat_cidadao_pec HAVING COUNT(*) >= 9
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         // Sub2: ≥9 registros de peso no período
         [$sub2] = $this->db()->select("
@@ -507,11 +1162,11 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
                 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
                 AND fai.nu_peso IS NOT NULL
               GROUP BY fai.co_fat_cidadao_pec HAVING COUNT(*) >= 9
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         // Sub3: ≥2 visitas ACS/TACS (CBO 515105/322255, desfecho=1)
         [$sub3] = $this->db()->select("
@@ -524,11 +1179,11 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_fat_cad_individual fci ON fvd.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
                 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
                 AND dc.nu_cbo IN ('515105', '322255') AND fvd.co_dim_desfecho_visita = 1
               GROUP BY fvd.co_fat_cidadao_pec HAVING COUNT(*) >= 2
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         // Sub4: vacinação — criança com todos os 6 imunobiológicos do calendário
         // ds_filtro_imunobiologico = '|id1|id2|...' com co_seq_dim_imunobiologico
@@ -541,7 +1196,7 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_fat_cad_individual fci ON fv.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
                 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               GROUP BY fv.co_fat_cidadao_pec
               HAVING
                 BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|15|%') AND
@@ -551,7 +1206,7 @@ class MonitorApsController extends MonitorApsBaseController
                 BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|16|%') AND
                 BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|21|%')
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         $vals = [(int)($sub1?->v ?? 0), (int)($sub2?->v ?? 0), (int)($sub3?->v ?? 0), (int)($sub4?->v ?? 0)];
         $numerador  = min(...$vals);
@@ -588,11 +1243,11 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_dim_cbo    dc ON fai.co_dim_cbo_1    = dc.co_seq_dim_cbo
               JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.st_gestante = 1 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
                 AND dc.nu_cbo IN ('225142','225125','223505')
               GROUP BY fai.co_fat_cidadao_pec HAVING COUNT(*) >= 6
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         $num2 = (int)($num?->total ?? 0);
         $pct  = $denominador > 0 ? round($num2 / $denominador * 100, 1) : 0.0;
@@ -621,10 +1276,10 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
               JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.st_hipertensao_arterial = 1 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               GROUP BY fai.co_fat_cidadao_pec HAVING COUNT(*) >= 2
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         $num2 = (int)($num?->total ?? 0);
         $pct  = $denominador > 0 ? round($num2 / $denominador * 100, 1) : 0.0;
@@ -653,10 +1308,10 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
               JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.st_diabete = 1 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               GROUP BY fai.co_fat_cidadao_pec HAVING COUNT(*) >= 2
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         $num2 = (int)($num?->total ?? 0);
         $pct  = $denominador > 0 ? round($num2 / $denominador * 100, 1) : 0.0;
@@ -685,8 +1340,8 @@ class MonitorApsController extends MonitorApsBaseController
             JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
               AND fci.dt_nascimento < CURRENT_DATE - INTERVAL '60 years'
               AND fci.st_ficha_inativa = 0
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
-        ", [$ine, $ano, $quad]) ?: [null];
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(6, 'Cuidado da Pessoa Idosa', 'eSF_eAP',
@@ -702,20 +1357,20 @@ class MonitorApsController extends MonitorApsBaseController
             FROM tb_fat_atendimento_individual fai
             JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
-        ", [$ine, $ano, $quad]) ?: [null];
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         [$sm] = $this->db()->select("
             SELECT COUNT(*) AS total
             FROM tb_fat_atendimento_individual fai
             JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fai.co_dim_tempo    = dt.co_seq_dim_tempo
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               AND (
                 fai.ds_filtro_ciaps ~ '\\|(P76|P77|P78|P79|P80|P81|P82|P85|P86|P98|P99)\\|'
                 OR fai.ds_filtro_cids ~ '\\|F[0-9]'
               )
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         $numerador   = (int)($sm?->total ?? 0);
         $denominador = (int)($total?->total ?? 0) ?: 1;
@@ -742,9 +1397,9 @@ class MonitorApsController extends MonitorApsBaseController
             JOIN tb_dim_equipe de ON fvd.co_dim_equipe = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fvd.co_dim_tempo  = dt.co_seq_dim_tempo
             JOIN tb_dim_cbo    dc ON fvd.co_dim_cbo    = dc.co_seq_dim_cbo
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               AND dc.nu_cbo IN ('515105', '322255') AND fvd.co_dim_desfecho_visita = 1
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(8, 'Visita Domiciliar por ACS/TACS', 'eSF_eAP',
@@ -777,7 +1432,7 @@ class MonitorApsController extends MonitorApsBaseController
               JOIN tb_fat_cad_individual fci ON fv.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '2 years'
                 AND fci.st_ficha_inativa = 0
-              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               GROUP BY fv.co_fat_cidadao_pec
               HAVING
                 BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|15|%') AND
@@ -787,7 +1442,7 @@ class MonitorApsController extends MonitorApsBaseController
                 BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|16|%') AND
                 BOOL_OR(fv.ds_filtro_imunobiologico LIKE '%|21|%')
             ) sq
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(9, 'Vacinação na APS', 'eSF_eAP',
@@ -802,8 +1457,8 @@ class MonitorApsController extends MonitorApsBaseController
             FROM tb_fat_atividade_coletiva fac
             JOIN tb_dim_equipe de ON fac.co_dim_equipe = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fac.co_dim_tempo  = dt.co_seq_dim_tempo
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
-        ", [$ine, $ano, $quad]) ?: [null];
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
@@ -960,9 +1615,9 @@ class MonitorApsController extends MonitorApsBaseController
             FROM tb_fat_atendimento_odonto fao
             JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               AND fao.co_dim_tipo_consulta = 1
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(13, 'Acesso à Saúde Bucal', 'eSB',
@@ -978,9 +1633,9 @@ class MonitorApsController extends MonitorApsBaseController
             FROM tb_fat_atendimento_odonto fao
             JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               AND fao.co_dim_tipo_consulta = 1
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
         $denominador = (int)($total?->total ?? 0);
         if (!$denominador) return null;
 
@@ -990,9 +1645,9 @@ class MonitorApsController extends MonitorApsBaseController
             FROM tb_fat_atendimento_odonto fao
             JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               AND fao.st_conduta_tratamento_concluid = 1
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
         $numerador  = (int)($concl?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(14, 'Conclusão de Tratamento Odontológico', 'eSB',
@@ -1011,9 +1666,9 @@ class MonitorApsController extends MonitorApsBaseController
             JOIN tb_dim_equipe           de   ON fac.co_dim_equipe           = de.co_seq_dim_equipe
             JOIN tb_dim_tempo            dt   ON fac.co_dim_tempo            = dt.co_seq_dim_tempo
             JOIN tb_dim_tema_saude_bucal dtsb ON fac.co_dim_tema_saude_bucal = dtsb.co_seq_dim_tema_saude_bucal
-            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+            WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_mes BETWEEN ? AND ?
               AND LOWER(dtsb.ds_tema_saude_bucal) LIKE '%escova%'
-        ", [$ine, $ano, $quad]) ?: [null];
+        ", [$ine, $ano, ...$this->quadMeses($quad)]) ?: [null];
 
         // Denominador: crianças 6–12 anos cadastradas na equipe (Nota B5/2025)
         [$den] = $this->db()->select("

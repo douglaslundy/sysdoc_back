@@ -172,13 +172,6 @@ class VisitaAcsController extends MonitorApsBaseController
 
         [$where, $params] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
 
-        $countRow = $this->db()->selectOne(
-            "SELECT COUNT(*) AS total FROM tb_fat_visita_domiciliar v {$this->baseJoins()} WHERE {$where}",
-            $params
-        );
-
-        $total = (int) ($countRow->total ?? 0);
-
         $rows = $this->db()->select("
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
@@ -200,13 +193,16 @@ class VisitaAcsController extends MonitorApsBaseController
                 v.st_mot_vis_orintacao_prevncao,
                 v.st_mot_vis_outros,
                 CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
-                     THEN true ELSE false END    AS has_geo
+                     THEN true ELSE false END    AS has_geo,
+                COUNT(*) OVER()                  AS total_count
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
             WHERE {$where}
             ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
             LIMIT ? OFFSET ?
         ", array_merge($params, [$perPage, $offset]));
+
+        $total = (int) ($rows[0]->total_count ?? 0);
 
         return response()->json([
             'data' => array_map(fn($r) => $this->formatVisita($r), $rows),
@@ -301,13 +297,6 @@ class VisitaAcsController extends MonitorApsBaseController
             $where .= ' AND (v.nu_latitude IS NULL OR v.nu_longitude IS NULL)';
         }
 
-        $countRow = $this->db()->selectOne(
-            "SELECT COUNT(*) AS total FROM tb_fat_visita_domiciliar v {$this->baseJoins()} WHERE {$where}",
-            $params
-        );
-
-        $total = (int) ($countRow->total ?? 0);
-
         $queryParams = array_merge($params, [$perPage, $offset]);
 
         // Query completa: citizen via LATERAL + nu_hora
@@ -340,7 +329,8 @@ class VisitaAcsController extends MonitorApsBaseController
                 v.st_acomp_domiciliados_acamados,
                 v.st_acomp_pessoa_tuberculose,
                 v.st_acomp_pessoa_hanseniase,
-                v.st_acomp_condi_bolsa_familia
+                v.st_acomp_condi_bolsa_familia,
+                COUNT(*) OVER()                  AS total_count
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
             LEFT JOIN LATERAL (
@@ -382,7 +372,8 @@ class VisitaAcsController extends MonitorApsBaseController
                 v.st_acomp_domiciliados_acamados,
                 v.st_acomp_pessoa_tuberculose,
                 v.st_acomp_pessoa_hanseniase,
-                v.st_acomp_condi_bolsa_familia
+                v.st_acomp_condi_bolsa_familia,
+                COUNT(*) OVER()                  AS total_count
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
             WHERE {$where}
@@ -390,11 +381,9 @@ class VisitaAcsController extends MonitorApsBaseController
             LIMIT ? OFFSET ?
         ";
 
-        try {
-            $rows = $this->db()->select($sqlFull, $queryParams);
-        } catch (\Throwable) {
-            $rows = $this->db()->select($sqlBase, $queryParams);
-        }
+        $sql  = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
+        $rows = $this->db()->select($sql, $queryParams);
+        $total = (int) ($rows[0]->total_count ?? 0);
 
         $visitas = array_map(fn($r) => [
             'id'             => (int) $r->id,
@@ -521,11 +510,8 @@ class VisitaAcsController extends MonitorApsBaseController
             WHERE v.co_seq_fat_visita_domiciliar = ?
         ";
 
-        try {
-            $row = $this->db()->selectOne($sqlFull, [$id]);
-        } catch (\Throwable) {
-            $row = $this->db()->selectOne($sqlBase, [$id]);
-        }
+        $sql = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
+        $row = $this->db()->selectOne($sql, [$id]);
 
         if (! $row) {
             return response()->json(['message' => 'Visita não encontrada.'], 404);
@@ -636,11 +622,8 @@ class VisitaAcsController extends MonitorApsBaseController
             LIMIT 2000
         ";
 
-        try {
-            $rows = $this->db()->select($sqlFull, $params);
-        } catch (\Throwable) {
-            $rows = $this->db()->select($sqlBase, $params);
-        }
+        $sql  = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
+        $rows = $this->db()->select($sql, $params);
 
         $pontos = array_map(fn($r) => [
             'id'         => (int) $r->id,
@@ -665,15 +648,11 @@ class VisitaAcsController extends MonitorApsBaseController
      */
     public function equipes(): JsonResponse
     {
-        $cbos = implode("','", self::ACS_CBOS);
-
         $rows = $this->db()->select("
-            SELECT DISTINCT e.nu_ine AS ine, e.no_equipe AS name
-            FROM tb_fat_visita_domiciliar v
-            JOIN tb_dim_cbo    c ON c.co_seq_dim_cbo    = v.co_dim_cbo
-            JOIN tb_dim_equipe e ON e.co_seq_dim_equipe = v.co_dim_equipe
-            WHERE c.nu_cbo IN ('{$cbos}')
-            ORDER BY e.no_equipe
+            SELECT nu_ine AS ine, no_equipe AS name
+            FROM tb_dim_equipe
+            WHERE st_registro_valido = 1 AND nu_ine != '-'
+            ORDER BY no_equipe
         ");
 
         return response()->json(['data' => $rows]);
