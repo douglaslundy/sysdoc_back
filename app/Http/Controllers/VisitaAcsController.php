@@ -413,18 +413,16 @@ class VisitaAcsController extends MonitorApsBaseController
         try {
             $row = $this->db()->selectOne("
                 SELECT base.*,
-                       ci.no_cidadao    AS citizen_name,
-                       ci.ds_logradouro AS logradouro,
-                       ci.nu_numero     AS num_endereco,
+                       ci.no_cidadao     AS citizen_name,
+                       ci.ds_logradouro  AS logradouro,
+                       ci.nu_numero      AS num_endereco,
                        ci.ds_complemento AS complemento,
-                       ci.ds_bairro     AS bairro
+                       ci.ds_bairro      AS bairro
                 FROM ({$baseSelect}) base
                 LEFT JOIN LATERAL (
                     SELECT no_cidadao, ds_logradouro, nu_numero, ds_complemento, ds_bairro
                     FROM  tb_fat_cad_individual
                     WHERE co_fat_cidadao_pec = base.cidadao_pec
-                      AND st_ficha_inativa = 0
-                    ORDER BY co_dim_tempo DESC
                     LIMIT 1
                 ) ci ON true
             ", [$id]);
@@ -492,6 +490,7 @@ class VisitaAcsController extends MonitorApsBaseController
         $sqlBase = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
+                v.co_fat_cidadao_pec             AS cidadao_pec,
                 v.nu_latitude::float             AS lat,
                 v.nu_longitude::float            AS lng,
                 p.no_profissional                AS agente,
@@ -518,8 +517,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 LEFT JOIN LATERAL (
                     SELECT no_cidadao
                     FROM   tb_fat_cad_individual
-                    WHERE  co_fat_cidadao_pec = base.id
-                      AND  st_ficha_inativa = 0
+                    WHERE  co_fat_cidadao_pec = base.cidadao_pec
                     LIMIT  1
                 ) ci ON true
             ", $params);
