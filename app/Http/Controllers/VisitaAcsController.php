@@ -480,7 +480,7 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
 
-        $rows = $this->db()->select("
+        $sqlBase = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
                 v.nu_latitude::float             AS lat,
@@ -491,23 +491,33 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.no_equipe                      AS equipe_nome,
                 t.dt_registro                    AS data,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
-                v.nu_micro_area                  AS micro_area,
-                ci.no_cidadao                    AS cidadao
+                v.nu_micro_area                  AS micro_area
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
-            LEFT JOIN (
-                SELECT DISTINCT ON (co_fat_cidadao_pec)
-                    co_fat_cidadao_pec, no_cidadao
-                FROM  tb_fat_cad_individual
-                WHERE st_ficha_inativa = 0
-                ORDER BY co_fat_cidadao_pec, co_dim_tempo DESC
-            ) ci ON ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
             WHERE {$where}
               AND v.nu_latitude  IS NOT NULL
               AND v.nu_longitude IS NOT NULL
             ORDER BY t.dt_registro DESC
             LIMIT 2000
-        ", $params);
+        ";
+
+        // Tenta incluir nome do cidadão via LATERAL JOIN (uma lookup por linha, usa índice FK)
+        try {
+            $rows = $this->db()->select("
+                SELECT base.*, ci.no_cidadao AS cidadao
+                FROM ({$sqlBase}) base
+                LEFT JOIN LATERAL (
+                    SELECT no_cidadao
+                    FROM   tb_fat_cad_individual
+                    WHERE  co_fat_cidadao_pec = base.id
+                      AND  st_ficha_inativa = 0
+                    LIMIT  1
+                ) ci ON true
+            ", $params);
+        } catch (\Throwable) {
+            // Se a tabela/coluna não estiver disponível, retorna sem o nome
+            $rows = $this->db()->select($sqlBase, $params);
+        }
 
         $pontos = array_map(fn($r) => [
             'id'         => (int) $r->id,
@@ -517,7 +527,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'cbo'        => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
             'equipe_ine' => $r->equipe_ine,
             'equipe'     => $r->equipe_nome,
-            'cidadao'    => $r->cidadao,
+            'cidadao'    => $r->cidadao ?? null,
             'data'       => $r->data,
             'desfecho'   => (int) $r->desfecho,
             'micro_area' => $r->micro_area,
