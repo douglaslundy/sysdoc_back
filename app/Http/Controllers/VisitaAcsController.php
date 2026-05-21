@@ -3,340 +3,338 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\JsonResponse;
 
 class VisitaAcsController extends MonitorApsBaseController
 {
-    private const CBO_ACS = ['515105', '322255'];
+    private const ACS_CBOS = ['515105', '322255'];
 
-    // ---------------------------------------------------------------
-    // Endpoints
-    // ---------------------------------------------------------------
+    // Desfechos confirmados no banco de produção:
+    // 1=Visita realizada, 2=Visita recusada, 3=Ausente, 4=Não informado
+    private const OUTCOME_COLORS = [
+        1 => 'success',
+        2 => 'error',
+        3 => 'warning',
+        4 => 'default',
+    ];
 
-    /** Resumo agregado por equipe e mês para o quadrimestre. */
-    public function resumo(Request $request)
+    private function baseWhere(int $ano, int $mes, ?string $ine, ?string $agentName): array
     {
-        ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
-        $ine = $request->query('ine');
-        $cacheKey = "aps_visitas_resumo_{$ano}_{$quad}_" . ($ine ?? 'all');
+        $cbos   = implode("','", self::ACS_CBOS);
+        $where  = "c.nu_cbo IN ('{$cbos}') AND t.nu_ano = ? AND t.nu_mes = ?";
+        $params = [$ano, $mes];
 
-        try {
-            $data = Cache::remember($cacheKey, 600, function () use ($ano, $quad, $ine) {
-                $cbos = "'" . implode("','", self::CBO_ACS) . "'";
-
-                $where = 'de.st_registro_valido = 1 AND de.nu_ine != \'-\'
-                  AND dc.nu_cbo IN (' . $cbos . ')
-                  AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?';
-                $bindings = [$ano, $quad];
-
-                if ($ine) {
-                    $where    .= ' AND de.nu_ine = ?';
-                    $bindings[] = $ine;
-                }
-
-                $rows = $this->db()->select("
-                    SELECT
-                      de.nu_ine, de.no_equipe,
-                      dt.nu_ano, dt.nu_mes,
-                      COUNT(*)                                                              AS total,
-                      SUM(CASE WHEN fvd.co_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)     AS realizadas,
-                      SUM(CASE WHEN fvd.co_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)     AS recusadas,
-                      SUM(CASE WHEN fvd.co_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)     AS ausentes,
-                      COUNT(DISTINCT fvd.co_fat_cidadao_pec)                              AS cidadaos
-                    FROM tb_fat_visita_domiciliar fvd
-                    JOIN tb_dim_equipe de ON fvd.co_dim_equipe = de.co_seq_dim_equipe
-                    JOIN tb_dim_cbo    dc ON fvd.co_dim_cbo    = dc.co_seq_dim_cbo
-                    JOIN tb_dim_tempo  dt ON fvd.co_dim_tempo   = dt.co_seq_dim_tempo
-                    WHERE {$where}
-                    GROUP BY de.nu_ine, de.no_equipe, dt.nu_ano, dt.nu_mes
-                    ORDER BY de.no_equipe, dt.nu_mes
-                ", $bindings);
-
-                $porEquipe = [];
-                $totais    = ['total' => 0, 'realizadas' => 0, 'recusadas' => 0, 'ausentes' => 0, 'cidadaos' => 0];
-                $porMes    = [];
-
-                foreach ($rows as $r) {
-                    $key = $r->nu_ine;
-                    if (!isset($porEquipe[$key])) {
-                        $porEquipe[$key] = [
-                            'ine' => $r->nu_ine, 'nome' => $r->no_equipe,
-                            'total' => 0, 'realizadas' => 0, 'recusadas' => 0, 'ausentes' => 0, 'cidadaos' => 0,
-                            'meses' => [],
-                        ];
-                    }
-                    $porEquipe[$key]['total']      += (int) $r->total;
-                    $porEquipe[$key]['realizadas']  += (int) $r->realizadas;
-                    $porEquipe[$key]['recusadas']   += (int) $r->recusadas;
-                    $porEquipe[$key]['ausentes']    += (int) $r->ausentes;
-                    $porEquipe[$key]['cidadaos']    += (int) $r->cidadaos;
-                    $porEquipe[$key]['meses'][]      = [
-                        'mes' => (int) $r->nu_mes, 'total' => (int) $r->total,
-                        'realizadas' => (int) $r->realizadas,
-                    ];
-
-                    $mes = (int) $r->nu_mes;
-                    if (!isset($porMes[$mes])) {
-                        $porMes[$mes] = ['mes' => $mes, 'total' => 0, 'realizadas' => 0, 'recusadas' => 0, 'ausentes' => 0];
-                    }
-                    $porMes[$mes]['total']      += (int) $r->total;
-                    $porMes[$mes]['realizadas']  += (int) $r->realizadas;
-                    $porMes[$mes]['recusadas']   += (int) $r->recusadas;
-                    $porMes[$mes]['ausentes']    += (int) $r->ausentes;
-
-                    $totais['total']      += (int) $r->total;
-                    $totais['realizadas']  += (int) $r->realizadas;
-                    $totais['recusadas']   += (int) $r->recusadas;
-                    $totais['ausentes']    += (int) $r->ausentes;
-                    $totais['cidadaos']    += (int) $r->cidadaos;
-                }
-
-                ksort($porMes);
-
-                return [
-                    'periodo'    => ['ano' => $ano, 'quadrimestre' => $quad],
-                    'totais'     => $totais,
-                    'por_equipe' => array_values($porEquipe),
-                    'por_mes'    => array_values($porMes),
-                ];
-            });
-
-            return response()->json($data);
-        } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+        if ($ine) {
+            $where   .= ' AND e.nu_ine = ?';
+            $params[] = $ine;
         }
+
+        if ($agentName) {
+            $where   .= ' AND p.no_profissional = ?';
+            $params[] = $agentName;
+        }
+
+        return [$where, $params];
     }
 
-    /** Lista paginada de visitas com filtros. */
-    public function lista(Request $request)
+    private function baseJoins(): string
     {
-        ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
-        $ine        = $request->query('ine');
-        $agente     = $request->query('agente');
-        $microArea  = $request->query('micro_area');
-        $desfecho   = $request->query('desfecho');
-        $page       = max(1, (int) $request->query('page', 1));
-        $perPage    = min(100, max(10, (int) $request->query('per_page', 50)));
-        $offset     = ($page - 1) * $perPage;
+        return "
+            JOIN tb_dim_profissional    p  ON p.co_seq_dim_profissional    = v.co_dim_profissional
+            JOIN tb_dim_cbo             c  ON c.co_seq_dim_cbo             = v.co_dim_cbo
+            JOIN tb_dim_equipe          e  ON e.co_seq_dim_equipe          = v.co_dim_equipe
+            JOIN tb_dim_tempo           t  ON t.co_seq_dim_tempo           = v.co_dim_tempo
+            JOIN tb_dim_desfecho_visita d  ON d.co_seq_dim_desfecho_visita = v.co_dim_desfecho_visita
+            JOIN tb_dim_tipo_ficha      tf ON tf.co_seq_dim_tipo_ficha     = v.co_dim_tipo_ficha
+        ";
+    }
 
-        $cbos = "'" . implode("','", self::CBO_ACS) . "'";
+    private function formatMotives(object $row): array
+    {
+        $labels = [
+            'st_mot_vis_cad_att'            => 'Cadastramento/atualização',
+            'st_mot_vis_visita_periodica'    => 'Visita periódica',
+            'st_mot_vis_busca_ativa'         => 'Busca ativa',
+            'st_mot_vis_acompanhamento'      => 'Acompanhamento',
+            'st_mot_vis_egresso_internacao'  => 'Egresso de internação',
+            'st_mot_vis_ctrl_ambnte_vetor'   => 'Controle ambiental/vetorial',
+            'st_mot_vis_convte_atvidd_cltva' => 'Convite para atividade coletiva',
+            'st_mot_vis_orintacao_prevncao'  => 'Orientação/prevenção',
+            'st_mot_vis_outros'              => 'Outros',
+        ];
 
-        $where    = ['de.st_registro_valido = 1', "de.nu_ine != '-'",
-                     "dc.nu_cbo IN ({$cbos})", 'dt.nu_ano = ?', 'CEIL(dt.nu_mes::numeric / 4) = ?'];
-        $bindings = [$ano, $quad];
+        $active = [];
+        foreach ($labels as $field => $label) {
+            if (isset($row->$field) && (int) $row->$field === 1) {
+                $active[] = $label;
+            }
+        }
 
-        if ($ine)       { $where[] = 'de.nu_ine = ?';                  $bindings[] = $ine; }
-        if ($agente)    { $where[] = 'dp.no_profissional ILIKE ?';      $bindings[] = "%{$agente}%"; }
-        if ($microArea) { $where[] = 'fvd.nu_micro_area = ?';           $bindings[] = $microArea; }
-        if ($desfecho)  { $where[] = 'fvd.co_dim_desfecho_visita = ?';  $bindings[] = (int) $desfecho; }
+        return $active;
+    }
 
-        $whereStr = implode(' AND ', $where);
+    private function formatAccompaniments(object $row): array
+    {
+        $fields = [
+            'st_acomp_gestante'              => 'Gestante',
+            'st_acomp_puerpera'              => 'Puérpera',
+            'st_acomp_recem_nascido'         => 'Recém-nascido',
+            'st_acomp_crianca'               => 'Criança',
+            'st_acomp_pessoa_hipertensao'    => 'Hipertensão',
+            'st_acomp_pessoa_diabetes'       => 'Diabetes',
+            'st_acomp_pessoa_cancer'         => 'Câncer',
+            'st_acomp_pessoa_idosa'          => 'Pessoa idosa',
+            'st_acomp_saude_mental'          => 'Saúde mental',
+            'st_acomp_tabagista'             => 'Tabagismo',
+            'st_acomp_domiciliados_acamados' => 'Domiciliado/acamado',
+            'st_acomp_pessoa_tuberculose'    => 'Tuberculose',
+            'st_acomp_pessoa_hanseniase'     => 'Hanseníase',
+            'st_acomp_condi_bolsa_familia'   => 'Bolsa Família',
+        ];
 
-        try {
-            [$countRow] = $this->db()->select("
-                SELECT COUNT(*) AS total
-                FROM tb_fat_visita_domiciliar fvd
-                JOIN tb_dim_equipe     de  ON fvd.co_dim_equipe      = de.co_seq_dim_equipe
-                JOIN tb_dim_cbo        dc  ON fvd.co_dim_cbo          = dc.co_seq_dim_cbo
-                JOIN tb_dim_profissional dp ON fvd.co_dim_profissional = dp.co_seq_dim_profissional
-                JOIN tb_dim_tempo       dt  ON fvd.co_dim_tempo        = dt.co_seq_dim_tempo
-                WHERE {$whereStr}
-            ", $bindings);
+        $active = [];
+        foreach ($fields as $field => $label) {
+            if (isset($row->$field) && (int) $row->$field === 1) {
+                $active[] = $label;
+            }
+        }
 
-            $rows = $this->db()->select("
-                SELECT
-                  fvd.co_seq_fat_visita_domiciliar AS id,
-                  de.nu_ine, de.no_equipe,
-                  dp.no_profissional AS agente,
-                  dc.nu_cbo, dc.no_cbo AS cbo_nome,
-                  dt.dt_registro, dt.nu_mes, dt.nu_ano,
-                  fvd.nu_micro_area,
-                  fvd.co_dim_desfecho_visita AS desfecho_id,
-                  dd.ds_desfecho_visita      AS desfecho,
-                  fvd.nu_latitude, fvd.nu_longitude,
-                  fvd.co_fat_cidadao_pec,
-                  fvd.st_mot_vis_visita_periodica,
-                  fvd.st_mot_vis_busca_ativa,
-                  fvd.st_mot_vis_acompanhamento,
-                  fvd.st_mot_vis_cad_att,
-                  fvd.st_acomp_gestante,
-                  fvd.st_acomp_crianca,
-                  fvd.st_acomp_pessoa_hipertensao,
-                  fvd.st_acomp_pessoa_diabetes,
-                  fvd.st_acomp_pessoa_idosa,
-                  fvd.st_acomp_saude_mental
-                FROM tb_fat_visita_domiciliar fvd
-                JOIN tb_dim_equipe       de  ON fvd.co_dim_equipe      = de.co_seq_dim_equipe
-                JOIN tb_dim_cbo          dc  ON fvd.co_dim_cbo          = dc.co_seq_dim_cbo
-                JOIN tb_dim_profissional  dp  ON fvd.co_dim_profissional = dp.co_seq_dim_profissional
-                JOIN tb_dim_tempo         dt  ON fvd.co_dim_tempo        = dt.co_seq_dim_tempo
-                JOIN tb_dim_desfecho_visita dd ON fvd.co_dim_desfecho_visita = dd.co_seq_dim_desfecho_visita
-                WHERE {$whereStr}
-                ORDER BY dt.dt_registro DESC, fvd.co_seq_fat_visita_domiciliar DESC
-                LIMIT {$perPage} OFFSET {$offset}
-            ", $bindings);
+        return $active;
+    }
 
-            return response()->json([
-                'periodo'  => ['ano' => $ano, 'quadrimestre' => $quad],
-                'total'    => (int) $countRow->total,
+    private function formatVisita(object $row, bool $detail = false): array
+    {
+        $outcomeCode = (int) ($row->outcome_code ?? 4);
+
+        $result = [
+            'id'               => (int) $row->id,
+            'agent_name'       => $row->agent_name,
+            'cbo'              => $row->cbo,
+            'cbo_label'        => $row->cbo === '515105' ? 'ACS' : 'TACS',
+            'team_ine'         => $row->team_ine,
+            'team_name'        => $row->team_name,
+            'visited_date'     => $row->visited_date,
+            'instrument_label' => $row->instrument_label,
+            'outcome_code'     => $outcomeCode,
+            'outcome_label'    => $row->outcome_label,
+            'outcome_color'    => self::OUTCOME_COLORS[$outcomeCode] ?? 'default',
+            'has_geolocation'  => (bool) $row->has_geo,
+            'motives'          => $this->formatMotives($row),
+        ];
+
+        if ($detail) {
+            $result['notes']          = $row->notes ?? null;
+            $result['lat']            = isset($row->lat) && $row->lat !== null ? (float) $row->lat : null;
+            $result['lng']            = isset($row->lng) && $row->lng !== null ? (float) $row->lng : null;
+            $result['accompaniments'] = $this->formatAccompaniments($row);
+        }
+
+        return $result;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ano'      => 'required|integer|min:2020|max:2030',
+            'mes'      => 'required|integer|min:1|max:12',
+            'ine'      => 'nullable|string',
+            'agente'   => 'nullable|string',
+            'page'     => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $ano     = (int) $request->ano;
+        $mes     = (int) $request->mes;
+        $perPage = (int) ($request->per_page ?? 20);
+        $page    = (int) ($request->page ?? 1);
+        $offset  = ($page - 1) * $perPage;
+
+        [$where, $params] = $this->baseWhere($ano, $mes, $request->ine, $request->agente);
+
+        $countRow = $this->db()->selectOne(
+            "SELECT COUNT(*) AS total FROM tb_fat_visita_domiciliar v {$this->baseJoins()} WHERE {$where}",
+            $params
+        );
+
+        $total = (int) ($countRow->total ?? 0);
+
+        $rows = $this->db()->select("
+            SELECT
+                v.co_seq_fat_visita_domiciliar   AS id,
+                p.no_profissional                AS agent_name,
+                c.nu_cbo                         AS cbo,
+                e.nu_ine                         AS team_ine,
+                e.no_equipe                      AS team_name,
+                t.dt_registro                    AS visited_date,
+                tf.ds_tipo_ficha                 AS instrument_label,
+                d.co_seq_dim_desfecho_visita     AS outcome_code,
+                d.ds_desfecho_visita             AS outcome_label,
+                v.st_mot_vis_cad_att,
+                v.st_mot_vis_visita_periodica,
+                v.st_mot_vis_busca_ativa,
+                v.st_mot_vis_acompanhamento,
+                v.st_mot_vis_egresso_internacao,
+                v.st_mot_vis_ctrl_ambnte_vetor,
+                v.st_mot_vis_convte_atvidd_cltva,
+                v.st_mot_vis_orintacao_prevncao,
+                v.st_mot_vis_outros,
+                CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
+                     THEN true ELSE false END    AS has_geo
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            WHERE {$where}
+            ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
+            LIMIT ? OFFSET ?
+        ", array_merge($params, [$perPage, $offset]));
+
+        return response()->json([
+            'data' => array_map(fn($r) => $this->formatVisita($r), $rows),
+            'meta' => [
+                'total'    => $total,
                 'page'     => $page,
                 'per_page' => $perPage,
-                'visitas'  => array_map(fn($r) => [
-                    'id'          => $r->id,
-                    'equipe'      => ['ine' => $r->nu_ine, 'nome' => $r->no_equipe],
-                    'agente'      => $r->agente,
-                    'cbo'         => $r->nu_cbo,
-                    'data'        => $r->dt_registro,
-                    'mes'         => (int) $r->nu_mes,
-                    'micro_area'  => $r->nu_micro_area,
-                    'desfecho'    => $r->desfecho,
-                    'desfecho_id' => (int) $r->desfecho_id,
-                    'lat'         => $r->nu_latitude  ? (float) $r->nu_latitude  : null,
-                    'lng'         => $r->nu_longitude ? (float) $r->nu_longitude : null,
-                    'cidadao'     => $r->co_fat_cidadao_pec,
-                    'motivacoes'  => array_filter([
-                        $r->st_mot_vis_visita_periodica ? 'Visita periódica'    : null,
-                        $r->st_mot_vis_busca_ativa      ? 'Busca ativa'         : null,
-                        $r->st_mot_vis_acompanhamento   ? 'Acompanhamento'      : null,
-                        $r->st_mot_vis_cad_att          ? 'Cadastro/atualiz.'   : null,
-                    ]),
-                    'acompanhamentos' => array_filter([
-                        $r->st_acomp_gestante             ? 'Gestante'      : null,
-                        $r->st_acomp_crianca              ? 'Criança'       : null,
-                        $r->st_acomp_pessoa_hipertensao   ? 'Hipertensão'   : null,
-                        $r->st_acomp_pessoa_diabetes      ? 'Diabetes'      : null,
-                        $r->st_acomp_pessoa_idosa         ? 'Idoso'         : null,
-                        $r->st_acomp_saude_mental         ? 'Saúde Mental'  : null,
-                    ]),
-                ], $rows),
-            ]);
-        } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+                'pages'    => (int) ceil($total / max($perPage, 1)),
+            ],
+        ]);
     }
 
-    /** Lista de agentes ACS/TACS com totais do período. */
-    public function agentes(Request $request)
+    public function show(int $id): JsonResponse
     {
-        ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
-        $ine = $request->query('ine');
-        $cacheKey = "aps_visitas_agentes_{$ano}_{$quad}_" . ($ine ?? 'all');
+        $row = $this->db()->selectOne("
+            SELECT
+                v.co_seq_fat_visita_domiciliar   AS id,
+                p.no_profissional                AS agent_name,
+                c.nu_cbo                         AS cbo,
+                e.nu_ine                         AS team_ine,
+                e.no_equipe                      AS team_name,
+                t.dt_registro                    AS visited_date,
+                tf.ds_tipo_ficha                 AS instrument_label,
+                d.co_seq_dim_desfecho_visita     AS outcome_code,
+                d.ds_desfecho_visita             AS outcome_label,
+                v.nu_latitude                    AS lat,
+                v.nu_longitude                   AS lng,
+                a.ds_anotacao                    AS notes,
+                v.st_mot_vis_cad_att,
+                v.st_mot_vis_visita_periodica,
+                v.st_mot_vis_busca_ativa,
+                v.st_mot_vis_acompanhamento,
+                v.st_mot_vis_egresso_internacao,
+                v.st_mot_vis_ctrl_ambnte_vetor,
+                v.st_mot_vis_convte_atvidd_cltva,
+                v.st_mot_vis_orintacao_prevncao,
+                v.st_mot_vis_outros,
+                v.st_acomp_gestante,
+                v.st_acomp_puerpera,
+                v.st_acomp_recem_nascido,
+                v.st_acomp_crianca,
+                v.st_acomp_pessoa_hipertensao,
+                v.st_acomp_pessoa_diabetes,
+                v.st_acomp_pessoa_cancer,
+                v.st_acomp_pessoa_idosa,
+                v.st_acomp_saude_mental,
+                v.st_acomp_tabagista,
+                v.st_acomp_domiciliados_acamados,
+                v.st_acomp_pessoa_tuberculose,
+                v.st_acomp_pessoa_hanseniase,
+                v.st_acomp_condi_bolsa_familia,
+                CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
+                     THEN true ELSE false END    AS has_geo
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            LEFT JOIN tb_visita_domiciliar_acs a ON a.co_unico_visita_domiciliar = v.nu_uuid_ficha
+            WHERE v.co_seq_fat_visita_domiciliar = ?
+        ", [$id]);
 
-        try {
-            $data = Cache::remember($cacheKey, 600, function () use ($ano, $quad, $ine) {
-                $cbos = "'" . implode("','", self::CBO_ACS) . "'";
-
-                $where    = ['de.st_registro_valido = 1', "de.nu_ine != '-'",
-                             "dc.nu_cbo IN ({$cbos})", 'dt.nu_ano = ?', 'CEIL(dt.nu_mes::numeric / 4) = ?'];
-                $bindings = [$ano, $quad];
-                if ($ine) { $where[] = 'de.nu_ine = ?'; $bindings[] = $ine; }
-                $whereStr = implode(' AND ', $where);
-
-                $rows = $this->db()->select("
-                    SELECT
-                      dp.no_profissional AS agente,
-                      dc.nu_cbo, dc.no_cbo,
-                      de.nu_ine, de.no_equipe,
-                      COUNT(*)                                                               AS total,
-                      SUM(CASE WHEN fvd.co_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)      AS realizadas,
-                      SUM(CASE WHEN fvd.co_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)      AS recusadas,
-                      SUM(CASE WHEN fvd.co_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)      AS ausentes,
-                      COUNT(DISTINCT fvd.co_fat_cidadao_pec)                               AS cidadaos,
-                      COUNT(DISTINCT fvd.nu_micro_area)                                    AS micro_areas
-                    FROM tb_fat_visita_domiciliar fvd
-                    JOIN tb_dim_equipe       de  ON fvd.co_dim_equipe      = de.co_seq_dim_equipe
-                    JOIN tb_dim_cbo          dc  ON fvd.co_dim_cbo          = dc.co_seq_dim_cbo
-                    JOIN tb_dim_profissional  dp  ON fvd.co_dim_profissional = dp.co_seq_dim_profissional
-                    JOIN tb_dim_tempo         dt  ON fvd.co_dim_tempo        = dt.co_seq_dim_tempo
-                    WHERE {$whereStr}
-                    GROUP BY dp.no_profissional, dc.nu_cbo, dc.no_cbo, de.nu_ine, de.no_equipe
-                    ORDER BY total DESC
-                ", $bindings);
-
-                return array_map(fn($r) => [
-                    'agente'      => $r->agente,
-                    'cbo'         => $r->nu_cbo,
-                    'cbo_nome'    => $r->no_cbo,
-                    'equipe'      => ['ine' => $r->nu_ine, 'nome' => $r->no_equipe],
-                    'total'       => (int) $r->total,
-                    'realizadas'  => (int) $r->realizadas,
-                    'recusadas'   => (int) $r->recusadas,
-                    'ausentes'    => (int) $r->ausentes,
-                    'cidadaos'    => (int) $r->cidadaos,
-                    'micro_areas' => (int) $r->micro_areas,
-                    'pct_realizadas' => $r->total > 0 ? round($r->realizadas / $r->total * 100, 1) : 0,
-                ], $rows);
-            });
-
-            return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'agentes' => $data]);
-        } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+        if (! $row) {
+            return response()->json(['message' => 'Visita não encontrada.'], 404);
         }
+
+        return response()->json($this->formatVisita($row, detail: true));
     }
 
-    /** Visitas com geolocalização para o mapa. */
-    public function mapa(Request $request)
+    public function mapa(Request $request): JsonResponse
     {
-        ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
-        $ine = $request->query('ine');
-        $cacheKey = "aps_visitas_mapa_{$ano}_{$quad}_" . ($ine ?? 'all');
+        $request->validate([
+            'ano'    => 'required|integer|min:2020|max:2030',
+            'mes'    => 'required|integer|min:1|max:12',
+            'ine'    => 'nullable|string',
+            'agente' => 'nullable|string',
+        ]);
 
-        try {
-            $data = Cache::remember($cacheKey, 600, function () use ($ano, $quad, $ine) {
-                $cbos = "'" . implode("','", self::CBO_ACS) . "'";
+        $ano = (int) $request->ano;
+        $mes = (int) $request->mes;
 
-                $where    = ['de.st_registro_valido = 1', "de.nu_ine != '-'",
-                             "dc.nu_cbo IN ({$cbos})", 'dt.nu_ano = ?', 'CEIL(dt.nu_mes::numeric / 4) = ?',
-                             'fvd.nu_latitude IS NOT NULL', 'fvd.nu_longitude IS NOT NULL',
-                             'fvd.nu_latitude <> 0', 'fvd.nu_longitude <> 0'];
-                $bindings = [$ano, $quad];
-                if ($ine) { $where[] = 'de.nu_ine = ?'; $bindings[] = $ine; }
-                $whereStr = implode(' AND ', $where);
+        [$where, $params] = $this->baseWhere($ano, $mes, $request->ine, $request->agente);
 
-                $rows = $this->db()->select("
-                    SELECT
-                      fvd.nu_latitude  AS lat,
-                      fvd.nu_longitude AS lng,
-                      fvd.co_dim_desfecho_visita AS desfecho_id,
-                      de.nu_ine,
-                      dp.no_profissional AS agente,
-                      dt.dt_registro,
-                      fvd.nu_micro_area
-                    FROM tb_fat_visita_domiciliar fvd
-                    JOIN tb_dim_equipe       de  ON fvd.co_dim_equipe      = de.co_seq_dim_equipe
-                    JOIN tb_dim_cbo          dc  ON fvd.co_dim_cbo          = dc.co_seq_dim_cbo
-                    JOIN tb_dim_profissional  dp  ON fvd.co_dim_profissional = dp.co_seq_dim_profissional
-                    JOIN tb_dim_tempo         dt  ON fvd.co_dim_tempo        = dt.co_seq_dim_tempo
-                    WHERE {$whereStr}
-                    LIMIT 2000
-                ", $bindings);
+        $rows = $this->db()->select("
+            SELECT
+                v.co_seq_fat_visita_domiciliar   AS id,
+                v.nu_latitude::float             AS lat,
+                v.nu_longitude::float            AS lng,
+                p.no_profissional                AS agent_name,
+                c.nu_cbo                         AS cbo,
+                e.nu_ine                         AS team_ine,
+                e.no_equipe                      AS team_name,
+                t.dt_registro                    AS visited_date,
+                d.co_seq_dim_desfecho_visita     AS outcome_code,
+                d.ds_desfecho_visita             AS outcome_label
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            WHERE {$where}
+              AND v.nu_latitude  IS NOT NULL
+              AND v.nu_longitude IS NOT NULL
+            ORDER BY t.dt_registro DESC
+        ", $params);
 
-                return array_map(fn($r) => [
-                    'lat'        => (float) $r->lat,
-                    'lng'        => (float) $r->lng,
-                    'desfecho'   => (int) $r->desfecho_id,
-                    'ine'        => $r->nu_ine,
-                    'agente'     => $r->agente,
-                    'data'       => $r->dt_registro,
-                    'micro_area' => $r->nu_micro_area,
-                ], $rows);
-            });
-
-            return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'pontos' => $data]);
-        } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        return response()->json([
+            'data' => array_map(fn($r) => [
+                'id'           => (int) $r->id,
+                'lat'          => (float) $r->lat,
+                'lng'          => (float) $r->lng,
+                'agent_name'   => $r->agent_name,
+                'cbo'          => $r->cbo,
+                'cbo_label'    => $r->cbo === '515105' ? 'ACS' : 'TACS',
+                'team_ine'     => $r->team_ine,
+                'team_name'    => $r->team_name,
+                'visited_date' => $r->visited_date,
+                'outcome_code' => (int) $r->outcome_code,
+                'outcome_label'=> $r->outcome_label,
+            ], $rows),
+        ]);
     }
 
-    // ---------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------
-
-    private function params(Request $request): array
+    public function equipes(): JsonResponse
     {
-        return [
-            'ano'          => (int) $request->query('ano', (int) date('Y')),
-            'quadrimestre' => (int) $request->query('quadrimestre', (int) ceil((int) date('n') / 4)),
-        ];
+        $cbos = implode("','", self::ACS_CBOS);
+
+        $rows = $this->db()->select("
+            SELECT DISTINCT e.nu_ine AS ine, e.no_equipe AS name
+            FROM tb_fat_visita_domiciliar v
+            JOIN tb_dim_cbo    c ON c.co_seq_dim_cbo    = v.co_dim_cbo
+            JOIN tb_dim_equipe e ON e.co_seq_dim_equipe = v.co_dim_equipe
+            WHERE c.nu_cbo IN ('{$cbos}')
+            ORDER BY e.no_equipe
+        ");
+
+        return response()->json(['data' => $rows]);
+    }
+
+    public function agentes(Request $request): JsonResponse
+    {
+        $request->validate(['ine' => 'required|string']);
+
+        $cbos = implode("','", self::ACS_CBOS);
+
+        $rows = $this->db()->select("
+            SELECT DISTINCT p.no_profissional AS name, c.nu_cbo AS cbo
+            FROM tb_fat_visita_domiciliar v
+            JOIN tb_dim_profissional p ON p.co_seq_dim_profissional = v.co_dim_profissional
+            JOIN tb_dim_cbo         c ON c.co_seq_dim_cbo           = v.co_dim_cbo
+            JOIN tb_dim_equipe      e ON e.co_seq_dim_equipe        = v.co_dim_equipe
+            WHERE e.nu_ine = ? AND c.nu_cbo IN ('{$cbos}')
+            ORDER BY p.no_profissional
+        ", [$request->ine]);
+
+        return response()->json(['data' => $rows]);
     }
 }

@@ -126,10 +126,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::get('/historico',    [MonitorApsController::class, 'historico']);
         });
         Route::prefix('visitas')->group(function () {
-            Route::get('/resumo',  [VisitaAcsController::class, 'resumo']);
-            Route::get('/lista',   [VisitaAcsController::class, 'lista']);
-            Route::get('/agentes', [VisitaAcsController::class, 'agentes']);
+            Route::get('/',        [VisitaAcsController::class, 'index']);
             Route::get('/mapa',    [VisitaAcsController::class, 'mapa']);
+            Route::get('/equipes', [VisitaAcsController::class, 'equipes']);
+            Route::get('/agentes', [VisitaAcsController::class, 'agentes']);
+            Route::get('/{id}',    [VisitaAcsController::class, 'show'])->whereNumber('id');
         });
         Route::get('/config/status',  [MonitorApsConfigController::class, 'status']);
         Route::get('/config/load',    [MonitorApsConfigController::class, 'load']);
@@ -139,6 +140,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::post('/config/save',    [MonitorApsConfigController::class, 'save']);
             Route::get('/config/explorar', [MonitorApsConfigController::class, 'explorar']);
         });
+
     });
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
