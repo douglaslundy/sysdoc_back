@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Cache;
 class MonitorApsController extends MonitorApsBaseController
 {
     private const THRESHOLDS = [
-        'ind1_acesso_aps'         => ['suficiente' => 20, 'bom' => 40, 'otimo' => 60],
+        // Ind1: percentual = tipos_com_>=10% / 5 × 100 → 3 tipos=60%, 4=80%, 5=100%
+        'ind1_acesso_aps'         => ['suficiente' => 60, 'bom' => 80, 'otimo' => 100],
         'ind2_crianca'            => ['suficiente' => 30, 'bom' => 60, 'otimo' => 80],
         'ind3_gestante'           => ['suficiente' => 40, 'bom' => 65, 'otimo' => 85],
         'ind4_hipertensao'        => ['suficiente' => 35, 'bom' => 60, 'otimo' => 80],
@@ -275,6 +276,20 @@ class MonitorApsController extends MonitorApsBaseController
         return $resultado;
     }
 
+    private array $equipeNomeCache = [];
+
+    private function nomeEquipe(string $ine): string
+    {
+        if (!array_key_exists($ine, $this->equipeNomeCache)) {
+            $r = $this->db()->selectOne(
+                'SELECT no_equipe FROM tb_dim_equipe WHERE nu_ine = ? AND st_registro_valido = 1 LIMIT 1',
+                [$ine]
+            );
+            $this->equipeNomeCache[$ine] = $r?->no_equipe ?? '';
+        }
+        return $this->equipeNomeCache[$ine];
+    }
+
     private function calcularVinculo(int $ano, int $quad, ?string $ine = null): array
     {
         // tb_dim_equipe não tem tp_equipe nem nu_cnes — apenas nu_ine e no_equipe
@@ -499,7 +514,7 @@ class MonitorApsController extends MonitorApsBaseController
         $numerador  = min(...$vals);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(2, 'Cuidado Longitudinal da Criança', 'eSF_eAP',
-            $ine, '', $ano, $quad, $numerador, $denominador, $percentual, 'ind2_crianca', [
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $numerador, $denominador, $percentual, 'ind2_crianca', [
                 ['nome' => '≥9 consultas médico/enfermeiro', 'valor' => $vals[0], 'total' => $denominador],
                 ['nome' => '≥9 registros peso/altura',       'valor' => $vals[1], 'total' => $denominador],
                 ['nome' => '≥2 visitas ACS',                 'valor' => $vals[2], 'total' => $denominador],
@@ -539,7 +554,7 @@ class MonitorApsController extends MonitorApsBaseController
         $num2 = (int)($num?->total ?? 0);
         $pct  = $denominador > 0 ? round($num2 / $denominador * 100, 1) : 0.0;
         return $this->resultado(3, 'Cuidado da Gestante e Puérpera', 'eSF_eAP',
-            $ine, '', $ano, $quad, $num2, $denominador, $pct, 'ind3_gestante',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $num2, $denominador, $pct, 'ind3_gestante',
             [['nome' => 'Gestantes com ≥6 consultas médico/enfermeiro', 'valor' => $num2, 'total' => $denominador]]);
     }
 
@@ -571,7 +586,7 @@ class MonitorApsController extends MonitorApsBaseController
         $num2 = (int)($num?->total ?? 0);
         $pct  = $denominador > 0 ? round($num2 / $denominador * 100, 1) : 0.0;
         return $this->resultado(4, 'Cuidado da Pessoa com Hipertensão', 'eSF_eAP',
-            $ine, '', $ano, $quad, $num2, $denominador, $pct, 'ind4_hipertensao',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $num2, $denominador, $pct, 'ind4_hipertensao',
             [['nome' => 'Hipertensos com ≥2 atendimentos', 'valor' => $num2, 'total' => $denominador]]);
     }
 
@@ -603,7 +618,7 @@ class MonitorApsController extends MonitorApsBaseController
         $num2 = (int)($num?->total ?? 0);
         $pct  = $denominador > 0 ? round($num2 / $denominador * 100, 1) : 0.0;
         return $this->resultado(5, 'Cuidado da Pessoa com Diabetes', 'eSF_eAP',
-            $ine, '', $ano, $quad, $num2, $denominador, $pct, 'ind5_diabetes',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $num2, $denominador, $pct, 'ind5_diabetes',
             [['nome' => 'Diabéticos com ≥2 atendimentos', 'valor' => $num2, 'total' => $denominador]]);
     }
 
@@ -632,7 +647,7 @@ class MonitorApsController extends MonitorApsBaseController
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(6, 'Cuidado da Pessoa Idosa', 'eSF_eAP',
-            $ine, '', $ano, $quad, $numerador, $denominador, $percentual, 'ind6_idoso',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $numerador, $denominador, $percentual, 'ind6_idoso',
             [['nome' => 'Idosos atendidos no quadrimestre', 'valor' => $numerador, 'total' => $denominador]]);
     }
 
@@ -663,7 +678,7 @@ class MonitorApsController extends MonitorApsBaseController
         $denominador = (int)($total?->total ?? 0) ?: 1;
         $percentual  = round($numerador / $denominador * 100, 1);
         return $this->resultado(7, 'Saúde Mental na APS', 'eSF_eAP',
-            $ine, '', $ano, $quad, $numerador, $denominador, $percentual, 'ind7_saude_mental',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $numerador, $denominador, $percentual, 'ind7_saude_mental',
             [['nome' => 'Atendimentos de saúde mental', 'valor' => $numerador, 'total' => $denominador]]);
     }
 
@@ -690,7 +705,7 @@ class MonitorApsController extends MonitorApsBaseController
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(8, 'Visita Domiciliar por ACS/TACS', 'eSF_eAP',
-            $ine, '', $ano, $quad, $numerador, $denominador, $percentual, 'ind8_visita_acs',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $numerador, $denominador, $percentual, 'ind8_visita_acs',
             [['nome' => 'Pessoas com ≥1 visita ACS no quadrimestre', 'valor' => $numerador, 'total' => $denominador]]);
     }
 
@@ -733,7 +748,7 @@ class MonitorApsController extends MonitorApsBaseController
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(9, 'Vacinação na APS', 'eSF_eAP',
-            $ine, '', $ano, $quad, $numerador, $denominador, $percentual, 'ind9_vacinacao',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $numerador, $denominador, $percentual, 'ind9_vacinacao',
             [['nome' => 'Crianças <2 anos com calendário básico completo', 'valor' => $numerador, 'total' => $denominador]]);
     }
 
@@ -758,7 +773,7 @@ class MonitorApsController extends MonitorApsBaseController
         $denominador   = (int)($den?->total ?? 0) ?: 1;
         $percentual    = round($participantes / $denominador * 100, 1);
         return $this->resultado(10, 'Ações Interprofissionais', 'eSF_eAP',
-            $ine, '', $ano, $quad, $participantes, $denominador, $percentual, 'ind10_interprofissional', [
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $participantes, $denominador, $percentual, 'ind10_interprofissional', [
                 ['nome' => 'Total de atividades coletivas', 'valor' => (int)($r?->total_atividades ?? 0), 'total' => '-'],
                 ['nome' => 'Total de participantes',        'valor' => $participantes, 'total' => $denominador],
             ]);
@@ -872,7 +887,7 @@ class MonitorApsController extends MonitorApsBaseController
         $percentual = round(($pct1 + $pct2 + $pct3 + $pct4) / 4, 1);
 
         return $this->resultado(11, 'Cuidado da Mulher na Prevenção do Câncer', 'eSF_eAP',
-            $ine, '', $ano, $quad, null, null, $percentual, 'ind11_mulher_cancer', [
+            $ine, $this->nomeEquipe($ine), $ano, $quad, null, null, $percentual, 'ind11_mulher_cancer', [
                 ['nome' => 'Citopatológico cervical (25–64 anos)', 'valor' => $num1, 'total' => $den1],
                 ['nome' => 'Vacina HPV (9–14 anos)',               'valor' => $num2, 'total' => $den2],
                 ['nome' => 'Atenção sexual/reprodutiva (14–69)',   'valor' => $num3, 'total' => $den3],
@@ -907,7 +922,7 @@ class MonitorApsController extends MonitorApsBaseController
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(13, 'Acesso à Saúde Bucal', 'eSB',
-            $ine, '', $ano, $quad, $numerador, $denominador, $percentual, 'ind13_acesso_bucal',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $numerador, $denominador, $percentual, 'ind13_acesso_bucal',
             [['nome' => 'Primeiras consultas odontológicas', 'valor' => $numerador, 'total' => $denominador]]);
     }
 
@@ -935,7 +950,7 @@ class MonitorApsController extends MonitorApsBaseController
         $numerador  = (int)($concl?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
         return $this->resultado(14, 'Conclusão de Tratamento Odontológico', 'eSB',
-            $ine, '', $ano, $quad, $numerador, $denominador, $percentual, 'ind14_conclusao',
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $numerador, $denominador, $percentual, 'ind14_conclusao',
             [['nome' => 'Tratamentos concluídos', 'valor' => $numerador, 'total' => $denominador]]);
     }
 
@@ -960,7 +975,7 @@ class MonitorApsController extends MonitorApsBaseController
         $denominador   = (int)($den?->total ?? 0) ?: 1;
         $percentual    = round($participantes / $denominador * 100, 1);
         return $this->resultado(15, 'Ações Coletivas em Saúde Bucal', 'eSB',
-            $ine, '', $ano, $quad, $participantes, $denominador, $percentual, 'ind15_coletivas', [
+            $ine, $this->nomeEquipe($ine), $ano, $quad, $participantes, $denominador, $percentual, 'ind15_coletivas', [
                 ['nome' => 'Atividades coletivas realizadas', 'valor' => (int)($r?->atividades ?? 0), 'total' => '-'],
                 ['nome' => 'Total de participantes',          'valor' => $participantes, 'total' => $denominador],
             ]);
