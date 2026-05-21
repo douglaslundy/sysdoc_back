@@ -7,22 +7,32 @@ use PDO;
 
 abstract class MonitorApsBaseController extends Controller
 {
+    private ?object $apsConfigCache = null;
+    private ?\Illuminate\Database\ConnectionInterface $apsConn = null;
+
     protected function apsConfig(): object
     {
+        if ($this->apsConfigCache !== null) return $this->apsConfigCache;
+
         try {
             $row = DB::table('monitor_aps_configs')->first();
         } catch (\Throwable) {
             $row = null;
         }
-        return (object) [
+
+        $this->apsConfigCache = (object) [
             'municipio_ibge' => $row?->municipio_ibge ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
             'municipio_nome' => $row?->municipio_nome ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
             'estrato_ied'    => (int) ($row?->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
         ];
+
+        return $this->apsConfigCache;
     }
 
     protected function db(): \Illuminate\Database\ConnectionInterface
     {
+        if ($this->apsConn !== null) return $this->apsConn;
+
         $row = DB::table('monitor_aps_configs')->first();
 
         $host     = $row?->aps_db_host     ?? env('APS_DB_HOST', '');
@@ -46,9 +56,10 @@ abstract class MonitorApsBaseController extends Controller
             'prefix'          => '',
             'schema'          => 'public',
             'sslmode'         => 'prefer',
-            'options'         => [PDO::ATTR_TIMEOUT => 8],
+            'options'         => [PDO::ATTR_TIMEOUT => 30],
         ]]);
 
-        return DB::connection('pgsql_esus_runtime');
+        $this->apsConn = DB::connection('pgsql_esus_runtime');
+        return $this->apsConn;
     }
 }

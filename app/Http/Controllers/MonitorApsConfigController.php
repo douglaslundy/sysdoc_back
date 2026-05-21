@@ -16,7 +16,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
         }
     }
 
-    // GET /monitor-aps/config/status  — não tenta conectar ao PostgreSQL (rápido)
+    // GET /monitor-aps/config/status
     public function status()
     {
         $row  = $this->row();
@@ -25,9 +25,17 @@ class MonitorApsConfigController extends MonitorApsBaseController
         $db   = $row?->aps_db_database ?? env('APS_DB_DATABASE', '');
         $user = $row?->aps_db_username ?? env('APS_DB_USERNAME', '');
 
+        $connected = false;
+        if ($host) {
+            try {
+                $this->db()->select('SELECT 1');
+                $connected = true;
+            } catch (\Throwable) {}
+        }
+
         return response()->json([
             'configured' => (bool) $host,
-            'connected'  => null,
+            'connected'  => $connected,
             'host'       => $host,
             'port'       => $port,
             'database'   => $db,

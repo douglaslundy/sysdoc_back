@@ -36,6 +36,7 @@ class MonitorApsController extends MonitorApsBaseController
 
     public function resumo(Request $request)
     {
+        set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
         try {
             $cfg      = $this->apsConfig();
@@ -76,6 +77,7 @@ class MonitorApsController extends MonitorApsBaseController
 
     public function qualidade(Request $request)
     {
+        set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine, 'bloco' => $bloco] = $this->params($request);
         try {
             $sql = 'SELECT nu_ine FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
@@ -404,7 +406,7 @@ class MonitorApsController extends MonitorApsBaseController
             ) sq
         ", [$ine, $ano, $quad]) ?: [null];
 
-        // Sub3: ≥2 visitas ACS (CBO 516220, desfecho=1)
+        // Sub3: ≥2 visitas ACS/TACS (CBO 515105/322255, desfecho=1)
         [$sub3] = $this->db()->select("
             SELECT COUNT(*) AS v FROM (
               SELECT fvd.co_fat_cidadao_pec
@@ -416,7 +418,7 @@ class MonitorApsController extends MonitorApsBaseController
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
                 AND fci.st_ficha_inativa = 0
               WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
-                AND dc.nu_cbo = '516220' AND fvd.co_dim_desfecho_visita = 1
+                AND dc.nu_cbo IN ('515105', '322255') AND fvd.co_dim_desfecho_visita = 1
               GROUP BY fvd.co_fat_cidadao_pec HAVING COUNT(*) >= 2
             ) sq
         ", [$ine, $ano, $quad]) ?: [null];
@@ -634,7 +636,7 @@ class MonitorApsController extends MonitorApsBaseController
             JOIN tb_dim_tempo  dt ON fvd.co_dim_tempo  = dt.co_seq_dim_tempo
             JOIN tb_dim_cbo    dc ON fvd.co_dim_cbo    = dc.co_seq_dim_cbo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
-              AND dc.nu_cbo = '516220' AND fvd.co_dim_desfecho_visita = 1
+              AND dc.nu_cbo IN ('515105', '322255') AND fvd.co_dim_desfecho_visita = 1
         ", [$ine, $ano, $quad]) ?: [null];
         $numerador  = (int)($num?->total ?? 0);
         $percentual = round($numerador / $denominador * 100, 1);
