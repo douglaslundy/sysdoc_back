@@ -122,6 +122,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'team_ine'         => $row->team_ine,
             'team_name'        => $row->team_name,
             'visited_date'     => $row->visited_date,
+            'hora'             => isset($row->hora) ? (int) $row->hora : null,
             'instrument_label' => $row->instrument_label,
             'outcome_code'     => $outcomeCode,
             'outcome_label'    => $row->outcome_label,
@@ -311,6 +312,7 @@ class VisitaAcsController extends MonitorApsBaseController
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
                 t.dt_registro                    AS data,
+                t.nu_hora                        AS hora,
                 p.no_profissional                AS agente,
                 c.nu_cbo                         AS cbo,
                 e.nu_ine                         AS equipe_ine,
@@ -345,6 +347,7 @@ class VisitaAcsController extends MonitorApsBaseController
         $visitas = array_map(fn($r) => [
             'id'             => (int) $r->id,
             'data'           => $r->data,
+            'hora'           => isset($r->hora) ? (int) $r->hora : null,
             'agente'         => $r->agente,
             'cbo'            => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
             'equipe'         => ['ine' => $r->equipe_ine, 'nome' => $r->equipe_nome],
@@ -374,6 +377,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.nu_ine                         AS team_ine,
                 e.no_equipe                      AS team_name,
                 t.dt_registro                    AS visited_date,
+                t.nu_hora                        AS hora,
                 tf.ds_tipo_ficha                 AS instrument_label,
                 d.co_seq_dim_desfecho_visita     AS outcome_code,
                 d.ds_desfecho_visita             AS outcome_label,
@@ -498,6 +502,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.nu_ine                         AS equipe_ine,
                 e.no_equipe                      AS equipe_nome,
                 t.dt_registro                    AS data,
+                t.nu_hora                        AS hora,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
                 v.nu_micro_area                  AS micro_area
             FROM tb_fat_visita_domiciliar v
@@ -536,6 +541,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'equipe'     => $r->equipe_nome,
             'cidadao'    => $r->cidadao ?? null,
             'data'       => $r->data,
+            'hora'       => isset($r->hora) ? (int) $r->hora : null,
             'desfecho'   => (int) $r->desfecho,
             'micro_area' => $r->micro_area,
         ], $rows);
