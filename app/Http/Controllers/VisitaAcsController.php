@@ -264,6 +264,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'ine'      => 'nullable|string',
             'agente'   => 'nullable|string',
             'desfecho' => 'nullable|integer',
+            'has_geo'  => 'nullable|in:sim,nao',
             'page'     => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
@@ -284,6 +285,12 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($request->desfecho) {
             $where   .= ' AND d.co_seq_dim_desfecho_visita = ?';
             $params[] = (int) $request->desfecho;
+        }
+
+        if ($request->has_geo === 'sim') {
+            $where .= ' AND v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL';
+        } elseif ($request->has_geo === 'nao') {
+            $where .= ' AND (v.nu_latitude IS NULL OR v.nu_longitude IS NULL)';
         }
 
         $countRow = $this->db()->selectOne(
