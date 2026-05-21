@@ -162,7 +162,7 @@ class MonitorApsController extends MonitorApsBaseController
         $method = $mapa[$indicadorId] ?? null;
         if (!$method) return response()->json(['error' => "Indicador {$indicadorId} não encontrado"], 404);
 
-        $anos      = array_map('intval', explode(',', $request->query('anos', '2025')));
+        $anos      = array_map('intval', explode(',', $request->query('anos', (string) date('Y'))));
         $historico = [];
 
         try {
@@ -187,8 +187,8 @@ class MonitorApsController extends MonitorApsBaseController
     private function params(Request $request): array
     {
         return [
-            'ano'          => (int) $request->query('ano', 2025),
-            'quadrimestre' => (int) $request->query('quadrimestre', 2),
+            'ano'          => (int) $request->query('ano', (int) date('Y')),
+            'quadrimestre' => (int) $request->query('quadrimestre', (int) ceil((int) date('n') / 4)),
             'ine'          => $request->query('ine'),
             'bloco'        => $request->query('bloco'),
         ];
