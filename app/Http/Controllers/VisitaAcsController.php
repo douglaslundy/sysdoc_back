@@ -421,16 +421,71 @@ class VisitaAcsController extends MonitorApsBaseController
      */
     public function show(int $id): JsonResponse
     {
-        $baseSelect = "
+        // Query completa: LATERAL direto no FROM + nu_hora + dados do cidadão
+        $sqlFull = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
-                v.co_fat_cidadao_pec             AS cidadao_pec,
                 p.no_profissional                AS agent_name,
                 c.nu_cbo                         AS cbo,
                 e.nu_ine                         AS team_ine,
                 e.no_equipe                      AS team_name,
                 t.dt_registro                    AS visited_date,
                 t.nu_hora                        AS hora,
+                tf.ds_tipo_ficha                 AS instrument_label,
+                d.co_seq_dim_desfecho_visita     AS outcome_code,
+                d.ds_desfecho_visita             AS outcome_label,
+                v.nu_latitude                    AS lat,
+                v.nu_longitude                   AS lng,
+                ci.no_cidadao                    AS citizen_name,
+                ci.ds_logradouro                 AS logradouro,
+                ci.nu_numero                     AS num_endereco,
+                ci.ds_complemento                AS complemento,
+                ci.ds_bairro                     AS bairro,
+                v.st_mot_vis_cad_att,
+                v.st_mot_vis_visita_periodica,
+                v.st_mot_vis_busca_ativa,
+                v.st_mot_vis_acompanhamento,
+                v.st_mot_vis_egresso_internacao,
+                v.st_mot_vis_ctrl_ambnte_vetor,
+                v.st_mot_vis_convte_atvidd_cltva,
+                v.st_mot_vis_orintacao_prevncao,
+                v.st_mot_vis_outros,
+                v.st_acomp_gestante,
+                v.st_acomp_puerpera,
+                v.st_acomp_recem_nascido,
+                v.st_acomp_crianca,
+                v.st_acomp_pessoa_hipertensao,
+                v.st_acomp_pessoa_diabetes,
+                v.st_acomp_pessoa_cancer,
+                v.st_acomp_pessoa_idosa,
+                v.st_acomp_saude_mental,
+                v.st_acomp_tabagista,
+                v.st_acomp_domiciliados_acamados,
+                v.st_acomp_pessoa_tuberculose,
+                v.st_acomp_pessoa_hanseniase,
+                v.st_acomp_condi_bolsa_familia,
+                CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
+                     THEN true ELSE false END    AS has_geo
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            LEFT JOIN LATERAL (
+                SELECT no_cidadao, ds_logradouro, nu_numero, ds_complemento, ds_bairro
+                FROM  tb_fat_cad_individual
+                WHERE co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                LIMIT 1
+            ) ci ON true
+            WHERE v.co_seq_fat_visita_domiciliar = ?
+        ";
+
+        // Fallback seguro: sem LATERAL e sem nu_hora — tabelas base garantidas
+        $sqlBase = "
+            SELECT
+                v.co_seq_fat_visita_domiciliar   AS id,
+                p.no_profissional                AS agent_name,
+                c.nu_cbo                         AS cbo,
+                e.nu_ine                         AS team_ine,
+                e.no_equipe                      AS team_name,
+                t.dt_registro                    AS visited_date,
                 tf.ds_tipo_ficha                 AS instrument_label,
                 d.co_seq_dim_desfecho_visita     AS outcome_code,
                 d.ds_desfecho_visita             AS outcome_label,
@@ -466,25 +521,10 @@ class VisitaAcsController extends MonitorApsBaseController
             WHERE v.co_seq_fat_visita_domiciliar = ?
         ";
 
-        // Tenta enriquecer com dados do cidadão via LATERAL JOIN
         try {
-            $row = $this->db()->selectOne("
-                SELECT base.*,
-                       ci.no_cidadao     AS citizen_name,
-                       ci.ds_logradouro  AS logradouro,
-                       ci.nu_numero      AS num_endereco,
-                       ci.ds_complemento AS complemento,
-                       ci.ds_bairro      AS bairro
-                FROM ({$baseSelect}) base
-                LEFT JOIN LATERAL (
-                    SELECT no_cidadao, ds_logradouro, nu_numero, ds_complemento, ds_bairro
-                    FROM  tb_fat_cad_individual
-                    WHERE co_fat_cidadao_pec = base.cidadao_pec
-                    LIMIT 1
-                ) ci ON true
-            ", [$id]);
+            $row = $this->db()->selectOne($sqlFull, [$id]);
         } catch (\Throwable) {
-            $row = $this->db()->selectOne($baseSelect, [$id]);
+            $row = $this->db()->selectOne($sqlBase, [$id]);
         }
 
         if (! $row) {
@@ -544,10 +584,10 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
 
-        $sqlBase = "
+        // Query completa: LATERAL direto no FROM + nu_hora + nome do cidadão
+        $sqlFull = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
-                v.co_fat_cidadao_pec             AS cidadao_pec,
                 v.nu_latitude::float             AS lat,
                 v.nu_longitude::float            AS lng,
                 p.no_profissional                AS agente,
@@ -556,6 +596,35 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.no_equipe                      AS equipe_nome,
                 t.dt_registro                    AS data,
                 t.nu_hora                        AS hora,
+                d.co_seq_dim_desfecho_visita     AS desfecho,
+                v.nu_micro_area                  AS micro_area,
+                ci.no_cidadao                    AS cidadao
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            LEFT JOIN LATERAL (
+                SELECT no_cidadao
+                FROM   tb_fat_cad_individual
+                WHERE  co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                LIMIT  1
+            ) ci ON true
+            WHERE {$where}
+              AND v.nu_latitude  IS NOT NULL
+              AND v.nu_longitude IS NOT NULL
+            ORDER BY t.dt_registro DESC
+            LIMIT 2000
+        ";
+
+        // Fallback seguro: sem LATERAL e sem nu_hora — tabelas base garantidas
+        $sqlBase = "
+            SELECT
+                v.co_seq_fat_visita_domiciliar   AS id,
+                v.nu_latitude::float             AS lat,
+                v.nu_longitude::float            AS lng,
+                p.no_profissional                AS agente,
+                c.nu_cbo                         AS cbo,
+                e.nu_ine                         AS equipe_ine,
+                e.no_equipe                      AS equipe_nome,
+                t.dt_registro                    AS data,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
                 v.nu_micro_area                  AS micro_area
             FROM tb_fat_visita_domiciliar v
@@ -567,20 +636,9 @@ class VisitaAcsController extends MonitorApsBaseController
             LIMIT 2000
         ";
 
-        // Tenta incluir nome do cidadão via LATERAL JOIN (uma lookup por linha, usa índice FK)
         try {
-            $rows = $this->db()->select("
-                SELECT base.*, ci.no_cidadao AS cidadao
-                FROM ({$sqlBase}) base
-                LEFT JOIN LATERAL (
-                    SELECT no_cidadao
-                    FROM   tb_fat_cad_individual
-                    WHERE  co_fat_cidadao_pec = base.cidadao_pec
-                    LIMIT  1
-                ) ci ON true
-            ", $params);
+            $rows = $this->db()->select($sqlFull, $params);
         } catch (\Throwable) {
-            // Se a tabela/coluna não estiver disponível, retorna sem o nome
             $rows = $this->db()->select($sqlBase, $params);
         }
 
