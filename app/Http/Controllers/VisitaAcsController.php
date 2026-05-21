@@ -468,13 +468,12 @@ class VisitaAcsController extends MonitorApsBaseController
                 v.co_seq_fat_visita_domiciliar   AS id,
                 v.nu_latitude::float             AS lat,
                 v.nu_longitude::float            AS lng,
-                p.no_profissional                AS agent_name,
+                p.no_profissional                AS agente,
                 c.nu_cbo                         AS cbo,
-                e.nu_ine                         AS team_ine,
-                e.no_equipe                      AS team_name,
-                t.dt_registro                    AS visited_date,
-                d.co_seq_dim_desfecho_visita     AS outcome_code,
-                d.ds_desfecho_visita             AS outcome_label
+                e.no_equipe                      AS equipe_nome,
+                t.dt_registro                    AS data,
+                d.co_seq_dim_desfecho_visita     AS desfecho,
+                v.nu_micro_area                  AS micro_area
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
             WHERE {$where}
@@ -484,18 +483,17 @@ class VisitaAcsController extends MonitorApsBaseController
             LIMIT 2000
         ", $params);
 
+        // Campos nomeados conforme MapaVisitas.js espera: desfecho, agente, data, micro_area
         $pontos = array_map(fn($r) => [
-            'id'           => (int) $r->id,
-            'lat'          => (float) $r->lat,
-            'lng'          => (float) $r->lng,
-            'agent_name'   => $r->agent_name,
-            'cbo'          => $r->cbo,
-            'cbo_label'    => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
-            'team_ine'     => $r->team_ine,
-            'team_name'    => $r->team_name,
-            'visited_date' => $r->visited_date,
-            'outcome_code' => (int) $r->outcome_code,
-            'outcome_label'=> $r->outcome_label,
+            'id'         => (int) $r->id,
+            'lat'        => (float) $r->lat,
+            'lng'        => (float) $r->lng,
+            'agente'     => $r->agente,
+            'cbo'        => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+            'equipe'     => $r->equipe_nome,
+            'data'       => $r->data,
+            'desfecho'   => (int) $r->desfecho,
+            'micro_area' => $r->micro_area,
         ], $rows);
 
         return response()->json(['pontos' => $pontos]);
