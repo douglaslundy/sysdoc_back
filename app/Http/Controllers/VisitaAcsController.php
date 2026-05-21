@@ -9,6 +9,11 @@ class VisitaAcsController extends MonitorApsBaseController
 {
     private const ACS_CBOS = ['515105', '322255'];
 
+    private const CBO_LABELS = [
+        '515105' => 'ACS',
+        '322255' => 'TACS',
+    ];
+
     // Desfechos confirmados no banco de produção:
     // 1=Visita realizada, 2=Visita recusada, 3=Ausente, 4=Não informado
     private const OUTCOME_COLORS = [
@@ -18,6 +23,17 @@ class VisitaAcsController extends MonitorApsBaseController
         4 => 'default',
     ];
 
+    private function quadMeses(int $quad): array
+    {
+        return match ($quad) {
+            1       => [1, 2, 3, 4],
+            2       => [5, 6, 7, 8],
+            3       => [9, 10, 11, 12],
+            default => [1, 2, 3, 4],
+        };
+    }
+
+    /** WHERE clause + bindings para filtro por mês exato (usado em index/show/mapa granular) */
     private function baseWhere(int $ano, int $mes, ?string $ine, ?string $agentName): array
     {
         $cbos   = implode("','", self::ACS_CBOS);
@@ -32,6 +48,23 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($agentName) {
             $where   .= ' AND p.no_profissional = ?';
             $params[] = $agentName;
+        }
+
+        return [$where, $params];
+    }
+
+    /** WHERE clause + bindings para filtro por quadrimestre (usado em resumo/lista/agentes/mapa) */
+    private function quadWhere(int $ano, int $quad, ?string $ine): array
+    {
+        $cbos   = implode("','", self::ACS_CBOS);
+        $meses  = $this->quadMeses($quad);
+        $phs    = implode(',', array_fill(0, count($meses), '?'));
+        $where  = "c.nu_cbo IN ('{$cbos}') AND t.nu_ano = ? AND t.nu_mes IN ({$phs})";
+        $params = array_merge([$ano], $meses);
+
+        if ($ine) {
+            $where   .= ' AND e.nu_ine = ?';
+            $params[] = $ine;
         }
 
         return [$where, $params];
@@ -110,7 +143,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'id'               => (int) $row->id,
             'agent_name'       => $row->agent_name,
             'cbo'              => $row->cbo,
-            'cbo_label'        => $row->cbo === '515105' ? 'ACS' : 'TACS',
+            'cbo_label'        => self::CBO_LABELS[$row->cbo] ?? $row->cbo,
             'team_ine'         => $row->team_ine,
             'team_name'        => $row->team_name,
             'visited_date'     => $row->visited_date,
@@ -132,6 +165,12 @@ class VisitaAcsController extends MonitorApsBaseController
         return $result;
     }
 
+    // ─── Endpoints públicos ───────────────────────────────────────────────────
+
+    /**
+     * GET /visitas?ano=X&mes=Y[&ine=Z&agente=W&page=N&per_page=N]
+     * Lista paginada por mês (granularidade mensal — mais precisa).
+     */
     public function index(Request $request): JsonResponse
     {
         $request->validate([
@@ -198,6 +237,155 @@ class VisitaAcsController extends MonitorApsBaseController
         ]);
     }
 
+    /**
+     * GET /visitas/resumo?ano=X&quadrimestre=Y[&ine=Z]
+     * Totais e breakdown mensal para o dashboard (VisitasAcs.js).
+     */
+    public function resumo(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ano'          => 'required|integer|min:2020|max:2030',
+            'quadrimestre' => 'required|integer|min:1|max:3',
+            'ine'          => 'nullable|string',
+        ]);
+
+        $ano  = (int) $request->ano;
+        $quad = (int) $request->quadrimestre;
+
+        [$where, $params] = $this->quadWhere($ano, $quad, $request->ine);
+
+        $totRow = $this->db()->selectOne("
+            SELECT
+                COUNT(*)                                                              AS total,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)   AS realizadas,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)   AS recusadas,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)   AS ausentes,
+                COUNT(DISTINCT v.co_fat_cidadao_pec)                                 AS cidadaos
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            WHERE {$where}
+        ", $params);
+
+        $porMes = $this->db()->select("
+            SELECT
+                t.nu_mes                                                              AS mes,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)   AS realizadas,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)   AS recusadas,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)   AS ausentes
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            WHERE {$where}
+            GROUP BY t.nu_mes
+            ORDER BY t.nu_mes
+        ", $params);
+
+        return response()->json([
+            'totais' => [
+                'total'      => (int) ($totRow->total ?? 0),
+                'realizadas' => (int) ($totRow->realizadas ?? 0),
+                'recusadas'  => (int) ($totRow->recusadas ?? 0),
+                'ausentes'   => (int) ($totRow->ausentes ?? 0),
+                'cidadaos'   => (int) ($totRow->cidadaos ?? 0),
+            ],
+            'por_mes' => array_map(fn($r) => [
+                'mes'        => (int) $r->mes,
+                'realizadas' => (int) $r->realizadas,
+                'recusadas'  => (int) $r->recusadas,
+                'ausentes'   => (int) $r->ausentes,
+            ], $porMes),
+        ]);
+    }
+
+    /**
+     * GET /visitas/lista?ano=X&quadrimestre=Y[&ine=Z&agente=W&desfecho=N&page=N&per_page=N]
+     * Lista paginada por quadrimestre (VisitasAcs.js — aba Tabela).
+     */
+    public function lista(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ano'          => 'required|integer|min:2020|max:2030',
+            'quadrimestre' => 'required|integer|min:1|max:3',
+            'ine'          => 'nullable|string',
+            'agente'       => 'nullable|string',
+            'desfecho'     => 'nullable|integer',
+            'page'         => 'nullable|integer|min:1',
+            'per_page'     => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $ano      = (int) $request->ano;
+        $quad     = (int) $request->quadrimestre;
+        $perPage  = (int) ($request->per_page ?? 50);
+        $page     = (int) ($request->page ?? 1);
+        $offset   = ($page - 1) * $perPage;
+        $desfecho = $request->agente ? null : ($request->desfecho ? (int) $request->desfecho : null);
+
+        [$where, $params] = $this->quadWhere($ano, $quad, $request->ine);
+
+        if ($request->agente) {
+            $where   .= ' AND p.no_profissional ILIKE ?';
+            $params[] = '%' . $request->agente . '%';
+        }
+
+        if ($desfecho) {
+            $where   .= ' AND d.co_seq_dim_desfecho_visita = ?';
+            $params[] = $desfecho;
+        }
+
+        $countRow = $this->db()->selectOne(
+            "SELECT COUNT(*) AS total FROM tb_fat_visita_domiciliar v {$this->baseJoins()} WHERE {$where}",
+            $params
+        );
+
+        $total = (int) ($countRow->total ?? 0);
+
+        $rows = $this->db()->select("
+            SELECT
+                v.co_seq_fat_visita_domiciliar   AS id,
+                t.dt_registro                    AS data,
+                p.no_profissional                AS agente,
+                c.nu_cbo                         AS cbo,
+                e.no_equipe                      AS equipe_nome,
+                v.nu_micro_area                  AS micro_area,
+                d.co_seq_dim_desfecho_visita     AS desfecho_id,
+                v.st_acomp_gestante,
+                v.st_acomp_puerpera,
+                v.st_acomp_recem_nascido,
+                v.st_acomp_crianca,
+                v.st_acomp_pessoa_hipertensao,
+                v.st_acomp_pessoa_diabetes,
+                v.st_acomp_pessoa_cancer,
+                v.st_acomp_pessoa_idosa,
+                v.st_acomp_saude_mental,
+                v.st_acomp_tabagista,
+                v.st_acomp_domiciliados_acamados,
+                v.st_acomp_pessoa_tuberculose,
+                v.st_acomp_pessoa_hanseniase,
+                v.st_acomp_condi_bolsa_familia
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            WHERE {$where}
+            ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
+            LIMIT ? OFFSET ?
+        ", array_merge($params, [$perPage, $offset]));
+
+        $visitas = array_map(fn($r) => [
+            'id'             => (int) $r->id,
+            'data'           => $r->data,
+            'agente'         => $r->agente,
+            'cbo'            => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+            'equipe'         => ['nome' => $r->equipe_nome],
+            'micro_area'     => $r->micro_area,
+            'desfecho_id'    => (int) $r->desfecho_id,
+            'acompanhamentos' => $this->formatAccompaniments($r),
+        ], $rows);
+
+        return response()->json(['visitas' => $visitas, 'total' => $total]);
+    }
+
+    /**
+     * GET /visitas/{id}
+     * Detalhe completo de uma visita (reutilizado pelo modal).
+     */
     public function show(int $id): JsonResponse
     {
         $row = $this->db()->selectOne("
@@ -252,19 +440,28 @@ class VisitaAcsController extends MonitorApsBaseController
         return response()->json($this->formatVisita($row, detail: true));
     }
 
+    /**
+     * GET /visitas/mapa?ano=X&quadrimestre=Y[&ine=Z&agente=W]
+     * Pins georreferenciados para o mapa Leaflet (VisitasAcs.js — aba Mapa).
+     */
     public function mapa(Request $request): JsonResponse
     {
         $request->validate([
-            'ano'    => 'required|integer|min:2020|max:2030',
-            'mes'    => 'required|integer|min:1|max:12',
-            'ine'    => 'nullable|string',
-            'agente' => 'nullable|string',
+            'ano'          => 'required|integer|min:2020|max:2030',
+            'quadrimestre' => 'required|integer|min:1|max:3',
+            'ine'          => 'nullable|string',
+            'agente'       => 'nullable|string',
         ]);
 
-        $ano = (int) $request->ano;
-        $mes = (int) $request->mes;
+        $ano  = (int) $request->ano;
+        $quad = (int) $request->quadrimestre;
 
-        [$where, $params] = $this->baseWhere($ano, $mes, $request->ine, $request->agente);
+        [$where, $params] = $this->quadWhere($ano, $quad, $request->ine);
+
+        if ($request->agente) {
+            $where   .= ' AND p.no_profissional = ?';
+            $params[] = $request->agente;
+        }
 
         $rows = $this->db()->select("
             SELECT
@@ -284,25 +481,30 @@ class VisitaAcsController extends MonitorApsBaseController
               AND v.nu_latitude  IS NOT NULL
               AND v.nu_longitude IS NOT NULL
             ORDER BY t.dt_registro DESC
+            LIMIT 2000
         ", $params);
 
-        return response()->json([
-            'data' => array_map(fn($r) => [
-                'id'           => (int) $r->id,
-                'lat'          => (float) $r->lat,
-                'lng'          => (float) $r->lng,
-                'agent_name'   => $r->agent_name,
-                'cbo'          => $r->cbo,
-                'cbo_label'    => $r->cbo === '515105' ? 'ACS' : 'TACS',
-                'team_ine'     => $r->team_ine,
-                'team_name'    => $r->team_name,
-                'visited_date' => $r->visited_date,
-                'outcome_code' => (int) $r->outcome_code,
-                'outcome_label'=> $r->outcome_label,
-            ], $rows),
-        ]);
+        $pontos = array_map(fn($r) => [
+            'id'           => (int) $r->id,
+            'lat'          => (float) $r->lat,
+            'lng'          => (float) $r->lng,
+            'agent_name'   => $r->agent_name,
+            'cbo'          => $r->cbo,
+            'cbo_label'    => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+            'team_ine'     => $r->team_ine,
+            'team_name'    => $r->team_name,
+            'visited_date' => $r->visited_date,
+            'outcome_code' => (int) $r->outcome_code,
+            'outcome_label'=> $r->outcome_label,
+        ], $rows);
+
+        return response()->json(['pontos' => $pontos]);
     }
 
+    /**
+     * GET /visitas/equipes
+     * Equipes que possuem ACS/TACS registrados.
+     */
     public function equipes(): JsonResponse
     {
         $cbos = implode("','", self::ACS_CBOS);
@@ -319,22 +521,55 @@ class VisitaAcsController extends MonitorApsBaseController
         return response()->json(['data' => $rows]);
     }
 
+    /**
+     * GET /visitas/agentes?ano=X&quadrimestre=Y[&ine=Z]
+     * Estatísticas agregadas por agente no quadrimestre (VisitasAcs.js — aba Por Agente).
+     */
     public function agentes(Request $request): JsonResponse
     {
-        $request->validate(['ine' => 'required|string']);
+        $request->validate([
+            'ano'          => 'required|integer|min:2020|max:2030',
+            'quadrimestre' => 'required|integer|min:1|max:3',
+            'ine'          => 'nullable|string',
+        ]);
 
-        $cbos = implode("','", self::ACS_CBOS);
+        $ano  = (int) $request->ano;
+        $quad = (int) $request->quadrimestre;
+
+        [$where, $params] = $this->quadWhere($ano, $quad, $request->ine);
 
         $rows = $this->db()->select("
-            SELECT DISTINCT p.no_profissional AS name, c.nu_cbo AS cbo
+            SELECT
+                p.no_profissional                                                      AS agente,
+                c.nu_cbo                                                               AS cbo,
+                e.no_equipe                                                            AS equipe_nome,
+                COUNT(*)                                                               AS total,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)    AS realizadas,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)    AS recusadas,
+                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)    AS ausentes,
+                COUNT(DISTINCT v.co_fat_cidadao_pec)                                  AS cidadaos
             FROM tb_fat_visita_domiciliar v
-            JOIN tb_dim_profissional p ON p.co_seq_dim_profissional = v.co_dim_profissional
-            JOIN tb_dim_cbo         c ON c.co_seq_dim_cbo           = v.co_dim_cbo
-            JOIN tb_dim_equipe      e ON e.co_seq_dim_equipe        = v.co_dim_equipe
-            WHERE e.nu_ine = ? AND c.nu_cbo IN ('{$cbos}')
-            ORDER BY p.no_profissional
-        ", [$request->ine]);
+            {$this->baseJoins()}
+            WHERE {$where}
+            GROUP BY p.no_profissional, c.nu_cbo, e.no_equipe
+            ORDER BY total DESC
+        ", $params);
 
-        return response()->json(['data' => $rows]);
+        $agentes = array_map(fn($r) => [
+            'agente'         => $r->agente,
+            'cbo'            => $r->cbo,
+            'cbo_nome'       => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+            'equipe'         => ['nome' => $r->equipe_nome],
+            'total'          => (int) $r->total,
+            'realizadas'     => (int) $r->realizadas,
+            'recusadas'      => (int) $r->recusadas,
+            'ausentes'       => (int) $r->ausentes,
+            'pct_realizadas' => $r->total > 0
+                ? (int) round($r->realizadas / $r->total * 100)
+                : 0,
+            'cidadaos'       => (int) $r->cidadaos,
+        ], $rows);
+
+        return response()->json(['agentes' => $agentes]);
     }
 }

@@ -126,10 +126,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::get('/historico',    [MonitorApsController::class, 'historico']);
         });
         Route::prefix('visitas')->group(function () {
-            Route::get('/',        [VisitaAcsController::class, 'index']);
-            Route::get('/mapa',    [VisitaAcsController::class, 'mapa']);
-            Route::get('/equipes', [VisitaAcsController::class, 'equipes']);
-            Route::get('/agentes', [VisitaAcsController::class, 'agentes']);
+            Route::get('/',        [VisitaAcsController::class, 'index']);    // por mês (granular)
+            Route::get('/resumo',  [VisitaAcsController::class, 'resumo']);   // totais + por_mes (quadrimestre)
+            Route::get('/lista',   [VisitaAcsController::class, 'lista']);    // paginado por quadrimestre
+            Route::get('/mapa',    [VisitaAcsController::class, 'mapa']);     // pins georreferenciados
+            Route::get('/equipes', [VisitaAcsController::class, 'equipes']);  // equipes com ACS
+            Route::get('/agentes', [VisitaAcsController::class, 'agentes']); // stats por agente
             Route::get('/{id}',    [VisitaAcsController::class, 'show'])->whereNumber('id');
         });
         Route::get('/config/status',  [MonitorApsConfigController::class, 'status']);
