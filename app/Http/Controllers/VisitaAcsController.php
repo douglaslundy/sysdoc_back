@@ -308,9 +308,10 @@ class VisitaAcsController extends MonitorApsBaseController
 
         $total = (int) ($countRow->total ?? 0);
 
-        $rows = $this->db()->select("
+        $sqlLista = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
+                v.co_fat_cidadao_pec             AS cidadao_pec,
                 t.dt_registro                    AS data,
                 t.nu_hora                        AS hora,
                 p.no_profissional                AS agente,
@@ -342,12 +343,30 @@ class VisitaAcsController extends MonitorApsBaseController
             WHERE {$where}
             ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
             LIMIT ? OFFSET ?
-        ", array_merge($params, [$perPage, $offset]));
+        ";
+
+        $listaParams = array_merge($params, [$perPage, $offset]);
+
+        try {
+            $rows = $this->db()->select("
+                SELECT base.*, ci.no_cidadao AS cidadao
+                FROM ({$sqlLista}) base
+                LEFT JOIN LATERAL (
+                    SELECT no_cidadao
+                    FROM   tb_fat_cad_individual
+                    WHERE  co_fat_cidadao_pec = base.cidadao_pec
+                    LIMIT  1
+                ) ci ON true
+            ", $listaParams);
+        } catch (\Throwable) {
+            $rows = $this->db()->select($sqlLista, $listaParams);
+        }
 
         $visitas = array_map(fn($r) => [
             'id'             => (int) $r->id,
             'data'           => $r->data,
             'hora'           => isset($r->hora) ? (int) $r->hora : null,
+            'cidadao'        => $r->cidadao ?? null,
             'agente'         => $r->agente,
             'cbo'            => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
             'equipe'         => ['ine' => $r->equipe_ine, 'nome' => $r->equipe_nome],
