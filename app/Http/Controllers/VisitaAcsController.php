@@ -308,12 +308,57 @@ class VisitaAcsController extends MonitorApsBaseController
 
         $total = (int) ($countRow->total ?? 0);
 
-        $sqlLista = "
+        $queryParams = array_merge($params, [$perPage, $offset]);
+
+        // Query completa: citizen via LATERAL + nu_hora
+        $sqlFull = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
-                v.co_fat_cidadao_pec             AS cidadao_pec,
                 t.dt_registro                    AS data,
                 t.nu_hora                        AS hora,
+                ci.no_cidadao                    AS cidadao,
+                p.no_profissional                AS agente,
+                c.nu_cbo                         AS cbo,
+                e.nu_ine                         AS equipe_ine,
+                e.no_equipe                      AS equipe_nome,
+                v.nu_micro_area                  AS micro_area,
+                tf.ds_tipo_ficha                 AS instrumento,
+                d.co_seq_dim_desfecho_visita     AS desfecho_id,
+                d.ds_desfecho_visita             AS desfecho_label,
+                CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
+                     THEN true ELSE false END    AS has_geo,
+                v.st_acomp_gestante,
+                v.st_acomp_puerpera,
+                v.st_acomp_recem_nascido,
+                v.st_acomp_crianca,
+                v.st_acomp_pessoa_hipertensao,
+                v.st_acomp_pessoa_diabetes,
+                v.st_acomp_pessoa_cancer,
+                v.st_acomp_pessoa_idosa,
+                v.st_acomp_saude_mental,
+                v.st_acomp_tabagista,
+                v.st_acomp_domiciliados_acamados,
+                v.st_acomp_pessoa_tuberculose,
+                v.st_acomp_pessoa_hanseniase,
+                v.st_acomp_condi_bolsa_familia
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            LEFT JOIN LATERAL (
+                SELECT no_cidadao
+                FROM   tb_fat_cad_individual
+                WHERE  co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                LIMIT  1
+            ) ci ON true
+            WHERE {$where}
+            ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
+            LIMIT ? OFFSET ?
+        ";
+
+        // Fallback seguro: sem LATERAL e sem nu_hora (tabelas base garantidas)
+        $sqlBase = "
+            SELECT
+                v.co_seq_fat_visita_domiciliar   AS id,
+                t.dt_registro                    AS data,
                 p.no_profissional                AS agente,
                 c.nu_cbo                         AS cbo,
                 e.nu_ine                         AS equipe_ine,
@@ -345,21 +390,10 @@ class VisitaAcsController extends MonitorApsBaseController
             LIMIT ? OFFSET ?
         ";
 
-        $listaParams = array_merge($params, [$perPage, $offset]);
-
         try {
-            $rows = $this->db()->select("
-                SELECT base.*, ci.no_cidadao AS cidadao
-                FROM ({$sqlLista}) base
-                LEFT JOIN LATERAL (
-                    SELECT no_cidadao
-                    FROM   tb_fat_cad_individual
-                    WHERE  co_fat_cidadao_pec = base.cidadao_pec
-                    LIMIT  1
-                ) ci ON true
-            ", $listaParams);
+            $rows = $this->db()->select($sqlFull, $queryParams);
         } catch (\Throwable) {
-            $rows = $this->db()->select($sqlLista, $listaParams);
+            $rows = $this->db()->select($sqlBase, $queryParams);
         }
 
         $visitas = array_map(fn($r) => [
