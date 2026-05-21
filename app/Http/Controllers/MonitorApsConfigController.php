@@ -137,7 +137,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
             if ($nomes->contains('tb_dim_equipe')) {
                 $schemaDW = collect($tabelas)->firstWhere('tabela', 'tb_dim_equipe')?->schema ?? 'public';
                 try {
-                    $result = $conn->select('SELECT COUNT(*) AS total FROM "tb_dim_equipe" WHERE st_ativo = true');
+                    $result = $conn->select("SELECT COUNT(*) AS total FROM \"tb_dim_equipe\" WHERE st_registro_valido = 1 AND nu_ine != '-'");
                     $temDW = true;
                     $totalEquipes = (int) ($result[0]->total ?? 0);
                 } catch (\Throwable) {}
