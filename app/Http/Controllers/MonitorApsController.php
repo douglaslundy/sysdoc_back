@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class MonitorApsController extends MonitorApsBaseController
 {
@@ -39,26 +40,27 @@ class MonitorApsController extends MonitorApsBaseController
         set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
         try {
-            $cfg      = $this->apsConfig();
-            $equipes  = $this->db()->select(
-                'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
-            );
-            $vinculos = $this->calcularVinculo($ano, $quad);
-
-            $equipesComClass = array_map(fn($v) => [
-                'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => 'eSF',
-                'classificacao_vinculo'   => $v['classificacao'],
-                'classificacao_qualidade' => 'regular',
-            ], $vinculos);
-
-            return response()->json([
-                'municipio'     => $cfg->municipio_nome,
-                'ibge'          => $cfg->municipio_ibge,
-                'periodo'       => ['ano' => $ano, 'quadrimestre' => $quad],
-                'total_equipes' => count($equipes),
-                'vinculos'      => $vinculos,
-                'repasse'       => $this->calcularRepasseEstimado($equipesComClass, $cfg->estrato_ied),
-            ]);
+            $data = Cache::remember("aps_resumo_{$ano}_{$quad}", 600, function () use ($ano, $quad) {
+                $cfg      = $this->apsConfig();
+                $equipes  = $this->db()->select(
+                    'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
+                );
+                $vinculos = $this->calcularVinculo($ano, $quad);
+                $equipesComClass = array_map(fn($v) => [
+                    'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => 'eSF',
+                    'classificacao_vinculo'   => $v['classificacao'],
+                    'classificacao_qualidade' => 'regular',
+                ], $vinculos);
+                return [
+                    'municipio'     => $cfg->municipio_nome,
+                    'ibge'          => $cfg->municipio_ibge,
+                    'periodo'       => ['ano' => $ano, 'quadrimestre' => $quad],
+                    'total_equipes' => count($equipes),
+                    'vinculos'      => $vinculos,
+                    'repasse'       => $this->calcularRepasseEstimado($equipesComClass, $cfg->estrato_ied),
+                ];
+            });
+            return response()->json($data);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -68,7 +70,8 @@ class MonitorApsController extends MonitorApsBaseController
     {
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine] = $this->params($request);
         try {
-            $data = $this->calcularVinculo($ano, $quad, $ine);
+            $cacheKey = 'aps_vinculo_' . $ano . '_' . $quad . '_' . ($ine ?? 'all');
+            $data = Cache::remember($cacheKey, 600, fn() => $this->calcularVinculo($ano, $quad, $ine));
             return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'equipes' => $data]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -80,23 +83,24 @@ class MonitorApsController extends MonitorApsBaseController
         set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine, 'bloco' => $bloco] = $this->params($request);
         try {
-            $sql = 'SELECT nu_ine FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
-            $bindings = [];
-            if ($ine) { $sql .= ' AND nu_ine = ?'; $bindings[] = $ine; }
-            $sql .= ' ORDER BY no_equipe';
+            $cacheKey = 'aps_qualidade_' . $ano . '_' . $quad . '_' . ($ine ?? 'all') . '_' . ($bloco ?? 'esf');
+            $indicadores = Cache::remember($cacheKey, 600, function () use ($ano, $quad, $ine, $bloco) {
+                $sql = 'SELECT nu_ine FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
+                $bindings = [];
+                if ($ine) { $sql .= ' AND nu_ine = ?'; $bindings[] = $ine; }
+                $sql .= ' ORDER BY no_equipe';
 
-            $equipes     = $this->db()->select($sql, $bindings);
-            $indicadores = [];
-
-            foreach ($equipes as $e) {
-                // Sem tp_equipe no DW — trata todas como eSF por padrão
-                if ($bloco === 'esb') {
-                    $indicadores = array_merge($indicadores, $this->calcularESB($e->nu_ine, $ano, $quad));
-                } else {
-                    $indicadores = array_merge($indicadores, $this->calcularESF($e->nu_ine, $ano, $quad));
+                $equipes     = $this->db()->select($sql, $bindings);
+                $indicadores = [];
+                foreach ($equipes as $e) {
+                    if ($bloco === 'esb') {
+                        $indicadores = array_merge($indicadores, $this->calcularESB($e->nu_ine, $ano, $quad));
+                    } else {
+                        $indicadores = array_merge($indicadores, $this->calcularESF($e->nu_ine, $ano, $quad));
+                    }
                 }
-            }
-
+                return $indicadores;
+            });
             return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'indicadores' => $indicadores]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -129,20 +133,23 @@ class MonitorApsController extends MonitorApsBaseController
     {
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
         try {
-            $estrato  = $this->apsConfig()->estrato_ied;
-            $vinculos = $this->calcularVinculo($ano, $quad);
-            $equipesComClass = array_map(fn($v) => [
-                'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => 'eSF',
-                'classificacao_vinculo'   => $v['classificacao'],
-                'classificacao_qualidade' => 'regular',
-            ], $vinculos);
-            $repasse = $this->calcularRepasseEstimado($equipesComClass, $estrato);
-            return response()->json([
-                'periodo'         => ['ano' => $ano, 'quadrimestre' => $quad],
-                'estrato_ied'     => $estrato,
-                'repasse'         => $repasse,
-                'total_municipal' => array_sum(array_column($repasse, 'total_estimado')),
-            ]);
+            $data = Cache::remember("aps_repasse_{$ano}_{$quad}", 600, function () use ($ano, $quad) {
+                $estrato  = $this->apsConfig()->estrato_ied;
+                $vinculos = $this->calcularVinculo($ano, $quad);
+                $equipesComClass = array_map(fn($v) => [
+                    'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => 'eSF',
+                    'classificacao_vinculo'   => $v['classificacao'],
+                    'classificacao_qualidade' => 'regular',
+                ], $vinculos);
+                $repasse = $this->calcularRepasseEstimado($equipesComClass, $estrato);
+                return [
+                    'periodo'         => ['ano' => $ano, 'quadrimestre' => $quad],
+                    'estrato_ied'     => $estrato,
+                    'repasse'         => $repasse,
+                    'total_municipal' => array_sum(array_column($repasse, 'total_estimado')),
+                ];
+            });
+            return response()->json($data);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
