@@ -17,14 +17,18 @@ class MonitorApsController extends MonitorApsBaseController
         'ind4_hipertensao'        => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
         'ind5_diabetes'           => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
         'ind6_idoso'              => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
+        // ind7–ind10: indicadores complementares — NÃO constam no conjunto oficial C1–C7 da Portaria 6.907/2025; thresholds estimados internamente
         'ind7_saude_mental'       => ['suficiente' => 15, 'bom' => 30, 'otimo' => 50],
         'ind8_visita_acs'         => ['suficiente' => 50, 'bom' => 70, 'otimo' => 85],
         'ind9_vacinacao'          => ['suficiente' => 70, 'bom' => 85, 'otimo' => 95],
         'ind10_interprofissional' => ['suficiente' => 20, 'bom' => 40, 'otimo' => 60],
         'ind11_mulher_cancer'     => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
-        'ind13_acesso_bucal'      => ['suficiente' => 20, 'bom' => 40, 'otimo' => 60],
-        'ind14_conclusao'         => ['suficiente' => 30, 'bom' => 50, 'otimo' => 70],
-        'ind15_coletivas'         => ['suficiente' => 10, 'bom' => 25, 'otimo' => 40],
+        // B1 (ind13): Nota Metodológica B1/2025 — Regular ≤1 %, Suficiente >1–3 %, Bom >3–5 %, Ótimo >5 %
+        'ind13_acesso_bucal'      => ['suficiente' => 1, 'bom' => 3, 'otimo' => 5],
+        // B2 (ind14): Nota Metodológica B2/2025 — Regular ≤25 %, Suficiente >25–50 %, Bom >50–75 %, Ótimo >75 %
+        'ind14_conclusao'         => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
+        // B5 (ind15): Nota Metodológica B5/2025 — Regular ≤0,25 %, Suficiente >0,25–0,5 %, Bom >0,5–1 %, Ótimo >1 %
+        'ind15_coletivas'         => ['suficiente' => 0.25, 'bom' => 0.5, 'otimo' => 1.0],
         'vinculo'                 => ['suficiente' => 40, 'bom' => 65, 'otimo' => 85],
     ];
 
@@ -956,19 +960,21 @@ class MonitorApsController extends MonitorApsBaseController
 
     private function calcularInd14(string $ine, int $ano, int $quad): ?array
     {
+        // B2: denominador = número de primeiras consultas programáticas distintas no quadrimestre (Nota Metodológica B2/2025)
         [$total] = $this->db()->select("
-            SELECT COUNT(*) AS total
+            SELECT COUNT(DISTINCT fao.co_fat_cidadao_pec) AS total
             FROM tb_fat_atendimento_odonto fao
             JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              AND fao.co_dim_tipo_consulta = 1
         ", [$ine, $ano, $quad]) ?: [null];
         $denominador = (int)($total?->total ?? 0);
         if (!$denominador) return null;
 
-        // st_conclusao_tratamento → st_conduta_tratamento_concluid = 1
+        // numerador = pacientes com conclusão de tratamento registrada no mesmo período
         [$concl] = $this->db()->select("
-            SELECT COUNT(*) AS total
+            SELECT COUNT(DISTINCT fao.co_fat_cidadao_pec) AS total
             FROM tb_fat_atendimento_odonto fao
             JOIN tb_dim_equipe de ON fao.co_dim_equipe_1 = de.co_seq_dim_equipe
             JOIN tb_dim_tempo  dt ON fao.co_dim_tempo    = dt.co_seq_dim_tempo
@@ -984,6 +990,9 @@ class MonitorApsController extends MonitorApsBaseController
 
     private function calcularInd15(string $ine, int $ano, int $quad): ?array
     {
+        // TODO (B5/2025): fórmula oficial = crianças 6–12 anos em escovação supervisionada /
+        //   crianças 6–12 anos cadastradas × 100. A implementação atual usa total participantes /
+        //   total cadastrados — substituir quando o DW disponibilizar faixa etária em fat_atividade_coletiva.
         [$r] = $this->db()->select("
             SELECT COUNT(*) AS atividades, COALESCE(SUM(nu_participantes), 0) AS participantes
             FROM tb_fat_atividade_coletiva fac
