@@ -8,18 +8,20 @@ use Illuminate\Support\Facades\Cache;
 class MonitorApsController extends MonitorApsBaseController
 {
     private const THRESHOLDS = [
-        // Ind1: percentual = tipos_com_>=10% / 5 × 100 → 3 tipos=60%, 4=80%, 5=100%
-        'ind1_acesso_aps'         => ['suficiente' => 60, 'bom' => 80, 'otimo' => 100],
-        'ind2_crianca'            => ['suficiente' => 30, 'bom' => 60, 'otimo' => 80],
-        'ind3_gestante'           => ['suficiente' => 40, 'bom' => 65, 'otimo' => 85],
-        'ind4_hipertensao'        => ['suficiente' => 35, 'bom' => 60, 'otimo' => 80],
-        'ind5_diabetes'           => ['suficiente' => 35, 'bom' => 60, 'otimo' => 80],
-        'ind6_idoso'              => ['suficiente' => 30, 'bom' => 55, 'otimo' => 75],
+        // C1: range-based — Ótimo 50–70 %, Bom 30–50 %, Suficiente 10–30 %, Regular ≤10 % ou >70 %
+        // classificarInd1() implementa a lógica de faixa; estes valores são usados apenas como meta display
+        'ind1_acesso_aps'         => ['suficiente' => 10, 'bom' => 30, 'otimo' => 50],
+        // C2–C7: Nota Metodológica oficial (Portaria 6.907/2025) — Regular <25, Suficiente 25–<50, Bom 50–<75, Ótimo ≥75
+        'ind2_crianca'            => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
+        'ind3_gestante'           => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
+        'ind4_hipertensao'        => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
+        'ind5_diabetes'           => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
+        'ind6_idoso'              => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
         'ind7_saude_mental'       => ['suficiente' => 15, 'bom' => 30, 'otimo' => 50],
         'ind8_visita_acs'         => ['suficiente' => 50, 'bom' => 70, 'otimo' => 85],
         'ind9_vacinacao'          => ['suficiente' => 70, 'bom' => 85, 'otimo' => 95],
         'ind10_interprofissional' => ['suficiente' => 20, 'bom' => 40, 'otimo' => 60],
-        'ind11_mulher_cancer'     => ['suficiente' => 40, 'bom' => 60, 'otimo' => 75],
+        'ind11_mulher_cancer'     => ['suficiente' => 25, 'bom' => 50, 'otimo' => 75],
         'ind13_acesso_bucal'      => ['suficiente' => 20, 'bom' => 40, 'otimo' => 60],
         'ind14_conclusao'         => ['suficiente' => 30, 'bom' => 50, 'otimo' => 70],
         'ind15_coletivas'         => ['suficiente' => 10, 'bom' => 25, 'otimo' => 40],
@@ -236,6 +238,16 @@ class MonitorApsController extends MonitorApsBaseController
         return 'regular';
     }
 
+    /** C1 é range-based: Ótimo 50–70 %, Bom 30–50 %, Suficiente 10–30 %, Regular ≤10 % ou >70 % */
+    private function classificarInd1(float $pct): string
+    {
+        if ($pct > 70.0)  return 'regular';
+        if ($pct >= 50.0) return 'otimo';
+        if ($pct >= 30.0) return 'bom';
+        if ($pct >= 10.0) return 'suficiente';
+        return 'regular';
+    }
+
     private function resultado(int $id, string $nome, string $bloco, string $ine, string $nomeEquipe, int $ano, int $quad, $numerador, $denominador, float $percentual, string $thresholdKey, array $subindicadores): array
     {
         $t = self::THRESHOLDS[$thresholdKey];
@@ -389,7 +401,8 @@ class MonitorApsController extends MonitorApsBaseController
 
     private function calcularInd1(string $ine, int $ano, int $quad): ?array
     {
-        // fat_atendimento_individual: co_dim_equipe → co_dim_equipe_1
+        // C1: % de atendimentos programados = programados / total × 100
+        // Classificação range-based: Ótimo 50–70 %, Bom 30–50 %, Suficiente 10–30 %, Regular ≤10 % ou >70 %
         $rows = $this->db()->select("
             SELECT de.nu_ine, de.no_equipe,
               COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 1 THEN 1 END) AS programados,
@@ -407,21 +420,35 @@ class MonitorApsController extends MonitorApsBaseController
         ", [$ano, $quad, $ine]);
 
         if (!$rows) return null;
-        $r     = $rows[0];
-        $total = (int)$r->total ?: 1;
+        $r          = $rows[0];
+        $total      = (int)$r->total ?: 1;
+        $prog       = (int)$r->programados;
+        $percentual = round($prog / $total * 100, 1);
         $tipos = [
-            ['nome' => 'Demanda programada',    'valor' => (int)$r->programados,    'pct' => round((int)$r->programados    / $total * 100, 1)],
-            ['nome' => 'Demanda espontânea',    'valor' => (int)$r->espontaneos,    'pct' => round((int)$r->espontaneos    / $total * 100, 1)],
-            ['nome' => 'Escuta inicial',        'valor' => (int)$r->escuta_inicial, 'pct' => round((int)$r->escuta_inicial / $total * 100, 1)],
-            ['nome' => 'Consulta do dia',       'valor' => (int)$r->consulta_dia,  'pct' => round((int)$r->consulta_dia   / $total * 100, 1)],
-            ['nome' => 'Urgência / emergência', 'valor' => (int)$r->urgencia,      'pct' => round((int)$r->urgencia       / $total * 100, 1)],
+            ['nome' => 'Demanda programada',    'valor' => $prog,                   'total' => $total, 'pct' => round($prog                   / $total * 100, 1)],
+            ['nome' => 'Demanda espontânea',    'valor' => (int)$r->espontaneos,    'total' => $total, 'pct' => round((int)$r->espontaneos    / $total * 100, 1)],
+            ['nome' => 'Escuta inicial',        'valor' => (int)$r->escuta_inicial, 'total' => $total, 'pct' => round((int)$r->escuta_inicial / $total * 100, 1)],
+            ['nome' => 'Consulta do dia',       'valor' => (int)$r->consulta_dia,   'total' => $total, 'pct' => round((int)$r->consulta_dia   / $total * 100, 1)],
+            ['nome' => 'Urgência / emergência', 'valor' => (int)$r->urgencia,       'total' => $total, 'pct' => round((int)$r->urgencia       / $total * 100, 1)],
         ];
-        $acima10    = count(array_filter($tipos, fn($t) => $t['pct'] >= 10));
-        $percentual = round($acima10 / 5 * 100, 1);
-        return $this->resultado(1, 'Mais Acesso à Atenção Primária', 'eSF_eAP',
-            $r->nu_ine, $r->no_equipe, $ano, $quad, $acima10, 5, $percentual, 'ind1_acesso_aps',
-            array_map(fn($t) => ['nome' => $t['nome'], 'valor' => $t['valor'], 'total' => (int)$r->total, 'pct' => $t['pct']], $tipos)
-        );
+        return [
+            'indicador' => [
+                'id' => 1, 'nome' => 'Mais Acesso à Atenção Primária', 'bloco' => 'eSF_eAP',
+                'equipe'  => ['ine' => $r->nu_ine, 'nome' => $r->no_equipe],
+                'periodo' => ['ano' => $ano, 'quadrimestre' => $quad],
+                'resultado' => [
+                    'numerador'       => $prog,
+                    'denominador'     => $total,
+                    'percentual'      => $percentual,
+                    'classificacao'   => $this->classificarInd1($percentual),
+                    'meta_suficiente' => 10,
+                    'meta_bom'        => 30,
+                    'meta_otimo'      => 50,
+                    'meta_otimo_max'  => 70,
+                ],
+                'subindicadores' => $tipos,
+            ],
+        ];
     }
 
     private function calcularInd2(string $ine, int $ano, int $quad): ?array
@@ -884,7 +911,8 @@ class MonitorApsController extends MonitorApsBaseController
         $pct2 = $den2 > 0 ? round($num2 / $den2 * 100, 1) : 0.0;
         $pct3 = $den3 > 0 ? round($num3 / $den3 * 100, 1) : 0.0;
         $pct4 = $den4 > 0 ? round($num4 / $den4 * 100, 1) : 0.0;
-        $percentual = round(($pct1 + $pct2 + $pct3 + $pct4) / 4, 1);
+        // Pesos C7 (Nota Metodológica): A=20 %, B=30 %, C=30 %, D=20 %
+        $percentual = round($pct1 * 0.20 + $pct2 * 0.30 + $pct3 * 0.30 + $pct4 * 0.20, 1);
 
         return $this->resultado(11, 'Cuidado da Mulher na Prevenção do Câncer', 'eSF_eAP',
             $ine, $this->nomeEquipe($ine), $ano, $quad, null, null, $percentual, 'ind11_mulher_cancer', [
