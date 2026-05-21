@@ -65,15 +65,10 @@ class MonitorApsConfigController extends MonitorApsBaseController
     {
         try {
             $rows = $this->db()->select("
-                SELECT nu_ine, no_equipe,
-                  CASE tp_equipe
-                    WHEN 70 THEN 'eSF' WHEN 71 THEN 'eAP'
-                    WHEN 72 THEN 'eSB' WHEN 80 THEN 'eMulti'
-                    ELSE tp_equipe::text
-                  END AS tipo,
-                  nu_cnes, st_ativo
+                SELECT nu_ine, no_equipe, 'eSF' AS tipo
                 FROM tb_dim_equipe
-                ORDER BY tp_equipe, no_equipe
+                WHERE st_registro_valido = 1 AND nu_ine != '-'
+                ORDER BY no_equipe
             ");
             return response()->json(['equipes' => $rows]);
         } catch (\Throwable $e) {
