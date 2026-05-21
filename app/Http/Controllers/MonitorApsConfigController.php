@@ -228,4 +228,56 @@ class MonitorApsConfigController extends MonitorApsBaseController
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+
+    // GET /monitor-aps/config/explorar  (admin)
+    public function explorar()
+    {
+        try {
+            $conn = $this->db();
+
+            // Todas as tabelas tb_* com contagem de registros
+            $tabelasTb = $conn->select("
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name LIKE 'tb_%'
+                ORDER BY table_name
+            ");
+
+            $tabelas = [];
+            foreach ($tabelasTb as $t) {
+                $nome = $t->table_name;
+
+                // Colunas
+                $colunas = $conn->select("
+                    SELECT column_name AS coluna, data_type AS tipo, is_nullable AS nulo
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = ?
+                    ORDER BY ordinal_position
+                ", [$nome]);
+
+                // Contagem (com timeout implícito do PDO)
+                $total = null;
+                try {
+                    $r = $conn->select("SELECT COUNT(*) AS total FROM \"{$nome}\"");
+                    $total = (int) ($r[0]->total ?? 0);
+                } catch (\Throwable) {}
+
+                $tabelas[] = [
+                    'tabela'  => $nome,
+                    'total'   => $total,
+                    'colunas' => $colunas,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'total'   => count($tabelas),
+                'tabelas' => $tabelas,
+            ]);
+        } catch (\Throwable $e) {
+            $msg = preg_replace('/\s*\(Connection:.*?\)/i', '', $e->getMessage());
+            return response()->json(['success' => false, 'error' => trim($msg)], 500);
+        }
+    }
 }
