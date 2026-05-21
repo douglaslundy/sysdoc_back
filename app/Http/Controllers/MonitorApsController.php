@@ -42,22 +42,32 @@ class MonitorApsController extends MonitorApsBaseController
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
         try {
             $data = Cache::remember("aps_resumo_{$ano}_{$quad}", 600, function () use ($ano, $quad) {
-                $cfg      = $this->apsConfig();
-                $equipes  = $this->db()->select(
+                $cfg     = $this->apsConfig();
+                $equipes = $this->db()->select(
                     'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
                 );
                 $vinculos = $this->calcularVinculo($ano, $quad);
-                $equipesComClass = array_map(fn($v) => [
-                    'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => 'eSF',
-                    'classificacao_vinculo'   => $v['classificacao'],
-                    'classificacao_qualidade' => 'regular',
-                ], $vinculos);
+
+                $indESF = [];
+                foreach ($equipes as $e) {
+                    $indESF = array_merge($indESF, $this->calcularESF($e->nu_ine, $ano, $quad));
+                }
+                $classQualidade = $this->mediaClassificacaoPorEquipe($indESF);
+
+                $vincMap = array_column($vinculos, 'classificacao', 'ine');
+                $equipesComClass = array_map(fn($e) => [
+                    'ine'  => $e->nu_ine, 'nome' => $e->no_equipe, 'tipo' => 'eSF',
+                    'classificacao_vinculo'   => $vincMap[$e->nu_ine]          ?? 'regular',
+                    'classificacao_qualidade' => $classQualidade[$e->nu_ine]   ?? 'regular',
+                ], $equipes);
+
                 return [
                     'municipio'     => $cfg->municipio_nome,
                     'ibge'          => $cfg->municipio_ibge,
                     'periodo'       => ['ano' => $ano, 'quadrimestre' => $quad],
                     'total_equipes' => count($equipes),
                     'vinculos'      => $vinculos,
+                    'qualidade'     => ['esf' => $indESF, 'esb' => []],
                     'repasse'       => $this->calcularRepasseEstimado($equipesComClass, $cfg->estrato_ied),
                 ];
             });
@@ -132,16 +142,29 @@ class MonitorApsController extends MonitorApsBaseController
 
     public function repasse(Request $request)
     {
+        set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
         try {
             $data = Cache::remember("aps_repasse_{$ano}_{$quad}", 600, function () use ($ano, $quad) {
                 $estrato  = $this->apsConfig()->estrato_ied;
+                $equipes  = $this->db()->select(
+                    'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
+                );
                 $vinculos = $this->calcularVinculo($ano, $quad);
-                $equipesComClass = array_map(fn($v) => [
-                    'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => 'eSF',
-                    'classificacao_vinculo'   => $v['classificacao'],
-                    'classificacao_qualidade' => 'regular',
-                ], $vinculos);
+
+                $indESF = [];
+                foreach ($equipes as $e) {
+                    $indESF = array_merge($indESF, $this->calcularESF($e->nu_ine, $ano, $quad));
+                }
+                $classQualidade = $this->mediaClassificacaoPorEquipe($indESF);
+
+                $vincMap = array_column($vinculos, 'classificacao', 'ine');
+                $equipesComClass = array_map(fn($e) => [
+                    'ine'  => $e->nu_ine, 'nome' => $e->no_equipe, 'tipo' => 'eSF',
+                    'classificacao_vinculo'   => $vincMap[$e->nu_ine]        ?? 'regular',
+                    'classificacao_qualidade' => $classQualidade[$e->nu_ine] ?? 'regular',
+                ], $equipes);
+
                 $repasse = $this->calcularRepasseEstimado($equipesComClass, $estrato);
                 return [
                     'periodo'         => ['ano' => $ano, 'quadrimestre' => $quad],
@@ -232,6 +255,24 @@ class MonitorApsController extends MonitorApsBaseController
                 'subindicadores' => $subindicadores,
             ],
         ];
+    }
+
+    /** Retorna [ine => classificacao] com a média dos ranks dos indicadores de cada equipe. */
+    private function mediaClassificacaoPorEquipe(array $indicadores): array
+    {
+        $ordem  = ['regular' => 0, 'suficiente' => 1, 'bom' => 2, 'otimo' => 3];
+        $chaves = array_keys($ordem);
+        $ranks  = [];
+        foreach ($indicadores as $ind) {
+            $ine   = $ind['indicador']['equipe']['ine']             ?? null;
+            $class = $ind['indicador']['resultado']['classificacao'] ?? 'regular';
+            if ($ine) $ranks[$ine][] = $ordem[$class] ?? 0;
+        }
+        $resultado = [];
+        foreach ($ranks as $ine => $r) {
+            $resultado[$ine] = $chaves[(int) round(array_sum($r) / count($r))] ?? 'regular';
+        }
+        return $resultado;
     }
 
     private function calcularVinculo(int $ano, int $quad, ?string $ine = null): array
