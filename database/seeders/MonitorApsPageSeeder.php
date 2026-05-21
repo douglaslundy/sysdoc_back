@@ -24,11 +24,13 @@ class MonitorApsPageSeeder extends Seeder
 
         // 2. Páginas do módulo
         $pages = [
-            ['titulo' => 'Monitor APS - Dashboard',           'path' => '/monitor-aps',               'icone' => 'bar-chart-2',  'ordem' => 1],
-            ['titulo' => 'Monitor APS - Vínculo Territorial', 'path' => '/monitor-aps/vinculo',        'icone' => 'map-pin',      'ordem' => 2],
-            ['titulo' => 'Monitor APS - Indicadores',         'path' => '/monitor-aps/qualidade',      'icone' => 'check-circle', 'ordem' => 3],
-            ['titulo' => 'Monitor APS - Por Equipe',          'path' => '/monitor-aps/equipe',         'icone' => 'users',        'ordem' => 4],
-            ['titulo' => 'Monitor APS - Configurações',       'path' => '/monitor-aps/configuracoes',  'icone' => 'settings',     'ordem' => 5],
+            ['titulo' => 'Monitor APS - Dashboard',           'path' => '/monitor-aps',                    'icone' => 'bar-chart-2',  'ordem' => 1],
+            ['titulo' => 'Monitor APS - Vínculo Territorial', 'path' => '/monitor-aps/vinculo',             'icone' => 'map-pin',      'ordem' => 2],
+            ['titulo' => 'Monitor APS - Indicadores',         'path' => '/monitor-aps/qualidade',           'icone' => 'check-circle', 'ordem' => 3],
+            ['titulo' => 'Monitor APS - Por Equipe',          'path' => '/monitor-aps/equipe',              'icone' => 'users',        'ordem' => 4],
+            ['titulo' => 'Monitor APS - Visitas ACS/TACS',    'path' => '/monitor-aps/visitas',             'icone' => 'home',         'ordem' => 5],
+            ['titulo' => 'Monitor APS - Mapa de Visitas',     'path' => '/monitor-aps/visitas/mapa',        'icone' => 'map',          'ordem' => 6],
+            ['titulo' => 'Monitor APS - Configurações',       'path' => '/monitor-aps/configuracoes',       'icone' => 'settings',     'ordem' => 7],
         ];
 
         foreach ($pages as $page) {
@@ -48,8 +50,8 @@ class MonitorApsPageSeeder extends Seeder
 
         // 3. Permissões por perfil
         $permissoes = [
-            'admin'   => ['/monitor-aps', '/monitor-aps/vinculo', '/monitor-aps/qualidade', '/monitor-aps/equipe', '/monitor-aps/configuracoes'],
-            'manager' => ['/monitor-aps', '/monitor-aps/vinculo', '/monitor-aps/qualidade', '/monitor-aps/equipe'],
+            'admin'   => ['/monitor-aps', '/monitor-aps/vinculo', '/monitor-aps/qualidade', '/monitor-aps/equipe', '/monitor-aps/visitas', '/monitor-aps/visitas/mapa', '/monitor-aps/configuracoes'],
+            'manager' => ['/monitor-aps', '/monitor-aps/vinculo', '/monitor-aps/qualidade', '/monitor-aps/equipe', '/monitor-aps/visitas', '/monitor-aps/visitas/mapa'],
         ];
 
         foreach ($permissoes as $slug => $paths) {
