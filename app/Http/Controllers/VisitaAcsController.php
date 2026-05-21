@@ -442,6 +442,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'mes'    => 'required|integer|min:1|max:12',
             'ine'    => 'nullable|string',
             'agente' => 'nullable|string',
+            'busca'  => 'nullable|string|max:200',
         ]);
 
         $ano = (int) $request->ano;
@@ -452,6 +453,31 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($request->agente) {
             $where   .= ' AND p.no_profissional = ?';
             $params[] = $request->agente;
+        }
+
+        if ($request->busca) {
+            $busca  = trim($request->busca);
+            $digits = preg_replace('/\D/', '', $busca);
+
+            if (strlen($digits) === 11) {
+                // CPF
+                $where   .= " AND v.co_fat_cidadao_pec IN (
+                    SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
+                    WHERE nu_cpf = ? AND st_ficha_inativa = 0)";
+                $params[] = $digits;
+            } elseif (strlen($digits) === 15) {
+                // CNS
+                $where   .= " AND v.co_fat_cidadao_pec IN (
+                    SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
+                    WHERE nu_cns = ? AND st_ficha_inativa = 0)";
+                $params[] = $digits;
+            } else {
+                // Nome parcial (mínimo 3 chars validado no frontend)
+                $where   .= " AND v.co_fat_cidadao_pec IN (
+                    SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
+                    WHERE no_cidadao ILIKE ? AND st_ficha_inativa = 0)";
+                $params[] = '%' . $busca . '%';
+            }
         }
 
         $rows = $this->db()->select("
