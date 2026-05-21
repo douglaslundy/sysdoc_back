@@ -281,6 +281,7 @@ class MonitorApsController extends MonitorApsBaseController
         $chaves = array_keys($ordem);
         $ranks  = [];
         foreach ($indicadores as $ind) {
+            if ($ind['indicador']['complementar'] ?? false) continue;
             $ine   = $ind['indicador']['equipe']['ine']             ?? null;
             $class = $ind['indicador']['resultado']['classificacao'] ?? 'regular';
             if ($ine) $ranks[$ine][] = $ordem[$class] ?? 0;
@@ -378,10 +379,21 @@ class MonitorApsController extends MonitorApsBaseController
     private function calcularESF(string $ine, int $ano, int $quad): array
     {
         $results = [];
-        foreach ([1,2,3,4,5,6,7,8,9,10,11] as $id) {
+        // C1–C7 (ind1–ind6, ind11): indicadores oficiais — entram na média de qualidade e no repasse
+        foreach ([1,2,3,4,5,6,11] as $id) {
             try {
                 $r = $this->{"calcularInd{$id}"}($ine, $ano, $quad);
                 if ($r !== null) $results[] = $r;
+            } catch (\Throwable) {}
+        }
+        // ind7–ind10: complementares — exibidos no painel mas NÃO entram na média de qualidade
+        foreach ([7,8,9,10] as $id) {
+            try {
+                $r = $this->{"calcularInd{$id}"}($ine, $ano, $quad);
+                if ($r !== null) {
+                    $r['indicador']['complementar'] = true;
+                    $results[] = $r;
+                }
             } catch (\Throwable) {}
         }
         return $results;
@@ -990,22 +1002,26 @@ class MonitorApsController extends MonitorApsBaseController
 
     private function calcularInd15(string $ine, int $ano, int $quad): ?array
     {
-        // TODO (B5/2025): fórmula oficial = crianças 6–12 anos em escovação supervisionada /
-        //   crianças 6–12 anos cadastradas × 100. A implementação atual usa total participantes /
-        //   total cadastrados — substituir quando o DW disponibilizar faixa etária em fat_atividade_coletiva.
+        // B5/2025: escovação dental supervisionada / crianças 6–12 cadastradas × 100
+        // Numerador: participantes de atividades de escovação supervisionada (nu_participantes — DW não
+        //   armazena faixa etária por atividade; contagem total é a melhor aproximação disponível)
         [$r] = $this->db()->select("
-            SELECT COUNT(*) AS atividades, COALESCE(SUM(nu_participantes), 0) AS participantes
+            SELECT COUNT(*) AS atividades, COALESCE(SUM(fac.nu_participantes), 0) AS participantes
             FROM tb_fat_atividade_coletiva fac
-            JOIN tb_dim_equipe de ON fac.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN tb_dim_tempo  dt ON fac.co_dim_tempo  = dt.co_seq_dim_tempo
+            JOIN tb_dim_equipe           de   ON fac.co_dim_equipe           = de.co_seq_dim_equipe
+            JOIN tb_dim_tempo            dt   ON fac.co_dim_tempo            = dt.co_seq_dim_tempo
+            JOIN tb_dim_tema_saude_bucal dtsb ON fac.co_dim_tema_saude_bucal = dtsb.co_seq_dim_tema_saude_bucal
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND CEIL(dt.nu_mes::numeric / 4) = ?
+              AND LOWER(dtsb.ds_tema_saude_bucal) LIKE '%escova%'
         ", [$ine, $ano, $quad]) ?: [null];
 
+        // Denominador: crianças 6–12 anos cadastradas na equipe (Nota B5/2025)
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
             FROM tb_fat_cad_individual fci
             JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ficha_inativa = 0
+              AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, fci.dt_nascimento)) BETWEEN 6 AND 12
         ", [$ine]) ?: [null];
 
         $participantes = (int)($r?->participantes ?? 0);
@@ -1013,8 +1029,8 @@ class MonitorApsController extends MonitorApsBaseController
         $percentual    = round($participantes / $denominador * 100, 1);
         return $this->resultado(15, 'Ações Coletivas em Saúde Bucal', 'eSB',
             $ine, $this->nomeEquipe($ine), $ano, $quad, $participantes, $denominador, $percentual, 'ind15_coletivas', [
-                ['nome' => 'Atividades coletivas realizadas', 'valor' => (int)($r?->atividades ?? 0), 'total' => '-'],
-                ['nome' => 'Total de participantes',          'valor' => $participantes, 'total' => $denominador],
+                ['nome' => 'Atividades de escovação supervisionada', 'valor' => (int)($r?->atividades ?? 0), 'total' => '-'],
+                ['nome' => 'Participantes em escovação supervisionada', 'valor' => $participantes, 'total' => $denominador],
             ]);
     }
 }
