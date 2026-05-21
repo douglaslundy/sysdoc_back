@@ -131,10 +131,17 @@ class VisitaAcsController extends MonitorApsBaseController
         ];
 
         if ($detail) {
-            $result['notes']          = $row->notes ?? null;
+            $result['citizen_name']   = $row->citizen_name   ?? null;
+            $result['notes']          = $row->notes          ?? null;
             $result['lat']            = isset($row->lat) && $row->lat !== null ? (float) $row->lat : null;
             $result['lng']            = isset($row->lng) && $row->lng !== null ? (float) $row->lng : null;
             $result['accompaniments'] = $this->formatAccompaniments($row);
+            $result['address']        = [
+                'logradouro'  => $row->logradouro  ?? null,
+                'numero'      => $row->num_endereco ?? null,
+                'complemento' => $row->complemento ?? null,
+                'bairro'      => $row->bairro       ?? null,
+            ];
         }
 
         return $result;
@@ -361,6 +368,7 @@ class VisitaAcsController extends MonitorApsBaseController
         $row = $this->db()->selectOne("
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
+                v.co_fat_cidadao_pec             AS cidadao_pec,
                 p.no_profissional                AS agent_name,
                 c.nu_cbo                         AS cbo,
                 e.nu_ine                         AS team_ine,
@@ -372,6 +380,11 @@ class VisitaAcsController extends MonitorApsBaseController
                 v.nu_latitude                    AS lat,
                 v.nu_longitude                   AS lng,
                 a.ds_anotacao                    AS notes,
+                ci.no_cidadao                    AS citizen_name,
+                ci.ds_logradouro                 AS logradouro,
+                ci.nu_numero                     AS num_endereco,
+                ci.ds_complemento                AS complemento,
+                ci.ds_bairro                     AS bairro,
                 v.st_mot_vis_cad_att,
                 v.st_mot_vis_visita_periodica,
                 v.st_mot_vis_busca_ativa,
@@ -399,7 +412,14 @@ class VisitaAcsController extends MonitorApsBaseController
                      THEN true ELSE false END    AS has_geo
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
-            LEFT JOIN tb_visita_domiciliar_acs a ON a.co_unico_visita_domiciliar = v.nu_uuid_ficha
+            LEFT JOIN tb_visita_domiciliar_acs a  ON a.co_unico_visita_domiciliar = v.nu_uuid_ficha
+            LEFT JOIN LATERAL (
+                SELECT no_cidadao, ds_logradouro, nu_numero, ds_complemento, ds_bairro
+                FROM  tb_fat_cad_individual
+                WHERE co_fat_cidadao_pec = v.co_fat_cidadao_pec AND st_ficha_inativa = 0
+                ORDER BY co_dim_tempo DESC
+                LIMIT 1
+            ) ci ON true
             WHERE v.co_seq_fat_visita_domiciliar = ?
         ", [$id]);
 
@@ -445,9 +465,17 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.no_equipe                      AS equipe_nome,
                 t.dt_registro                    AS data,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
-                v.nu_micro_area                  AS micro_area
+                v.nu_micro_area                  AS micro_area,
+                ci.no_cidadao                    AS cidadao
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
+            LEFT JOIN (
+                SELECT DISTINCT ON (co_fat_cidadao_pec)
+                    co_fat_cidadao_pec, no_cidadao
+                FROM  tb_fat_cad_individual
+                WHERE st_ficha_inativa = 0
+                ORDER BY co_fat_cidadao_pec, co_dim_tempo DESC
+            ) ci ON ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
             WHERE {$where}
               AND v.nu_latitude  IS NOT NULL
               AND v.nu_longitude IS NOT NULL
@@ -463,6 +491,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'cbo'        => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
             'equipe_ine' => $r->equipe_ine,
             'equipe'     => $r->equipe_nome,
+            'cidadao'    => $r->cidadao,
             'data'       => $r->data,
             'desfecho'   => (int) $r->desfecho,
             'micro_area' => $r->micro_area,
