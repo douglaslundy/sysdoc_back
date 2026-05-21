@@ -49,6 +49,7 @@ use App\Http\Controllers\StateController;
 use App\Http\Controllers\SystemPageController;
 use App\Http\Controllers\MonitorApsConfigController;
 use App\Http\Controllers\MonitorApsController;
+use App\Http\Controllers\VisitaAcsController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
@@ -123,6 +124,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::get('/qualidade/{id}', [MonitorApsController::class, 'qualidadeIndicador']);
             Route::get('/repasse',      [MonitorApsController::class, 'repasse']);
             Route::get('/historico',    [MonitorApsController::class, 'historico']);
+        });
+        Route::prefix('visitas')->group(function () {
+            Route::get('/resumo',  [VisitaAcsController::class, 'resumo']);
+            Route::get('/lista',   [VisitaAcsController::class, 'lista']);
+            Route::get('/agentes', [VisitaAcsController::class, 'agentes']);
+            Route::get('/mapa',    [VisitaAcsController::class, 'mapa']);
         });
         Route::get('/config/status',  [MonitorApsConfigController::class, 'status']);
         Route::get('/config/load',    [MonitorApsConfigController::class, 'load']);
