@@ -87,6 +87,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
     // POST /monitor-aps/config/test  (admin)
     public function testar(Request $request)
     {
+        set_time_limit(120);
         $data = $request->validate([
             'host'     => 'required|string',
             'database' => 'required|string',
@@ -115,7 +116,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
             'prefix'   => '',
             'schema'   => 'public',
             'sslmode'  => 'prefer',
-            'options'  => [\PDO::ATTR_TIMEOUT => 8],
+            'options'  => [\PDO::ATTR_TIMEOUT => 30],
         ]]);
 
         try {
