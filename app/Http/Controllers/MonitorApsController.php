@@ -18,6 +18,7 @@ class MonitorApsController extends MonitorApsBaseController
         'ind8_visita_acs'         => ['suficiente' => 50, 'bom' => 70, 'otimo' => 85],
         'ind9_vacinacao'          => ['suficiente' => 70, 'bom' => 85, 'otimo' => 95],
         'ind10_interprofissional' => ['suficiente' => 20, 'bom' => 40, 'otimo' => 60],
+        'ind11_mulher_cancer'     => ['suficiente' => 40, 'bom' => 60, 'otimo' => 75],
         'ind13_acesso_bucal'      => ['suficiente' => 20, 'bom' => 40, 'otimo' => 60],
         'ind14_conclusao'         => ['suficiente' => 30, 'bom' => 50, 'otimo' => 70],
         'ind15_coletivas'         => ['suficiente' => 10, 'bom' => 25, 'otimo' => 40],
@@ -116,7 +117,7 @@ class MonitorApsController extends MonitorApsBaseController
             1 => 'calcularInd1',  2 => 'calcularInd2',  3 => 'calcularInd3',
             4 => 'calcularInd4',  5 => 'calcularInd5',  6 => 'calcularInd6',
             7 => 'calcularInd7',  8 => 'calcularInd8',  9 => 'calcularInd9',
-            10 => 'calcularInd10', 13 => 'calcularInd13',
+            10 => 'calcularInd10', 11 => 'calcularInd11', 13 => 'calcularInd13',
             14 => 'calcularInd14', 15 => 'calcularInd15',
         ];
         $method = $mapa[$id] ?? null;
@@ -165,7 +166,7 @@ class MonitorApsController extends MonitorApsBaseController
             1 => 'calcularInd1',   2 => 'calcularInd2',  3 => 'calcularInd3',
             4 => 'calcularInd4',   5 => 'calcularInd5',  6 => 'calcularInd6',
             7 => 'calcularInd7',   8 => 'calcularInd8',  9 => 'calcularInd9',
-            10 => 'calcularInd10', 13 => 'calcularInd13',
+            10 => 'calcularInd10', 11 => 'calcularInd11', 13 => 'calcularInd13',
             14 => 'calcularInd14', 15 => 'calcularInd15',
         ];
         $method = $mapa[$indicadorId] ?? null;
@@ -305,7 +306,7 @@ class MonitorApsController extends MonitorApsBaseController
     private function calcularESF(string $ine, int $ano, int $quad): array
     {
         $results = [];
-        foreach ([1,2,3,4,5,6,7,8,9,10] as $id) {
+        foreach ([1,2,3,4,5,6,7,8,9,10,11] as $id) {
             try {
                 $r = $this->{"calcularInd{$id}"}($ine, $ano, $quad);
                 if ($r !== null) $results[] = $r;
@@ -719,6 +720,122 @@ class MonitorApsController extends MonitorApsBaseController
             $ine, '', $ano, $quad, $participantes, $denominador, $percentual, 'ind10_interprofissional', [
                 ['nome' => 'Total de atividades coletivas', 'valor' => (int)($r?->total_atividades ?? 0), 'total' => '-'],
                 ['nome' => 'Total de participantes',        'valor' => $participantes, 'total' => $denominador],
+            ]);
+    }
+
+    private function calcularInd11(string $ine, int $ano, int $quad): ?array
+    {
+        // Data de referência = último dia do quadrimestre (Q1→abr, Q2→ago, Q3→dez)
+        $mesRef  = $quad * 4;
+        $refDate = date('Y-m-d', mktime(0, 0, 0, $mesRef + 1, 0, $ano));
+        $refYM   = $ano * 12 + $mesRef;
+
+        // Sub1: Citopatológico cervical — mulheres 25-64 anos, ≥1 exame últimos 36 meses
+        [$den1] = $this->db()->select("
+            SELECT COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            WHERE de.nu_ine = ? AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 25 AND 64
+        ", [$ine, $refDate]) ?: [null];
+        $den1 = (int)($den1?->total ?? 0);
+
+        [$num1] = $this->db()->select("
+            SELECT COUNT(DISTINCT p.co_fat_cidadao_pec) AS total
+            FROM tb_fat_atd_ind_procedimentos p
+            JOIN tb_dim_equipe de ON p.co_dim_equipe_1 = de.co_seq_dim_equipe
+            JOIN tb_dim_tempo dt ON p.co_dim_tempo = dt.co_seq_dim_tempo
+            JOIN tb_fat_cad_individual fci ON p.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+              AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 25 AND 64
+            WHERE de.nu_ine = ?
+              AND p.co_dim_procedimento_avaliado IN (21, 105, 106, 175, 328)
+              AND (dt.nu_ano * 12 + dt.nu_mes) BETWEEN ? AND ?
+        ", [$refDate, $ine, $refYM - 36, $refYM]) ?: [null];
+        $num1 = (int)($num1?->total ?? 0);
+
+        // Sub2: Vacina HPV — meninas 9-14 anos, ≥1 dose
+        [$den2] = $this->db()->select("
+            SELECT COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            WHERE de.nu_ine = ? AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 9 AND 14
+        ", [$ine, $refDate]) ?: [null];
+        $den2 = (int)($den2?->total ?? 0);
+
+        [$num2] = $this->db()->select("
+            SELECT COUNT(DISTINCT fv.co_fat_cidadao_pec) AS total
+            FROM tb_fat_vacinacao fv
+            JOIN tb_dim_equipe de ON fv.co_dim_equipe = de.co_seq_dim_equipe
+            JOIN tb_fat_cad_individual fci ON fv.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+              AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 9 AND 14
+            WHERE de.nu_ine = ?
+              AND fv.ds_filtro_imunobiologico LIKE '%|13|%'
+        ", [$refDate, $ine]) ?: [null];
+        $num2 = (int)($num2?->total ?? 0);
+
+        // Sub3: Atenção sexual/reprodutiva — mulheres 14-69 anos, ≥1 atendimento CIAP X últimos 12 meses
+        [$den3] = $this->db()->select("
+            SELECT COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            WHERE de.nu_ine = ? AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 14 AND 69
+        ", [$ine, $refDate]) ?: [null];
+        $den3 = (int)($den3?->total ?? 0);
+
+        [$num3] = $this->db()->select("
+            SELECT COUNT(DISTINCT fai.co_fat_cidadao_pec) AS total
+            FROM tb_fat_atendimento_individual fai
+            JOIN tb_dim_equipe de ON fai.co_dim_equipe_1 = de.co_seq_dim_equipe
+            JOIN tb_dim_tempo dt ON fai.co_dim_tempo = dt.co_seq_dim_tempo
+            JOIN tb_fat_cad_individual fci ON fai.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+              AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 14 AND 69
+            WHERE de.nu_ine = ?
+              AND fai.ds_filtro_ciaps ~ '\\|X'
+              AND (dt.nu_ano * 12 + dt.nu_mes) BETWEEN ? AND ?
+        ", [$refDate, $ine, $refYM - 12, $refYM]) ?: [null];
+        $num3 = (int)($num3?->total ?? 0);
+
+        // Sub4: Mamografia — mulheres 50-69 anos, ≥1 exame últimos 24 meses
+        [$den4] = $this->db()->select("
+            SELECT COUNT(DISTINCT fci.co_fat_cidadao_pec) AS total
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            WHERE de.nu_ine = ? AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 50 AND 69
+        ", [$ine, $refDate]) ?: [null];
+        $den4 = (int)($den4?->total ?? 0);
+
+        [$num4] = $this->db()->select("
+            SELECT COUNT(DISTINCT p.co_fat_cidadao_pec) AS total
+            FROM tb_fat_atd_ind_procedimentos p
+            JOIN tb_dim_equipe de ON p.co_dim_equipe_1 = de.co_seq_dim_equipe
+            JOIN tb_dim_tempo dt ON p.co_dim_tempo = dt.co_seq_dim_tempo
+            JOIN tb_fat_cad_individual fci ON p.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+              AND fci.st_ficha_inativa = 0 AND fci.co_dim_sexo = 2
+              AND EXTRACT(YEAR FROM AGE(? ::date, fci.dt_nascimento)) BETWEEN 50 AND 69
+            WHERE de.nu_ine = ?
+              AND p.co_dim_procedimento_avaliado IN (16, 46, 120, 51)
+              AND (dt.nu_ano * 12 + dt.nu_mes) BETWEEN ? AND ?
+        ", [$refDate, $ine, $refYM - 24, $refYM]) ?: [null];
+        $num4 = (int)($num4?->total ?? 0);
+
+        $pct1 = $den1 > 0 ? round($num1 / $den1 * 100, 1) : 0.0;
+        $pct2 = $den2 > 0 ? round($num2 / $den2 * 100, 1) : 0.0;
+        $pct3 = $den3 > 0 ? round($num3 / $den3 * 100, 1) : 0.0;
+        $pct4 = $den4 > 0 ? round($num4 / $den4 * 100, 1) : 0.0;
+        $percentual = round(($pct1 + $pct2 + $pct3 + $pct4) / 4, 1);
+
+        return $this->resultado(11, 'Cuidado da Mulher na Prevenção do Câncer', 'eSF_eAP',
+            $ine, '', $ano, $quad, null, null, $percentual, 'ind11_mulher_cancer', [
+                ['nome' => 'Citopatológico cervical (25–64 anos)', 'valor' => $num1, 'total' => $den1],
+                ['nome' => 'Vacina HPV (9–14 anos)',               'valor' => $num2, 'total' => $den2],
+                ['nome' => 'Atenção sexual/reprodutiva (14–69)',   'valor' => $num3, 'total' => $den3],
+                ['nome' => 'Mamografia (50–69 anos)',              'valor' => $num4, 'total' => $den4],
             ]);
     }
 
