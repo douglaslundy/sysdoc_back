@@ -40,9 +40,9 @@ class MonitorApsController extends MonitorApsBaseController
     {
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
         try {
-            $equipes  = $this->db()->select('SELECT nu_ine, no_equipe, tp_equipe FROM dim_equipe WHERE st_ativo = true ORDER BY tp_equipe, no_equipe');
+            $cfg      = $this->apsConfig();
+            $equipes  = $this->db()->select('SELECT nu_ine, no_equipe, tp_equipe FROM tb_dim_equipe WHERE st_ativo = true ORDER BY tp_equipe, no_equipe');
             $vinculos = $this->calcularVinculo($ano, $quad);
-            $estrato  = (int) env('MONITOR_APS_ESTRATO_IED', 4);
 
             $equipesComClass = array_map(fn($v) => [
                 'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => $v['tipo'],
@@ -51,12 +51,12 @@ class MonitorApsController extends MonitorApsBaseController
             ], $vinculos);
 
             return response()->json([
-                'municipio'     => env('MONITOR_APS_MUNICIPIO_NOME', ''),
-                'ibge'          => env('MONITOR_APS_MUNICIPIO_IBGE', ''),
+                'municipio'     => $cfg->municipio_nome,
+                'ibge'          => $cfg->municipio_ibge,
                 'periodo'       => ['ano' => $ano, 'quadrimestre' => $quad],
                 'total_equipes' => count($equipes),
                 'vinculos'      => $vinculos,
-                'repasse'       => $this->calcularRepasseEstimado($equipesComClass, $estrato),
+                'repasse'       => $this->calcularRepasseEstimado($equipesComClass, $cfg->estrato_ied),
             ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -78,7 +78,7 @@ class MonitorApsController extends MonitorApsBaseController
     {
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine, 'bloco' => $bloco] = $this->params($request);
         try {
-            $sql = 'SELECT nu_ine, tp_equipe FROM dim_equipe WHERE st_ativo = true';
+            $sql = 'SELECT nu_ine, tp_equipe FROM tb_dim_equipe WHERE st_ativo = true';
             $bindings = [];
             if ($ine) { $sql .= ' AND nu_ine = ?'; $bindings[] = $ine; }
             $sql .= ' ORDER BY tp_equipe';
@@ -126,8 +126,8 @@ class MonitorApsController extends MonitorApsBaseController
     public function repasse(Request $request)
     {
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
-        $estrato = (int) env('MONITOR_APS_ESTRATO_IED', 4);
         try {
+            $estrato  = $this->apsConfig()->estrato_ied;
             $vinculos = $this->calcularVinculo($ano, $quad);
             $equipesComClass = array_map(fn($v) => [
                 'ine'  => $v['ine'], 'nome' => $v['nome'], 'tipo' => $v['tipo'],
@@ -244,10 +244,10 @@ class MonitorApsController extends MonitorApsBaseController
                 THEN fci.co_cidadao END)                                                AS idosos_60_mais,
               COUNT(DISTINCT CASE WHEN dt.nu_ano = ? AND dt.nu_quadrimestre = ?
                 THEN fci.co_cidadao END)                                                AS atualizados_quad
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de  ON fci.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt  ON fci.co_dim_tempo  = dt.co_seq_dim_tempo
-            LEFT JOIN fat_cad_domiciliar fcd ON fci.co_cidadao = fcd.co_cidadao_responsavel
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de  ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt  ON fci.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+            LEFT JOIN tb_fat_cad_domiciliar fcd ON fci.co_cidadao = fcd.co_cidadao_responsavel
             WHERE de.st_ativo = true AND fci.st_ativo = true
         ";
         $bindings = [$ano, $quad];
@@ -334,9 +334,9 @@ class MonitorApsController extends MonitorApsBaseController
               COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 4 THEN 1 END) AS consulta_dia,
               COUNT(CASE WHEN fai.co_dim_tipo_atendimento = 5 THEN 1 END) AS urgencia,
               COUNT(*) AS total
-            FROM fat_atendimento_individual fai
-            JOIN dim_equipe de ON fai.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fai.co_dim_tempo  = dt.co_seq_dim_tempo
+            FROM tb_fat_atendimento_individual fai
+            JOIN tb_dim_equipe de ON fai.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fai.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
             WHERE dt.nu_ano = ? AND dt.nu_quadrimestre = ? AND de.nu_ine = ? AND de.st_ativo = true
             GROUP BY de.nu_ine, de.no_equipe
         ", [$ano, $quad, $ine]);
@@ -363,8 +363,8 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_cidadao) AS total
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ativo = true
               AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
         ", [$ine]) ?: [null];
@@ -376,11 +376,11 @@ class MonitorApsController extends MonitorApsBaseController
         [$sub1] = $this->db()->select("
             SELECT COUNT(*) AS v FROM (
               SELECT fai.co_cidadao
-              FROM fat_atendimento_individual fai
-              JOIN dim_equipe de ON fai.co_dim_equipe = de.co_seq_dim_equipe
-              JOIN dim_tempo  dt ON fai.co_dim_tempo  = dt.co_seq_dim_tempo
-              JOIN dim_cbo    dc ON fai.co_dim_cbo    = dc.co_seq_dim_cbo
-              JOIN fat_cad_individual fci ON fai.co_cidadao = fci.co_cidadao
+              FROM tb_fat_atendimento_individual fai
+              JOIN tb_dim_equipe de ON fai.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+              JOIN tb_dim_tempo  dt ON fai.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+              JOIN tb_dim_cbo    dc ON fai.co_tb_dim_cbo    = dc.co_seq_tb_dim_cbo
+              JOIN tb_fat_cad_individual fci ON fai.co_cidadao = fci.co_cidadao
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
               WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
                 AND dc.nu_cbo IN ('225142','225125','223505')
@@ -391,10 +391,10 @@ class MonitorApsController extends MonitorApsBaseController
         [$sub2] = $this->db()->select("
             SELECT COUNT(*) AS v FROM (
               SELECT fai.co_cidadao
-              FROM fat_atendimento_individual fai
-              JOIN dim_equipe de ON fai.co_dim_equipe = de.co_seq_dim_equipe
-              JOIN dim_tempo  dt ON fai.co_dim_tempo  = dt.co_seq_dim_tempo
-              JOIN fat_cad_individual fci ON fai.co_cidadao = fci.co_cidadao
+              FROM tb_fat_atendimento_individual fai
+              JOIN tb_dim_equipe de ON fai.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+              JOIN tb_dim_tempo  dt ON fai.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+              JOIN tb_fat_cad_individual fci ON fai.co_cidadao = fci.co_cidadao
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
               WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
                 AND fai.nu_peso IS NOT NULL
@@ -405,11 +405,11 @@ class MonitorApsController extends MonitorApsBaseController
         [$sub3] = $this->db()->select("
             SELECT COUNT(*) AS v FROM (
               SELECT fvd.co_cidadao
-              FROM fat_visita_domiciliar fvd
-              JOIN dim_equipe de ON fvd.co_dim_equipe = de.co_seq_dim_equipe
-              JOIN dim_tempo  dt ON fvd.co_dim_tempo  = dt.co_seq_dim_tempo
-              JOIN dim_cbo    dc ON fvd.co_dim_cbo    = dc.co_seq_dim_cbo
-              JOIN fat_cad_individual fci ON fvd.co_cidadao = fci.co_cidadao
+              FROM tb_fat_visita_domiciliar fvd
+              JOIN tb_dim_equipe de ON fvd.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+              JOIN tb_dim_tempo  dt ON fvd.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+              JOIN tb_dim_cbo    dc ON fvd.co_tb_dim_cbo    = dc.co_seq_tb_dim_cbo
+              JOIN tb_fat_cad_individual fci ON fvd.co_cidadao = fci.co_cidadao
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
               WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
                 AND dc.nu_cbo = '516220' AND fvd.st_visita_realizada = true
@@ -420,10 +420,10 @@ class MonitorApsController extends MonitorApsBaseController
         [$sub4] = $this->db()->select("
             SELECT COUNT(*) AS v FROM (
               SELECT fv.co_cidadao
-              FROM fat_vacinacao fv
-              JOIN dim_equipe de ON fv.co_dim_equipe = de.co_seq_dim_equipe
-              JOIN dim_tempo  dt ON fv.co_dim_tempo  = dt.co_seq_dim_tempo
-              JOIN fat_cad_individual fci ON fv.co_cidadao = fci.co_cidadao
+              FROM tb_fat_vacinacao fv
+              JOIN tb_dim_equipe de ON fv.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+              JOIN tb_dim_tempo  dt ON fv.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+              JOIN tb_fat_cad_individual fci ON fv.co_cidadao = fci.co_cidadao
                 AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '24 months'
               WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
                 AND fv.nu_sigtap_imuno = ANY(?::varchar[])
@@ -450,8 +450,8 @@ class MonitorApsController extends MonitorApsBaseController
               COUNT(*) AS denominador,
               SUM(CASE WHEN st_pn_adequado THEN 1 ELSE 0 END) AS numerador
             FROM vw_acompanhamento_pre_natal vpn
-            JOIN dim_equipe de ON de.nu_ine = vpn.nu_ine
-            JOIN dim_tempo  dt ON dt.nu_ano = ? AND dt.nu_quadrimestre = ?
+            JOIN tb_dim_equipe de ON de.nu_ine = vpn.nu_ine
+            JOIN tb_dim_tempo  dt ON dt.nu_ano = ? AND dt.nu_quadrimestre = ?
             WHERE vpn.nu_ine = ?
             GROUP BY nu_ine, no_equipe
         ", [$ano, $quad, $ine]);
@@ -501,8 +501,8 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_cidadao) AS total
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ativo = true
               AND fci.dt_nascimento < CURRENT_DATE - INTERVAL '60 years'
         ", [$ine]) ?: [null];
@@ -511,10 +511,10 @@ class MonitorApsController extends MonitorApsBaseController
 
         [$num] = $this->db()->select("
             SELECT COUNT(DISTINCT fai.co_cidadao) AS total
-            FROM fat_atendimento_individual fai
-            JOIN dim_equipe de ON fai.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fai.co_dim_tempo  = dt.co_seq_dim_tempo
-            JOIN fat_cad_individual fci ON fai.co_cidadao = fci.co_cidadao
+            FROM tb_fat_atendimento_individual fai
+            JOIN tb_dim_equipe de ON fai.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fai.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+            JOIN tb_fat_cad_individual fci ON fai.co_cidadao = fci.co_cidadao
               AND fci.dt_nascimento < CURRENT_DATE - INTERVAL '60 years'
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
         ", [$ine, $ano, $quad]) ?: [null];
@@ -529,19 +529,19 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$total] = $this->db()->select("
             SELECT COUNT(*) AS total
-            FROM fat_atendimento_individual fai
-            JOIN dim_equipe de ON fai.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fai.co_dim_tempo  = dt.co_seq_dim_tempo
+            FROM tb_fat_atendimento_individual fai
+            JOIN tb_dim_equipe de ON fai.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fai.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
         ", [$ine, $ano, $quad]) ?: [null];
 
         [$sm] = $this->db()->select("
             SELECT COUNT(*) AS total
-            FROM fat_atendimento_individual fai
-            JOIN dim_equipe de ON fai.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fai.co_dim_tempo  = dt.co_seq_dim_tempo
-            LEFT JOIN dim_ciap2 dc ON fai.co_dim_ciap2_avaliado = dc.co_seq_dim_ciap2
-            LEFT JOIN dim_cid10 di ON fai.co_dim_cid10_avaliado = di.co_seq_dim_cid10
+            FROM tb_fat_atendimento_individual fai
+            JOIN tb_dim_equipe de ON fai.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fai.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+            LEFT JOIN tb_dim_ciap2 dc ON fai.co_tb_dim_ciap2_avaliado = dc.co_seq_tb_dim_ciap2
+            LEFT JOIN tb_dim_cid10 di ON fai.co_tb_dim_cid10_avaliado = di.co_seq_tb_dim_cid10
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
               AND (dc.nu_ciap2 IN ('P76','P77','P78','P79','P80','P81','P82','P85','P86','P98','P99')
                    OR di.nu_cid10 LIKE 'F%')
@@ -559,8 +559,8 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_cidadao) AS total
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ativo = true
         ", [$ine]) ?: [null];
         $denominador = (int)($den?->total ?? 0);
@@ -568,10 +568,10 @@ class MonitorApsController extends MonitorApsBaseController
 
         [$num] = $this->db()->select("
             SELECT COUNT(DISTINCT fvd.co_cidadao) AS total
-            FROM fat_visita_domiciliar fvd
-            JOIN dim_equipe de ON fvd.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fvd.co_dim_tempo  = dt.co_seq_dim_tempo
-            JOIN dim_cbo    dc ON fvd.co_dim_cbo    = dc.co_seq_dim_cbo
+            FROM tb_fat_visita_domiciliar fvd
+            JOIN tb_dim_equipe de ON fvd.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fvd.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
+            JOIN tb_dim_cbo    dc ON fvd.co_tb_dim_cbo    = dc.co_seq_tb_dim_cbo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
               AND dc.nu_cbo = '516220' AND fvd.st_visita_realizada = true
         ", [$ine, $ano, $quad]) ?: [null];
@@ -586,8 +586,8 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_cidadao) AS total
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ativo = true
               AND fci.dt_nascimento > CURRENT_DATE - INTERVAL '2 years'
         ", [$ine]) ?: [null];
@@ -598,9 +598,9 @@ class MonitorApsController extends MonitorApsBaseController
         [$num] = $this->db()->select("
             SELECT COUNT(*) AS total FROM (
               SELECT fv.co_cidadao
-              FROM fat_vacinacao fv
-              JOIN dim_equipe de ON fv.co_dim_equipe = de.co_seq_dim_equipe
-              JOIN dim_tempo  dt ON fv.co_dim_tempo  = dt.co_seq_dim_tempo
+              FROM tb_fat_vacinacao fv
+              JOIN tb_dim_equipe de ON fv.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+              JOIN tb_dim_tempo  dt ON fv.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
               WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
                 AND fv.nu_sigtap_imuno = ANY(?::varchar[]) AND fv.st_realizado = true
               GROUP BY fv.co_cidadao HAVING COUNT(DISTINCT fv.nu_sigtap_imuno) >= 4
@@ -617,16 +617,16 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$r] = $this->db()->select("
             SELECT COUNT(*) AS total_atividades, COALESCE(SUM(nu_participantes), 0) AS total_participantes
-            FROM fat_ativ_coletiva fac
-            JOIN dim_equipe de ON fac.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fac.co_dim_tempo  = dt.co_seq_dim_tempo
+            FROM tb_fat_atividade_coletiva fac
+            JOIN tb_dim_equipe de ON fac.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fac.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
         ", [$ine, $ano, $quad]) ?: [null];
 
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_cidadao) AS total
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ativo = true
         ", [$ine]) ?: [null];
 
@@ -648,8 +648,8 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_cidadao) AS total
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ativo = true
         ", [$ine]) ?: [null];
         $denominador = (int)($den?->total ?? 0);
@@ -657,9 +657,9 @@ class MonitorApsController extends MonitorApsBaseController
 
         [$num] = $this->db()->select("
             SELECT COUNT(*) AS total
-            FROM fat_atendimento_odontologico fao
-            JOIN dim_equipe de ON fao.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fao.co_dim_tempo  = dt.co_seq_dim_tempo
+            FROM tb_fat_atendimento_odonto fao
+            JOIN tb_dim_equipe de ON fao.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fao.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
               AND fao.st_primeira_consulta = true
         ", [$ine, $ano, $quad]) ?: [null];
@@ -674,9 +674,9 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$total] = $this->db()->select("
             SELECT COUNT(*) AS total
-            FROM fat_atendimento_odontologico fao
-            JOIN dim_equipe de ON fao.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fao.co_dim_tempo  = dt.co_seq_dim_tempo
+            FROM tb_fat_atendimento_odonto fao
+            JOIN tb_dim_equipe de ON fao.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fao.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
         ", [$ine, $ano, $quad]) ?: [null];
         $denominador = (int)($total?->total ?? 0);
@@ -684,9 +684,9 @@ class MonitorApsController extends MonitorApsBaseController
 
         [$concl] = $this->db()->select("
             SELECT COUNT(*) AS total
-            FROM fat_atendimento_odontologico fao
-            JOIN dim_equipe de ON fao.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fao.co_dim_tempo  = dt.co_seq_dim_tempo
+            FROM tb_fat_atendimento_odonto fao
+            JOIN tb_dim_equipe de ON fao.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fao.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
               AND fao.st_conclusao_tratamento = true
         ", [$ine, $ano, $quad]) ?: [null];
@@ -701,16 +701,16 @@ class MonitorApsController extends MonitorApsBaseController
     {
         [$r] = $this->db()->select("
             SELECT COUNT(*) AS atividades, COALESCE(SUM(nu_participantes), 0) AS participantes
-            FROM fat_ativ_coletiva fac
-            JOIN dim_equipe de ON fac.co_dim_equipe = de.co_seq_dim_equipe
-            JOIN dim_tempo  dt ON fac.co_dim_tempo  = dt.co_seq_dim_tempo
+            FROM tb_fat_atividade_coletiva fac
+            JOIN tb_dim_equipe de ON fac.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
+            JOIN tb_dim_tempo  dt ON fac.co_tb_dim_tempo  = dt.co_seq_tb_dim_tempo
             WHERE de.nu_ine = ? AND dt.nu_ano = ? AND dt.nu_quadrimestre = ?
         ", [$ine, $ano, $quad]) ?: [null];
 
         [$den] = $this->db()->select("
             SELECT COUNT(DISTINCT fci.co_cidadao) AS total
-            FROM fat_cad_individual fci
-            JOIN dim_equipe de ON fci.co_dim_equipe = de.co_seq_dim_equipe
+            FROM tb_fat_cad_individual fci
+            JOIN tb_dim_equipe de ON fci.co_tb_dim_equipe = de.co_seq_tb_dim_equipe
             WHERE de.nu_ine = ? AND fci.st_ativo = true
         ", [$ine]) ?: [null];
 

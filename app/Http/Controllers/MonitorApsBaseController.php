@@ -7,6 +7,20 @@ use PDO;
 
 abstract class MonitorApsBaseController extends Controller
 {
+    protected function apsConfig(): object
+    {
+        try {
+            $row = DB::table('monitor_aps_configs')->first();
+        } catch (\Throwable) {
+            $row = null;
+        }
+        return (object) [
+            'municipio_ibge' => $row?->municipio_ibge ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
+            'municipio_nome' => $row?->municipio_nome ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
+            'estrato_ied'    => (int) ($row?->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
+        ];
+    }
+
     protected function db(): \Illuminate\Database\ConnectionInterface
     {
         $row = DB::table('monitor_aps_configs')->first();

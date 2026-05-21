@@ -72,7 +72,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
                     ELSE tp_equipe::text
                   END AS tipo,
                   nu_cnes, st_ativo
-                FROM dim_equipe
+                FROM tb_dim_equipe
                 ORDER BY tp_equipe, no_equipe
             ");
             return response()->json(['equipes' => $rows]);
@@ -128,25 +128,21 @@ class MonitorApsConfigController extends MonitorApsBaseController
 
             $nomes = collect($tabelas)->pluck('tabela');
 
-            // Detecta schema DW (dim_equipe)
-            $schemaDW = null;
-            foreach ($tabelas as $t) {
-                if ($t->tabela === 'dim_equipe') { $schemaDW = $t->schema; break; }
-            }
-
-            // Conta tabelas dim_ e fat_
-            $qtdDim = $nomes->filter(fn($n) => str_starts_with($n, 'dim_'))->count();
-            $qtdFat = $nomes->filter(fn($n) => str_starts_with($n, 'fat_'))->count();
+            // Detecta DW pelo prefixo tb_dim_ / tb_fat_
+            $qtdDim = $nomes->filter(fn($n) => str_starts_with($n, 'tb_dim_'))->count();
+            $qtdFat = $nomes->filter(fn($n) => str_starts_with($n, 'tb_fat_'))->count();
 
             // Confirma se é banco eSUS PEC (tabelas operacionais conhecidas)
-            $tabelasEsus = ['tb_cidadao', 'tb_atendimento_individual', 'tb_visita_domiciliar', 'tb_municipio'];
+            $tabelasEsus = ['tb_cidadao_pec', 'tb_municipio', 'tb_unidade_saude'];
             $esusEncontradas = $nomes->filter(fn($n) => in_array($n, $tabelasEsus))->values()->toArray();
 
             $temDW = false;
             $totalEquipes = 0;
-            if ($schemaDW) {
+            $schemaDW = null;
+            if ($nomes->contains('tb_dim_equipe')) {
+                $schemaDW = collect($tabelas)->firstWhere('tabela', 'tb_dim_equipe')?->schema ?? 'public';
                 try {
-                    $result = $conn->select("SELECT COUNT(*) AS total FROM \"{$schemaDW}\".dim_equipe WHERE st_ativo = true");
+                    $result = $conn->select('SELECT COUNT(*) AS total FROM "tb_dim_equipe" WHERE st_ativo = true');
                     $temDW = true;
                     $totalEquipes = (int) ($result[0]->total ?? 0);
                 } catch (\Throwable) {}
@@ -155,9 +151,9 @@ class MonitorApsConfigController extends MonitorApsBaseController
             $schemas = collect($tabelas)->pluck('schema')->unique()->values()->toArray();
 
             if ($temDW) {
-                $mensagem = "Conectado — schema DW: {$schemaDW} | {$totalEquipes} equipe(s) ativa(s) | " . count($tabelas) . " tabela(s).";
+                $mensagem = "Conectado — DW eSUS encontrado (tb_dim: {$qtdDim}, tb_fat: {$qtdFat}) | {$totalEquipes} equipe(s) ativa(s) | " . count($tabelas) . " tabela(s).";
             } elseif ($qtdDim > 0 || $qtdFat > 0) {
-                $mensagem = "Conectado — tabelas DW encontradas (dim: {$qtdDim}, fat: {$qtdFat}) mas dim_equipe ausente. Verifique o schema.";
+                $mensagem = "Conectado — tabelas DW encontradas (tb_dim: {$qtdDim}, tb_fat: {$qtdFat}) mas tb_dim_equipe ausente. Verifique a sincronização do DW.";
             } elseif (!empty($esusEncontradas)) {
                 $mensagem = "Conectado ao banco eSUS PEC operacional (" . implode(', ', $esusEncontradas) . "). O módulo DW não está habilitado — ative o Data Warehouse no eSUS PEC para usar o Monitor APS.";
             } else {
@@ -230,33 +226,32 @@ class MonitorApsConfigController extends MonitorApsBaseController
     }
 
     // GET /monitor-aps/config/explorar  (admin)
+    // Lista apenas as tabelas DW (tb_dim_* e tb_fat_*) com colunas e contagem.
+    // Tabelas operacionais genéricas tb_* são ignoradas para evitar timeout.
     public function explorar()
     {
         try {
             $conn = $this->db();
 
-            // Todas as tabelas tb_* com contagem de registros
-            $tabelasTb = $conn->select("
+            $tabelasDW = $conn->select("
                 SELECT table_name
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
-                  AND table_name LIKE 'tb_%'
+                  AND (table_name LIKE 'tb_dim_%' OR table_name LIKE 'tb_fat_%')
                 ORDER BY table_name
             ");
 
             $tabelas = [];
-            foreach ($tabelasTb as $t) {
+            foreach ($tabelasDW as $t) {
                 $nome = $t->table_name;
 
-                // Colunas
                 $colunas = $conn->select("
-                    SELECT column_name AS coluna, data_type AS tipo, is_nullable AS nulo
+                    SELECT column_name AS coluna, data_type AS tipo
                     FROM information_schema.columns
                     WHERE table_schema = 'public' AND table_name = ?
                     ORDER BY ordinal_position
                 ", [$nome]);
 
-                // Contagem (com timeout implícito do PDO)
                 $total = null;
                 try {
                     $r = $conn->select("SELECT COUNT(*) AS total FROM \"{$nome}\"");
@@ -277,6 +272,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
             ]);
         } catch (\Throwable $e) {
             $msg = preg_replace('/\s*\(Connection:.*?\)/i', '', $e->getMessage());
+            $msg = preg_replace('/\s*\(SQL:.*\)/is', '', $msg);
             return response()->json(['success' => false, 'error' => trim($msg)], 500);
         }
     }
