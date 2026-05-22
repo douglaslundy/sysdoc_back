@@ -582,12 +582,12 @@ class VisitaAcsController extends MonitorApsBaseController
             return response()->json(['message' => 'Visita não encontrada.'], 404);
         }
 
-        $isMissingCoreDetail = empty($row->notes)
-            && empty($row->citizen_name)
-            && empty($row->logradouro)
-            && empty($row->bairro);
+        $needsFallbackDetail = empty($row->notes)
+            || empty($row->citizen_name)
+            || empty($row->logradouro)
+            || empty($row->bairro);
 
-        if ($isMissingCoreDetail && $this->hasTable('tb_fat_consolidado_cidadao_fvd')) {
+        if ($needsFallbackDetail && $this->hasTable('tb_fat_consolidado_cidadao_fvd')) {
             $consNotesCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_anotacao', 'ds_observacao', 'ds_relato']);
             $consCitizenCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['no_cidadao']);
             $consLogradouroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_logradouro', 'no_logradouro']);
