@@ -376,6 +376,12 @@ class VisitaAcsController extends MonitorApsBaseController
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
                 t.dt_registro                    AS data,
+                (
+                    SELECT ci.no_cidadao
+                    FROM tb_fat_cad_individual ci
+                    WHERE ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    LIMIT 1
+                )                                AS cidadao,
                 p.no_profissional                AS agente,
                 c.nu_cbo                         AS cbo,
                 e.nu_ine                         AS equipe_ine,
@@ -692,7 +698,13 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.no_equipe                      AS equipe_nome,
                 t.dt_registro                    AS data,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
-                v.nu_micro_area                  AS micro_area
+                v.nu_micro_area                  AS micro_area,
+                (
+                    SELECT ci.no_cidadao
+                    FROM tb_fat_cad_individual ci
+                    WHERE ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    LIMIT 1
+                )                                AS cidadao
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
             WHERE {$where}
@@ -790,4 +802,3 @@ class VisitaAcsController extends MonitorApsBaseController
         return response()->json(['agentes' => $agentes]);
     }
 }
-
