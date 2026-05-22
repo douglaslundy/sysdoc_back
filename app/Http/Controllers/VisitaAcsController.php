@@ -84,6 +84,27 @@ class VisitaAcsController extends MonitorApsBaseController
         }
     }
 
+    private function citizenNameExpr(string $visitAlias = 'v'): string
+    {
+        if (
+            $this->hasTable('tb_fat_cad_individual')
+            && $this->hasColumn('tb_fat_cad_individual', 'no_cidadao')
+            && $this->hasColumn('tb_fat_cad_individual', 'co_fat_cidadao_pec')
+        ) {
+            return "(SELECT ci.no_cidadao FROM tb_fat_cad_individual ci WHERE ci.co_fat_cidadao_pec = {$visitAlias}.co_fat_cidadao_pec LIMIT 1)";
+        }
+
+        if (
+            $this->hasTable('tb_fat_cidadao_pec')
+            && $this->hasColumn('tb_fat_cidadao_pec', 'no_cidadao')
+            && $this->hasColumn('tb_fat_cidadao_pec', 'co_seq_fat_cidadao_pec')
+        ) {
+            return "(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = {$visitAlias}.co_fat_cidadao_pec LIMIT 1)";
+        }
+
+        return 'NULL::text';
+    }
+
     private function formatMotives(object $row): array
     {
         $labels = [
@@ -325,6 +346,7 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         $queryParams = array_merge($params, [$perPage, $offset]);
+        $citizenExpr = $this->citizenNameExpr('v');
 
         // Query completa: citizen via LATERAL + nu_hora
         $sqlFull = "
@@ -376,12 +398,7 @@ class VisitaAcsController extends MonitorApsBaseController
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
                 t.dt_registro                    AS data,
-                (
-                    SELECT ci.no_cidadao
-                    FROM tb_fat_cidadao_pec ci
-                    WHERE ci.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec
-                    LIMIT 1
-                )                                AS cidadao,
+                {$citizenExpr}                   AS cidadao,
                 p.no_profissional                AS agente,
                 c.nu_cbo                         AS cbo,
                 e.nu_ine                         AS equipe_ine,
@@ -655,6 +672,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 $params[] = '%' . $busca . '%';
             }
         }
+        $citizenExpr = $this->citizenNameExpr('v');
 
         // Query completa: LATERAL direto no FROM + nu_hora + nome do cidadÃƒÂ£o
         $sqlFull = "
@@ -699,12 +717,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 t.dt_registro                    AS data,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
                 v.nu_micro_area                  AS micro_area,
-                (
-                    SELECT ci.no_cidadao
-                    FROM tb_fat_cidadao_pec ci
-                    WHERE ci.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec
-                    LIMIT 1
-                )                                AS cidadao
+                {$citizenExpr}                   AS cidadao
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
             WHERE {$where}
