@@ -26,7 +26,7 @@ class ResultadoLiberadoMail extends Mailable implements ShouldQueue
             subject: 'Seu resultado de exame está disponível',
         );
     }
-//ok
+
     public function content(): Content
     {
         return new Content(
