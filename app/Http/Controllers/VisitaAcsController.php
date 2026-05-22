@@ -488,6 +488,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 d.ds_desfecho_visita             AS outcome_label,
                 v.nu_latitude                    AS lat,
                 v.nu_longitude                   AS lng,
+                v.co_fat_cidadao_pec            AS citizen_pec,
                 {$notesExpr}                     AS notes,
                 {$citizenNameExpr}               AS citizen_name,
                 {$logradouroExpr}                AS logradouro,
@@ -538,6 +539,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 d.ds_desfecho_visita             AS outcome_label,
                 v.nu_latitude                    AS lat,
                 v.nu_longitude                   AS lng,
+                v.co_fat_cidadao_pec            AS citizen_pec,
                 {$notesExpr}                     AS notes,
                 {$citizenNameExpr}               AS citizen_name,
                 {$logradouroExpr}                AS logradouro,
@@ -594,9 +596,11 @@ class VisitaAcsController extends MonitorApsBaseController
             $consNumeroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['nu_numero', 'nu_endereco']);
             $consComplementoCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_complemento', 'no_complemento']);
             $consBairroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_bairro', 'no_bairro']);
+            $consVisitKeyCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['co_seq_fat_visita_domiciliar']);
+            $consCitizenKeyCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
 
             if ($consNotesCol || $consCitizenCol || $consLogradouroCol || $consNumeroCol || $consComplementoCol || $consBairroCol) {
-                $consSql = "
+                $consSelect = "
                     SELECT
                         " . ($consNotesCol ? "c.{$consNotesCol}" : "NULL::text") . " AS notes,
                         " . ($consCitizenCol ? "c.{$consCitizenCol}" : "NULL::text") . " AS citizen_name,
@@ -604,12 +608,31 @@ class VisitaAcsController extends MonitorApsBaseController
                         " . ($consNumeroCol ? "c.{$consNumeroCol}::text" : "NULL::text") . " AS num_endereco,
                         " . ($consComplementoCol ? "c.{$consComplementoCol}" : "NULL::text") . " AS complemento,
                         " . ($consBairroCol ? "c.{$consBairroCol}" : "NULL::text") . " AS bairro
-                    FROM tb_fat_consolidado_cidadao_fvd c
-                    WHERE c.co_seq_fat_visita_domiciliar = ?
-                    LIMIT 1
                 ";
 
-                $fallback = $this->db()->selectOne($consSql, [$id]);
+                $fallback = null;
+                if ($consVisitKeyCol) {
+                    $consSqlByVisit = "
+                        {$consSelect}
+                        FROM tb_fat_consolidado_cidadao_fvd c
+                        WHERE c.{$consVisitKeyCol} = ?
+                        LIMIT 1
+                    ";
+                    $fallback = $this->db()->selectOne($consSqlByVisit, [$id]);
+                }
+
+                if (! $fallback && $consCitizenKeyCol && !empty($row->citizen_pec)) {
+                    $orderBy = $consVisitKeyCol ? "ORDER BY c.{$consVisitKeyCol} DESC" : '';
+                    $consSqlByCitizen = "
+                        {$consSelect}
+                        FROM tb_fat_consolidado_cidadao_fvd c
+                        WHERE c.{$consCitizenKeyCol} = ?
+                        {$orderBy}
+                        LIMIT 1
+                    ";
+                    $fallback = $this->db()->selectOne($consSqlByCitizen, [$row->citizen_pec]);
+                }
+
                 if ($fallback) {
                     $row->notes = $row->notes ?: ($fallback->notes ?? null);
                     $row->citizen_name = $row->citizen_name ?: ($fallback->citizen_name ?? null);
