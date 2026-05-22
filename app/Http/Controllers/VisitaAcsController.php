@@ -378,8 +378,8 @@ class VisitaAcsController extends MonitorApsBaseController
                 t.dt_registro                    AS data,
                 (
                     SELECT ci.no_cidadao
-                    FROM tb_fat_cad_individual ci
-                    WHERE ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    FROM tb_fat_cidadao_pec ci
+                    WHERE ci.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec
                     LIMIT 1
                 )                                AS cidadao,
                 p.no_profissional                AS agente,
@@ -701,8 +701,8 @@ class VisitaAcsController extends MonitorApsBaseController
                 v.nu_micro_area                  AS micro_area,
                 (
                     SELECT ci.no_cidadao
-                    FROM tb_fat_cad_individual ci
-                    WHERE ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    FROM tb_fat_cidadao_pec ci
+                    WHERE ci.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec
                     LIMIT 1
                 )                                AS cidadao
             FROM tb_fat_visita_domiciliar v
