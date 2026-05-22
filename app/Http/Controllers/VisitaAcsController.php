@@ -112,69 +112,18 @@ class VisitaAcsController extends MonitorApsBaseController
         return 'NULL::text';
     }
 
-    private function normalizeNoteValue(mixed $value): ?string
+    private function normalizeAddressValue(mixed $value): ?string
     {
-        if (!is_string($value)) {
+        if ($value === null) {
             return null;
         }
 
-        $trimmed = trim($value);
-        return $trimmed !== '' ? $trimmed : null;
-    }
-
-    private function loadNotesFromAlternativeSources(int $visitId, mixed $citizenPec): ?string
-    {
-        $noteCols = [
-            'ds_anotacao',
-            'ds_observacao',
-            'ds_relato',
-            'ds_anotacao_visita',
-            'ds_observacao_visita',
-            'ds_relato_visita',
-            'tx_anotacao',
-            'tx_observacao',
-            'tx_relato',
-        ];
-        $tables = [
-            'tb_fat_consolidado_cidadao_fvd',
-            'tb_fat_consolidado_fvd',
-            'tb_fat_consolidado_visita_domiciliar',
-            'tb_fat_visita_domiciliar',
-            'tb_cds_visita_domiciliar',
-            'tb_cds_ficha_visita_domiciliar',
-        ];
-
-        foreach ($tables as $table) {
-            if (! $this->hasTable($table)) {
-                continue;
-            }
-
-            $noteCol = $this->firstExistingColumn($table, $noteCols);
-            if (! $noteCol) {
-                continue;
-            }
-
-            $visitKey = $this->firstExistingColumn($table, ['co_seq_fat_visita_domiciliar', 'co_fat_visita_domiciliar']);
-            if ($visitKey) {
-                $row = $this->db()->selectOne("SELECT {$noteCol} AS notes FROM {$table} WHERE {$visitKey} = ? LIMIT 1", [$visitId]);
-                $normalized = $this->normalizeNoteValue($row->notes ?? null);
-                if ($normalized) {
-                    return $normalized;
-                }
-            }
-
-            $citizenKey = $this->firstExistingColumn($table, ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
-            if ($citizenKey && !empty($citizenPec)) {
-                $orderByVisit = $visitKey ? " ORDER BY {$visitKey} DESC" : '';
-                $row = $this->db()->selectOne("SELECT {$noteCol} AS notes FROM {$table} WHERE {$citizenKey} = ?{$orderByVisit} LIMIT 1", [$citizenPec]);
-                $normalized = $this->normalizeNoteValue($row->notes ?? null);
-                if ($normalized) {
-                    return $normalized;
-                }
-            }
+        $trimmed = trim((string) $value);
+        if ($trimmed === '') {
+            return null;
         }
 
-        return null;
+        return preg_match('/^[a-f0-9]{12,}$/i', $trimmed) ? null : $trimmed;
     }
 
     private function formatMotives(object $row): array
@@ -252,22 +201,28 @@ class VisitaAcsController extends MonitorApsBaseController
         ];
 
         if ($detail) {
+            $logradouro = $this->normalizeAddressValue($row->logradouro ?? null);
+            $numero = $this->normalizeAddressValue($row->num_endereco ?? null);
+            $complemento = $this->normalizeAddressValue($row->complemento ?? null);
+            $bairro = $this->normalizeAddressValue($row->bairro ?? null);
+            $cep = $this->normalizeAddressValue($row->cep ?? null);
+
             $result['citizen_name']   = $row->citizen_name   ?? null;
             $result['notes']          = $row->notes          ?? null;
             $result['lat']            = isset($row->lat) && $row->lat !== null ? (float) $row->lat : null;
             $result['lng']            = isset($row->lng) && $row->lng !== null ? (float) $row->lng : null;
             $result['accompaniments'] = $this->formatAccompaniments($row);
-            $result['logradouro']     = $row->logradouro     ?? null;
-            $result['num_endereco']   = $row->num_endereco   ?? null;
-            $result['complemento']    = $row->complemento    ?? null;
-            $result['bairro']         = $row->bairro         ?? null;
-            $result['cep']            = $row->cep            ?? null;
+            $result['logradouro']     = $logradouro;
+            $result['num_endereco']   = $numero;
+            $result['complemento']    = $complemento;
+            $result['bairro']         = $bairro;
+            $result['cep']            = $cep;
             $result['address']        = [
-                'logradouro'  => $row->logradouro  ?? null,
-                'numero'      => $row->num_endereco ?? null,
-                'complemento' => $row->complemento ?? null,
-                'bairro'      => $row->bairro       ?? null,
-                'cep'         => $row->cep          ?? null,
+                'logradouro'  => $logradouro,
+                'numero'      => $numero,
+                'complemento' => $complemento,
+                'bairro'      => $bairro,
+                'cep'         => $cep,
             ];
         }
 
@@ -683,70 +638,6 @@ class VisitaAcsController extends MonitorApsBaseController
 
         if (! $row) {
             return response()->json(['message' => 'Visita não encontrada.'], 404);
-        }
-
-        $needsFallbackDetail = empty($row->notes)
-            || empty($row->citizen_name)
-            || empty($row->logradouro)
-            || empty($row->bairro);
-
-        if ($needsFallbackDetail && $this->hasTable('tb_fat_consolidado_cidadao_fvd')) {
-            $consNotesCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_anotacao', 'ds_observacao', 'ds_relato', 'tx_anotacao', 'tx_observacao', 'tx_relato']);
-            $consCitizenCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['no_cidadao']);
-            $consLogradouroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_logradouro', 'no_logradouro']);
-            $consNumeroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['nu_numero', 'nu_endereco']);
-            $consComplementoCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_complemento', 'no_complemento']);
-            $consBairroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_bairro', 'no_bairro']);
-            $consVisitKeyCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['co_seq_fat_visita_domiciliar']);
-            $consCitizenKeyCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
-
-            if ($consNotesCol || $consCitizenCol || $consLogradouroCol || $consNumeroCol || $consComplementoCol || $consBairroCol) {
-                $consSelect = "
-                    SELECT
-                        " . ($consNotesCol ? "c.{$consNotesCol}" : "NULL::text") . " AS notes,
-                        " . ($consCitizenCol ? "c.{$consCitizenCol}" : "NULL::text") . " AS citizen_name,
-                        " . ($consLogradouroCol ? "c.{$consLogradouroCol}" : "NULL::text") . " AS logradouro,
-                        " . ($consNumeroCol ? "c.{$consNumeroCol}::text" : "NULL::text") . " AS num_endereco,
-                        " . ($consComplementoCol ? "c.{$consComplementoCol}" : "NULL::text") . " AS complemento,
-                        " . ($consBairroCol ? "c.{$consBairroCol}" : "NULL::text") . " AS bairro
-                ";
-
-                $fallback = null;
-                if ($consVisitKeyCol) {
-                    $consSqlByVisit = "
-                        {$consSelect}
-                        FROM tb_fat_consolidado_cidadao_fvd c
-                        WHERE c.{$consVisitKeyCol} = ?
-                        LIMIT 1
-                    ";
-                    $fallback = $this->db()->selectOne($consSqlByVisit, [$id]);
-                }
-
-                if (! $fallback && $consCitizenKeyCol && !empty($row->citizen_pec)) {
-                    $orderBy = $consVisitKeyCol ? "ORDER BY c.{$consVisitKeyCol} DESC" : '';
-                    $consSqlByCitizen = "
-                        {$consSelect}
-                        FROM tb_fat_consolidado_cidadao_fvd c
-                        WHERE c.{$consCitizenKeyCol} = ?
-                        {$orderBy}
-                        LIMIT 1
-                    ";
-                    $fallback = $this->db()->selectOne($consSqlByCitizen, [$row->citizen_pec]);
-                }
-
-                if ($fallback) {
-                    $row->notes = $row->notes ?: ($fallback->notes ?? null);
-                    $row->citizen_name = $row->citizen_name ?: ($fallback->citizen_name ?? null);
-                    $row->logradouro = $row->logradouro ?: ($fallback->logradouro ?? null);
-                    $row->num_endereco = $row->num_endereco ?: ($fallback->num_endereco ?? null);
-                    $row->complemento = $row->complemento ?: ($fallback->complemento ?? null);
-                    $row->bairro = $row->bairro ?: ($fallback->bairro ?? null);
-                }
-            }
-        }
-
-        if (empty($row->notes)) {
-            $row->notes = $this->loadNotesFromAlternativeSources($id, $row->citizen_pec ?? null) ?? $row->notes;
         }
 
         return response()->json($this->formatVisita($row, detail: true));
