@@ -105,6 +105,59 @@ class VisitaAcsController extends MonitorApsBaseController
         return 'NULL::text';
     }
 
+    private function normalizeNoteValue(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
+    private function loadNotesFromAlternativeSources(int $visitId, mixed $citizenPec): ?string
+    {
+        $noteCols = ['ds_anotacao', 'ds_observacao', 'ds_relato', 'tx_anotacao', 'tx_observacao', 'tx_relato'];
+        $tables = [
+            'tb_fat_consolidado_cidadao_fvd',
+            'tb_fat_consolidado_fvd',
+            'tb_fat_consolidado_visita_domiciliar',
+            'tb_fat_visita_domiciliar',
+        ];
+
+        foreach ($tables as $table) {
+            if (! $this->hasTable($table)) {
+                continue;
+            }
+
+            $noteCol = $this->firstExistingColumn($table, $noteCols);
+            if (! $noteCol) {
+                continue;
+            }
+
+            $visitKey = $this->firstExistingColumn($table, ['co_seq_fat_visita_domiciliar', 'co_fat_visita_domiciliar']);
+            if ($visitKey) {
+                $row = $this->db()->selectOne("SELECT {$noteCol} AS notes FROM {$table} WHERE {$visitKey} = ? LIMIT 1", [$visitId]);
+                $normalized = $this->normalizeNoteValue($row->notes ?? null);
+                if ($normalized) {
+                    return $normalized;
+                }
+            }
+
+            $citizenKey = $this->firstExistingColumn($table, ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
+            if ($citizenKey && !empty($citizenPec)) {
+                $orderByVisit = $visitKey ? " ORDER BY {$visitKey} DESC" : '';
+                $row = $this->db()->selectOne("SELECT {$noteCol} AS notes FROM {$table} WHERE {$citizenKey} = ?{$orderByVisit} LIMIT 1", [$citizenPec]);
+                $normalized = $this->normalizeNoteValue($row->notes ?? null);
+                if ($normalized) {
+                    return $normalized;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private function formatMotives(object $row): array
     {
         $labels = [
@@ -642,6 +695,10 @@ class VisitaAcsController extends MonitorApsBaseController
                     $row->bairro = $row->bairro ?: ($fallback->bairro ?? null);
                 }
             }
+        }
+
+        if (empty($row->notes)) {
+            $row->notes = $this->loadNotesFromAlternativeSources($id, $row->citizen_pec ?? null) ?? $row->notes;
         }
 
         return response()->json($this->formatVisita($row, detail: true));
