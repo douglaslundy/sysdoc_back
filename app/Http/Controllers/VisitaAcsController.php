@@ -439,18 +439,17 @@ class VisitaAcsController extends MonitorApsBaseController
     {
         $hasHora = $this->hasColumn('tb_dim_tempo', 'nu_hora');
         $notesCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']);
-        $citizenNameCol = $this->firstExistingColumn('tb_fat_cad_individual', ['no_cidadao']);
-        $logradouroCol = $this->firstExistingColumn('tb_fat_cad_individual', ['ds_logradouro', 'no_logradouro']);
-        $numeroCol = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_numero', 'nu_endereco']);
-        $complCol = $this->firstExistingColumn('tb_fat_cad_individual', ['ds_complemento', 'no_complemento']);
-        $bairroCol = $this->firstExistingColumn('tb_fat_cad_individual', ['ds_bairro', 'no_bairro']);
 
         $notesExpr = $notesCol ? "v.{$notesCol}" : 'NULL::text';
-        $citizenNameExpr = $citizenNameCol ? "(SELECT fci.{$citizenNameCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
-        $logradouroExpr = $logradouroCol ? "(SELECT fci.{$logradouroCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
-        $numeroExpr = $numeroCol ? "(SELECT fci.{$numeroCol}::text FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
-        $complementoExpr = $complCol ? "(SELECT fci.{$complCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
-        $bairroExpr = $bairroCol ? "(SELECT fci.{$bairroCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
+        // Nome: tb_fat_cidadao_pec é join 1:1 com a visita via co_seq_fat_cidadao_pec
+        $citizenNameExpr = "(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)";
+        // Endereço: tb_fat_cad_dom_familia liga cidadão ao domicílio; tb_fat_cad_domiciliar tem os campos de endereço
+        $addrBase = "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar WHERE f.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1";
+        $logradouroExpr  = "(SELECT d.no_logradouro {$addrBase})";
+        $numeroExpr      = "(SELECT d.nu_num_logradouro {$addrBase})";
+        $complementoExpr = "(SELECT d.no_complemento {$addrBase})";
+        $bairroExpr      = "(SELECT d.no_bairro {$addrBase})";
+        $cepExpr         = "(SELECT d.nu_cep {$addrBase})";
 
         $sqlFull = "
             SELECT
@@ -472,6 +471,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 {$numeroExpr}                    AS num_endereco,
                 {$complementoExpr}               AS complemento,
                 {$bairroExpr}                    AS bairro,
+                {$cepExpr}                       AS cep,
                 v.st_mot_vis_cad_att,
                 v.st_mot_vis_visita_periodica,
                 v.st_mot_vis_busca_ativa,
@@ -521,6 +521,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 {$numeroExpr}                    AS num_endereco,
                 {$complementoExpr}               AS complemento,
                 {$bairroExpr}                    AS bairro,
+                {$cepExpr}                       AS cep,
                 v.st_mot_vis_cad_att,
                 v.st_mot_vis_visita_periodica,
                 v.st_mot_vis_busca_ativa,
