@@ -68,6 +68,35 @@ class VisitaAcsController extends MonitorApsBaseController
         return null;
     }
 
+    private function firstExistingColumnFresh(string $table, array $candidates): ?string
+    {
+        foreach ($candidates as $column) {
+            try {
+                $row = $this->db()->selectOne("
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                      AND table_name = ?
+                      AND column_name = ?
+                    LIMIT 1
+                ", [$table, $column]);
+
+                if ($row !== null) {
+                    return $column;
+                }
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private function textColumnExpr(string $tableAlias, ?string $column): string
+    {
+        return $column ? "{$tableAlias}.{$column}::text" : 'NULL::text';
+    }
+
     private function hasTable(string $table): bool
     {
         try {
@@ -117,12 +146,24 @@ class VisitaAcsController extends MonitorApsBaseController
 
     private function loadNotesFromAlternativeSources(int $visitId, mixed $citizenPec): ?string
     {
-        $noteCols = ['ds_anotacao', 'ds_observacao', 'ds_relato', 'tx_anotacao', 'tx_observacao', 'tx_relato'];
+        $noteCols = [
+            'ds_anotacao',
+            'ds_observacao',
+            'ds_relato',
+            'ds_anotacao_visita',
+            'ds_observacao_visita',
+            'ds_relato_visita',
+            'tx_anotacao',
+            'tx_observacao',
+            'tx_relato',
+        ];
         $tables = [
             'tb_fat_consolidado_cidadao_fvd',
             'tb_fat_consolidado_fvd',
             'tb_fat_consolidado_visita_domiciliar',
             'tb_fat_visita_domiciliar',
+            'tb_cds_visita_domiciliar',
+            'tb_cds_ficha_visita_domiciliar',
         ];
 
         foreach ($tables as $table) {
@@ -130,12 +171,12 @@ class VisitaAcsController extends MonitorApsBaseController
                 continue;
             }
 
-            $noteCol = $this->firstExistingColumn($table, $noteCols);
+            $noteCol = $this->firstExistingColumnFresh($table, $noteCols);
             if (! $noteCol) {
                 continue;
             }
 
-            $visitKey = $this->firstExistingColumn($table, ['co_seq_fat_visita_domiciliar', 'co_fat_visita_domiciliar']);
+            $visitKey = $this->firstExistingColumnFresh($table, ['co_seq_fat_visita_domiciliar', 'co_fat_visita_domiciliar']);
             if ($visitKey) {
                 $row = $this->db()->selectOne("SELECT {$noteCol} AS notes FROM {$table} WHERE {$visitKey} = ? LIMIT 1", [$visitId]);
                 $normalized = $this->normalizeNoteValue($row->notes ?? null);
@@ -144,7 +185,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 }
             }
 
-            $citizenKey = $this->firstExistingColumn($table, ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
+            $citizenKey = $this->firstExistingColumnFresh($table, ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
             if ($citizenKey && !empty($citizenPec)) {
                 $orderByVisit = $visitKey ? " ORDER BY {$visitKey} DESC" : '';
                 $row = $this->db()->selectOne("SELECT {$noteCol} AS notes FROM {$table} WHERE {$citizenKey} = ?{$orderByVisit} LIMIT 1", [$citizenPec]);
@@ -238,11 +279,17 @@ class VisitaAcsController extends MonitorApsBaseController
             $result['lat']            = isset($row->lat) && $row->lat !== null ? (float) $row->lat : null;
             $result['lng']            = isset($row->lng) && $row->lng !== null ? (float) $row->lng : null;
             $result['accompaniments'] = $this->formatAccompaniments($row);
+            $result['logradouro']     = $row->logradouro     ?? null;
+            $result['num_endereco']   = $row->num_endereco   ?? null;
+            $result['complemento']    = $row->complemento    ?? null;
+            $result['bairro']         = $row->bairro         ?? null;
+            $result['cep']            = $row->cep            ?? null;
             $result['address']        = [
                 'logradouro'  => $row->logradouro  ?? null,
                 'numero'      => $row->num_endereco ?? null,
                 'complemento' => $row->complemento ?? null,
                 'bairro'      => $row->bairro       ?? null,
+                'cep'         => $row->cep          ?? null,
             ];
         }
 
@@ -514,18 +561,41 @@ class VisitaAcsController extends MonitorApsBaseController
     public function show(int $id): JsonResponse
     {
         $hasHora = $this->hasColumn('tb_dim_tempo', 'nu_hora');
-        $notesCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']);
+        $notesCol = $this->firstExistingColumnFresh('tb_fat_visita_domiciliar', [
+            'ds_anotacao',
+            'ds_observacao',
+            'ds_relato',
+            'ds_anotacao_visita',
+            'ds_observacao_visita',
+            'ds_relato_visita',
+            'tx_anotacao',
+            'tx_observacao',
+            'tx_relato',
+        ]);
 
         $notesExpr = $notesCol ? "v.{$notesCol}" : 'NULL::text';
         // Nome: tb_fat_cidadao_pec é join 1:1 com a visita via co_seq_fat_cidadao_pec
         $citizenNameExpr = "(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)";
         // Endereço: tb_fat_cad_dom_familia liga cidadão ao domicílio; tb_fat_cad_domiciliar tem os campos de endereço
-        $addrBase = "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar WHERE f.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1";
-        $logradouroExpr  = "(SELECT d.no_logradouro {$addrBase})";
-        $numeroExpr      = "(SELECT d.nu_num_logradouro {$addrBase})";
-        $complementoExpr = "(SELECT d.no_complemento {$addrBase})";
-        $bairroExpr      = "(SELECT d.no_bairro {$addrBase})";
-        $cepExpr         = "(SELECT d.nu_cep {$addrBase})";
+        $domPkCol = $this->firstExistingColumnFresh('tb_fat_cad_domiciliar', ['co_seq_fat_cad_domiciliar']);
+        $familyDomFkCol = $this->firstExistingColumnFresh('tb_fat_cad_dom_familia', ['co_fat_cad_domiciliar']);
+        $familyCitizenCol = $this->firstExistingColumnFresh('tb_fat_cad_dom_familia', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
+        $logradouroCol = $this->firstExistingColumnFresh('tb_fat_cad_domiciliar', ['ds_logradouro', 'no_logradouro', 'logradouro']);
+        $numeroCol = $this->firstExistingColumnFresh('tb_fat_cad_domiciliar', ['nu_num_logradouro', 'nu_numero', 'nu_endereco']);
+        $complementoCol = $this->firstExistingColumnFresh('tb_fat_cad_domiciliar', ['ds_complemento', 'no_complemento', 'complemento']);
+        $bairroCol = $this->firstExistingColumnFresh('tb_fat_cad_domiciliar', ['no_bairro', 'ds_bairro', 'bairro']);
+        $cepCol = $this->firstExistingColumnFresh('tb_fat_cad_domiciliar', ['nu_cep', 'cep']);
+
+        if ($domPkCol && $familyDomFkCol && $familyCitizenCol) {
+            $addrBase = "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.{$domPkCol} = f.{$familyDomFkCol} WHERE f.{$familyCitizenCol} = v.co_fat_cidadao_pec LIMIT 1";
+            $logradouroExpr  = "(SELECT " . $this->textColumnExpr('d', $logradouroCol) . " {$addrBase})";
+            $numeroExpr      = "(SELECT " . $this->textColumnExpr('d', $numeroCol) . " {$addrBase})";
+            $complementoExpr = "(SELECT " . $this->textColumnExpr('d', $complementoCol) . " {$addrBase})";
+            $bairroExpr      = "(SELECT " . $this->textColumnExpr('d', $bairroCol) . " {$addrBase})";
+            $cepExpr         = "(SELECT " . $this->textColumnExpr('d', $cepCol) . " {$addrBase})";
+        } else {
+            $logradouroExpr = $numeroExpr = $complementoExpr = $bairroExpr = $cepExpr = 'NULL::text';
+        }
 
         $sqlFull = "
             SELECT
@@ -643,14 +713,14 @@ class VisitaAcsController extends MonitorApsBaseController
             || empty($row->bairro);
 
         if ($needsFallbackDetail && $this->hasTable('tb_fat_consolidado_cidadao_fvd')) {
-            $consNotesCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_anotacao', 'ds_observacao', 'ds_relato']);
-            $consCitizenCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['no_cidadao']);
-            $consLogradouroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_logradouro', 'no_logradouro']);
-            $consNumeroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['nu_numero', 'nu_endereco']);
-            $consComplementoCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_complemento', 'no_complemento']);
-            $consBairroCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['ds_bairro', 'no_bairro']);
-            $consVisitKeyCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['co_seq_fat_visita_domiciliar']);
-            $consCitizenKeyCol = $this->firstExistingColumn('tb_fat_consolidado_cidadao_fvd', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
+            $consNotesCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['ds_anotacao', 'ds_observacao', 'ds_relato', 'tx_anotacao', 'tx_observacao', 'tx_relato']);
+            $consCitizenCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['no_cidadao']);
+            $consLogradouroCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['ds_logradouro', 'no_logradouro']);
+            $consNumeroCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['nu_numero', 'nu_endereco']);
+            $consComplementoCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['ds_complemento', 'no_complemento']);
+            $consBairroCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['ds_bairro', 'no_bairro']);
+            $consVisitKeyCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['co_seq_fat_visita_domiciliar']);
+            $consCitizenKeyCol = $this->firstExistingColumnFresh('tb_fat_consolidado_cidadao_fvd', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
 
             if ($consNotesCol || $consCitizenCol || $consLogradouroCol || $consNumeroCol || $consComplementoCol || $consBairroCol) {
                 $consSelect = "
