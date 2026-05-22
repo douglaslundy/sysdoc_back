@@ -14,7 +14,7 @@ class VisitaAcsController extends MonitorApsBaseController
         '322255' => 'TACS',
     ];
 
-    // 1=Visita realizada, 2=Visita recusada, 3=Ausente, 4=Não informado
+    // 1=Visita realizada, 2=Visita recusada, 3=Ausente, 4=NÃ£o informado
     private const OUTCOME_COLORS = [
         1 => 'success',
         2 => 'error',
@@ -24,7 +24,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
     /**
      * WHERE clause + bindings compartilhados por todos os endpoints de visitas.
-     * $agentName aplica filtro textual exato (usado só em index).
+     * $agentName aplica filtro textual exato (usado sÃ³ em index).
      */
     private function buildWhere(int $ano, int $mes, ?string $ine, ?string $agentName = null): array
     {
@@ -57,17 +57,28 @@ class VisitaAcsController extends MonitorApsBaseController
         ";
     }
 
+    private function firstExistingColumn(string $table, array $candidates): ?string
+    {
+        foreach ($candidates as $column) {
+            if ($this->hasColumn($table, $column)) {
+                return $column;
+            }
+        }
+
+        return null;
+    }
+
     private function formatMotives(object $row): array
     {
         $labels = [
-            'st_mot_vis_cad_att'            => 'Cadastramento/atualização',
-            'st_mot_vis_visita_periodica'    => 'Visita periódica',
+            'st_mot_vis_cad_att'            => 'Cadastramento/atualizaÃ§Ã£o',
+            'st_mot_vis_visita_periodica'    => 'Visita periÃ³dica',
             'st_mot_vis_busca_ativa'         => 'Busca ativa',
             'st_mot_vis_acompanhamento'      => 'Acompanhamento',
-            'st_mot_vis_egresso_internacao'  => 'Egresso de internação',
+            'st_mot_vis_egresso_internacao'  => 'Egresso de internaÃ§Ã£o',
             'st_mot_vis_ctrl_ambnte_vetor'   => 'Controle ambiental/vetorial',
             'st_mot_vis_convte_atvidd_cltva' => 'Convite para atividade coletiva',
-            'st_mot_vis_orintacao_prevncao'  => 'Orientação/prevenção',
+            'st_mot_vis_orintacao_prevncao'  => 'OrientaÃ§Ã£o/prevenÃ§Ã£o',
             'st_mot_vis_outros'              => 'Outros',
         ];
 
@@ -85,19 +96,19 @@ class VisitaAcsController extends MonitorApsBaseController
     {
         $fields = [
             'st_acomp_gestante'              => 'Gestante',
-            'st_acomp_puerpera'              => 'Puérpera',
-            'st_acomp_recem_nascido'         => 'Recém-nascido',
-            'st_acomp_crianca'               => 'Criança',
-            'st_acomp_pessoa_hipertensao'    => 'Hipertensão',
+            'st_acomp_puerpera'              => 'PuÃ©rpera',
+            'st_acomp_recem_nascido'         => 'RecÃ©m-nascido',
+            'st_acomp_crianca'               => 'CrianÃ§a',
+            'st_acomp_pessoa_hipertensao'    => 'HipertensÃ£o',
             'st_acomp_pessoa_diabetes'       => 'Diabetes',
-            'st_acomp_pessoa_cancer'         => 'Câncer',
+            'st_acomp_pessoa_cancer'         => 'CÃ¢ncer',
             'st_acomp_pessoa_idosa'          => 'Pessoa idosa',
-            'st_acomp_saude_mental'          => 'Saúde mental',
+            'st_acomp_saude_mental'          => 'SaÃºde mental',
             'st_acomp_tabagista'             => 'Tabagismo',
             'st_acomp_domiciliados_acamados' => 'Domiciliado/acamado',
             'st_acomp_pessoa_tuberculose'    => 'Tuberculose',
-            'st_acomp_pessoa_hanseniase'     => 'Hanseníase',
-            'st_acomp_condi_bolsa_familia'   => 'Bolsa Família',
+            'st_acomp_pessoa_hanseniase'     => 'HansenÃ­ase',
+            'st_acomp_condi_bolsa_familia'   => 'Bolsa FamÃ­lia',
         ];
 
         $active = [];
@@ -148,7 +159,7 @@ class VisitaAcsController extends MonitorApsBaseController
         return $result;
     }
 
-    // ─── Endpoints ───────────────────────────────────────────────────────────
+    // â”€â”€â”€ Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * GET /visitas?ano=X&mes=Y[&ine=Z&agente=W&page=N&per_page=N]
@@ -217,7 +228,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
     /**
      * GET /visitas/resumo?ano=X&mes=Y[&ine=Z]
-     * Cards de totais + gráfico de barras (VisitasAcs.js).
+     * Cards de totais + grÃ¡fico de barras (VisitasAcs.js).
      */
     public function resumo(Request $request): JsonResponse
     {
@@ -257,8 +268,8 @@ class VisitaAcsController extends MonitorApsBaseController
 
     /**
      * GET /visitas/lista?ano=X&mes=Y[&ine=Z&agente=W&desfecho=N&page=N&per_page=N]
-     * Lista paginada — aba Tabela do VisitasAcs.js.
-     * Inclui instrumento e has_geo para exibir na tabela e habilitar o botão Ver.
+     * Lista paginada â€” aba Tabela do VisitasAcs.js.
+     * Inclui instrumento e has_geo para exibir na tabela e habilitar o botÃ£o Ver.
      */
     public function lista(Request $request): JsonResponse
     {
@@ -406,11 +417,25 @@ class VisitaAcsController extends MonitorApsBaseController
 
     /**
      * GET /visitas/{id}
-     * Detalhe completo — abre ao clicar em "Ver" ou em um pin no mapa.
+     * Detalhe completo â€” abre ao clicar em "Ver" ou em um pin no mapa.
      */
     public function show(int $id): JsonResponse
     {
-        // Query completa: LATERAL direto no FROM + nu_hora + dados do cidadão
+        $hasHora = $this->hasColumn('tb_dim_tempo', 'nu_hora');
+        $notesCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']);
+        $citizenNameCol = $this->firstExistingColumn('tb_fat_cad_individual', ['no_cidadao']);
+        $logradouroCol = $this->firstExistingColumn('tb_fat_cad_individual', ['ds_logradouro', 'no_logradouro']);
+        $numeroCol = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_numero', 'nu_endereco']);
+        $complCol = $this->firstExistingColumn('tb_fat_cad_individual', ['ds_complemento', 'no_complemento']);
+        $bairroCol = $this->firstExistingColumn('tb_fat_cad_individual', ['ds_bairro', 'no_bairro']);
+
+        $notesExpr = $notesCol ? "v.{$notesCol}" : 'NULL::text';
+        $citizenNameExpr = $citizenNameCol ? "(SELECT fci.{$citizenNameCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
+        $logradouroExpr = $logradouroCol ? "(SELECT fci.{$logradouroCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
+        $numeroExpr = $numeroCol ? "(SELECT fci.{$numeroCol}::text FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
+        $complementoExpr = $complCol ? "(SELECT fci.{$complCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
+        $bairroExpr = $bairroCol ? "(SELECT fci.{$bairroCol} FROM tb_fat_cad_individual fci WHERE fci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)" : 'NULL::text';
+
         $sqlFull = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
@@ -425,11 +450,12 @@ class VisitaAcsController extends MonitorApsBaseController
                 d.ds_desfecho_visita             AS outcome_label,
                 v.nu_latitude                    AS lat,
                 v.nu_longitude                   AS lng,
-                ci.no_cidadao                    AS citizen_name,
-                ci.ds_logradouro                 AS logradouro,
-                ci.nu_numero                     AS num_endereco,
-                ci.ds_complemento                AS complemento,
-                ci.ds_bairro                     AS bairro,
+                {$notesExpr}                     AS notes,
+                {$citizenNameExpr}               AS citizen_name,
+                {$logradouroExpr}                AS logradouro,
+                {$numeroExpr}                    AS num_endereco,
+                {$complementoExpr}               AS complemento,
+                {$bairroExpr}                    AS bairro,
                 v.st_mot_vis_cad_att,
                 v.st_mot_vis_visita_periodica,
                 v.st_mot_vis_busca_ativa,
@@ -457,16 +483,9 @@ class VisitaAcsController extends MonitorApsBaseController
                      THEN true ELSE false END    AS has_geo
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
-            LEFT JOIN LATERAL (
-                SELECT no_cidadao, ds_logradouro, nu_numero, ds_complemento, ds_bairro
-                FROM  tb_fat_cad_individual
-                WHERE co_fat_cidadao_pec = v.co_fat_cidadao_pec
-                LIMIT 1
-            ) ci ON true
             WHERE v.co_seq_fat_visita_domiciliar = ?
         ";
 
-        // Fallback seguro: sem LATERAL e sem nu_hora — tabelas base garantidas
         $sqlBase = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
@@ -480,6 +499,12 @@ class VisitaAcsController extends MonitorApsBaseController
                 d.ds_desfecho_visita             AS outcome_label,
                 v.nu_latitude                    AS lat,
                 v.nu_longitude                   AS lng,
+                {$notesExpr}                     AS notes,
+                {$citizenNameExpr}               AS citizen_name,
+                {$logradouroExpr}                AS logradouro,
+                {$numeroExpr}                    AS num_endereco,
+                {$complementoExpr}               AS complemento,
+                {$bairroExpr}                    AS bairro,
                 v.st_mot_vis_cad_att,
                 v.st_mot_vis_visita_periodica,
                 v.st_mot_vis_busca_ativa,
@@ -510,7 +535,7 @@ class VisitaAcsController extends MonitorApsBaseController
             WHERE v.co_seq_fat_visita_domiciliar = ?
         ";
 
-        $sql = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
+        $sql = $hasHora ? $sqlFull : $sqlBase;
         $row = $this->db()->selectOne($sql, [$id]);
 
         if (! $row) {
@@ -519,11 +544,10 @@ class VisitaAcsController extends MonitorApsBaseController
 
         return response()->json($this->formatVisita($row, detail: true));
     }
-
-    /**
+/**
      * GET /visitas/mapa?ano=X&mes=Y[&ine=Z&agente=W]
-     * Pins georreferenciados — aba Mapa do VisitasAcs.js.
-     * Inclui equipe_ine para coloração por equipe no modo "Todos".
+     * Pins georreferenciados â€” aba Mapa do VisitasAcs.js.
+     * Inclui equipe_ine para coloraÃ§Ã£o por equipe no modo "Todos".
      */
     public function mapa(Request $request): JsonResponse
     {
@@ -562,7 +586,7 @@ class VisitaAcsController extends MonitorApsBaseController
                     WHERE nu_cns = ? AND st_ficha_inativa = 0)";
                 $params[] = $digits;
             } else {
-                // Nome parcial (mínimo 3 chars validado no frontend)
+                // Nome parcial (mÃ­nimo 3 chars validado no frontend)
                 $where   .= " AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
                     WHERE no_cidadao ILIKE ? AND st_ficha_inativa = 0)";
@@ -570,7 +594,7 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
 
-        // Query completa: LATERAL direto no FROM + nu_hora + nome do cidadão
+        // Query completa: LATERAL direto no FROM + nu_hora + nome do cidadÃ£o
         $sqlFull = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
@@ -600,7 +624,7 @@ class VisitaAcsController extends MonitorApsBaseController
             LIMIT 2000
         ";
 
-        // Fallback seguro: sem LATERAL e sem nu_hora — tabelas base garantidas
+        // Fallback seguro: sem LATERAL e sem nu_hora â€” tabelas base garantidas
         $sqlBase = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
@@ -660,7 +684,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
     /**
      * GET /visitas/agentes?ano=X&mes=Y[&ine=Z]
-     * Estatísticas agregadas por agente — aba Por Agente.
+     * EstatÃ­sticas agregadas por agente â€” aba Por Agente.
      */
     public function agentes(Request $request): JsonResponse
     {
@@ -710,3 +734,4 @@ class VisitaAcsController extends MonitorApsBaseController
         return response()->json(['agentes' => $agentes]);
     }
 }
+
