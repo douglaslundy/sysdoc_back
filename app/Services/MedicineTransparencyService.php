@@ -52,12 +52,20 @@ class MedicineTransparencyService
 
     public function getPublicPanelList(?string $date = null): array
     {
-        $referenceDate = $date ? Carbon::parse($date)->toDateString() : now()->toDateString();
+        $referenceDate = $date ? Carbon::parse($date)->toDateString() : null;
 
-        $statuses = MedicineDailyStatus::with('medicineItem')
-            ->whereDate('reference_date', $referenceDate)
-            ->whereHas('medicineItem', fn ($q) => $q->where('active', true))
+        $statusesQuery = MedicineDailyStatus::with('medicineItem')
+            ->whereHas('medicineItem', fn ($q) => $q->where('active', true));
+
+        if ($referenceDate) {
+            $statusesQuery->whereDate('reference_date', $referenceDate);
+        }
+
+        $statuses = $statusesQuery
+            ->orderByDesc('reference_date')
+            ->orderByDesc('id')
             ->get()
+            ->unique('medicine_item_id')
             ->keyBy('medicine_item_id');
 
         $medicines = MedicineItem::query()
@@ -67,7 +75,7 @@ class MedicineTransparencyService
             ->get();
 
         $result = [
-            'reference_date' => $referenceDate,
+            'reference_date' => $referenceDate ?? $this->formatReferenceDate($statuses->max('reference_date')),
             'last_update_at' => $this->formatLastUpdate($statuses->max('updated_at')),
             'items' => $medicines->map(function (MedicineItem $medicine) use ($statuses) {
                 $status = $statuses->get($medicine->id);
@@ -96,6 +104,19 @@ class MedicineTransparencyService
         ]);
 
         return $result;
+    }
+
+    private function formatReferenceDate(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        return Carbon::parse($value)->toDateString();
     }
 
     public function getPublicMonthlyAcquisitions(?string $month = null): array
