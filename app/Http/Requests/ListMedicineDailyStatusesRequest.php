@@ -21,6 +21,8 @@ class ListMedicineDailyStatusesRequest extends BaseApiFormRequest
             'reference_date' => ['nullable', 'date'],
             'availability_status' => ['nullable', Rule::in(['available', 'unavailable'])],
             'medicine_item_id' => ['nullable', 'integer', 'exists:medicine_items,id'],
+            'search' => ['nullable', 'string', 'max:120'],
+            'include_all' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ];
     }

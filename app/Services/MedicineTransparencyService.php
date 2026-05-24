@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\MedicineDailyStatus;
+use App\Models\MedicineItem;
 use App\Models\MedicineMonthlyAcquisition;
 use Carbon\Carbon;
 
@@ -42,6 +43,54 @@ class MedicineTransparencyService
         ];
 
         AuditService::record('VIEW_PUBLIC_MEDICINES_DAILY', null, null, [
+            'reference_date' => $referenceDate,
+            'items_count' => count($result['items']),
+        ]);
+
+        return $result;
+    }
+
+    public function getPublicPanelList(?string $date = null): array
+    {
+        $referenceDate = $date ? Carbon::parse($date)->toDateString() : now()->toDateString();
+
+        $statuses = MedicineDailyStatus::with('medicineItem')
+            ->whereDate('reference_date', $referenceDate)
+            ->whereHas('medicineItem', fn ($q) => $q->where('active', true))
+            ->get()
+            ->keyBy('medicine_item_id');
+
+        $medicines = MedicineItem::query()
+            ->where('active', true)
+            ->orderBy('active_ingredient')
+            ->orderBy('concentration')
+            ->get();
+
+        $result = [
+            'reference_date' => $referenceDate,
+            'last_update_at' => $this->formatLastUpdate($statuses->max('updated_at')),
+            'items' => $medicines->map(function (MedicineItem $medicine) use ($statuses) {
+                $status = $statuses->get($medicine->id);
+
+                return [
+                    'medicine_id' => $medicine->id,
+                    'internal_code' => $medicine->internal_code,
+                    'brand_name' => $medicine->brand_name,
+                    'active_ingredient' => $medicine->active_ingredient,
+                    'concentration' => $medicine->concentration,
+                    'pharmaceutical_form' => $medicine->pharmaceutical_form,
+                    'presentation' => $medicine->presentation,
+                    'unit_measure' => $medicine->unit_measure,
+                    'is_free_distribution' => (bool) $medicine->is_free_distribution,
+                    'availability_status' => $status?->availability_status ?? 'unavailable',
+                    'available_quantity' => $status?->available_quantity,
+                    'restock_forecast_date' => $status?->restock_forecast_date?->toDateString(),
+                    'public_note' => $status?->public_note,
+                ];
+            })->values(),
+        ];
+
+        AuditService::record('VIEW_PUBLIC_MEDICINES_PANEL', null, null, [
             'reference_date' => $referenceDate,
             'items_count' => count($result['items']),
         ]);

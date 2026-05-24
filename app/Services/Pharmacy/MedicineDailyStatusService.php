@@ -3,7 +3,9 @@
 namespace App\Services\Pharmacy;
 
 use App\Models\MedicineDailyStatus;
+use App\Models\MedicineItem;
 use App\Services\AuditService;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -11,6 +13,10 @@ class MedicineDailyStatusService
 {
     public function paginate(array $filters, int $perPage = 20): LengthAwarePaginator
     {
+        if (filter_var($filters['include_all'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            return $this->paginateAllMedicines($filters, $perPage);
+        }
+
         $query = MedicineDailyStatus::with('medicineItem')
             ->orderByDesc('reference_date')
             ->orderByDesc('id');
@@ -27,10 +33,76 @@ class MedicineDailyStatusService
             $query->where('medicine_item_id', (int) $filters['medicine_item_id']);
         }
 
+        if (! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('medicineItem', function ($q) use ($search) {
+                $q->where('active_ingredient', 'LIKE', "%{$search}%")
+                    ->orWhere('brand_name', 'LIKE', "%{$search}%")
+                    ->orWhere('internal_code', 'LIKE', "%{$search}%")
+                    ->orWhere('concentration', 'LIKE', "%{$search}%");
+            });
+        }
+
         $result = $query->paginate($perPage);
 
         AuditService::record('VIEW', null, null, [
             'event' => 'LIST_DAILY_STATUSES',
+            'filters' => $filters,
+            'per_page' => $perPage,
+            'total' => $result->total(),
+        ]);
+
+        return $result;
+    }
+
+    private function paginateAllMedicines(array $filters, int $perPage): LengthAwarePaginator
+    {
+        $referenceDate = $filters['reference_date'] ?? Carbon::today()->toDateString();
+        $query = MedicineItem::with(['dailyStatuses' => function ($q) use ($referenceDate) {
+                $q->whereDate('reference_date', $referenceDate);
+            }])
+            ->where('active', true)
+            ->orderBy('active_ingredient');
+
+        if (! empty($filters['medicine_item_id'])) {
+            $query->where('id', (int) $filters['medicine_item_id']);
+        }
+
+        if (! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('active_ingredient', 'LIKE', "%{$search}%")
+                    ->orWhere('brand_name', 'LIKE', "%{$search}%")
+                    ->orWhere('internal_code', 'LIKE', "%{$search}%")
+                    ->orWhere('concentration', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $result = $query->paginate($perPage);
+        $result->getCollection()->transform(function (MedicineItem $medicine) use ($referenceDate) {
+            $status = $medicine->dailyStatuses->first();
+            if ($status) {
+                $status->setRelation('medicineItem', $medicine);
+
+                return $status;
+            }
+
+            $syntheticStatus = new MedicineDailyStatus([
+                'medicine_item_id' => $medicine->id,
+                'reference_date' => $referenceDate,
+                'availability_status' => null,
+                'available_quantity' => null,
+                'restock_forecast_date' => null,
+                'public_note' => null,
+            ]);
+            $syntheticStatus->exists = false;
+            $syntheticStatus->setRelation('medicineItem', $medicine);
+
+            return $syntheticStatus;
+        });
+
+        AuditService::record('VIEW', null, null, [
+            'event' => 'LIST_DAILY_STATUSES_ALL_MEDICINES',
             'filters' => $filters,
             'per_page' => $perPage,
             'total' => $result->total(),

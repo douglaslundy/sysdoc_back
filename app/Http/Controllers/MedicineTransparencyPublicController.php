@@ -23,7 +23,7 @@ class MedicineTransparencyPublicController extends Controller
     public function panel(PublicMedicineDailyRequest $request): JsonResponse
     {
         return response()->json(
-            $this->service->getPublicDailyList($request->validated('date'))
+            $this->service->getPublicPanelList($request->validated('date'))
         );
     }
 
