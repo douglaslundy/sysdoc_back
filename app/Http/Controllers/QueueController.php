@@ -2,51 +2,54 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ListQueuesRequest;
+use App\Http\Requests\StoreQueueRequest;
+use App\Http\Requests\UpdateQueueRequest;
+use App\Http\Resources\QueueListResource;
 use App\Models\PublicQueueLog;
 use App\Models\QRCodeLog;
 use App\Models\Queue;
 use App\Services\AuditService;
+use App\Services\Authorization\PagePermissionService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class QueueController extends Controller
 {
-    public function index()
+    public function index(ListQueuesRequest $request)
     {
-        // Buscar todos os registros com as relações necessárias (independente de 'done')
-        $queues = Queue::with(['client', 'user', 'speciality'])->withCount('attachments')
+        $validated = $request->validated();
+        $perPage = (int) ($validated['per_page'] ?? 10);
+
+        $queues = $this->listQuery($validated)
             ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc') // Garante ordenação consistente em caso de created_at iguais
-            ->get();
+            ->orderBy('id', 'asc')
+            ->paginate($perPage);
 
-        // Adicionar a posição correta
-        foreach ($queues as $queue) {
-            if ($queue->done == 1) {
-                $queue->position = 0; // Se o registro estiver finalizado, posição é 0
-            } else {
-                $queue->position = Queue::where('id_specialities', $queue->id_specialities)
-                    ->where('urgency', $queue->urgency)
-                    ->where('done', 0)
-                    ->where(function ($query) use ($queue) {
-                        $query->where('created_at', '<', $queue->created_at)
-                            ->orWhere(function ($query) use ($queue) {
-                                $query->where('created_at', '=', $queue->created_at)
-                                    ->where('id', '<', $queue->id); // Garante ordenação estável
-                            });
-                    })
-                    ->count() + 1;
-            }
-        }
+        AuditService::record('VIEW', null, null, [
+            'event' => 'LIST_QUEUES',
+            'has_search' => ! empty($validated['search']),
+            'done' => $validated['done'] ?? null,
+            'urgency' => $validated['urgency'] ?? null,
+            'speciality_id' => $validated['speciality_id'] ?? null,
+            'per_page' => $perPage,
+            'total' => $queues->total(),
+        ]);
 
-        return response()->json($queues, 200);
+        return QueueListResource::collection($queues);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        if (! $this->canAccessQueue($request)) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         $queue = Queue::with(['client', 'user', 'speciality'])->withCount('attachments')->find($id);
 
         if (! $queue) {
-            return response()->json(['error' => 'Registro não encontrado'], 404);
+            return response()->json(['error' => 'Registro nao encontrado'], 404);
         }
 
         AuditService::record('VIEW', $queue, null, [
@@ -56,50 +59,23 @@ class QueueController extends Controller
             'status' => $queue->done ? 'realizado' : 'aguardando',
         ]);
 
-        if ($queue->done == 1) {
-            $queue->position = 0;
-        } else {
-            $queue->position = Queue::where('id_specialities', $queue->id_specialities)
-                ->where('urgency', $queue->urgency)
-                ->where('done', 0)
-                ->where(function ($query) use ($queue) {
-                    $query->where('created_at', '<', $queue->created_at)
-                        ->orWhere(function ($query) use ($queue) {
-                            $query->where('created_at', '=', $queue->created_at)
-                                ->where('id', '<', $queue->id);
-                        });
-                })
-                ->count() + 1;
-        }
+        $queue->position = $this->calculateQueuePosition($queue);
 
         return response()->json($queue);
     }
 
     public function showPublicQueue()
     {
-        // Buscar somente registros com done = 0
         $queues = Queue::with(['client', 'user', 'speciality'])
             ->where('done', 0)
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc')
             ->get();
 
-        // Calcular posição de cada item
         foreach ($queues as $queue) {
-            $queue->position = Queue::where('id_specialities', $queue->id_specialities)
-                ->where('urgency', $queue->urgency)
-                ->where('done', 0)
-                ->where(function ($query) use ($queue) {
-                    $query->where('created_at', '<', $queue->created_at)
-                        ->orWhere(function ($query) use ($queue) {
-                            $query->where('created_at', '=', $queue->created_at)
-                                ->where('id', '<', $queue->id);
-                        });
-                })
-                ->count() + 1;
+            $queue->position = $this->calculateQueuePosition($queue);
         }
 
-        // Agrupar por especialidade
         $agrupadas = $queues->groupBy(fn ($q) => $q->speciality->name ?? 'Sem Especialidade')
             ->map(function ($fila) {
                 return [
@@ -108,7 +84,6 @@ class QueueController extends Controller
                 ];
             })->sortKeys();
 
-        // Registrar acesso na tabela de logs
         PublicQueueLog::create([
             'ip_address' => request()->ip(),
             'user_agent' => substr(request()->header('User-Agent'), 0, 255),
@@ -123,77 +98,52 @@ class QueueController extends Controller
         ]);
     }
 
-    /**
-     * Criar um novo registro na tabela queue.
-     */
-    public function store(Request $request)
+    public function store(StoreQueueRequest $request)
     {
-        $validatedData = $request->validate([
-            'id_client' => 'required|exists:clients,id',
-            'id_specialities' => 'required|exists:specialities,id',
-            'id_user' => 'required|exists:users,id',
-            'done' => 'boolean',
-            'date_of_realized' => 'nullable|date',
-            'urgency' => 'required|boolean',
-            'obs' => 'nullable|string|max:200',
-        ]);
-
-        $queue = Queue::create($validatedData);
+        $queue = Queue::create($request->validated());
         AuditService::record('CREATE', $queue, null, $queue->toArray());
 
-        // Carrega as relações client e speciality
         $queue->load('client', 'speciality', 'user')->loadCount('attachments');
+        $queue->position = $this->calculateQueuePosition($queue);
 
-        // Retorna a fila com as relações carregadas
-        return response()->json($queue, 201);
+        return (new QueueListResource($queue))->response()->setStatusCode(201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateQueueRequest $request, $id)
     {
         $queue = Queue::find($id);
 
         if (! $queue) {
-            return response()->json(['message' => 'Registro não encontrado'], 404);
+            return response()->json(['message' => 'Registro nao encontrado'], 404);
         }
 
-        $validatedData = $request->validate([
-            'id_client' => 'sometimes|required|exists:clients,id',
-            'id_specialities' => 'sometimes|required|exists:specialities,id',
-            'id_user' => 'sometimes|required|exists:users,id',
-            'done' => 'boolean',
-            'date_of_realized' => 'nullable|date',
-            'urgency' => 'sometimes|required|boolean',
-            'obs' => 'nullable|string|max:200',
-        ]);
-
         $old = $queue->toArray();
-        $queue->update($validatedData);
+        $queue->update($request->validated());
         AuditService::record('UPDATE', $queue, $old, $queue->toArray());
 
-        // Se o campo done for verdadeiro (true ou 1)
         if ($queue->done == true) {
-            // Atualiza o campo updated_at de todos os registros com o mesmo id_specialities e done = 0
             Queue::where('id_specialities', $queue->id_specialities)
                 ->where('urgency', $queue->urgency)
                 ->where('done', 0)
                 ->update(['updated_at' => now()]);
         }
 
-        // Carrega as relações client e speciality
         $queue->load('client', 'speciality', 'user')->loadCount('attachments');
+        $queue->position = $this->calculateQueuePosition($queue);
 
-        return response()->json($queue, 200);
+        return new QueueListResource($queue);
     }
 
-    /**
-     * Deletar um registro específico na tabela queue.
-     */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        if (! $this->canAccessQueue($request)) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         $queue = Queue::find($id);
 
         if (! $queue) {
-            return response()->json(['message' => 'Registro não encontrado'], 404);
+            return response()->json(['message' => 'Registro nao encontrado'], 404);
         }
 
         AuditService::record('DELETE', $queue, $queue->toArray(), null);
@@ -209,32 +159,17 @@ class QueueController extends Controller
             ->first();
 
         if (! $queue) {
-            return response()->json(['message' => 'Registro não encontrado'], 404);
+            return response()->json(['message' => 'Registro nao encontrado'], 404);
         }
 
-        // Calcula posição (como já estava)
-        $position = Queue::where('id_specialities', $queue->id_specialities)
-            ->where('urgency', $queue->urgency)
-            ->where('done', 0)
-            ->where(function ($query) use ($queue) {
-                $query->where('created_at', '<', $queue->created_at)
-                    ->orWhere(function ($query) use ($queue) {
-                        $query->where('created_at', '=', $queue->created_at)
-                            ->where('id', '<', $queue->id);
-                    });
-            })
-            ->count() + 1;
+        $queue->position = $this->calculateQueuePosition($queue);
 
-        $queue->position = $queue->done ? 0 : $position;
-
-        // Captura IP e User-Agent
         $ip = $request->ip();
         $userAgent = $request->userAgent();
-
-        // Opcional: buscar localização via IP (ex: usando ipapi.co ou ipwho.is)
         $location = null;
+
         try {
-            $locationResponse = Http::get("https://ipwho.is/{$ip}");
+            $locationResponse = Http::timeout(2)->get("https://ipwho.is/{$ip}");
             if ($locationResponse->ok()) {
                 $location = $locationResponse->json();
             }
@@ -242,7 +177,6 @@ class QueueController extends Controller
             $location = null;
         }
 
-        // Salvar log
         QRCodeLog::create([
             'uuid' => $uuid,
             'queue_id' => $queue->id,
@@ -255,7 +189,6 @@ class QueueController extends Controller
             'accessed_at' => now(),
         ]);
 
-        // Passando diretamente os dados para a view
         return view('qrcode', [
             'queue' => $queue,
         ]);
@@ -269,7 +202,6 @@ class QueueController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        // Atualize o log mais recente desse UUID com localização
         QRCodeLog::where('uuid', $data['uuid'])
             ->latest()
             ->first()
@@ -280,6 +212,99 @@ class QueueController extends Controller
                 ]),
             ]);
 
-        return response()->json(['message' => 'Localização salva com sucesso']);
+        return response()->json(['message' => 'Localizacao salva com sucesso']);
+    }
+
+    private function listQuery(array $filters): Builder
+    {
+        $query = Queue::query()
+            ->select('queue.*')
+            ->with([
+                'client:id,name,mother,cpf,cns,phone',
+                'user:id,name',
+                'speciality:id,name',
+            ])
+            ->withCount('attachments')
+            ->selectSub(function ($query) {
+                $query->from('queue as ahead')
+                    ->selectRaw('COUNT(*) + 1')
+                    ->whereColumn('ahead.id_specialities', 'queue.id_specialities')
+                    ->whereColumn('ahead.urgency', 'queue.urgency')
+                    ->where('ahead.done', 0)
+                    ->where(function ($query) {
+                        $query->whereColumn('ahead.created_at', '<', 'queue.created_at')
+                            ->orWhere(function ($query) {
+                                $query->whereColumn('ahead.created_at', 'queue.created_at')
+                                    ->whereColumn('ahead.id', '<', 'queue.id');
+                            });
+                    });
+            }, 'position');
+
+        if (array_key_exists('done', $filters) && (int) $filters['done'] !== 2) {
+            $query->where('done', (int) $filters['done']);
+        }
+
+        if (array_key_exists('urgency', $filters) && (int) $filters['urgency'] !== 2) {
+            $query->where('urgency', (int) $filters['urgency']);
+        }
+
+        if (! empty($filters['speciality_id'])) {
+            $query->where('id_specialities', (int) $filters['speciality_id']);
+        }
+
+        $search = trim((string) ($filters['search'] ?? ''));
+        if ($search !== '') {
+            $like = '%'.$this->escapeLike($search).'%';
+            $digits = preg_replace('/\D+/', '', $search);
+
+            $query->where(function ($query) use ($like, $digits) {
+                $query->whereHas('client', function ($query) use ($like, $digits) {
+                    $query->where('name', 'like', $like)
+                        ->orWhere('mother', 'like', $like);
+
+                    if (strlen((string) $digits) >= 3) {
+                        $query->orWhere('cpf', 'like', '%'.$digits.'%')
+                            ->orWhere('cns', 'like', '%'.$digits.'%')
+                            ->orWhere('phone', 'like', '%'.$digits.'%');
+                    }
+                })->orWhereHas('speciality', function ($query) use ($like) {
+                    $query->where('name', 'like', $like);
+                });
+            });
+        }
+
+        return $query;
+    }
+
+    private function calculateQueuePosition(Queue $queue): int
+    {
+        if ((int) $queue->done === 1) {
+            return 0;
+        }
+
+        return Queue::where('id_specialities', $queue->id_specialities)
+            ->where('urgency', $queue->urgency)
+            ->where('done', 0)
+            ->where(function ($query) use ($queue) {
+                $query->where('created_at', '<', $queue->created_at)
+                    ->orWhere(function ($query) use ($queue) {
+                        $query->where('created_at', '=', $queue->created_at)
+                            ->where('id', '<', $queue->id);
+                    });
+            })
+            ->count() + 1;
+    }
+
+    private function canAccessQueue(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user !== null
+            && app(PagePermissionService::class)->canAccess($user, '/queue');
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return addcslashes($value, '\\%_');
     }
 }

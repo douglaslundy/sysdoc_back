@@ -3,9 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ClientRequest;
+use App\Http\Requests\ListClientsRequest;
+use App\Http\Resources\ClientListResource;
 use App\Models\Addresses;
 use App\Models\Client;
 use App\Services\AuditService;
+use App\Services\Authorization\PagePermissionService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,13 +22,63 @@ class ClientController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(ListClientsRequest $request): AnonymousResourceCollection
     {
-        $clients = Client::with(['addresses'])
-            ->where('active', true)
-            ->orderBy('name', 'asc')->get();
+        $validated = $request->validated();
+        $perPage = (int) ($validated['per_page'] ?? 10);
+        $result = $this->listQuery($validated)->paginate($perPage);
 
-        return response()->json($clients);
+        AuditService::record('VIEW', null, null, [
+            'event' => 'LIST_CLIENTS',
+            'has_search' => ! empty($validated['search']),
+            'per_page' => $perPage,
+            'total' => $result->total(),
+        ]);
+
+        return ClientListResource::collection($result);
+    }
+
+    public function select(ListClientsRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $limit = (int) ($validated['limit'] ?? 20);
+
+        $clients = $this->listQuery($validated)
+            ->limit($limit)
+            ->get();
+
+        return response()->json(ClientListResource::collection($clients)->resolve());
+    }
+
+    private function listQuery(array $filters): Builder
+    {
+        $query = Client::query()
+            ->select(['id', 'name', 'mother', 'cpf', 'cns', 'phone', 'born_date'])
+            ->with(['addresses:id_client,street,number,district,city'])
+            ->where('active', true);
+
+        if (! empty($filters['search'])) {
+            $search = $this->escapeLike(trim($filters['search']));
+            $digits = preg_replace('/\D/', '', $search);
+
+            $query->where(function ($q) use ($search, $digits) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('mother', 'LIKE', "%{$search}%");
+
+                if (strlen($digits) >= 3) {
+                    $q->orWhere('cpf', 'LIKE', "%{$digits}%")
+                        ->orWhere('cns', 'LIKE', "%{$digits}%")
+                        ->orWhere('phone', 'LIKE', "%{$digits}%");
+                }
+            });
+        }
+
+        return $query->orderBy('name');
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return addcslashes($value, '\\%_');
     }
 
     /**
@@ -34,16 +90,20 @@ class ClientController extends Controller
     public function store(ClientRequest $request)
     {
         $client = DB::transaction(function () use ($request) {
-            $client = Client::create($request->all());
+            $data = $request->validated();
+            $addressData = $data['addresses'];
+            unset($data['addresses']);
+
+            $client = Client::create($data);
 
             Addresses::create([
                 'id_client' => $client->id,
-                'zip_code' => $request->input('addresses.zip_code'),
-                'city' => $request->input('addresses.city'),
-                'street' => $request->input('addresses.street'),
-                'number' => $request->input('addresses.number'),
-                'district' => $request->input('addresses.district'),
-                'complement' => $request->input('addresses.complement'),
+                'zip_code' => $addressData['zip_code'],
+                'city' => $addressData['city'],
+                'street' => $addressData['street'],
+                'number' => $addressData['number'],
+                'district' => $addressData['district'],
+                'complement' => $addressData['complement'] ?? null,
             ]);
 
             return $client;
@@ -60,6 +120,10 @@ class ClientController extends Controller
      */
     public function show($id)
     {
+        if (! app(PagePermissionService::class)->canAccess(request()->user(), '/clients')) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         $client = Client::with(['addresses'])->find($id);
         if (! $client) {
             return response()->json([
@@ -86,17 +150,21 @@ class ClientController extends Controller
     public function update(ClientRequest $request, Client $client)
     {
         DB::transaction(function () use ($request, $client) {
-            $client->update($request->all());
+            $data = $request->validated();
+            $addressData = $data['addresses'];
+            unset($data['addresses']);
+
+            $client->update($data);
 
             $address = Addresses::firstOrNew(['id_client' => $client->id]);
             $address->fill([
                 'id_client' => $client->id,
-                'zip_code' => $request->input('addresses.zip_code'),
-                'city' => $request->input('addresses.city'),
-                'street' => $request->input('addresses.street'),
-                'number' => $request->input('addresses.number'),
-                'district' => $request->input('addresses.district'),
-                'complement' => $request->input('addresses.complement'),
+                'zip_code' => $addressData['zip_code'],
+                'city' => $addressData['city'],
+                'street' => $addressData['street'],
+                'number' => $addressData['number'],
+                'district' => $addressData['district'],
+                'complement' => $addressData['complement'] ?? null,
             ])->save();
         });
 
@@ -114,16 +182,20 @@ class ClientController extends Controller
      */
     public function destroy($id)
     {
+        if (! app(PagePermissionService::class)->canAccess(request()->user(), '/clients')) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         $client = Client::find($id);
         if (! $client) {
             return response()->json([
                 'error' => 'Client not found',
             ], 404);
         }
-        $client->delete();
+        $client->update(['active' => false]);
 
         return response()->json([
-            'message' => 'Client deleted successfully!',
+            'message' => 'Client inactivated successfully!',
         ]);
     }
 
@@ -158,6 +230,10 @@ class ClientController extends Controller
 
     public function buscarPorCpfCns(Request $request)
     {
+        if (! app(PagePermissionService::class)->canAccessAny($request->user(), ['/clients', '/laboratorio/pedidos'])) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         $termo = preg_replace('/\D/', '', trim($request->query('q', '')));
 
         if (strlen($termo) < 6) {
@@ -178,6 +254,10 @@ class ClientController extends Controller
 
     public function detailedClientReport(Request $request)
     {
+        if (! app(PagePermissionService::class)->canAccess($request->user(), '/client_report')) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         $value = trim($request->query('value', ''));
 
         if ($value === '') {

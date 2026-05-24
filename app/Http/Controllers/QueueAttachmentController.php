@@ -6,7 +6,9 @@ use App\Http\Requests\StoreQueueAttachmentRequest;
 use App\Models\Queue;
 use App\Models\QueueAttachment;
 use App\Services\AuditService;
+use App\Services\Authorization\PagePermissionService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class QueueAttachmentController extends Controller
@@ -15,8 +17,12 @@ class QueueAttachmentController extends Controller
 
     private const ATTACHMENT_DIR = 'queue-attachments';
 
-    public function index(Queue $queue): JsonResponse
+    public function index(Request $request, Queue $queue): JsonResponse
     {
+        if (! $this->canAccessQueue($request)) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         $attachments = $queue->attachments()
             ->with('uploader:id,name')
             ->orderByDesc('id')
@@ -69,8 +75,12 @@ class QueueAttachmentController extends Controller
         ], 201);
     }
 
-    public function download(Queue $queue, QueueAttachment $attachment)
+    public function download(Request $request, Queue $queue, QueueAttachment $attachment)
     {
+        if (! $this->canAccessQueue($request)) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         if (! $this->belongsToQueue($queue, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
@@ -94,8 +104,12 @@ class QueueAttachmentController extends Controller
         );
     }
 
-    public function destroy(Queue $queue, QueueAttachment $attachment): JsonResponse
+    public function destroy(Request $request, Queue $queue, QueueAttachment $attachment): JsonResponse
     {
+        if (! $this->canAccessQueue($request)) {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
         if (! $this->belongsToQueue($queue, $attachment)) {
             return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
         }
@@ -156,5 +170,13 @@ class QueueAttachmentController extends Controller
     private function belongsToQueue(Queue $queue, QueueAttachment $attachment): bool
     {
         return (int) $attachment->queue_id === (int) $queue->id;
+    }
+
+    private function canAccessQueue(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user !== null
+            && app(PagePermissionService::class)->canAccess($user, '/queue');
     }
 }

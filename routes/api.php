@@ -210,9 +210,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('rooms', RoomController::class);
 
     // Clients
-    Route::get('/clients/buscar-cpf-cns', [ClientController::class, 'buscarPorCpfCns']);
-    Route::apiResource('clients', ClientController::class);
-    Route::get('/detailed-client-report', [ClientController::class, 'detailedClientReport']);
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::get('/clients/buscar-cpf-cns', [ClientController::class, 'buscarPorCpfCns']);
+        Route::get('/clients/select', [ClientController::class, 'select']);
+        Route::apiResource('clients', ClientController::class);
+        Route::get('/detailed-client-report', [ClientController::class, 'detailedClientReport']);
+    });
 
     // Calls
     Route::get('/calls/called', [CallController::class, 'called_call']);
@@ -234,11 +237,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('specialities', SpecialityController::class);
 
     // QueueCall
-    Route::apiResource('queues', QueueController::class);
-    Route::get('/queues/{queue}/attachments', [QueueAttachmentController::class, 'index']);
-    Route::post('/queues/{queue}/attachments', [QueueAttachmentController::class, 'store']);
-    Route::get('/queues/{queue}/attachments/{attachment}/download', [QueueAttachmentController::class, 'download']);
-    Route::delete('/queues/{queue}/attachments/{attachment}', [QueueAttachmentController::class, 'destroy']);
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::apiResource('queues', QueueController::class);
+        Route::get('/queues/{queue}/attachments', [QueueAttachmentController::class, 'index']);
+        Route::post('/queues/{queue}/attachments', [QueueAttachmentController::class, 'store']);
+        Route::get('/queues/{queue}/attachments/{attachment}/download', [QueueAttachmentController::class, 'download']);
+        Route::delete('/queues/{queue}/attachments/{attachment}', [QueueAttachmentController::class, 'destroy']);
+    });
 
     // Logs de Erro
     Route::apiResource('errorlogs', ErrorLogController::class);

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Rules\PhoneValidation;
 use App\Rules\ValidCpf;
+use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,10 @@ class ClientRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $user = $this->user();
+
+        return $user !== null
+            && app(PagePermissionService::class)->canAccess($user, '/clients');
     }
 
     /**
@@ -28,10 +32,16 @@ class ClientRequest extends FormRequest
     {
         $rules = [
             'name' => ['string', 'required', 'min:5', 'max:100'],
+            'mother' => ['nullable', 'string', 'max:100'],
+            'father' => ['nullable', 'string', 'max:100'],
+            'cns' => ['nullable', 'string', 'max:15'],
             'cpf' => ['required', 'string', 'max:18', new ValidCpf()],
             'email' => ['nullable', 'string', 'email', 'max:100'],
             'phone' => [new PhoneValidation],
             'obs' => ['nullable', 'string', 'max:500'],
+            'born_date' => ['nullable', 'date'],
+            'sexo' => ['nullable', Rule::in(['MASCULINE', 'FEMININE', 'INDETERMINATE'])],
+            'active' => ['nullable', 'boolean'],
             'addresses.zip_code' => ['required', 'max:10'],
             'addresses.city' => ['required', 'max:30'],
             'addresses.street' => ['required', 'max:100'],
@@ -40,14 +50,17 @@ class ClientRequest extends FormRequest
             'addresses.complement' => ['nullable', 'max:50'],
         ];
 
-        if ($this->method() === 'PUT') {
-            $rules['cpf'][] = Rule::unique('clients', 'cpf')->ignore($this->id)->where(function ($query) {
+        $client = $this->route('client');
+        $clientId = $client?->id ?? $this->id;
+
+        if (in_array($this->method(), ['PUT', 'PATCH'], true)) {
+            $rules['cpf'][] = Rule::unique('clients', 'cpf')->ignore($clientId)->where(function ($query) {
                 return $query->where(function ($q) {
                     $q->where('active', 1);
                 })->orWhereNull('active');
             });
         } else {
-            $rules['cpf'] = ['required', 'string', 'max:18', new ValidCpf(), Rule::unique('clients', 'cpf')->ignore(request()->id)->where(function ($query) {
+            $rules['cpf'] = ['required', 'string', 'max:18', new ValidCpf(), Rule::unique('clients', 'cpf')->where(function ($query) {
                 return $query->where(function ($q) {
                     $q->where('active', 1);
                 })->orWhereNull('active');
