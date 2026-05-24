@@ -57,9 +57,10 @@ class MedicineDailyStatusService
 
     private function paginateAllMedicines(array $filters, int $perPage): LengthAwarePaginator
     {
-        $referenceDate = $filters['reference_date'] ?? Carbon::today()->toDateString();
-        $query = MedicineItem::with(['dailyStatuses' => function ($q) use ($referenceDate) {
-                $q->whereDate('reference_date', $referenceDate);
+        $fallbackReferenceDate = $filters['reference_date'] ?? Carbon::today()->toDateString();
+        $query = MedicineItem::with(['dailyStatuses' => function ($q) {
+                $q->orderByDesc('reference_date')
+                    ->orderByDesc('id');
             }])
             ->where('active', true)
             ->orderBy('active_ingredient');
@@ -79,7 +80,7 @@ class MedicineDailyStatusService
         }
 
         $result = $query->paginate($perPage);
-        $result->getCollection()->transform(function (MedicineItem $medicine) use ($referenceDate) {
+        $result->getCollection()->transform(function (MedicineItem $medicine) use ($fallbackReferenceDate) {
             $status = $medicine->dailyStatuses->first();
             if ($status) {
                 $status->setRelation('medicineItem', $medicine);
@@ -89,7 +90,7 @@ class MedicineDailyStatusService
 
             $syntheticStatus = new MedicineDailyStatus([
                 'medicine_item_id' => $medicine->id,
-                'reference_date' => $referenceDate,
+                'reference_date' => $fallbackReferenceDate,
                 'availability_status' => null,
                 'available_quantity' => null,
                 'restock_forecast_date' => null,
