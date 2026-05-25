@@ -1006,4 +1006,77 @@ class VisitaAcsController extends MonitorApsBaseController
 
         return response()->json(['series' => $series]);
     }
+
+    /**
+     * GET /visitas/debug/{id}
+     * Diagnóstico temporário — mostra quais colunas foram encontradas e qual SQL foi gerado.
+     */
+    public function showDebug(int $id): JsonResponse
+    {
+        // --- notas ---
+        $notesDirectCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', [
+            'ds_anotacao', 'ds_observacao', 'ds_relato',
+            'ds_anotacao_visita', 'ds_observacao_visita',
+            'tx_anotacao', 'tx_observacao', 'tx_relato',
+        ]);
+        $fatCdsFk  = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['co_cds_visita_domiciliar', 'co_seq_cds_visita_domiciliar']);
+        $cdsAnnot  = $this->firstExistingColumn('tb_cds_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']);
+        $uuidCol   = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_uuid_ficha', 'co_unico_ficha']);
+        $fichaPk   = $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['co_seq_cds_ficha_visita_domiciliar']);
+        $fichaUuid = $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['nu_uuid_ficha', 'nu_uuid']);
+        $cdsFichaFk = $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cds_ficha_visita_domiciliar']);
+        $cdsCidCol  = $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cidadao']);
+        $pecCidCol  = $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']);
+
+        // --- endereço ---
+        $domPkCol         = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['co_seq_fat_cad_domiciliar']);
+        $familyDomFkCol   = $this->firstExistingColumn('tb_fat_cad_dom_familia', ['co_fat_cad_domiciliar']);
+        $familyCitizenCol = $this->firstExistingColumn('tb_fat_cad_dom_familia', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
+        $logradouroCol    = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_logradouro', 'ds_logradouro', 'logradouro']);
+        $bairroCol        = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_bairro', 'ds_bairro', 'bairro']);
+        $cepCol           = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['nu_cep', 'cep']);
+
+        // --- resultado bruto da visita ---
+        $row = null;
+        try {
+            $row = $this->db()->selectOne("
+                SELECT v.co_seq_fat_visita_domiciliar AS id,
+                       v.co_fat_cidadao_pec,
+                       {$this->buildNotesExpr('v')} AS notes_result,
+                       (SELECT d.no_logradouro::text
+                        FROM tb_fat_cad_dom_familia f
+                        JOIN tb_fat_cad_domiciliar d ON d.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar
+                        WHERE f.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1) AS addr_test
+                FROM tb_fat_visita_domiciliar v
+                WHERE v.co_seq_fat_visita_domiciliar = ?
+            ", [$id]);
+        } catch (\Throwable $e) {
+            $row = ['error' => $e->getMessage()];
+        }
+
+        return response()->json([
+            'notes' => [
+                'fat_direct_col'   => $notesDirectCol,
+                'fat_cds_fk'       => $fatCdsFk,
+                'cds_annot_col'    => $cdsAnnot,
+                'fat_uuid_col'     => $uuidCol,
+                'ficha_pk'         => $fichaPk,
+                'ficha_uuid_col'   => $fichaUuid,
+                'cds_ficha_fk'     => $cdsFichaFk,
+                'cds_cidadao_col'  => $cdsCidCol,
+                'pec_cidadao_col'  => $pecCidCol,
+                'expr_used'        => $this->buildNotesExpr('v'),
+            ],
+            'address' => [
+                'dom_pk'           => $domPkCol,
+                'family_dom_fk'    => $familyDomFkCol,
+                'family_citizen'   => $familyCitizenCol,
+                'logradouro_col'   => $logradouroCol,
+                'bairro_col'       => $bairroCol,
+                'cep_col'          => $cepCol,
+                'address_join_ok'  => ($domPkCol && $familyDomFkCol && $familyCitizenCol),
+            ],
+            'raw' => $row,
+        ]);
+    }
 }
