@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class VisitaAcsController extends MonitorApsBaseController
 {
@@ -29,25 +29,62 @@ class VisitaAcsController extends MonitorApsBaseController
     private function buildWhere(
         int $ano, int $mes, ?string $ine,
         ?string $agentName = null,
-        ?string $desfecho  = null,
-        ?string $hasGeo    = null
+        ?string $desfecho = null,
+        ?string $hasGeo = null
     ): array {
-        $cbos   = implode("','", self::ACS_CBOS);
-        $where  = "c.nu_cbo IN ('{$cbos}') AND t.nu_ano = ? AND t.nu_mes = ?";
+        $cbos = implode("','", self::ACS_CBOS);
+        $where = "c.nu_cbo IN ('{$cbos}') AND t.nu_ano = ? AND t.nu_mes = ?";
         $params = [$ano, $mes];
 
         if ($ine) {
-            $where   .= ' AND e.nu_ine = ?';
+            $where .= ' AND e.nu_ine = ?';
             $params[] = $ine;
         }
 
         if ($agentName) {
-            $where   .= ' AND p.no_profissional = ?';
+            $where .= ' AND p.no_profissional = ?';
             $params[] = $agentName;
         }
 
         if ($desfecho !== null && $desfecho !== '') {
-            $where   .= ' AND d.co_seq_dim_desfecho_visita = ?';
+            $where .= ' AND d.co_seq_dim_desfecho_visita = ?';
+            $params[] = (int) $desfecho;
+        }
+
+        if ($hasGeo === 'sim') {
+            $where .= ' AND v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL';
+        } elseif ($hasGeo === 'nao') {
+            $where .= ' AND (v.nu_latitude IS NULL OR v.nu_longitude IS NULL)';
+        }
+
+        return [$where, $params];
+    }
+
+    /**
+     * Filtros opcionais sem fixar ano/mês — usado por evolucao().
+     */
+    private function buildWhereFilters(
+        ?string $ine,
+        ?string $agentName = null,
+        ?string $desfecho = null,
+        ?string $hasGeo = null
+    ): array {
+        $cbos = implode("','", self::ACS_CBOS);
+        $where = "c.nu_cbo IN ('{$cbos}')";
+        $params = [];
+
+        if ($ine) {
+            $where .= ' AND e.nu_ine = ?';
+            $params[] = $ine;
+        }
+
+        if ($agentName) {
+            $where .= ' AND p.no_profissional = ?';
+            $params[] = $agentName;
+        }
+
+        if ($desfecho !== null && $desfecho !== '') {
+            $where .= ' AND d.co_seq_dim_desfecho_visita = ?';
             $params[] = (int) $desfecho;
         }
 
@@ -62,14 +99,14 @@ class VisitaAcsController extends MonitorApsBaseController
 
     private function baseJoins(): string
     {
-        return "
+        return '
             JOIN tb_dim_profissional    p  ON p.co_seq_dim_profissional    = v.co_dim_profissional
             JOIN tb_dim_cbo             c  ON c.co_seq_dim_cbo             = v.co_dim_cbo
             JOIN tb_dim_equipe          e  ON e.co_seq_dim_equipe          = v.co_dim_equipe
             JOIN tb_dim_tempo           t  ON t.co_seq_dim_tempo           = v.co_dim_tempo
             JOIN tb_dim_desfecho_visita d  ON d.co_seq_dim_desfecho_visita = v.co_dim_desfecho_visita
             JOIN tb_dim_tipo_ficha      tf ON tf.co_seq_dim_tipo_ficha     = v.co_dim_tipo_ficha
-        ";
+        ';
     }
 
     private function firstExistingColumn(string $table, array $candidates): ?string
@@ -91,6 +128,7 @@ class VisitaAcsController extends MonitorApsBaseController
     private function hasTable(string $table): bool
     {
         $v = $this->schemaCacheVersion();
+
         return \Illuminate\Support\Facades\Cache::remember("aps_table2_{$v}_{$table}", 86400, function () use ($table) {
             try {
                 $row = $this->db()->selectOne("
@@ -102,6 +140,7 @@ class VisitaAcsController extends MonitorApsBaseController
                       AND n.nspname = 'public'
                     LIMIT 1
                 ", [$table]);
+
                 return $row !== null;
             } catch (\Throwable) {
                 return false;
@@ -147,15 +186,15 @@ class VisitaAcsController extends MonitorApsBaseController
     private function formatMotives(object $row): array
     {
         $labels = [
-            'st_mot_vis_cad_att'            => 'Cadastramento/atualização',
-            'st_mot_vis_visita_periodica'    => 'Visita periódica',
-            'st_mot_vis_busca_ativa'         => 'Busca ativa',
-            'st_mot_vis_acompanhamento'      => 'Acompanhamento',
-            'st_mot_vis_egresso_internacao'  => 'Egresso de internação',
-            'st_mot_vis_ctrl_ambnte_vetor'   => 'Controle ambiental/vetorial',
+            'st_mot_vis_cad_att' => 'Cadastramento/atualização',
+            'st_mot_vis_visita_periodica' => 'Visita periódica',
+            'st_mot_vis_busca_ativa' => 'Busca ativa',
+            'st_mot_vis_acompanhamento' => 'Acompanhamento',
+            'st_mot_vis_egresso_internacao' => 'Egresso de internação',
+            'st_mot_vis_ctrl_ambnte_vetor' => 'Controle ambiental/vetorial',
             'st_mot_vis_convte_atvidd_cltva' => 'Convite para atividade coletiva',
-            'st_mot_vis_orintacao_prevncao'  => 'Orientação/prevenção',
-            'st_mot_vis_outros'              => 'Outros',
+            'st_mot_vis_orintacao_prevncao' => 'Orientação/prevenção',
+            'st_mot_vis_outros' => 'Outros',
         ];
 
         $active = [];
@@ -171,20 +210,20 @@ class VisitaAcsController extends MonitorApsBaseController
     private function formatAccompaniments(object $row): array
     {
         $fields = [
-            'st_acomp_gestante'              => 'Gestante',
-            'st_acomp_puerpera'              => 'Puérpera',
-            'st_acomp_recem_nascido'         => 'Recém-nascido',
-            'st_acomp_crianca'               => 'Criança',
-            'st_acomp_pessoa_hipertensao'    => 'Hipertensão',
-            'st_acomp_pessoa_diabetes'       => 'Diabetes',
-            'st_acomp_pessoa_cancer'         => 'Câncer',
-            'st_acomp_pessoa_idosa'          => 'Pessoa idosa',
-            'st_acomp_saude_mental'          => 'Saúde mental',
-            'st_acomp_tabagista'             => 'Tabagismo',
+            'st_acomp_gestante' => 'Gestante',
+            'st_acomp_puerpera' => 'Puérpera',
+            'st_acomp_recem_nascido' => 'Recém-nascido',
+            'st_acomp_crianca' => 'Criança',
+            'st_acomp_pessoa_hipertensao' => 'Hipertensão',
+            'st_acomp_pessoa_diabetes' => 'Diabetes',
+            'st_acomp_pessoa_cancer' => 'Câncer',
+            'st_acomp_pessoa_idosa' => 'Pessoa idosa',
+            'st_acomp_saude_mental' => 'Saúde mental',
+            'st_acomp_tabagista' => 'Tabagismo',
             'st_acomp_domiciliados_acamados' => 'Domiciliado/acamado',
-            'st_acomp_pessoa_tuberculose'    => 'Tuberculose',
-            'st_acomp_pessoa_hanseniase'     => 'Hanseníase',
-            'st_acomp_condi_bolsa_familia'   => 'Bolsa Família',
+            'st_acomp_pessoa_tuberculose' => 'Tuberculose',
+            'st_acomp_pessoa_hanseniase' => 'Hanseníase',
+            'st_acomp_condi_bolsa_familia' => 'Bolsa Família',
         ];
 
         $active = [];
@@ -202,20 +241,20 @@ class VisitaAcsController extends MonitorApsBaseController
         $outcomeCode = (int) ($row->outcome_code ?? 4);
 
         $result = [
-            'id'               => (int) $row->id,
-            'agent_name'       => $row->agent_name,
-            'cbo'              => $row->cbo,
-            'cbo_label'        => self::CBO_LABELS[$row->cbo] ?? $row->cbo,
-            'team_ine'         => $row->team_ine,
-            'team_name'        => $row->team_name,
-            'visited_date'     => $row->visited_date,
-            'hora'             => isset($row->hora) ? (int) $row->hora : null,
+            'id' => (int) $row->id,
+            'agent_name' => $row->agent_name,
+            'cbo' => $row->cbo,
+            'cbo_label' => self::CBO_LABELS[$row->cbo] ?? $row->cbo,
+            'team_ine' => $row->team_ine,
+            'team_name' => $row->team_name,
+            'visited_date' => $row->visited_date,
+            'hora' => isset($row->hora) ? (int) $row->hora : null,
             'instrument_label' => $row->instrument_label,
-            'outcome_code'     => $outcomeCode,
-            'outcome_label'    => $row->outcome_label,
-            'outcome_color'    => self::OUTCOME_COLORS[$outcomeCode] ?? 'default',
-            'has_geolocation'  => (bool) $row->has_geo,
-            'motives'          => $this->formatMotives($row),
+            'outcome_code' => $outcomeCode,
+            'outcome_label' => $row->outcome_label,
+            'outcome_color' => self::OUTCOME_COLORS[$outcomeCode] ?? 'default',
+            'has_geolocation' => (bool) $row->has_geo,
+            'motives' => $this->formatMotives($row),
         ];
 
         if ($detail) {
@@ -225,22 +264,22 @@ class VisitaAcsController extends MonitorApsBaseController
             $bairro = $this->normalizeAddressValue($row->bairro ?? null);
             $cep = $this->normalizeAddressValue($row->cep ?? null);
 
-            $result['citizen_name']   = $row->citizen_name   ?? null;
-            $result['notes']          = $row->notes          ?? null;
-            $result['lat']            = isset($row->lat) && $row->lat !== null ? (float) $row->lat : null;
-            $result['lng']            = isset($row->lng) && $row->lng !== null ? (float) $row->lng : null;
+            $result['citizen_name'] = $row->citizen_name ?? null;
+            $result['notes'] = $row->notes ?? null;
+            $result['lat'] = isset($row->lat) && $row->lat !== null ? (float) $row->lat : null;
+            $result['lng'] = isset($row->lng) && $row->lng !== null ? (float) $row->lng : null;
             $result['accompaniments'] = $this->formatAccompaniments($row);
-            $result['logradouro']     = $logradouro;
-            $result['num_endereco']   = $numero;
-            $result['complemento']    = $complemento;
-            $result['bairro']         = $bairro;
-            $result['cep']            = $cep;
-            $result['address']        = [
-                'logradouro'  => $logradouro,
-                'numero'      => $numero,
+            $result['logradouro'] = $logradouro;
+            $result['num_endereco'] = $numero;
+            $result['complemento'] = $complemento;
+            $result['bairro'] = $bairro;
+            $result['cep'] = $cep;
+            $result['address'] = [
+                'logradouro' => $logradouro,
+                'numero' => $numero,
                 'complemento' => $complemento,
-                'bairro'      => $bairro,
-                'cep'         => $cep,
+                'bairro' => $bairro,
+                'cep' => $cep,
             ];
         }
 
@@ -255,19 +294,19 @@ class VisitaAcsController extends MonitorApsBaseController
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'ano'      => 'required|integer|min:2020|max:2030',
-            'mes'      => 'required|integer|min:1|max:12',
-            'ine'      => 'nullable|string',
-            'agente'   => 'nullable|string',
-            'page'     => 'nullable|integer|min:1',
+            'ano' => 'required|integer|min:2020|max:2030',
+            'mes' => 'required|integer|min:1|max:12',
+            'ine' => 'nullable|string',
+            'agente' => 'nullable|string',
+            'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
-        $ano     = (int) $request->ano;
-        $mes     = (int) $request->mes;
+        $ano = (int) $request->ano;
+        $mes = (int) $request->mes;
         $perPage = (int) ($request->per_page ?? 20);
-        $page    = (int) ($request->page ?? 1);
-        $offset  = ($page - 1) * $perPage;
+        $page = (int) ($request->page ?? 1);
+        $offset = ($page - 1) * $perPage;
 
         [$where, $params] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
 
@@ -304,12 +343,12 @@ class VisitaAcsController extends MonitorApsBaseController
         $total = (int) ($rows[0]->total_count ?? 0);
 
         return response()->json([
-            'data' => array_map(fn($r) => $this->formatVisita($r), $rows),
+            'data' => array_map(fn ($r) => $this->formatVisita($r), $rows),
             'meta' => [
-                'total'    => $total,
-                'page'     => $page,
+                'total' => $total,
+                'page' => $page,
                 'per_page' => $perPage,
-                'pages'    => (int) ceil($total / max($perPage, 1)),
+                'pages' => (int) ceil($total / max($perPage, 1)),
             ],
         ]);
     }
@@ -321,12 +360,12 @@ class VisitaAcsController extends MonitorApsBaseController
     public function resumo(Request $request): JsonResponse
     {
         $request->validate([
-            'ano'      => 'required|integer|min:2020|max:2030',
-            'mes'      => 'required|integer|min:1|max:12',
-            'ine'      => 'nullable|string',
-            'agente'   => 'nullable|string',
+            'ano' => 'required|integer|min:2020|max:2030',
+            'mes' => 'required|integer|min:1|max:12',
+            'ine' => 'nullable|string',
+            'agente' => 'nullable|string',
             'desfecho' => 'nullable|integer|in:1,2,3',
-            'has_geo'  => 'nullable|string|in:sim,nao',
+            'has_geo' => 'nullable|string|in:sim,nao',
         ]);
 
         $ano = (int) $request->ano;
@@ -353,11 +392,11 @@ class VisitaAcsController extends MonitorApsBaseController
 
         return response()->json([
             'totais' => [
-                'total'      => (int) ($totRow->total ?? 0),
+                'total' => (int) ($totRow->total ?? 0),
                 'realizadas' => (int) ($totRow->realizadas ?? 0),
-                'recusadas'  => (int) ($totRow->recusadas ?? 0),
-                'ausentes'   => (int) ($totRow->ausentes ?? 0),
-                'cidadaos'   => (int) ($totRow->cidadaos ?? 0),
+                'recusadas' => (int) ($totRow->recusadas ?? 0),
+                'ausentes' => (int) ($totRow->ausentes ?? 0),
+                'cidadaos' => (int) ($totRow->cidadaos ?? 0),
             ],
         ]);
     }
@@ -370,31 +409,31 @@ class VisitaAcsController extends MonitorApsBaseController
     public function lista(Request $request): JsonResponse
     {
         $request->validate([
-            'ano'      => 'required|integer|min:2020|max:2030',
-            'mes'      => 'required|integer|min:1|max:12',
-            'ine'      => 'nullable|string',
-            'agente'   => 'nullable|string',
+            'ano' => 'required|integer|min:2020|max:2030',
+            'mes' => 'required|integer|min:1|max:12',
+            'ine' => 'nullable|string',
+            'agente' => 'nullable|string',
             'desfecho' => 'nullable|integer',
-            'has_geo'  => 'nullable|in:sim,nao',
-            'page'     => 'nullable|integer|min:1',
+            'has_geo' => 'nullable|in:sim,nao',
+            'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
-        $ano     = (int) $request->ano;
-        $mes     = (int) $request->mes;
+        $ano = (int) $request->ano;
+        $mes = (int) $request->mes;
         $perPage = (int) ($request->per_page ?? 50);
-        $page    = (int) ($request->page ?? 1);
-        $offset  = ($page - 1) * $perPage;
+        $page = (int) ($request->page ?? 1);
+        $offset = ($page - 1) * $perPage;
 
         [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
 
         if ($request->agente) {
-            $where   .= ' AND p.no_profissional ILIKE ?';
-            $params[] = '%' . $request->agente . '%';
+            $where .= ' AND p.no_profissional ILIKE ?';
+            $params[] = '%'.$request->agente.'%';
         }
 
         if ($request->desfecho) {
-            $where   .= ' AND d.co_seq_dim_desfecho_visita = ?';
+            $where .= ' AND d.co_seq_dim_desfecho_visita = ?';
             $params[] = (int) $request->desfecho;
         }
 
@@ -490,23 +529,23 @@ class VisitaAcsController extends MonitorApsBaseController
             LIMIT ? OFFSET ?
         ";
 
-        $sql  = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
+        $sql = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
         $rows = $this->db()->select($sql, $queryParams);
         $total = (int) ($rows[0]->total_count ?? 0);
 
-        $visitas = array_map(fn($r) => [
-            'id'             => (int) $r->id,
-            'data'           => $r->data,
-            'hora'           => isset($r->hora) ? (int) $r->hora : null,
-            'cidadao'        => $r->cidadao ?? null,
-            'agente'         => $r->agente,
-            'cbo'            => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
-            'equipe'         => ['ine' => $r->equipe_ine, 'nome' => $r->equipe_nome],
-            'micro_area'     => $r->micro_area,
-            'instrumento'    => $r->instrumento,
-            'desfecho_id'    => (int) $r->desfecho_id,
+        $visitas = array_map(fn ($r) => [
+            'id' => (int) $r->id,
+            'data' => $r->data,
+            'hora' => isset($r->hora) ? (int) $r->hora : null,
+            'cidadao' => $r->cidadao ?? null,
+            'agente' => $r->agente,
+            'cbo' => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+            'equipe' => ['ine' => $r->equipe_ine, 'nome' => $r->equipe_nome],
+            'micro_area' => $r->micro_area,
+            'instrumento' => $r->instrumento,
+            'desfecho_id' => (int) $r->desfecho_id,
             'desfecho_label' => $r->desfecho_label,
-            'has_geo'        => (bool) $r->has_geo,
+            'has_geo' => (bool) $r->has_geo,
             'acompanhamentos' => $this->formatAccompaniments($r),
         ], $rows);
 
@@ -534,7 +573,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
         $notesExpr = $notesCol ? "v.{$notesCol}" : 'NULL::text';
         // Nome: tb_fat_cidadao_pec é join 1:1 com a visita via co_seq_fat_cidadao_pec
-        $citizenNameExpr = "(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)";
+        $citizenNameExpr = '(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)';
         // Endereço: tb_fat_cad_dom_familia liga cidadão ao domicílio; tb_fat_cad_domiciliar tem os campos de endereço
         $domPkCol = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['co_seq_fat_cad_domiciliar']);
         $familyDomFkCol = $this->firstExistingColumn('tb_fat_cad_dom_familia', ['co_fat_cad_domiciliar']);
@@ -547,11 +586,11 @@ class VisitaAcsController extends MonitorApsBaseController
 
         if ($domPkCol && $familyDomFkCol && $familyCitizenCol) {
             $addrBase = "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.{$domPkCol} = f.{$familyDomFkCol} WHERE f.{$familyCitizenCol} = v.co_fat_cidadao_pec LIMIT 1";
-            $logradouroExpr  = "(SELECT " . $this->textColumnExpr('d', $logradouroCol) . " {$addrBase})";
-            $numeroExpr      = "(SELECT " . $this->textColumnExpr('d', $numeroCol) . " {$addrBase})";
-            $complementoExpr = "(SELECT " . $this->textColumnExpr('d', $complementoCol) . " {$addrBase})";
-            $bairroExpr      = "(SELECT " . $this->textColumnExpr('d', $bairroCol) . " {$addrBase})";
-            $cepExpr         = "(SELECT " . $this->textColumnExpr('d', $cepCol) . " {$addrBase})";
+            $logradouroExpr = '(SELECT '.$this->textColumnExpr('d', $logradouroCol)." {$addrBase})";
+            $numeroExpr = '(SELECT '.$this->textColumnExpr('d', $numeroCol)." {$addrBase})";
+            $complementoExpr = '(SELECT '.$this->textColumnExpr('d', $complementoCol)." {$addrBase})";
+            $bairroExpr = '(SELECT '.$this->textColumnExpr('d', $bairroCol)." {$addrBase})";
+            $cepExpr = '(SELECT '.$this->textColumnExpr('d', $cepCol)." {$addrBase})";
         } else {
             $logradouroExpr = $numeroExpr = $complementoExpr = $bairroExpr = $cepExpr = 'NULL::text';
         }
@@ -668,7 +707,8 @@ class VisitaAcsController extends MonitorApsBaseController
 
         return response()->json($this->formatVisita($row, detail: true));
     }
-/**
+
+    /**
      * GET /visitas/mapa?ano=X&mes=Y[&ine=Z&agente=W]
      * Pins georreferenciados Ã¢â‚¬â€ aba Mapa do VisitasAcs.js.
      * Inclui equipe_ine para coloraÃƒÂ§ÃƒÂ£o por equipe no modo "Todos".
@@ -676,11 +716,11 @@ class VisitaAcsController extends MonitorApsBaseController
     public function mapa(Request $request): JsonResponse
     {
         $request->validate([
-            'ano'    => 'required|integer|min:2020|max:2030',
-            'mes'    => 'required|integer|min:1|max:12',
-            'ine'    => 'nullable|string',
+            'ano' => 'required|integer|min:2020|max:2030',
+            'mes' => 'required|integer|min:1|max:12',
+            'ine' => 'nullable|string',
             'agente' => 'nullable|string',
-            'busca'  => 'nullable|string|max:200',
+            'busca' => 'nullable|string|max:200',
         ]);
 
         $ano = (int) $request->ano;
@@ -689,32 +729,32 @@ class VisitaAcsController extends MonitorApsBaseController
         [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
 
         if ($request->agente) {
-            $where   .= ' AND p.no_profissional = ?';
+            $where .= ' AND p.no_profissional = ?';
             $params[] = $request->agente;
         }
 
         if ($request->busca) {
-            $busca  = trim($request->busca);
+            $busca = trim($request->busca);
             $digits = preg_replace('/\D/', '', $busca);
 
             if (strlen($digits) === 11) {
                 // CPF
-                $where   .= " AND v.co_fat_cidadao_pec IN (
+                $where .= ' AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE nu_cpf = ? AND st_ficha_inativa = 0)";
+                    WHERE nu_cpf = ? AND st_ficha_inativa = 0)';
                 $params[] = $digits;
             } elseif (strlen($digits) === 15) {
                 // CNS
-                $where   .= " AND v.co_fat_cidadao_pec IN (
+                $where .= ' AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE nu_cns = ? AND st_ficha_inativa = 0)";
+                    WHERE nu_cns = ? AND st_ficha_inativa = 0)';
                 $params[] = $digits;
             } else {
                 // Nome parcial (mÃƒÂ­nimo 3 chars validado no frontend)
-                $where   .= " AND v.co_fat_cidadao_pec IN (
+                $where .= ' AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE no_cidadao ILIKE ? AND st_ficha_inativa = 0)";
-                $params[] = '%' . $busca . '%';
+                    WHERE no_cidadao ILIKE ? AND st_ficha_inativa = 0)';
+                $params[] = '%'.$busca.'%';
             }
         }
         $citizenExpr = $this->citizenNameExpr('v');
@@ -770,21 +810,21 @@ class VisitaAcsController extends MonitorApsBaseController
             ORDER BY t.dt_registro DESC
         ";
 
-        $sql  = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
+        $sql = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
         $rows = $this->db()->select($sql, $params);
 
-        $pontos = array_map(fn($r) => [
-            'id'         => (int) $r->id,
-            'lat'        => (float) $r->lat,
-            'lng'        => (float) $r->lng,
-            'agente'     => $r->agente,
-            'cbo'        => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+        $pontos = array_map(fn ($r) => [
+            'id' => (int) $r->id,
+            'lat' => (float) $r->lat,
+            'lng' => (float) $r->lng,
+            'agente' => $r->agente,
+            'cbo' => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
             'equipe_ine' => $r->equipe_ine,
-            'equipe'     => $r->equipe_nome,
-            'cidadao'    => $r->cidadao ?? null,
-            'data'       => $r->data,
-            'hora'       => isset($r->hora) ? (int) $r->hora : null,
-            'desfecho'   => (int) $r->desfecho,
+            'equipe' => $r->equipe_nome,
+            'cidadao' => $r->cidadao ?? null,
+            'data' => $r->data,
+            'hora' => isset($r->hora) ? (int) $r->hora : null,
+            'desfecho' => (int) $r->desfecho,
             'micro_area' => $r->micro_area,
         ], $rows);
 
@@ -813,10 +853,10 @@ class VisitaAcsController extends MonitorApsBaseController
     public function agentes(Request $request): JsonResponse
     {
         $request->validate([
-            'ano'     => 'required|integer|min:2020|max:2030',
-            'mes'     => 'required|integer|min:1|max:12',
-            'ine'     => 'nullable|string',
-            'agente'  => 'nullable|string',
+            'ano' => 'required|integer|min:2020|max:2030',
+            'mes' => 'required|integer|min:1|max:12',
+            'ine' => 'nullable|string',
+            'agente' => 'nullable|string',
             'has_geo' => 'nullable|string|in:sim,nao',
         ]);
 
@@ -847,21 +887,33 @@ class VisitaAcsController extends MonitorApsBaseController
             ORDER BY total DESC
         ", $params);
 
-        $agentes = array_map(fn($r) => [
-            'agente'         => $r->agente,
-            'cbo'            => $r->cbo,
-            'cbo_nome'       => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
-            'equipe'         => ['nome' => $r->equipe_nome],
-            'total'          => (int) $r->total,
-            'realizadas'     => (int) $r->realizadas,
-            'recusadas'      => (int) $r->recusadas,
-            'ausentes'       => (int) $r->ausentes,
+        $agentes = array_map(fn ($r) => [
+            'agente' => $r->agente,
+            'cbo' => $r->cbo,
+            'cbo_nome' => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+            'equipe' => ['nome' => $r->equipe_nome],
+            'total' => (int) $r->total,
+            'realizadas' => (int) $r->realizadas,
+            'recusadas' => (int) $r->recusadas,
+            'ausentes' => (int) $r->ausentes,
             'pct_realizadas' => $r->total > 0
                 ? (int) round($r->realizadas / $r->total * 100)
                 : 0,
-            'cidadaos'       => (int) $r->cidadaos,
+            'cidadaos' => (int) $r->cidadaos,
         ], $rows);
 
         return response()->json(['agentes' => $agentes]);
+    }
+
+    public function evolucao(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ine' => 'nullable|string',
+            'agente' => 'nullable|string',
+            'desfecho' => 'nullable|integer|in:1,2,3',
+            'has_geo' => 'nullable|string|in:sim,nao',
+        ]);
+
+        return response()->json(['series' => []]);
     }
 }

@@ -29,6 +29,8 @@ use App\Http\Controllers\MedicinePublicationController;
 use App\Http\Controllers\MedicineTransparencyPublicController;
 use App\Http\Controllers\MedicoSolicitanteController;
 use App\Http\Controllers\ModelController;
+use App\Http\Controllers\MonitorApsConfigController;
+use App\Http\Controllers\MonitorApsController;
 use App\Http\Controllers\OrdinanceAttachmentController;
 use App\Http\Controllers\OrdinanceController;
 use App\Http\Controllers\PageCategoryController;
@@ -47,13 +49,11 @@ use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SpecialityController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\SystemPageController;
-use App\Http\Controllers\MonitorApsConfigController;
-use App\Http\Controllers\MonitorApsController;
-use App\Http\Controllers\VisitaAcsController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VigilanciaConfigController;
+use App\Http\Controllers\VisitaAcsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -118,28 +118,29 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Monitor APS — indicadores Portaria GM/MS 6.907/2025
     Route::prefix('monitor-aps')->middleware('throttle:60,1')->group(function () {
         Route::prefix('indicadores')->group(function () {
-            Route::get('/resumo',       [MonitorApsController::class, 'resumo']);
-            Route::get('/vinculo',      [MonitorApsController::class, 'vinculo']);
-            Route::get('/qualidade',    [MonitorApsController::class, 'qualidade']);
+            Route::get('/resumo', [MonitorApsController::class, 'resumo']);
+            Route::get('/vinculo', [MonitorApsController::class, 'vinculo']);
+            Route::get('/qualidade', [MonitorApsController::class, 'qualidade']);
             Route::get('/qualidade/{id}', [MonitorApsController::class, 'qualidadeIndicador']);
-            Route::get('/repasse',      [MonitorApsController::class, 'repasse']);
-            Route::get('/historico',    [MonitorApsController::class, 'historico']);
+            Route::get('/repasse', [MonitorApsController::class, 'repasse']);
+            Route::get('/historico', [MonitorApsController::class, 'historico']);
         });
         Route::prefix('visitas')->group(function () {
-            Route::get('/',        [VisitaAcsController::class, 'index']);    // por mês (granular)
-            Route::get('/resumo',  [VisitaAcsController::class, 'resumo']);   // totais + por_mes (quadrimestre)
-            Route::get('/lista',   [VisitaAcsController::class, 'lista']);    // paginado por quadrimestre
-            Route::get('/mapa',    [VisitaAcsController::class, 'mapa']);     // pins georreferenciados
+            Route::get('/', [VisitaAcsController::class, 'index']);    // por mês (granular)
+            Route::get('/resumo', [VisitaAcsController::class, 'resumo']);   // totais + por_mes (quadrimestre)
+            Route::get('/lista', [VisitaAcsController::class, 'lista']);    // paginado por quadrimestre
+            Route::get('/mapa', [VisitaAcsController::class, 'mapa']);     // pins georreferenciados
             Route::get('/equipes', [VisitaAcsController::class, 'equipes']);  // equipes com ACS
-            Route::get('/agentes', [VisitaAcsController::class, 'agentes']); // stats por agente
-            Route::get('/{id}',    [VisitaAcsController::class, 'show'])->whereNumber('id');
+            Route::get('/agentes', [VisitaAcsController::class, 'agentes']);  // stats por agente
+            Route::get('/evolucao', [VisitaAcsController::class, 'evolucao']);
+            Route::get('/{id}', [VisitaAcsController::class, 'show'])->whereNumber('id');
         });
-        Route::get('/config/status',  [MonitorApsConfigController::class, 'status']);
-        Route::get('/config/load',    [MonitorApsConfigController::class, 'load']);
+        Route::get('/config/status', [MonitorApsConfigController::class, 'status']);
+        Route::get('/config/load', [MonitorApsConfigController::class, 'load']);
         Route::get('/config/equipes', [MonitorApsConfigController::class, 'equipes']);
         Route::middleware('admin')->group(function () {
-            Route::post('/config/test',    [MonitorApsConfigController::class, 'testar']);
-            Route::post('/config/save',    [MonitorApsConfigController::class, 'save']);
+            Route::post('/config/test', [MonitorApsConfigController::class, 'testar']);
+            Route::post('/config/save', [MonitorApsConfigController::class, 'save']);
             Route::get('/config/explorar', [MonitorApsConfigController::class, 'explorar']);
         });
 
