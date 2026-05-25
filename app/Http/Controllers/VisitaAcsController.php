@@ -803,6 +803,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 'fat_cds_fk'     => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['co_cds_visita_domiciliar', 'co_seq_cds_visita_domiciliar']),
                 'cds_annot_col'  => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']),
             ],
+            'nu_hora_exists'  => $this->hasColumn('tb_dim_tempo', 'nu_hora'),
             'addr_ind_base'  => $indBase     ? 'OK' : 'null',
             'addr_ind_cols'  => compact('indLogCol', 'indNumCol', 'indCompCol', 'indBaiCol', 'indCepCol'),
             'addr_dw_base'   => $dwAddrBase  ? 'OK' : 'null',
