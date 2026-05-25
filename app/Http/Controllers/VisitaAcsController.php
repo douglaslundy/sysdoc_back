@@ -753,6 +753,17 @@ class VisitaAcsController extends MonitorApsBaseController
         $result = $this->formatVisita($row, detail: true);
         $result['_debug'] = [
             'notes_expr'      => $notesExpr,
+            'notes_probes'    => [
+                'fat_direct_col'  => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato', 'ds_anotacao_visita', 'ds_observacao_visita', 'tx_anotacao', 'tx_observacao', 'tx_relato']),
+                'fat_cds_fk'      => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['co_cds_visita_domiciliar', 'co_seq_cds_visita_domiciliar']),
+                'fat_uuid_col'    => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_uuid_ficha', 'co_unico_ficha']),
+                'cds_annot_col'   => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']),
+                'ficha_pk'        => $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['co_seq_cds_ficha_visita_domiciliar']),
+                'ficha_uuid_col'  => $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['nu_uuid_ficha', 'nu_uuid']),
+                'cds_ficha_fk'    => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cds_ficha_visita_domiciliar']),
+                'cds_cidadao_col' => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cidadao']),
+                'pec_cidadao_col' => $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']),
+            ],
             'address_join_ok' => ($domPkCol && $familyDomFkCol && $familyCitizenCol),
             'address_cols'    => [
                 'dom_pk'         => $domPkCol,
