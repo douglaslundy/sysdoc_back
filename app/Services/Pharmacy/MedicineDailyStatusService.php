@@ -58,12 +58,20 @@ class MedicineDailyStatusService
     private function paginateAllMedicines(array $filters, int $perPage): LengthAwarePaginator
     {
         $fallbackReferenceDate = $filters['reference_date'] ?? Carbon::today()->toDateString();
+        $statusFilter = $filters['availability_status'] ?? null;
+
         $query = MedicineItem::with(['dailyStatuses' => function ($q) {
                 $q->orderByDesc('reference_date')
                     ->orderByDesc('id');
             }])
             ->where('active', true)
             ->orderBy('active_ingredient');
+
+        if ($statusFilter) {
+            $query->whereHas('dailyStatuses', function ($q) use ($statusFilter) {
+                $q->where('availability_status', $statusFilter);
+            });
+        }
 
         if (! empty($filters['medicine_item_id'])) {
             $query->where('id', (int) $filters['medicine_item_id']);

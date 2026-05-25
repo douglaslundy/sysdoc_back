@@ -21,6 +21,7 @@ class MedicineItemResource extends JsonResource
             'ean_code' => $this->ean_code,
             'is_free_distribution' => (bool) $this->is_free_distribution,
             'is_controlled' => (bool) $this->is_controlled,
+            'is_judicial_order' => (bool) $this->is_judicial_order,
             'active' => (bool) $this->active,
             'technical_notes' => $this->technical_notes,
             'created_at' => $this->created_at?->toDateTimeString(),

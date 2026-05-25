@@ -30,6 +30,7 @@ class UpdateMedicineItemRequest extends BaseApiFormRequest
             'ean_code' => ['nullable', 'string', 'max:50'],
             'is_free_distribution' => ['sometimes', 'boolean'],
             'is_controlled' => ['sometimes', 'boolean'],
+            'is_judicial_order' => ['sometimes', 'boolean'],
             'active' => ['sometimes', 'boolean'],
             'technical_notes' => ['nullable', 'string', 'max:4000'],
         ];

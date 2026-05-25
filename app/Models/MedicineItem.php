@@ -24,6 +24,7 @@ class MedicineItem extends Model
         'ean_code',
         'is_free_distribution',
         'is_controlled',
+        'is_judicial_order',
         'active',
         'technical_notes',
     ];
@@ -31,6 +32,7 @@ class MedicineItem extends Model
     protected $casts = [
         'is_free_distribution' => 'boolean',
         'is_controlled' => 'boolean',
+        'is_judicial_order' => 'boolean',
         'active' => 'boolean',
     ];
 
