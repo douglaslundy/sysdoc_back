@@ -9,11 +9,12 @@ class AttendancePanelService
 {
     public function state(): array
     {
-        $today = now()->toDateString();
+        $startOfDay = now('America/Sao_Paulo')->startOfDay()->utc();
+        $endOfDay = now('America/Sao_Paulo')->endOfDay()->utc();
 
         $latestCall = AttendanceCall::query()
             ->with(['ticket', 'client', 'room', 'user'])
-            ->whereDate('called_at', $today)
+            ->whereBetween('called_at', [$startOfDay, $endOfDay])
             ->orderByDesc('called_at')
             ->orderByDesc('id')
             ->first();
@@ -21,14 +22,14 @@ class AttendancePanelService
         $inService = AttendanceTicket::query()
             ->with(['client', 'room', 'assignedUser'])
             ->where('status', AttendanceTicket::STATUS_EM_ATENDIMENTO)
-            ->whereDate('created_at', $today)
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->orderByDesc('started_at')
             ->limit(10)
             ->get();
 
         $lastCalls = AttendanceCall::query()
             ->with(['ticket', 'client', 'room', 'user'])
-            ->whereDate('called_at', $today)
+            ->whereBetween('called_at', [$startOfDay, $endOfDay])
             ->when($latestCall, function ($query) use ($latestCall) {
                 $query->where('id', '!=', $latestCall->id);
             })

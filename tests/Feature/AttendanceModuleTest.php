@@ -6,6 +6,7 @@ use App\Models\AttendanceRoom;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AttendanceModuleTest extends TestCase
@@ -152,6 +153,38 @@ class AttendanceModuleTest extends TestCase
             ->postJson("/api/attendance/service/{$ticketIds[0]}/start")
             ->assertStatus(200);
 
+        $oldClientId = $this->createClient('100.000.000-99')->id;
+        $oldTicket = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/attendance/tickets', ['clientId' => $oldClientId])
+            ->json();
+        $oldTicketId = $oldTicket['id'];
+        $oldTicketCode = $oldTicket['display_code'] ?? null;
+
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/attendance/queue/{$oldTicketId}/call", ['roomId' => $this->room->id])
+            ->assertStatus(200);
+
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/attendance/service/{$oldTicketId}/start")
+            ->assertStatus(200);
+
+        $yesterday = now('America/Sao_Paulo')->subDay()->setTime(14, 0)->utc();
+        DB::table('attendance_tickets')
+            ->where('id', $oldTicketId)
+            ->update([
+                'created_at' => $yesterday,
+                'started_at' => $yesterday,
+                'updated_at' => $yesterday,
+            ]);
+
+        DB::table('attendance_calls')
+            ->where('attendance_ticket_id', $oldTicketId)
+            ->update([
+                'called_at' => $yesterday,
+                'created_at' => $yesterday,
+                'updated_at' => $yesterday,
+            ]);
+
         $panel = $this->getJson('/api/attendance/panel/state');
 
         $panel->assertStatus(200)
@@ -163,6 +196,10 @@ class AttendanceModuleTest extends TestCase
 
         $this->assertCount(3, $panel->json('lastCalls'));
         $this->assertNotEmpty($panel->json('currentInService'));
+        if ($oldTicketCode) {
+            $this->assertNotContains($oldTicketCode, array_column($panel->json('currentInService'), 'ticketCode'));
+            $this->assertNotContains($oldTicketCode, array_column($panel->json('lastCalls'), 'ticketCode'));
+        }
     }
 
     public function test_lista_atendimentos_com_filtros_de_sala_usuario_status_e_periodo(): void
