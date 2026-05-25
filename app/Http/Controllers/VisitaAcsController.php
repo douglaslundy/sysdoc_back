@@ -109,6 +109,21 @@ class VisitaAcsController extends MonitorApsBaseController
         ';
     }
 
+    private function listColumns(string $table): array
+    {
+        try {
+            $rows = $this->db()->select("
+                SELECT attname::text AS col
+                FROM pg_catalog.pg_attribute
+                WHERE attrelid = ?::regclass AND attnum > 0 AND NOT attisdropped
+                ORDER BY attnum
+            ", [$table]);
+            return array_column($rows, 'col');
+        } catch (\Throwable) {
+            return ["(tabela não encontrada: {$table})"];
+        }
+    }
+
     private function firstExistingColumn(string $table, array $candidates): ?string
     {
         foreach ($candidates as $column) {
@@ -764,6 +779,8 @@ class VisitaAcsController extends MonitorApsBaseController
                 'cds_cidadao_col' => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cidadao']),
                 'pec_cidadao_col' => $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']),
             ],
+            'cds_visita_cols'  => $this->listColumns('tb_cds_visita_domiciliar'),
+            'cds_ficha_cols'   => $this->listColumns('tb_cds_ficha_visita_domiciliar'),
             'address_join_ok' => ($domPkCol && $familyDomFkCol && $familyCitizenCol),
             'address_cols'    => [
                 'dom_pk'         => $domPkCol,
