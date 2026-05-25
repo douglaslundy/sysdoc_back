@@ -863,26 +863,23 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         if ($request->busca) {
-            $busca = trim($request->busca);
+            $busca  = trim($request->busca);
             $digits = preg_replace('/\D/', '', $busca);
 
             if (strlen($digits) === 11) {
-                // CPF
-                $where .= ' AND v.co_fat_cidadao_pec IN (
+                $where   .= ' AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE nu_cpf = ? AND st_ficha_inativa = 0)';
+                    WHERE nu_cpf = ?)';
                 $params[] = $digits;
             } elseif (strlen($digits) === 15) {
-                // CNS
-                $where .= ' AND v.co_fat_cidadao_pec IN (
+                $where   .= ' AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE nu_cns = ? AND st_ficha_inativa = 0)';
+                    WHERE nu_cns = ?)';
                 $params[] = $digits;
             } else {
-                // Nome parcial (mÃƒÂ­nimo 3 chars validado no frontend)
-                $where .= ' AND v.co_fat_cidadao_pec IN (
+                $where   .= ' AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE no_cidadao ILIKE ? AND st_ficha_inativa = 0)';
+                    WHERE no_cidadao ILIKE ?)';
                 $params[] = '%'.$busca.'%';
             }
         }
