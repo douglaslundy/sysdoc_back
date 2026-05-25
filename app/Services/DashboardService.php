@@ -630,7 +630,7 @@ class DashboardService
             ->whereNotIn('status', ['Cassado', 'Cancelado', 'Cancelado de ofício', 'Interditado'])
             ->orderBy('vencimento_alvara')
             ->limit(10)
-            ->get(['id', 'numero_alvara', 'status', 'vencimento_alvara', 'estabelecimento_id'])
+            ->get(['id', 'numero_alvara', 'nivel_risco', 'status', 'vencimento_alvara', 'estabelecimento_id'])
             ->toArray();
     }
 }
