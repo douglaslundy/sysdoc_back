@@ -534,14 +534,61 @@ class VisitaAcsController extends MonitorApsBaseController
             WHERE {$where}
         ", $params);
 
+        $familyData = null;
+        $familyExpr = $this->familyIdExpr();
+
+        if ($familyExpr !== null) {
+            // Family counts are always month-wide (desfecho/geo filters excluded)
+            // so the breakdown reflects the full picture, not just the filtered slice.
+            [$familyWhere, $familyParams] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
+
+            try {
+                $famRow = $this->db()->selectOne("
+                    SELECT
+                        COUNT(DISTINCT {$familyExpr})                        AS familias,
+                        COUNT(DISTINCT {$familyExpr})
+                            FILTER (WHERE d.co_seq_dim_desfecho_visita = 1) AS familias_acompanhadas,
+                        COUNT(DISTINCT {$familyExpr})
+                            FILTER (WHERE d.co_seq_dim_desfecho_visita = 2) AS familias_recusadas,
+                        COUNT(DISTINCT {$familyExpr})
+                            FILTER (WHERE d.co_seq_dim_desfecho_visita = 3) AS familias_ausentes
+                    FROM tb_fat_visita_domiciliar v
+                    {$this->baseJoins()}
+                    LEFT JOIN tb_fat_cad_individual ci ON ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    WHERE {$familyWhere}
+                ", $familyParams);
+
+                if ($famRow) {
+                    $familyData = [
+                        'familias'              => (int) ($famRow->familias ?? 0),
+                        'familias_acompanhadas' => (int) ($famRow->familias_acompanhadas ?? 0),
+                        'familias_recusadas'    => (int) ($famRow->familias_recusadas ?? 0),
+                        'familias_ausentes'     => (int) ($famRow->familias_ausentes ?? 0),
+                    ];
+                }
+            } catch (\Throwable) {
+                // Falha silenciosa — front trata null como "não disponível"
+            }
+        }
+
+        $nullFamily = [
+            'familias'              => null,
+            'familias_acompanhadas' => null,
+            'familias_recusadas'    => null,
+            'familias_ausentes'     => null,
+        ];
+
         return response()->json([
-            'totais' => [
-                'total' => (int) ($totRow->total ?? 0),
-                'realizadas' => (int) ($totRow->realizadas ?? 0),
-                'recusadas' => (int) ($totRow->recusadas ?? 0),
-                'ausentes' => (int) ($totRow->ausentes ?? 0),
-                'cidadaos' => (int) ($totRow->cidadaos ?? 0),
-            ],
+            'totais' => array_merge(
+                [
+                    'total'      => (int) ($totRow->total ?? 0),
+                    'realizadas' => (int) ($totRow->realizadas ?? 0),
+                    'recusadas'  => (int) ($totRow->recusadas ?? 0),
+                    'ausentes'   => (int) ($totRow->ausentes ?? 0),
+                    'cidadaos'   => (int) ($totRow->cidadaos ?? 0),
+                ],
+                $familyData ?? $nullFamily
+            ),
         ]);
     }
 
