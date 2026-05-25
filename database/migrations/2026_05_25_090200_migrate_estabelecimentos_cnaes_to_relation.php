@@ -11,7 +11,8 @@ return new class extends Migration
         $estabelecimentos = DB::table('estabelecimentos')->select('id', 'cnaes')->get();
 
         foreach ($estabelecimentos as $estabelecimento) {
-            $codigos = extrair_codigos_cnae((string) $estabelecimento->cnaes);
+            preg_match_all('/\d{4}-\d\/\d{2}/', (string) $estabelecimento->cnaes, $matches);
+            $codigos = array_values(array_unique($matches[0] ?? []));
 
             foreach ($codigos as $codigo) {
                 DB::table('cnaes')->updateOrInsert(
@@ -37,11 +38,3 @@ return new class extends Migration
         DB::table('estabelecimento_cnaes')->delete();
     }
 };
-
-if (! function_exists('extrair_codigos_cnae')) {
-    function extrair_codigos_cnae(string $texto): array
-    {
-        preg_match_all('/\d{4}-\d\/\d{2}/', $texto, $matches);
-        return array_values(array_unique($matches[0] ?? []));
-    }
-}
