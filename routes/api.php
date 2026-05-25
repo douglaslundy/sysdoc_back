@@ -35,6 +35,7 @@ use App\Http\Controllers\OrdinanceAttachmentController;
 use App\Http\Controllers\OrdinanceController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\PageViewAuditController;
+use App\Http\Controllers\PainelEsusController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PedidoExameController;
 use App\Http\Controllers\PharmacyCatalogAdminController;
@@ -82,6 +83,9 @@ Route::get('/public/pharmacy/medicines/daily', [MedicineTransparencyPublicContro
 Route::get('/public/pharmacy/medicines/panel', [MedicineTransparencyPublicController::class, 'panel']);
 Route::get('/public/pharmacy/medicines/monthly-acquisitions', [MedicineTransparencyPublicController::class, 'monthly']);
 Route::get('/attendance/panel/state', [AttendanceController::class, 'panelState']);
+
+// Painel de atendimento eSUS PEC — público (sala de espera)
+Route::middleware('throttle:30,1')->get('/public/painel-esus/estado', [PainelEsusController::class, 'estado']);
 
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
@@ -145,6 +149,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::get('/config/explorar', [MonitorApsConfigController::class, 'explorar']);
         });
 
+    });
+
+    // Painel de atendimento eSUS PEC — gestão de fila (autenticado)
+    Route::prefix('painel-esus')->group(function () {
+        Route::get('/fila',    [PainelEsusController::class, 'fila']);
+        Route::get('/filtros', [PainelEsusController::class, 'filtros']);
     });
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
