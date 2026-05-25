@@ -207,6 +207,63 @@ class VisitaAcsController extends MonitorApsBaseController
         return 'NULL::text';
     }
 
+    private function familyRespCol(): ?string
+    {
+        if (!$this->hasTable('tb_fat_cad_individual')) {
+            return null;
+        }
+
+        return $this->firstExistingColumn('tb_fat_cad_individual', [
+            'co_responsavel_familiar',
+            'co_fat_cidadao_pec_responsavel',
+        ]);
+    }
+
+    private function familyStCol(): ?string
+    {
+        if (!$this->hasTable('tb_fat_cad_individual')) {
+            return null;
+        }
+
+        return $this->firstExistingColumn('tb_fat_cad_individual', [
+            'st_responsavel_familiar',
+            'tp_responsavel_familiar',
+        ]);
+    }
+
+    /**
+     * Expressão SQL que identifica a família de um cidadão via JOIN com tb_fat_cad_individual (alias ci).
+     *
+     * Retorna null quando as colunas necessárias não existem — o chamador deve omitir
+     * o LEFT JOIN e retornar null nos campos de família da resposta.
+     *
+     * Lógica:
+     *   - Responsável: co_responsavel_familiar IS NULL → usa seu próprio co_fat_cidadao_pec
+     *   - Membro: co_responsavel_familiar aponta para o co_fat_cidadao_pec do responsável
+     *   - Sem vínculo familiar: expressão retorna NULL (excluído do COUNT DISTINCT)
+     */
+    private function familyIdExpr(string $alias = 'ci'): ?string
+    {
+        $stCol   = $this->familyStCol();
+        $respCol = $this->familyRespCol();
+
+        if (! $respCol && ! $stCol) {
+            return null;
+        }
+
+        if ($stCol && $respCol) {
+            return "COALESCE({$alias}.{$respCol}, CASE WHEN {$alias}.{$stCol} = 1 THEN {$alias}.co_fat_cidadao_pec END)";
+        }
+
+        if ($respCol) {
+            // Sem coluna de flag: assume NULL no co_responsavel = próprio responsável
+            return "COALESCE({$alias}.{$respCol}, {$alias}.co_fat_cidadao_pec)";
+        }
+
+        // Apenas flag disponível: identifica somente os responsáveis
+        return "CASE WHEN {$alias}.{$stCol} = 1 THEN {$alias}.co_fat_cidadao_pec ELSE NULL END";
+    }
+
     private function textColumnExpr(string $tableAlias, ?string $column): string
     {
         return $column ? "{$tableAlias}.{$column}::text" : 'NULL::text';
