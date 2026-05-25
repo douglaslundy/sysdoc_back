@@ -139,12 +139,28 @@ class VisitaAcsController extends MonitorApsBaseController
      * Builds the SQL expression for the visit annotation/notes.
      *
      * Priority:
+     *   0. tb_visita_domiciliar_acs (OLTP) linked via UUID — has free-text ds_anotacao
      *   1. Direct text column in tb_fat_visita_domiciliar (rare — some e-SUS versions populate it)
      *   2. Direct FK from fat table to tb_cds_visita_domiciliar
-     *   3. UUID-based join via tb_cds_ficha_visita_domiciliar + citizen match
      */
     private function buildNotesExpr(string $alias = 'v'): string
     {
+        // 0. OLTP ACS visit table — contains free-text annotation (ds_anotacao)
+        if ($this->hasTable('tb_visita_domiciliar_acs')) {
+            $fatUuidCol  = $this->firstExistingColumn('tb_fat_visita_domiciliar', [
+                'nu_uuid_ficha', 'co_unico_ficha', 'nu_uuid',
+            ]);
+            $acsUuidCol  = $this->firstExistingColumn('tb_visita_domiciliar_acs', [
+                'co_unico_visita_domiciliar', 'nu_uuid_ficha', 'nu_uuid', 'co_unico',
+            ]);
+            $acsAnnotCol = $this->firstExistingColumn('tb_visita_domiciliar_acs', [
+                'ds_anotacao', 'ds_observacao', 'ds_relato', 'ds_anotacao_visita',
+            ]);
+            if ($fatUuidCol && $acsUuidCol && $acsAnnotCol) {
+                return "(SELECT a.{$acsAnnotCol}::text FROM tb_visita_domiciliar_acs a WHERE a.{$acsUuidCol} = {$alias}.{$fatUuidCol} LIMIT 1)";
+            }
+        }
+
         // 1. Direct column in fact table
         $col = $this->firstExistingColumn('tb_fat_visita_domiciliar', [
             'ds_anotacao', 'ds_observacao', 'ds_relato',
@@ -156,34 +172,14 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         // 2. Direct FK: fat → cds visit row
-        $fatCdsFk  = $this->firstExistingColumn('tb_fat_visita_domiciliar', [
+        $fatCdsFk = $this->firstExistingColumn('tb_fat_visita_domiciliar', [
             'co_cds_visita_domiciliar', 'co_seq_cds_visita_domiciliar',
         ]);
-        $cdsAnnot  = $this->firstExistingColumn('tb_cds_visita_domiciliar', [
+        $cdsAnnot = $this->firstExistingColumn('tb_cds_visita_domiciliar', [
             'ds_anotacao', 'ds_observacao', 'ds_relato',
         ]);
         if ($fatCdsFk && $cdsAnnot) {
             return "(SELECT cds.{$cdsAnnot}::text FROM tb_cds_visita_domiciliar cds WHERE cds.co_seq_cds_visita_domiciliar = {$alias}.{$fatCdsFk} LIMIT 1)";
-        }
-
-        // 3. UUID-based join: fat.nu_uuid_ficha → ficha header → cds visit row (matched by citizen)
-        $uuidCol    = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_uuid_ficha', 'co_unico_ficha']);
-        $fichaPk    = $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['co_seq_cds_ficha_visita_domiciliar']);
-        $fichaUuid  = $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['nu_uuid_ficha', 'nu_uuid']);
-        $cdsFichaFk = $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cds_ficha_visita_domiciliar']);
-        $cdsCidCol  = $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cidadao']);
-        $pecCidCol  = $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']);
-
-        if ($cdsAnnot && $uuidCol && $fichaPk && $fichaUuid && $cdsFichaFk && $cdsCidCol && $pecCidCol) {
-            return "(SELECT cds.{$cdsAnnot}::text
-                     FROM tb_cds_ficha_visita_domiciliar ficha
-                     JOIN tb_cds_visita_domiciliar cds ON cds.{$cdsFichaFk} = ficha.{$fichaPk}
-                     WHERE ficha.{$fichaUuid} = {$alias}.{$uuidCol}
-                       AND cds.{$cdsCidCol} = (
-                           SELECT cp.{$pecCidCol} FROM tb_fat_cidadao_pec cp
-                           WHERE cp.co_seq_fat_cidadao_pec = {$alias}.co_fat_cidadao_pec LIMIT 1
-                       )
-                     LIMIT 1)";
         }
 
         return 'NULL::text';
@@ -631,9 +627,19 @@ class VisitaAcsController extends MonitorApsBaseController
 
         $notesExpr = $this->buildNotesExpr('v');
 
-        $citizenNameExpr = '(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)';
+        $citizenNameExpr = $this->citizenNameExpr('v');
 
-        // Endereço — fonte primária: DW (tb_fat_cad_dom_familia → tb_fat_cad_domiciliar)
+        // Endereço — fonte 1: tb_fat_cad_individual (Ficha de Cadastro Individual, por cidadão)
+        $indHasTable = $this->hasTable('tb_fat_cad_individual')
+                    && $this->hasColumn('tb_fat_cad_individual', 'co_fat_cidadao_pec');
+        $indLogCol   = $indHasTable ? $this->firstExistingColumn('tb_fat_cad_individual', ['ds_logradouro', 'no_logradouro']) : null;
+        $indNumCol   = $indHasTable ? $this->firstExistingColumn('tb_fat_cad_individual', ['nu_numero', 'nu_num_logradouro']) : null;
+        $indCompCol  = $indHasTable ? $this->firstExistingColumn('tb_fat_cad_individual', ['ds_complemento', 'no_complemento']) : null;
+        $indBaiCol   = $indHasTable ? $this->firstExistingColumn('tb_fat_cad_individual', ['ds_bairro', 'no_bairro']) : null;
+        $indCepCol   = $indHasTable ? $this->firstExistingColumn('tb_fat_cad_individual', ['nu_cep']) : null;
+        $indBase     = $indHasTable ? 'FROM tb_fat_cad_individual ci WHERE ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1' : null;
+
+        // Endereço — fonte 2: DW (tb_fat_cad_dom_familia → tb_fat_cad_domiciliar)
         $domPkCol         = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['co_seq_fat_cad_domiciliar']);
         $familyDomFkCol   = $this->firstExistingColumn('tb_fat_cad_dom_familia', ['co_fat_cad_domiciliar']);
         $familyCitizenCol = $this->firstExistingColumn('tb_fat_cad_dom_familia', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
@@ -647,7 +653,7 @@ class VisitaAcsController extends MonitorApsBaseController
             ? "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.{$domPkCol} = f.{$familyDomFkCol} WHERE f.{$familyCitizenCol} = v.co_fat_cidadao_pec LIMIT 1"
             : null;
 
-        // Endereço — fallback: tb_cidadao (tabela OLTP mestre, atualizada pelo cadastro individual)
+        // Endereço — fonte 3: tb_cidadao (tabela OLTP mestre)
         $cidPkCol    = $this->firstExistingColumn('tb_cidadao', ['co_seq_cidadao']);
         $pecCidCol   = $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']);
         $cidLogCol   = $this->firstExistingColumn('tb_cidadao', ['no_logradouro', 'ds_logradouro']);
@@ -660,18 +666,20 @@ class VisitaAcsController extends MonitorApsBaseController
             ? "FROM tb_cidadao cid JOIN tb_fat_cidadao_pec cp ON cp.{$pecCidCol} = cid.{$cidPkCol} WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1"
             : null;
 
-        $makeAddr = function (?string $dwCol, ?string $cidCol) use ($dwAddrBase, $cidAddrBase): string {
+        $makeAddr = function (?string $indCol, ?string $dwCol, ?string $cidCol) use ($indBase, $dwAddrBase, $cidAddrBase): string {
+            $ind = $indBase     && $indCol ? "(SELECT ci.{$indCol}::text {$indBase})"      : null;
             $dw  = $dwAddrBase  && $dwCol  ? "(SELECT d.{$dwCol}::text {$dwAddrBase})"    : null;
             $cid = $cidAddrBase && $cidCol ? "(SELECT cid.{$cidCol}::text {$cidAddrBase})" : null;
-            if ($dw && $cid) return "COALESCE({$dw}, {$cid})";
-            return $dw ?? $cid ?? 'NULL::text';
+            $parts = array_filter([$ind, $dw, $cid]);
+            if (count($parts) > 1) return 'COALESCE(' . implode(', ', $parts) . ')';
+            return $parts[0] ?? 'NULL::text';
         };
 
-        $logradouroExpr  = $makeAddr($logradouroCol, $cidLogCol);
-        $numeroExpr      = $makeAddr($numeroCol,     $cidNumCol);
-        $complementoExpr = $makeAddr($complementoCol, $cidCompCol);
-        $bairroExpr      = $makeAddr($bairroCol,     $cidBaiCol);
-        $cepExpr         = $makeAddr($cepCol,        $cidCepCol);
+        $logradouroExpr  = $makeAddr($indLogCol,  $logradouroCol, $cidLogCol);
+        $numeroExpr      = $makeAddr($indNumCol,  $numeroCol,     $cidNumCol);
+        $complementoExpr = $makeAddr($indCompCol, $complementoCol, $cidCompCol);
+        $bairroExpr      = $makeAddr($indBaiCol,  $bairroCol,     $cidBaiCol);
+        $cepExpr         = $makeAddr($indCepCol,  $cepCol,        $cidCepCol);
 
         $sqlFull = "
             SELECT
@@ -787,19 +795,19 @@ class VisitaAcsController extends MonitorApsBaseController
         $result['_debug'] = [
             'notes_expr'      => $notesExpr,
             'notes_probes'    => [
-                'fat_direct_col'  => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato', 'ds_anotacao_visita', 'ds_observacao_visita', 'tx_anotacao', 'tx_observacao', 'tx_relato']),
-                'fat_cds_fk'      => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['co_cds_visita_domiciliar', 'co_seq_cds_visita_domiciliar']),
-                'fat_uuid_col'    => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_uuid_ficha', 'co_unico_ficha']),
-                'cds_annot_col'   => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']),
-                'ficha_pk'        => $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['co_seq_cds_ficha_visita_domiciliar']),
-                'ficha_uuid_col'  => $this->firstExistingColumn('tb_cds_ficha_visita_domiciliar', ['nu_uuid_ficha', 'nu_uuid']),
-                'cds_ficha_fk'    => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cds_ficha_visita_domiciliar']),
-                'cds_cidadao_col' => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cidadao']),
-                'pec_cidadao_col' => $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']),
+                'acs_table'      => $this->hasTable('tb_visita_domiciliar_acs'),
+                'acs_fat_uuid'   => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_uuid_ficha', 'co_unico_ficha', 'nu_uuid']),
+                'acs_uuid_col'   => $this->firstExistingColumn('tb_visita_domiciliar_acs', ['co_unico_visita_domiciliar', 'nu_uuid_ficha', 'nu_uuid', 'co_unico']),
+                'acs_annot_col'  => $this->firstExistingColumn('tb_visita_domiciliar_acs', ['ds_anotacao', 'ds_observacao', 'ds_relato', 'ds_anotacao_visita']),
+                'fat_direct_col' => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']),
+                'fat_cds_fk'     => $this->firstExistingColumn('tb_fat_visita_domiciliar', ['co_cds_visita_domiciliar', 'co_seq_cds_visita_domiciliar']),
+                'cds_annot_col'  => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['ds_anotacao', 'ds_observacao', 'ds_relato']),
             ],
-            'addr_dw_base'  => $dwAddrBase  ? 'OK' : 'null',
-            'addr_cid_base' => $cidAddrBase ? 'OK' : 'null',
-            'addr_cid_cols' => compact('cidLogCol', 'cidNumCol', 'cidCompCol', 'cidBaiCol', 'cidCepCol'),
+            'addr_ind_base'  => $indBase     ? 'OK' : 'null',
+            'addr_ind_cols'  => compact('indLogCol', 'indNumCol', 'indCompCol', 'indBaiCol', 'indCepCol'),
+            'addr_dw_base'   => $dwAddrBase  ? 'OK' : 'null',
+            'addr_cid_base'  => $cidAddrBase ? 'OK' : 'null',
+            'addr_cid_cols'  => compact('cidLogCol', 'cidNumCol', 'cidCompCol', 'cidBaiCol', 'cidCepCol'),
         ];
         return response()->json($result);
     }
