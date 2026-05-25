@@ -9,8 +9,11 @@ class AttendancePanelService
 {
     public function state(): array
     {
+        $today = now()->toDateString();
+
         $latestCall = AttendanceCall::query()
             ->with(['ticket', 'client', 'room', 'user'])
+            ->whereDate('called_at', $today)
             ->orderByDesc('called_at')
             ->orderByDesc('id')
             ->first();
@@ -18,12 +21,14 @@ class AttendancePanelService
         $inService = AttendanceTicket::query()
             ->with(['client', 'room', 'assignedUser'])
             ->where('status', AttendanceTicket::STATUS_EM_ATENDIMENTO)
+            ->whereDate('created_at', $today)
             ->orderByDesc('started_at')
             ->limit(10)
             ->get();
 
         $lastCalls = AttendanceCall::query()
             ->with(['ticket', 'client', 'room', 'user'])
+            ->whereDate('called_at', $today)
             ->when($latestCall, function ($query) use ($latestCall) {
                 $query->where('id', '!=', $latestCall->id);
             })

@@ -109,6 +109,28 @@ class VisitaAcsController extends MonitorApsBaseController
         ';
     }
 
+    /**
+     * Expressão SQL para o instrumento de registro.
+     *
+     * tb_dim_tipo_ficha.ds_tipo_ficha armazena o NOME DA FICHA (template), que é sempre
+     * "CDS Ficha de Visita Domiciliar" independente do canal de entrada. O campo correto
+     * para distinguir tablet/CDS é st_tipo_instrumento_registro:
+     *   1 = CDS (offline/papel)  |  3 = PEC (tablet)  |  4 = App e-SUS APS
+     */
+    private function instrumentExpr(string $alias = 'v'): string
+    {
+        if ($this->hasColumn('tb_fat_visita_domiciliar', 'st_tipo_instrumento_registro')) {
+            return "CASE {$alias}.st_tipo_instrumento_registro
+                        WHEN 1 THEN 'CDS'
+                        WHEN 3 THEN 'PEC (Tablet)'
+                        WHEN 4 THEN 'App e-SUS APS'
+                        ELSE COALESCE(tf.ds_tipo_ficha, 'Desconhecido')
+                    END";
+        }
+
+        return 'tf.ds_tipo_ficha';
+    }
+
     private function listColumns(string $table): array
     {
         try {
@@ -383,7 +405,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.nu_ine                         AS team_ine,
                 e.no_equipe                      AS team_name,
                 t.dt_registro                    AS visited_date,
-                tf.ds_tipo_ficha                 AS instrument_label,
+                {$this->instrumentExpr()}        AS instrument_label,
                 d.co_seq_dim_desfecho_visita     AS outcome_code,
                 d.ds_desfecho_visita             AS outcome_label,
                 v.st_mot_vis_cad_att,
@@ -523,7 +545,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.nu_ine                         AS equipe_ine,
                 e.no_equipe                      AS equipe_nome,
                 v.nu_micro_area                  AS micro_area,
-                tf.ds_tipo_ficha                 AS instrumento,
+                {$this->instrumentExpr()}        AS instrumento,
                 d.co_seq_dim_desfecho_visita     AS desfecho_id,
                 d.ds_desfecho_visita             AS desfecho_label,
                 CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
@@ -567,7 +589,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.nu_ine                         AS equipe_ine,
                 e.no_equipe                      AS equipe_nome,
                 v.nu_micro_area                  AS micro_area,
-                tf.ds_tipo_ficha                 AS instrumento,
+                {$this->instrumentExpr()}        AS instrumento,
                 d.co_seq_dim_desfecho_visita     AS desfecho_id,
                 d.ds_desfecho_visita             AS desfecho_label,
                 CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
@@ -690,7 +712,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.no_equipe                      AS team_name,
                 t.dt_registro                    AS visited_date,
                 t.nu_hora                        AS hora,
-                tf.ds_tipo_ficha                 AS instrument_label,
+                {$this->instrumentExpr()}        AS instrument_label,
                 d.co_seq_dim_desfecho_visita     AS outcome_code,
                 d.ds_desfecho_visita             AS outcome_label,
                 v.nu_latitude                    AS lat,
@@ -741,7 +763,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 e.nu_ine                         AS team_ine,
                 e.no_equipe                      AS team_name,
                 t.dt_registro                    AS visited_date,
-                tf.ds_tipo_ficha                 AS instrument_label,
+                {$this->instrumentExpr()}        AS instrument_label,
                 d.co_seq_dim_desfecho_visita     AS outcome_code,
                 d.ds_desfecho_visita             AS outcome_label,
                 v.nu_latitude                    AS lat,

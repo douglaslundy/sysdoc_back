@@ -19,7 +19,7 @@ class ListMedicineDailyStatusesRequest extends BaseApiFormRequest
     {
         return [
             'reference_date' => ['nullable', 'date'],
-            'availability_status' => ['nullable', Rule::in(['available', 'unavailable'])],
+            'availability_status' => ['nullable', Rule::in(['available', 'unavailable', 'no_record'])],
             'medicine_item_id' => ['nullable', 'integer', 'exists:medicine_items,id'],
             'search' => ['nullable', 'string', 'max:120'],
             'include_all' => ['nullable', 'boolean'],
@@ -31,7 +31,7 @@ class ListMedicineDailyStatusesRequest extends BaseApiFormRequest
     {
         return [
             'reference_date.date' => 'A data de referência deve estar em formato válido.',
-            'availability_status.in' => 'A disponibilidade deve ser "available" ou "unavailable".',
+            'availability_status.in' => 'A disponibilidade deve ser "available", "unavailable" ou "no_record".',
             'medicine_item_id.integer' => 'O identificador do medicamento deve ser um número inteiro.',
             'medicine_item_id.exists' => 'O medicamento informado não foi encontrado.',
             'per_page.integer' => 'A paginação deve ser um número inteiro.',

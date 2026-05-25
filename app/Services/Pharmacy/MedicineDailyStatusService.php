@@ -67,7 +67,11 @@ class MedicineDailyStatusService
             ->where('active', true)
             ->orderBy('active_ingredient');
 
-        if ($statusFilter) {
+        if ($statusFilter === 'no_record') {
+            $query->whereDoesntHave('dailyStatuses', function ($q) use ($fallbackReferenceDate) {
+                $q->whereDate('reference_date', $fallbackReferenceDate);
+            });
+        } elseif ($statusFilter) {
             $query->whereHas('dailyStatuses', function ($q) use ($statusFilter) {
                 $q->where('availability_status', $statusFilter);
             });
