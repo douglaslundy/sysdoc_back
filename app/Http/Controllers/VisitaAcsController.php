@@ -919,6 +919,46 @@ class VisitaAcsController extends MonitorApsBaseController
             'has_geo' => 'nullable|string|in:sim,nao',
         ]);
 
-        return response()->json(['series' => []]);
+        $anoAtual = (int) date('Y');
+        $anos = [$anoAtual, $anoAtual - 1, $anoAtual - 2];
+
+        [$where, $params] = $this->buildWhereFilters(
+            $request->ine,
+            $request->agente,
+            $request->desfecho,
+            $request->has_geo,
+        );
+
+        $placeholders = implode(',', array_fill(0, count($anos), '?'));
+        $where .= " AND t.nu_ano IN ({$placeholders})";
+        $params = array_merge($params, $anos);
+
+        $rows = $this->db()->select("
+            SELECT
+                t.nu_ano  AS ano,
+                t.nu_mes  AS mes,
+                COUNT(*)  AS total
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            WHERE {$where}
+            GROUP BY t.nu_ano, t.nu_mes
+            ORDER BY t.nu_ano, t.nu_mes
+        ", $params);
+
+        $index = [];
+        foreach ($rows as $row) {
+            $index[(int) $row->ano][(int) $row->mes] = (int) $row->total;
+        }
+
+        $series = array_map(function (int $ano) use ($index): array {
+            $meses = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $meses[] = $index[$ano][$m] ?? 0;
+            }
+
+            return ['ano' => $ano, 'meses' => $meses];
+        }, $anos);
+
+        return response()->json(['series' => $series]);
     }
 }
