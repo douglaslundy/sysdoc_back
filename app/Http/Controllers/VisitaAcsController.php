@@ -90,7 +90,8 @@ class VisitaAcsController extends MonitorApsBaseController
 
     private function hasTable(string $table): bool
     {
-        return \Illuminate\Support\Facades\Cache::remember("aps_table2_{$table}", 86400, function () use ($table) {
+        $v = $this->schemaCacheVersion();
+        return \Illuminate\Support\Facades\Cache::remember("aps_table2_{$v}_{$table}", 86400, function () use ($table) {
             try {
                 $row = $this->db()->selectOne("
                     SELECT 1

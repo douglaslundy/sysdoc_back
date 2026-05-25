@@ -73,19 +73,32 @@ abstract class MonitorApsBaseController extends Controller
     }
 
     /**
+     * Versão do schema — incrementada em MonitorApsConfigController::save()
+     * para invalidar caches de hasColumn/hasTable sem precisar de cache tags.
+     */
+    protected function schemaCacheVersion(): int
+    {
+        return (int) Cache::get('aps_schema_v', 0);
+    }
+
+    /**
      * Verifica se uma coluna existe em uma tabela do banco eSUS.
-     * Resultado cacheado por 24h — evita query repetida a cada request.
+     * Usa pg_catalog.pg_attribute — funciona em qualquer versão do PostgreSQL,
+     * sem depender de information_schema (que pode falhar em versões antigas).
+     * Resultado cacheado por 24h; chave inclui versão do schema para invalidação.
      */
     protected function hasColumn(string $table, string $column): bool
     {
-        $key = "aps_col_{$table}_{$column}";
+        $v   = $this->schemaCacheVersion();
+        $key = "aps_col2_{$v}_{$table}_{$column}";
         return Cache::remember($key, 86400, function () use ($table, $column) {
             try {
                 $row = $this->db()->selectOne("
-                    SELECT 1 FROM information_schema.columns
-                    WHERE table_schema = 'public'
-                      AND table_name   = ?
-                      AND column_name  = ?
+                    SELECT 1 FROM pg_catalog.pg_attribute
+                    WHERE attrelid = ?::regclass
+                      AND attname   = ?
+                      AND attnum    > 0
+                      AND NOT attisdropped
                     LIMIT 1
                 ", [$table, $column]);
                 return $row !== null;

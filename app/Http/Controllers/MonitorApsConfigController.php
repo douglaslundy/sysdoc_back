@@ -125,10 +125,13 @@ class MonitorApsConfigController extends MonitorApsBaseController
             $conn->select('SELECT 1');
 
             $tabelas = $conn->select("
-                SELECT table_schema AS schema, table_name AS tabela, table_type AS tipo
-                FROM information_schema.tables
-                WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
-                ORDER BY table_schema, table_name
+                SELECT n.nspname AS schema, c.relname AS tabela,
+                       CASE c.relkind WHEN 'r' THEN 'BASE TABLE' WHEN 'v' THEN 'VIEW' ELSE c.relkind::text END AS tipo
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relkind IN ('r','v')
+                  AND n.nspname NOT IN ('information_schema','pg_catalog','pg_toast')
+                ORDER BY n.nspname, c.relname
             ");
 
             $nomes = collect($tabelas)->pluck('tabela');
@@ -225,6 +228,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
             }
             DB::purge('pgsql_esus_runtime');
             Cache::forget('aps_db_config');
+            Cache::put('aps_schema_v', time(), 86400 * 30);
             return response()->json(['success' => true]);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
@@ -240,11 +244,13 @@ class MonitorApsConfigController extends MonitorApsBaseController
             $conn = $this->db();
 
             $tabelasDW = $conn->select("
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                  AND (table_name LIKE 'tb_dim_%' OR table_name LIKE 'tb_fat_%')
-                ORDER BY table_name
+                SELECT c.relname AS table_name
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = 'public'
+                  AND c.relkind = 'r'
+                  AND (c.relname LIKE 'tb_dim_%' OR c.relname LIKE 'tb_fat_%')
+                ORDER BY c.relname
             ");
 
             $tabelas = [];
@@ -252,10 +258,16 @@ class MonitorApsConfigController extends MonitorApsBaseController
                 $nome = $t->table_name;
 
                 $colunas = $conn->select("
-                    SELECT column_name AS coluna, data_type AS tipo
-                    FROM information_schema.columns
-                    WHERE table_schema = 'public' AND table_name = ?
-                    ORDER BY ordinal_position
+                    SELECT a.attname AS coluna,
+                           pg_catalog.format_type(a.atttypid, a.atttypmod) AS tipo
+                    FROM pg_catalog.pg_attribute a
+                    JOIN pg_catalog.pg_class c ON c.oid = a.attrelid
+                    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                    WHERE c.relname = ?
+                      AND n.nspname = 'public'
+                      AND a.attnum > 0
+                      AND NOT a.attisdropped
+                    ORDER BY a.attnum
                 ", [$nome]);
 
                 $total = null;
