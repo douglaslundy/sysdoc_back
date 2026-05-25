@@ -806,7 +806,9 @@ class VisitaAcsController extends MonitorApsBaseController
             'nu_hora_exists'  => $this->hasColumn('tb_dim_tempo', 'nu_hora'),
             'addr_ind_base'  => $indBase     ? 'OK' : 'null',
             'addr_ind_cols'  => compact('indLogCol', 'indNumCol', 'indCompCol', 'indBaiCol', 'indCepCol'),
+            'addr_ind_all_cols' => $this->listColumns('tb_fat_cad_individual'),
             'addr_dw_base'   => $dwAddrBase  ? 'OK' : 'null',
+            'addr_dw_all_cols' => $this->listColumns('tb_fat_cad_domiciliar'),
             'addr_cid_base'  => $cidAddrBase ? 'OK' : 'null',
             'addr_cid_cols'  => compact('cidLogCol', 'cidNumCol', 'cidCompCol', 'cidBaiCol', 'cidCepCol'),
         ];
