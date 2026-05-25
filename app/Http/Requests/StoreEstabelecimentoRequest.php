@@ -6,6 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEstabelecimentoRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['cnaes' => $this->normalizeCnaes($this->cnaes)]);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -21,18 +26,33 @@ class StoreEstabelecimentoRequest extends FormRequest
             'cnpj' => ['nullable', 'string', 'max:18', 'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/'],
             'telefone' => ['nullable', 'string', 'max:20'],
             'endereco' => ['required', 'string', 'max:500'],
-            'cnaes' => ['required', 'string', 'max:1000'],
+            'cnaes' => ['required', 'array', 'min:1'],
+            'cnaes.*' => ['required', 'string', 'regex:/^\d{4}-\d\/\d{2}$/'],
             'obs' => ['nullable', 'string', 'max:5000'],
         ];
     }
 
-    public function messages(): array
+    private function normalizeCnaes(mixed $raw): array
     {
-        return [
-            'nome_responsavel.required' => 'O nome do responsável é obrigatório.',
-            'nome_estabelecimento.required' => 'O nome do estabelecimento é obrigatório.',
-            'endereco.required' => 'O endereço é obrigatório.',
-            'cnaes.required' => 'Os CNAEs são obrigatórios.',
-        ];
+        $values = is_array($raw) ? $raw : [$raw];
+        $out = [];
+
+        foreach ($values as $item) {
+            if ($item === null) {
+                continue;
+            }
+            $text = (string) $item;
+            preg_match_all('/\d{2}\.?\d{2}-?\d\/?-?\d{2}|\d{4}-\d\/\d{2}/', $text, $matches);
+            foreach (($matches[0] ?? []) as $found) {
+                $digits = preg_replace('/\D/', '', $found);
+                if (strlen($digits) !== 7) {
+                    continue;
+                }
+                $out[] = substr($digits, 0, 4).'-'.substr($digits, 4, 1).'/'.substr($digits, 5, 2);
+            }
+        }
+
+        return array_values(array_unique($out));
     }
 }
+

@@ -320,24 +320,37 @@ class DashboardController extends Controller
             'fontes_aquisicao_mes' => [],
         ];
 
-        $today = now()->toDateString();
         $currentMonth = now()->format('Y-m');
 
         try {
-            $cacheKey = 'dashboard.farmacia.'.$janelaDias.'.'.$janelaMeses.'.'.now()->format('Y-m-d');
-            $data = Cache::remember($cacheKey, 180, function () use ($today, $currentMonth, $janelaDias, $janelaMeses) {
+            $cacheKey = 'dashboard.farmacia.v2.'.$janelaDias.'.'.$janelaMeses.'.'.now()->format('Y-m-d');
+            $data = Cache::remember($cacheKey, 180, function () use ($currentMonth, $janelaDias, $janelaMeses) {
                 try {
                     $medicamentosAtivos = (int) DB::table('medicine_items')
                         ->whereNull('deleted_at')
                         ->where('active', true)
                         ->count();
 
-                    $statusHoje = DB::table('medicine_daily_statuses')
-                        ->whereDate('reference_date', $today);
+                    $statusAtual = DB::table('medicine_items as m')
+                        ->leftJoin('medicine_daily_statuses as s', function ($join) {
+                            $join->on('s.medicine_item_id', '=', 'm.id')
+                                ->whereRaw('s.id = (
+                                    select s2.id
+                                    from medicine_daily_statuses s2
+                                    where s2.medicine_item_id = m.id
+                                    order by s2.reference_date desc, s2.id desc
+                                    limit 1
+                                )');
+                        })
+                        ->whereNull('m.deleted_at')
+                        ->where('m.active', true);
 
-                    $registrosStatusHoje = (int) (clone $statusHoje)->count();
-                    $disponiveisHoje = (int) (clone $statusHoje)->where('availability_status', 'available')->count();
-                    $indisponiveisHoje = (int) (clone $statusHoje)->where('availability_status', 'unavailable')->count();
+                    $registrosStatusHoje = $medicamentosAtivos;
+                    $disponiveisHoje = (int) (clone $statusAtual)
+                        ->where('s.availability_status', 'available')
+                        ->where('s.available_quantity', '>', 0)
+                        ->count();
+                    $indisponiveisHoje = max($registrosStatusHoje - $disponiveisHoje, 0);
                     $taxaDisponibilidade = $registrosStatusHoje > 0
                         ? round(($disponiveisHoje / $registrosStatusHoje) * 100, 1)
                         : 0;
@@ -362,8 +375,8 @@ class DashboardController extends Controller
                     $statusPorDia = DB::table('medicine_daily_statuses')
                         ->select(
                             'reference_date as dia',
-                            DB::raw("SUM(CASE WHEN availability_status = 'available' THEN 1 ELSE 0 END) as disponiveis"),
-                            DB::raw("SUM(CASE WHEN availability_status = 'unavailable' THEN 1 ELSE 0 END) as indisponiveis"),
+                            DB::raw("SUM(CASE WHEN availability_status = 'available' AND COALESCE(available_quantity, 0) > 0 THEN 1 ELSE 0 END) as disponiveis"),
+                            DB::raw("SUM(CASE WHEN availability_status = 'unavailable' OR COALESCE(available_quantity, 0) <= 0 THEN 1 ELSE 0 END) as indisponiveis"),
                             DB::raw('COUNT(*) as total')
                         )
                         ->whereDate('reference_date', '>=', now()->subDays($janelaDias - 1)->toDateString())
@@ -401,7 +414,11 @@ class DashboardController extends Controller
                             DB::raw('COUNT(*) as dias_indisponivel')
                         )
                         ->whereDate('s.reference_date', '>=', now()->subDays($janelaDias - 1)->toDateString())
-                        ->where('s.availability_status', 'unavailable')
+                        ->where(function ($query) {
+                            $query->where('s.availability_status', 'unavailable')
+                                ->orWhere('s.available_quantity', '<=', 0)
+                                ->orWhereNull('s.available_quantity');
+                        })
                         ->whereNull('m.deleted_at')
                         ->groupBy('m.id', 'm.active_ingredient', 'm.internal_code')
                         ->orderByDesc('dias_indisponivel')

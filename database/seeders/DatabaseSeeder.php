@@ -14,7 +14,10 @@ class DatabaseSeeder extends Seeder
             AccessProfileSeeder::class,           // Perfis de acesso + paginas + permissoes
             CategoriaExameSeeder::class,          // Categorias de exames laboratoriais
             ExamesCompletosSeeder::class,         // Catalogo completo de exames
+            CnaesOficiaisSeeder::class,           // Tabela oficial de CNAEs (IBGE/CONCLA)
             EstabelecimentosAlvarasSeeder::class, // Estabelecimentos e alvaras de Ilicinea
+            EstabVisaComplementoProducaoSeeder::class, // Complemento de estabelecimentos/alvaras EstabVisa
+            ReconciliarCnaesEstabvisaSeeder::class, // Reconcilia CNAEs a partir do dump antigo + planilhas EstabVisa
             PharmacyCatalogSeeder::class,         // Catalogos auxiliares da Farmacia
             SusMgMedicinesSeeder::class,          // Medicamentos SUS-MG (REMEMG/CEAF + controlados)
             MonitorApsPageSeeder::class,          // Monitor APS - categorias, paginas e permissoes

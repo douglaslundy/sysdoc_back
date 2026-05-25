@@ -9,6 +9,14 @@ class EstabelecimentoResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $cnaesCollection = $this->relationLoaded('cnaes') ? collect($this->resource->getRelation('cnaes')) : collect();
+        $cnaesDetalhados = $cnaesCollection->map(fn ($cnae) => [
+                'codigo' => $cnae->codigo,
+                'descricao' => $cnae->descricao,
+            ])->values()->all();
+
+        $cnaesCodigos = collect($cnaesDetalhados)->pluck('codigo')->all();
+
         return [
             'id' => $this->id,
             'nome_responsavel' => $this->nome_responsavel,
@@ -18,7 +26,9 @@ class EstabelecimentoResource extends JsonResource
             'cnpj' => $this->cnpj,
             'telefone' => $this->telefone,
             'endereco' => $this->endereco,
-            'cnaes' => $this->cnaes,
+            'cnaes' => $cnaesCodigos,
+            'cnaes_texto' => implode(' ', $cnaesCodigos),
+            'cnaes_detalhados' => $cnaesDetalhados,
             'obs' => $this->obs,
             'alvaras_count' => $this->whenCounted('alvaras'),
             'created_at' => $this->created_at?->toDateTimeString(),

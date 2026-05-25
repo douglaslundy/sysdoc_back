@@ -279,6 +279,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // Alvarás e Estabelecimentos (Vigilância Sanitária)
     // ATENÇÃO: rotas estáticas ANTES de apiResource para não conflitar com {id}
     Route::get('/estabelecimentos/select', [EstabelecimentoController::class, 'select']);
+    Route::get('/cnaes/select', [EstabelecimentoController::class, 'cnaesSelect']);
     Route::apiResource('estabelecimentos', EstabelecimentoController::class);
     Route::get('/alvaras/{id}/pdf', [AlvaraController::class, 'downloadPdf']);
     Route::apiResource('alvaras', AlvaraController::class);

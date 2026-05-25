@@ -119,7 +119,10 @@
     $responsavel = strtoupper($est?->nome_responsavel ?? 'XXXXXXXXXXXXXXXXX');
     $estabelecimento = strtoupper($est?->nome_estabelecimento ?? 'XXXXXXXXXXXXXXXXX');
     $endereco = strtoupper($est?->endereco ?? 'XXXXXXXXXXXXXXXXX');
-    $cnae = $est?->cnaes ?: 'XXXXXXXXX';
+    $cnaes = collect();
+    if ($est && method_exists($est, 'relationLoaded') && $est->relationLoaded('cnaes')) {
+      $cnaes = collect($est->getRelation('cnaes'));
+    }
     $validadeExtenso = $fmtDateExtenso($alvara->vencimento_alvara);
 
     $obs = is_array($config->observacoes) ? array_values($config->observacoes) : [];
@@ -168,7 +171,13 @@
         pelo período de 1 (um) ano, que o habilita a manter as seguintes atividades:
       </p>
 
-      <p>1. {{ $cnae }}</p>
+      @if($cnaes->count() > 0)
+        @foreach($cnaes as $i => $item)
+          <p>{{ $i + 1 }}. {{ $item->codigo }} - {{ $item->descricao }}</p>
+        @endforeach
+      @else
+        <p>1. XXXXXXXX - DESCRIÇÃO NÃO INFORMADA</p>
+      @endif
 
       <div class="field-inline"><span class="field-label">Responsável Técnico:</span> {{ $responsavel }}</div>
       <div class="field-inline">Este Alvará Sanitário se estende apenas ao(s) CNAE(S) citado(s) acima.</div>

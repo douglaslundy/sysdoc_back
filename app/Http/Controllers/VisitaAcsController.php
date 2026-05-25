@@ -720,7 +720,6 @@ class VisitaAcsController extends MonitorApsBaseController
               AND v.nu_latitude  IS NOT NULL
               AND v.nu_longitude IS NOT NULL
             ORDER BY t.dt_registro DESC
-            LIMIT 2000
         ";
 
         // Fallback seguro: sem LATERAL e sem nu_hora Ã¢â‚¬â€ tabelas base garantidas
@@ -743,7 +742,6 @@ class VisitaAcsController extends MonitorApsBaseController
               AND v.nu_latitude  IS NOT NULL
               AND v.nu_longitude IS NOT NULL
             ORDER BY t.dt_registro DESC
-            LIMIT 2000
         ";
 
         $sql  = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;

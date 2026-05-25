@@ -10,7 +10,7 @@ class AlvaraPdfService
 {
     public function gerar(Alvara $alvara): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $alvara->load('estabelecimento');
+        $alvara->load('estabelecimento.cnaes');
 
         $config = VigilanciaConfig::get();
 

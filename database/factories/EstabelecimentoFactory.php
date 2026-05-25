@@ -19,7 +19,6 @@ class EstabelecimentoFactory extends Factory
             'cnpj' => null,
             'telefone' => $this->faker->optional()->numerify('(##) #####-####'),
             'endereco' => $this->faker->address(),
-            'cnaes' => $this->faker->numerify('##.##-#-##'),
             'obs' => $this->faker->optional()->sentence(),
         ];
     }

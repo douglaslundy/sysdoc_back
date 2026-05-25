@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -21,12 +22,17 @@ class Estabelecimento extends Model
         'cnpj',
         'telefone',
         'endereco',
-        'cnaes',
         'obs',
     ];
 
     public function alvaras(): HasMany
     {
         return $this->hasMany(Alvara::class, 'estabelecimento_id');
+    }
+
+    public function cnaes(): BelongsToMany
+    {
+        return $this->belongsToMany(Cnae::class, 'estabelecimento_cnaes')
+            ->withTimestamps();
     }
 }

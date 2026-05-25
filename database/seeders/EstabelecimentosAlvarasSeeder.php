@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cnae;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +17,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         $agora = now();
 
         // Linha 2
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Wagner Eduardo Bueno',
             'nome_estabelecimento' => 'Academia Evolution Fitness',
             'endereco' => 'Rua do Comércio, 420',
@@ -37,7 +38,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 3
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Sandro Menezes de Oliveira',
             'nome_estabelecimento' => 'Academia Saúde Total',
             'endereco' => 'Rua do Comércio, 215',
@@ -58,7 +59,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 4
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Marcelino Moreira Costa',
             'nome_estabelecimento' => 'Academia Vida Ativa',
             'endereco' => 'Rua Direita, 110',
@@ -79,7 +80,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 5
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'A informar',
             'nome_estabelecimento' => 'Açaí e CIA',
             'endereco' => 'Endereço a informar.',
@@ -89,7 +90,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 6
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Neimar Pereira Guedes',
             'nome_estabelecimento' => 'Açaí Sorvetes',
             'endereco' => 'Rua Direita, 72 - Centro',
@@ -99,7 +100,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 7
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Celeno César de Sousa',
             'nome_estabelecimento' => 'Açougue Casa da Carne João e Maria',
             'endereco' => 'Rua Doze de Outúbro, 78',
@@ -120,7 +121,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 8
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Dayvison Wallas Claudino',
             'nome_estabelecimento' => 'Adega DAYVISON WALLAS CLAUDINO (Distribuidora DJ)',
             'endereco' => 'Rua Brasil, 08',
@@ -130,7 +131,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 9
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Antônio Roberto de Andrade Junior',
             'nome_estabelecimento' => 'Adega do Juninho do Beto',
             'endereco' => 'Rua Santa Catarina, 22',
@@ -140,7 +141,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 10
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Vinícius Eugênio Alvarenga de Melo',
             'nome_estabelecimento' => 'Adega House Beer',
             'endereco' => 'Praça Padre João Lourenço Leite, 02',
@@ -161,7 +162,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 11
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Bruna Loraine Rocha Assis',
             'nome_estabelecimento' => 'Ar Essence Espaço Integrado',
             'endereco' => 'Avenida José Vilela da Costa, 980 - Cidade Nova',
@@ -182,7 +183,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 12
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Querem Danielle Rocha Assis',
             'nome_estabelecimento' => 'Ar Essence Espaço Integrado',
             'endereco' => 'Avenida José Vilela da Costa, 980 - Cidade Nova',
@@ -203,7 +204,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 13
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Odilon Rodrigues de Oliveira',
             'nome_estabelecimento' => 'Atividade de Estética',
             'endereco' => 'Rua Paraíba, 370',
@@ -213,7 +214,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 14
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Larissa Bernardes de Oliveira',
             'nome_estabelecimento' => 'Bar Chalé da XV',
             'endereco' => 'Avenida XV de Novembro, 1457',
@@ -223,7 +224,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 15
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Rosilene Júlia Vilela',
             'nome_estabelecimento' => 'Bar da Rosy',
             'endereco' => 'Rua Maranhão, 182',
@@ -244,7 +245,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 16
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Roberto Antônio de Lima',
             'nome_estabelecimento' => 'Bar do Baiano',
             'endereco' => 'Rua Vanilton Vilela de Faria, 242',
@@ -254,7 +255,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 17
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Rosimeire Aparecida da Costa',
             'nome_estabelecimento' => 'Bar do Beto',
             'endereco' => 'Rua do Comércio, 272',
@@ -264,7 +265,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 18
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'José Marcio dos Santos',
             'nome_estabelecimento' => 'Bar do José Marcio',
             'endereco' => 'Rua Querubino Vilela Moscardini, 245',
@@ -274,7 +275,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 19
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Rone Marcos Alves',
             'nome_estabelecimento' => 'Bar do Rone',
             'endereco' => 'Avenida José Vilela da Costa, 211',
@@ -284,7 +285,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 20
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Marciel Antônio da Silva',
             'nome_estabelecimento' => 'BAR E PETISCARIA DO MARCIEL LTDA',
             'endereco' => 'Rua Vanilton Vilela de Faria, 292',
@@ -294,7 +295,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 21
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'João Paulo Lucarini Bueno',
             'nome_estabelecimento' => 'Bar Morada Caipira',
             'endereco' => 'Rua Vanilton Vilela de Faria, 302',
@@ -304,7 +305,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 22
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maria Luiza Montanine',
             'nome_estabelecimento' => 'Bar Recanto da Lagoa',
             'endereco' => 'Rua Joaquim Marciano de Carvalho',
@@ -314,7 +315,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 23
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Irandi Patrocinio Leite',
             'nome_estabelecimento' => 'Barbearia do Pretinho',
             'endereco' => 'Rua Boa Esperança, 540',
@@ -335,7 +336,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 24
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Guilherme Henrique Vilela Messias',
             'nome_estabelecimento' => 'Barbearia Gentleman\'s Barbershop',
             'endereco' => 'Avenida XV de Novembro, 120',
@@ -356,7 +357,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 25
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Kelder de Lucas',
             'nome_estabelecimento' => 'Barbearia kerder Cortes',
             'endereco' => 'Rua Sebastião Cardoso, 220 - Centro',
@@ -377,7 +378,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 26
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Matheus Oliveira Pereira',
             'nome_estabelecimento' => 'Barbearia Matheus',
             'endereco' => 'Rua Padre Jose Zellis, 102',
@@ -398,7 +399,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 27
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Weverton Cesar de Oliveira',
             'nome_estabelecimento' => 'Barbearia Oliveira',
             'endereco' => 'Rua Leopoldino Mendes, 141',
@@ -419,7 +420,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 28
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Cristiane Barbosa Ferreira',
             'nome_estabelecimento' => 'BARBOSA FERREIRA LABORATORIO LTDA (Labcon)',
             'endereco' => 'Avenida 15 de Novembro, 206',
@@ -440,7 +441,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 29
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Neymar Eventos',
             'nome_estabelecimento' => 'Barracas Motorock',
             'endereco' => 'Praça Padre João Lourenço Leite',
@@ -450,7 +451,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 30
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Lucimar Aparecida Teixeira',
             'nome_estabelecimento' => 'Bona Quitanda',
             'endereco' => 'Rua Herculino da Silva, 73',
@@ -471,7 +472,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 31
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Tereza Cristina Vilela Lemos',
             'nome_estabelecimento' => 'Bradesco S.A.',
             'endereco' => 'Rua Direita, 173 - Centro',
@@ -481,7 +482,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 32
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Elias Alves dos Santos',
             'nome_estabelecimento' => 'Buteko da Praça',
             'endereco' => 'Rua Doze de Outubro, 213',
@@ -491,7 +492,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 33
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ana Luiza Alves Teixeira',
             'nome_estabelecimento' => 'Cantinho do Açaí',
             'endereco' => 'Rua do comércio, 586',
@@ -501,7 +502,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 34
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Elaine Aparecida Pereira',
             'nome_estabelecimento' => 'Casa de Rações Amigo do Campo',
             'endereco' => 'Rua Brasil, 298',
@@ -522,7 +523,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 35
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Lucineia Santos',
             'nome_estabelecimento' => 'Centro Dias (APAE)',
             'endereco' => 'Rua Querubino Vilela Moscardini, 125',
@@ -543,7 +544,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 36
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'A informar',
             'nome_estabelecimento' => 'Clínica F&L Aliança LTDA',
             'endereco' => 'Endereço a informar.',
@@ -553,7 +554,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 37
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Gessica Camila da Silva',
             'nome_estabelecimento' => 'Clínica Gessica Camila Podologia',
             'endereco' => 'Avenida XV de Novembro, 104',
@@ -574,7 +575,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 38
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Patrícia Figueiredo',
             'nome_estabelecimento' => 'Clínica Patrícia Figueiredo Odontologia',
             'endereco' => 'Rua Paraná, 47 - Centro',
@@ -595,7 +596,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 39
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Igor Ferreira Botto',
             'nome_estabelecimento' => 'Clinica Revigore Centro Médico e Exames EIRELLISILVA LTDA.',
             'endereco' => 'Rua Parana, 97',
@@ -616,7 +617,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 40
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maik',
             'nome_estabelecimento' => 'Clube Social Ilicinense',
             'endereco' => 'Rua Edson Bernardesa Vilela, 301',
@@ -637,7 +638,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 41
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Juliana Aparecida Alves Faria',
             'nome_estabelecimento' => 'Comercial Faria LTDA.',
             'endereco' => 'Rua Maranhão, 171',
@@ -658,7 +659,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 42
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Danele Françue Vitar Lima',
             'nome_estabelecimento' => 'Consultorio Danelly Lima',
             'endereco' => 'Praça Padre João Lourenço Leite, 47',
@@ -679,7 +680,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 43
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Izabelly Lucarini Vilela Carvalho',
             'nome_estabelecimento' => 'Consultório Izabelle Lucarini',
             'endereco' => 'Avenida XV de Novembro, 55',
@@ -700,7 +701,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 44
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Frank Luis Martins Graneiro CRM/MG 38485',
             'nome_estabelecimento' => 'Consultório Médico Dr. Frank',
             'endereco' => 'Avenida Xv de Novembro, 155',
@@ -721,7 +722,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 45
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Aluany Luisa de Sousa Alvarenga',
             'nome_estabelecimento' => 'Consultório Odontológico Aluany',
             'endereco' => 'Rua Áurea, 670',
@@ -742,7 +743,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 46
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Angelo de Oliveira Junior Dias',
             'nome_estabelecimento' => 'Consultório Odontológico Angelo',
             'endereco' => 'Avenida 15 de Novembro, 8 - Centro',
@@ -763,7 +764,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 47
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Gabriela Alvarenga Vilela',
             'nome_estabelecimento' => 'Consultório Odontológico Gabriela',
             'endereco' => 'Rua Direita, 34',
@@ -784,7 +785,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 48
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maria Gisele Damasceno',
             'nome_estabelecimento' => 'Consultório Odontológico Gisele',
             'endereco' => 'Rua Francisco de Ouro, 104',
@@ -805,7 +806,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 49
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Gisele Arco Verde',
             'nome_estabelecimento' => 'Consultório Odontológico Giséle Arco Verde',
             'endereco' => 'Rua Boa Esperança, 267',
@@ -826,7 +827,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 50
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maria Regina Oliveira Silva',
             'nome_estabelecimento' => 'Consultório Odontológico RG',
             'endereco' => 'Rua do Comércio, 116 - Centro',
@@ -847,7 +848,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 51
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Viviane Vilela Oliveira',
             'nome_estabelecimento' => 'Consultório Odontológico Viviane',
             'endereco' => 'Rua Direita, 85',
@@ -868,7 +869,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 52
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ciciana Almeida Silva',
             'nome_estabelecimento' => 'CRAS (centro de assistência)',
             'endereco' => 'Avenida 15 de novembro, 690',
@@ -889,7 +890,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 53
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maria Helena Carvalho',
             'nome_estabelecimento' => 'Creche Cemei Luriane Rosalves Ribeiro',
             'endereco' => 'Rua Querubino Vilela Moscardini, 210',
@@ -910,7 +911,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 54
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Cristiane de Paula Silva',
             'nome_estabelecimento' => 'Cristiane Bolos',
             'endereco' => 'Zona Rural Comunidade Grotão',
@@ -931,7 +932,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 55
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Gabriel Henrique da Cunha',
             'nome_estabelecimento' => 'Distibuidora Conveniencia SM.',
             'endereco' => 'Avenida Jose Vilela da Costa, 204',
@@ -941,7 +942,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 56
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Rafael Oliveira Damasceno',
             'nome_estabelecimento' => 'Docê Hamburgueria e Confeitaria',
             'endereco' => 'Rua Santa Catarina, 70 - Centro',
@@ -951,7 +952,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 57
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Otávio Henrique Rezende A.',
             'nome_estabelecimento' => 'Droga 100',
             'endereco' => 'Rua Comércio, 855',
@@ -961,7 +962,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 58
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Daine Aparecida Lima',
             'nome_estabelecimento' => 'Drogaria Dias - ME (Filial)',
             'endereco' => 'Praça Sete de Setembro, 50',
@@ -982,7 +983,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 59
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Jaqueline Dayane da Silva CRF/MG31.695',
             'nome_estabelecimento' => 'Drogaria Dias Ltda. Rede Mais Minas (Matriz)',
             'endereco' => 'Avenida José Vilela da Costa, 514',
@@ -992,7 +993,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 60
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Denis Rafael Vilela de Sousa CRF 44623',
             'nome_estabelecimento' => 'Drogaria Minas Master (Filial)',
             'endereco' => 'Avenida 15 de Novembro, 316',
@@ -1002,7 +1003,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 61
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Deliani Aparecida Oliveira',
             'nome_estabelecimento' => 'Drogaria Minas Master (Matriz)',
             'endereco' => 'Rua Do Comércio, 111',
@@ -1012,7 +1013,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 62
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Otávio Junqueira Silva',
             'nome_estabelecimento' => 'Drogaria Minas Super Farma',
             'endereco' => 'Avenida 15 de Novembro, 300',
@@ -1033,7 +1034,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 63
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Marilia Ranieli de Sousa',
             'nome_estabelecimento' => 'Drogaria Nossa Senhora Aparecida',
             'endereco' => 'Rua Boa Esperança, 788',
@@ -1043,7 +1044,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 64
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Mateus Faustino de Carvalho',
             'nome_estabelecimento' => 'Drogaria Nossa Senhora Aparecida (Filial)',
             'endereco' => 'Rua Francisco de Ouro, 90',
@@ -1053,7 +1054,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 65
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Adriano da Silva Pires',
             'nome_estabelecimento' => 'EDSON SILVA BORGES (Funerária Santa Rita)',
             'endereco' => 'Rua 2 de novembro, 112',
@@ -1074,7 +1075,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 66
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Andrelisa Aparecida de Andrade Carrijo',
             'nome_estabelecimento' => 'EMPORIO J.N LTDA',
             'endereco' => 'Rua Maranhão, 03',
@@ -1095,7 +1096,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 67
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Claudia Aparecida Nunes',
             'nome_estabelecimento' => 'Escola Estadual Nossa Senhora Aparecida',
             'endereco' => 'Rua Doze de Outúbro, 198',
@@ -1116,7 +1117,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 68
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Elaine Carvalho',
             'nome_estabelecimento' => 'Escola Municiapal Maria Elma Firmino',
             'endereco' => 'Praça do Rosario,',
@@ -1137,7 +1138,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 69
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Izabel Aparecida Oliveira',
             'nome_estabelecimento' => 'Escola Municipal Neiva Maria Mendes',
             'endereco' => 'Rua Aurea, 448',
@@ -1147,7 +1148,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 70
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Germana Isabel Misseno',
             'nome_estabelecimento' => 'Escola Municipal Professor Ismael Silva',
             'endereco' => 'Rua Francisco Augusto Passos Maia, 120',
@@ -1168,7 +1169,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 71
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Vera Lucia Marciano',
             'nome_estabelecimento' => 'Espaço Diola',
             'endereco' => 'Rodovia Br 265, km 0',
@@ -1189,7 +1190,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 72
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Bruniely Aparecida Belineli',
             'nome_estabelecimento' => 'Estética Bruniely',
             'endereco' => 'Rua Aurea, 70 - Centro',
@@ -1210,7 +1211,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 73
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Erica Fernanda de Paulo',
             'nome_estabelecimento' => 'Estética Erica Fernanda',
             'endereco' => 'Rua do Comércio, 111 - sala 01',
@@ -1231,7 +1232,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 74
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Lilian Oliveira Dutra Costa',
             'nome_estabelecimento' => 'Farmácia de Minas',
             'endereco' => 'Rua 12 do Outubro,  345',
@@ -1252,7 +1253,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 75
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Dijan Vitor Freire',
             'nome_estabelecimento' => 'Festa do Peão de Ilicínea',
             'endereco' => 'Centro de Eventos Rodolfo Bernardes Ferreira',
@@ -1262,7 +1263,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 76
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Evani Alvarenga Vilela',
             'nome_estabelecimento' => 'Festa Junina Creche',
             'endereco' => 'Rua Dois de Novembro',
@@ -1272,7 +1273,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 77
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Naiane Fonseca',
             'nome_estabelecimento' => 'Festa Junina na Praça',
             'endereco' => 'Praça Padre João Lourenço Leite',
@@ -1282,7 +1283,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 78
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Lucilei Dias Rocha',
             'nome_estabelecimento' => 'Hortigranjeiro',
             'endereco' => 'Praça Padre João Lourenço Leite',
@@ -1303,7 +1304,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 79
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Aliny Bruniely Amaral',
             'nome_estabelecimento' => 'Instituição de Longa Permanência para Idosos Vila Vicentina',
             'endereco' => 'Rua São Vicente, 100',
@@ -1324,7 +1325,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 80
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Jaqueline Alves',
             'nome_estabelecimento' => 'Jaqueline Alves',
             'endereco' => 'Rua do Comércio, 1050',
@@ -1345,7 +1346,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 81
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Joyce Maria Leopoldino',
             'nome_estabelecimento' => 'JOYCE MARIA LEOPOLDINO (Banho e tosa)',
             'endereco' => 'Rua Áurea, 417',
@@ -1355,7 +1356,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 82
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Fabricio Faria de Oliveira',
             'nome_estabelecimento' => 'KAROLAINE APARECIDA CASSIANO OLIVEIRA (Mascote)',
             'endereco' => 'Rua Brasil, 407',
@@ -1365,7 +1366,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 83
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ricardo Luiz Pereira Sergio',
             'nome_estabelecimento' => 'Kspetos Bar - Ricardo do Espeto',
             'endereco' => 'Avenida XV de Novembro, 1240',
@@ -1375,7 +1376,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 84
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Waldir José de Assis',
             'nome_estabelecimento' => 'Laboratório Biológica',
             'endereco' => 'Rua Coqueiral, 10',
@@ -1396,7 +1397,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 85
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'João Marcos Siqueira',
             'nome_estabelecimento' => 'Lanchonete D`Guste',
             'endereco' => 'Rua Brasil, 03',
@@ -1417,7 +1418,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 86
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ana Paula Alves de Assis',
             'nome_estabelecimento' => 'Lanchonete Espaço Burger',
             'endereco' => 'Rua Sebastião Cardoso, 71',
@@ -1427,7 +1428,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 87
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Laís Correia Araújo',
             'nome_estabelecimento' => 'Lanchonete House Burger',
             'endereco' => 'Avenida José Vilela da Costa, 325',
@@ -1437,7 +1438,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 88
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Claudio Cesar Vaneli',
             'nome_estabelecimento' => 'Lanchonete Los Vaneli',
             'endereco' => 'Rua Boa Esperança, 526',
@@ -1447,7 +1448,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 89
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Luiz Henrique Pereira Sergio',
             'nome_estabelecimento' => 'Lanchonete Mega Lanche',
             'endereco' => 'Rua Boa Esperança, 156',
@@ -1457,7 +1458,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 90
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Letícia Sabrino Francisco/ Hudson Ramos da Cunha',
             'nome_estabelecimento' => 'Lanchonete Mek Dog e Açai',
             'endereco' => 'Rua Joaquim Marciano de Carvalho',
@@ -1467,7 +1468,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 91
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Neymar Pereira Guedes',
             'nome_estabelecimento' => 'Lanchonete P. Café da Praça',
             'endereco' => 'Praça Padre João Lourenço Leite, 21A',
@@ -1477,7 +1478,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 92
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Tallys Bricio Morais Silva',
             'nome_estabelecimento' => 'Lanchonete Sabor na Chapa',
             'endereco' => 'Praça Padre João Lourenço Leite, 212',
@@ -1487,7 +1488,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 93
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Livia Aparecida de Souza',
             'nome_estabelecimento' => 'Lanconete THE FRUIT',
             'endereco' => 'Praça 7 de setembro, 51 Loja03',
@@ -1497,7 +1498,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 94
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Adenilson Ferreira',
             'nome_estabelecimento' => 'Mercado Adenilson',
             'endereco' => 'Rua Doze de Outúbro, 116',
@@ -1518,7 +1519,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 95
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Antônio José Martins Murta',
             'nome_estabelecimento' => 'Mercado CARLINHOS SUPERMERCADOS LTDA',
             'endereco' => 'Rua Salvador Procópio, 290',
@@ -1539,7 +1540,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 96
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Luciano Francisco de Assis',
             'nome_estabelecimento' => 'Mercado e Bar do Luciano',
             'endereco' => 'Rua Tiradentes, 840',
@@ -1560,7 +1561,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 97
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Carlos Vilela',
             'nome_estabelecimento' => 'Mercado Matheus Thieres',
             'endereco' => 'Avenida José Vilela da Costa',
@@ -1581,7 +1582,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 98
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Stefani Cristina Silva',
             'nome_estabelecimento' => 'Mercado Padre Vitor - Filial',
             'endereco' => 'Rua Boa Esperança, 340',
@@ -1602,7 +1603,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 99
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Lucimara Amaral Oliveira',
             'nome_estabelecimento' => 'Mercado Padre Vitor (Matriz)',
             'endereco' => 'Rua do Comércio, 582',
@@ -1623,7 +1624,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 100
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Wendel Rodrigo Alves Pinheiro',
             'nome_estabelecimento' => 'Mercado Pinheiro',
             'endereco' => 'Avenida 15 de Novembro, 675 - Gloria',
@@ -1644,7 +1645,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 101
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Luzia de Lourdes Vilela',
             'nome_estabelecimento' => 'Mercado Rainha da Paz',
             'endereco' => 'Avenida 15 de Novembro - Gloria',
@@ -1665,7 +1666,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 102
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maria Lúcia Vilela Damasceno',
             'nome_estabelecimento' => 'Mercado São Geraldo',
             'endereco' => 'Rua Doze de Outubro',
@@ -1686,7 +1687,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 103
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Israel Benedito da Silva',
             'nome_estabelecimento' => 'Mercearia do Israel',
             'endereco' => 'Rua Arildo Vilela Moscardine, 346',
@@ -1707,7 +1708,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 104
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Silvia Regina Resende da Silva',
             'nome_estabelecimento' => 'Mini Padaria da Silva',
             'endereco' => 'Avenida Xv de Novembro, 580',
@@ -1728,7 +1729,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 105
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Marcelo Montijo Teixeira',
             'nome_estabelecimento' => 'Montijo Odontologia LTDA',
             'endereco' => 'Rua do CoMÉRCIO, 465',
@@ -1738,7 +1739,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 106
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Núbia Alves Belineli',
             'nome_estabelecimento' => 'Movimento e Saúde',
             'endereco' => 'Rua Boa Esperança, 470 - Centro',
@@ -1759,7 +1760,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 107
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Janizia Adriana Silva',
             'nome_estabelecimento' => 'Mercado Jc Faria Comercio de Alimentos LTDA.',
             'endereco' => 'Rua do Comercio, 322',
@@ -1780,7 +1781,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 108
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Larissa Borges Costa',
             'nome_estabelecimento' => 'Oliva Granel',
             'endereco' => 'Rua Santa Catarina,  42',
@@ -1801,7 +1802,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 109
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Fabrício Figueiredo Mendes',
             'nome_estabelecimento' => 'Ortoclínicas',
             'endereco' => 'Rua do Comércio, 141 - Centro',
@@ -1822,7 +1823,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 110
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ana Clara Silva Nunes',
             'nome_estabelecimento' => 'Padaria Ana Clara',
             'endereco' => 'Rua Oiapoque, 122',
@@ -1843,7 +1844,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 111
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Edivânia Aparecida Pereira',
             'nome_estabelecimento' => 'Padaria Bagueteria Ilicínea',
             'endereco' => 'Rua Direita, 20 - Centro',
@@ -1864,7 +1865,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 112
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maria de Fatima Oliveira',
             'nome_estabelecimento' => 'Padaria da Fatinha',
             'endereco' => 'Rua Boa Esperança, 112',
@@ -1874,7 +1875,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 113
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Sueli Andrade Alves',
             'nome_estabelecimento' => 'Padaria da Sueli',
             'endereco' => 'Rua Brasil, 756',
@@ -1884,7 +1885,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 114
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ricardo Alberto Fernandes',
             'nome_estabelecimento' => 'Padaria do Ricardo',
             'endereco' => 'Rua do Comércio, 306',
@@ -1894,7 +1895,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 115
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Antônio Marcos Durval',
             'nome_estabelecimento' => 'Padaria Pão e CIA',
             'endereco' => 'Rua Aurea, 892',
@@ -1915,7 +1916,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 116
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Neimar Pereira Guedes',
             'nome_estabelecimento' => 'Pães e Bolos Central',
             'endereco' => 'Rua Direita, 72 - Centro',
@@ -1925,7 +1926,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 117
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Paula de Oliveira Figueiredo Lima',
             'nome_estabelecimento' => 'Pastelaria da Paula',
             'endereco' => 'Avenida XV de novembro, 140',
@@ -1946,7 +1947,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 118
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Christian Luis Gois de Melo',
             'nome_estabelecimento' => 'Pastelaria do Christião',
             'endereco' => 'Avenida José Vilela da Costa, 211',
@@ -1956,7 +1957,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 119
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maikel Pereira Sérgio',
             'nome_estabelecimento' => 'Pastelaria Rei do Salgado',
             'endereco' => 'Rua Direita, 81 - Centro',
@@ -1966,7 +1967,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 120
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Patrícia Magalhães',
             'nome_estabelecimento' => 'Patricciah M Studio Personal',
             'endereco' => 'Rua 12 de Outúbro, 44 - Centro',
@@ -1976,7 +1977,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 121
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'A informar',
             'nome_estabelecimento' => 'Patty Odontologia',
             'endereco' => 'Endereço a informar.',
@@ -1986,7 +1987,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 122
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Pedro Domiciano Vieira',
             'nome_estabelecimento' => 'Pedro do Zeca',
             'endereco' => 'Rua do Comércio, 530',
@@ -1996,7 +1997,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 123
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Markeline Garcia Silva',
             'nome_estabelecimento' => 'Peixaria Empório do Peixe',
             'endereco' => 'Avenida José Vilela da Costa',
@@ -2017,7 +2018,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 124
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Leonice Aparecida Souza Oliveira',
             'nome_estabelecimento' => 'Peixaria Santa Maria',
             'endereco' => 'Avenida José Vilela da Costa, 133',
@@ -2038,7 +2039,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 125
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Rozimeire Aparecida Andrade Rezende',
             'nome_estabelecimento' => 'Pizzaria Bella Italia',
             'endereco' => 'Avenida XV de Novembro, 479',
@@ -2059,7 +2060,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 126
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Henrique Vilela Amaral',
             'nome_estabelecimento' => 'Polpa de frutas',
             'endereco' => 'Rua Doze de Outubro, 371',
@@ -2080,7 +2081,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 127
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Paulo Gonçalves do Amaral',
             'nome_estabelecimento' => 'Polpa de frutas',
             'endereco' => 'Rua Doze de Outubro, 371',
@@ -2101,7 +2102,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 128
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Marcio Vinícius Vilela',
             'nome_estabelecimento' => 'Posto de Coleta Messora e Vilela Ltda.',
             'endereco' => 'Rua do Comércio, 40',
@@ -2122,7 +2123,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 129
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Alda de Oliveira',
             'nome_estabelecimento' => 'PSF Central',
             'endereco' => 'Rua Francisco de Ouro, 50',
@@ -2143,7 +2144,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 130
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Beatriz Aparecida Alves',
             'nome_estabelecimento' => 'PSF Rosário',
             'endereco' => 'Rua Ly de Oliveira, 06',
@@ -2164,7 +2165,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 131
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Gisele Aparecida de Carvalho Bueno',
             'nome_estabelecimento' => 'PSF Rural',
             'endereco' => 'Praça do Rosario, 09',
@@ -2185,7 +2186,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 132
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Josyane Costa Conde Ferreira',
             'nome_estabelecimento' => 'Restaurante D`Guste',
             'endereco' => 'Rua do Comércio, 665',
@@ -2206,7 +2207,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 133
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Maria Aparecida Alves',
             'nome_estabelecimento' => 'Restaurante da Nenem',
             'endereco' => 'Praça Padre João Loureço Leite, 15',
@@ -2227,7 +2228,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 134
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Emerson Luiz de Souza',
             'nome_estabelecimento' => 'Restaurante disk Rango',
             'endereco' => 'Rua Boa Esperança',
@@ -2248,7 +2249,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 135
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Tayrine Oliveira',
             'nome_estabelecimento' => 'Restaurante e Lanchonete Sabor Nobre',
             'endereco' => 'Rua do Comércio, 270 - Centro',
@@ -2269,7 +2270,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 136
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Régia de Fátima Machado',
             'nome_estabelecimento' => 'Restaurante e Pousada Recanto dos Araças',
             'endereco' => 'Rua Goiás, 15',
@@ -2290,7 +2291,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 137
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Taíza Amanda Rodrigues',
             'nome_estabelecimento' => 'Restaurante Porcolino Grill',
             'endereco' => 'Avenida 15 de Novembro, 1721 - Monsenhor Francisco Figueiredo',
@@ -2300,7 +2301,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 138
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Claudia Aurica de Oliveira',
             'nome_estabelecimento' => 'Restaurante Tradição Mineira',
             'endereco' => 'Rua Rita de Cassia, 48',
@@ -2321,7 +2322,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 139
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Adriana da Silveira Vitor',
             'nome_estabelecimento' => 'Restaurante Vitor/ Mathias Choperia',
             'endereco' => 'Praça Padre João Lourenço Leite, 15',
@@ -2342,7 +2343,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 140
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Robson Moscardini',
             'nome_estabelecimento' => 'Robinho Dentista',
             'endereco' => 'Praça Padre João Lourenço Leite, 9',
@@ -2363,7 +2364,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 141
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Karine de Freitas Silva',
             'nome_estabelecimento' => 'Salão beleza e estetica',
             'endereco' => 'Rua Tiradentes, 02',
@@ -2384,7 +2385,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 142
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Conceição Aparecida Alves',
             'nome_estabelecimento' => 'Salão Cidinha Alves',
             'endereco' => 'Rua Rita de Cássia, 101 - Centro',
@@ -2405,7 +2406,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 143
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ana Flávia Silvestre Silva',
             'nome_estabelecimento' => 'Salão da Ana Flávia',
             'endereco' => 'Rua São Paulo, 212',
@@ -2426,7 +2427,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 144
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Jaqueline Margaria de Lima',
             'nome_estabelecimento' => 'Salão da Jaque Lima',
             'endereco' => 'Rua Direita, 104, Sala 16 - Centro',
@@ -2447,7 +2448,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 145
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Samara Santos da Silva',
             'nome_estabelecimento' => 'Salão da Samara',
             'endereco' => 'Rua Direita, 104 - Centro',
@@ -2468,7 +2469,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 146
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Histefani Pereira Ferreira',
             'nome_estabelecimento' => 'Salão Espaço Renovar',
             'endereco' => 'Rua Alfredo Pio, 203',
@@ -2489,7 +2490,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 147
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Eduardo José de Oliveira',
             'nome_estabelecimento' => 'SAO BENTO COMERCIO E PRESTAÇOES DE SERVICO LTDA (Lava rápido, borracharia e oficina)',
             'endereco' => 'Avenida XV de Novembro, 685',
@@ -2510,7 +2511,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 148
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Adriana Miranda de Alcântara',
             'nome_estabelecimento' => 'Saúde Mental',
             'endereco' => 'Avenida José Vilela da Costa, 565',
@@ -2531,7 +2532,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 149
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Vitor Tadeu Alves de Jesus',
             'nome_estabelecimento' => 'Sorveteria 4 Estações',
             'endereco' => 'Avenida XV de Novembro, 565',
@@ -2552,7 +2553,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 150
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Wallison Fernando de Oliveira',
             'nome_estabelecimento' => 'Sorveteria e Açai',
             'endereco' => 'Praça 7 de setembro, 05',
@@ -2562,7 +2563,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 151
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Cleudes Oswaldo de Souza',
             'nome_estabelecimento' => 'Sorveteria Fino Sabor',
             'endereco' => 'Rua do Comércio, 50',
@@ -2572,7 +2573,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 152
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Amanda Dias',
             'nome_estabelecimento' => 'Sorveteria PONTO 265',
             'endereco' => 'Avenida 15 de Novembro',
@@ -2582,7 +2583,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 153
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Patrícia Conceição Alves Barbosa',
             'nome_estabelecimento' => 'Studio de Cabelos Phaty',
             'endereco' => 'Rua Ituriel Viana Lemos, 45',
@@ -2603,7 +2604,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 154
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Ailton Rodrigues da Cunha',
             'nome_estabelecimento' => 'Trailer do Ailton',
             'endereco' => 'Praça Padre João Lourenço Leite/ Parque João A.',
@@ -2613,7 +2614,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 155
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Luis Fernando Mathias',
             'nome_estabelecimento' => 'Trem Bão Restaurante',
             'endereco' => 'Praça Padre João Lourenço Leite, 15',
@@ -2623,7 +2624,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 156
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Eduardo Miranda de Carvalho',
             'nome_estabelecimento' => 'Veterinário e Pet Shop CENTER VET.',
             'endereco' => 'Rua do Comércio, 770',
@@ -2644,7 +2645,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
         // Linha 157
-        $estId = DB::table('estabelecimentos')->insertGetId([
+        $estId = $this->inserirEstabelecimento([
             'nome_responsavel' => 'Eandra Brunielli Oliveira Barbosa',
             'nome_estabelecimento' => 'Vita Care Serviços em Saúde',
             'endereco' => 'Rua Dois de Novembro, 30 - Centro',
@@ -2654,4 +2655,42 @@ class EstabelecimentosAlvarasSeeder extends Seeder
         ]);
 
     }
+
+    private function inserirEstabelecimento(array $dados): int
+    {
+        $cnaesRaw = (string) ($dados['cnaes'] ?? '');
+        unset($dados['cnaes']);
+
+        $estabelecimentoId = DB::table('estabelecimentos')->insertGetId($dados);
+        $this->sincronizarCnaes($estabelecimentoId, $cnaesRaw, $dados['created_at'] ?? now());
+
+        return $estabelecimentoId;
+    }
+
+    private function sincronizarCnaes(int $estabelecimentoId, string $raw, $timestamp): void
+    {
+        preg_match_all('/\d{2}\.?\d{2}-?\d\/?-?\d{2}|\d{4}-\d\/\d{2}/', $raw, $matches);
+        $codigos = [];
+
+        foreach (($matches[0] ?? []) as $found) {
+            $digits = preg_replace('/\D/', '', $found);
+            if (strlen($digits) !== 7) {
+                continue;
+            }
+            $codigos[] = substr($digits, 0, 4).'-'.substr($digits, 4, 1).'/'.substr($digits, 5, 2);
+        }
+
+        $codigos = array_values(array_unique($codigos));
+        foreach ($codigos as $codigo) {
+            $cnae = Cnae::firstOrCreate(['codigo' => $codigo], ['descricao' => null]);
+            DB::table('estabelecimento_cnaes')->updateOrInsert(
+                ['estabelecimento_id' => $estabelecimentoId, 'cnae_id' => $cnae->id],
+                ['created_at' => $timestamp, 'updated_at' => $timestamp]
+            );
+        }
+    }
 }
+
+
+
+
