@@ -905,6 +905,11 @@ class VisitaAcsController extends MonitorApsBaseController
         return response()->json(['agentes' => $agentes]);
     }
 
+    /**
+     * GET /visitas/evolucao?[ine=Z&agente=W&desfecho=N&has_geo=X]
+     * Contagem mensal de visitas para o ano atual e os 2 anos anteriores.
+     * Retorna 3 séries, cada uma com 12 valores (índice 0 = Janeiro).
+     */
     public function evolucao(Request $request): JsonResponse
     {
         $request->validate([
