@@ -630,7 +630,8 @@ class VisitaAcsController extends MonitorApsBaseController
         $cepCol           = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['nu_cep', 'cep']);
 
         if ($domPkCol && $familyDomFkCol && $familyCitizenCol) {
-            $addrBase       = "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.{$domPkCol} = f.{$familyDomFkCol} WHERE f.{$familyCitizenCol} = v.co_fat_cidadao_pec LIMIT 1";
+            // ORDER BY PK DESC → registro mais recente de qualquer equipe
+            $addrBase       = "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.{$domPkCol} = f.{$familyDomFkCol} WHERE f.{$familyCitizenCol} = v.co_fat_cidadao_pec ORDER BY d.{$domPkCol} DESC LIMIT 1";
             $logradouroExpr = '(SELECT '.$this->textColumnExpr('d', $logradouroCol)." {$addrBase})";
             $numeroExpr     = '(SELECT '.$this->textColumnExpr('d', $numeroCol)." {$addrBase})";
             $complementoExpr = '(SELECT '.$this->textColumnExpr('d', $complementoCol)." {$addrBase})";
