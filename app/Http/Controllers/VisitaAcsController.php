@@ -633,8 +633,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
         $citizenNameExpr = '(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1)';
 
-        // Address: tb_fat_cad_dom_familia links citizen → tb_fat_cad_domiciliar (household).
-        // Confirmed column names come first; alternatives follow for portability.
+        // Endereço — fonte primária: DW (tb_fat_cad_dom_familia → tb_fat_cad_domiciliar)
         $domPkCol         = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['co_seq_fat_cad_domiciliar']);
         $familyDomFkCol   = $this->firstExistingColumn('tb_fat_cad_dom_familia', ['co_fat_cad_domiciliar']);
         $familyCitizenCol = $this->firstExistingColumn('tb_fat_cad_dom_familia', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec']);
@@ -644,16 +643,35 @@ class VisitaAcsController extends MonitorApsBaseController
         $bairroCol        = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_bairro', 'ds_bairro', 'bairro']);
         $cepCol           = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['nu_cep', 'cep']);
 
-        if ($domPkCol && $familyDomFkCol && $familyCitizenCol) {
-            $addrBase       = "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.{$domPkCol} = f.{$familyDomFkCol} WHERE f.{$familyCitizenCol} = v.co_fat_cidadao_pec LIMIT 1";
-            $logradouroExpr = '(SELECT '.$this->textColumnExpr('d', $logradouroCol)." {$addrBase})";
-            $numeroExpr     = '(SELECT '.$this->textColumnExpr('d', $numeroCol)." {$addrBase})";
-            $complementoExpr = '(SELECT '.$this->textColumnExpr('d', $complementoCol)." {$addrBase})";
-            $bairroExpr     = '(SELECT '.$this->textColumnExpr('d', $bairroCol)." {$addrBase})";
-            $cepExpr        = '(SELECT '.$this->textColumnExpr('d', $cepCol)." {$addrBase})";
-        } else {
-            $logradouroExpr = $numeroExpr = $complementoExpr = $bairroExpr = $cepExpr = 'NULL::text';
-        }
+        $dwAddrBase = ($domPkCol && $familyDomFkCol && $familyCitizenCol)
+            ? "FROM tb_fat_cad_dom_familia f JOIN tb_fat_cad_domiciliar d ON d.{$domPkCol} = f.{$familyDomFkCol} WHERE f.{$familyCitizenCol} = v.co_fat_cidadao_pec LIMIT 1"
+            : null;
+
+        // Endereço — fallback: tb_cidadao (tabela OLTP mestre, atualizada pelo cadastro individual)
+        $cidPkCol    = $this->firstExistingColumn('tb_cidadao', ['co_seq_cidadao']);
+        $pecCidCol   = $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']);
+        $cidLogCol   = $this->firstExistingColumn('tb_cidadao', ['no_logradouro', 'ds_logradouro']);
+        $cidNumCol   = $this->firstExistingColumn('tb_cidadao', ['nu_numero', 'nu_num_logradouro']);
+        $cidCompCol  = $this->firstExistingColumn('tb_cidadao', ['ds_complemento', 'no_complemento']);
+        $cidBaiCol   = $this->firstExistingColumn('tb_cidadao', ['no_bairro', 'ds_bairro']);
+        $cidCepCol   = $this->firstExistingColumn('tb_cidadao', ['nu_cep']);
+
+        $cidAddrBase = ($cidPkCol && $pecCidCol)
+            ? "FROM tb_cidadao cid JOIN tb_fat_cidadao_pec cp ON cp.{$pecCidCol} = cid.{$cidPkCol} WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec LIMIT 1"
+            : null;
+
+        $makeAddr = function (?string $dwCol, ?string $cidCol) use ($dwAddrBase, $cidAddrBase): string {
+            $dw  = $dwAddrBase  && $dwCol  ? "(SELECT d.{$dwCol}::text {$dwAddrBase})"    : null;
+            $cid = $cidAddrBase && $cidCol ? "(SELECT cid.{$cidCol}::text {$cidAddrBase})" : null;
+            if ($dw && $cid) return "COALESCE({$dw}, {$cid})";
+            return $dw ?? $cid ?? 'NULL::text';
+        };
+
+        $logradouroExpr  = $makeAddr($logradouroCol, $cidLogCol);
+        $numeroExpr      = $makeAddr($numeroCol,     $cidNumCol);
+        $complementoExpr = $makeAddr($complementoCol, $cidCompCol);
+        $bairroExpr      = $makeAddr($bairroCol,     $cidBaiCol);
+        $cepExpr         = $makeAddr($cepCol,        $cidCepCol);
 
         $sqlFull = "
             SELECT
@@ -779,19 +797,9 @@ class VisitaAcsController extends MonitorApsBaseController
                 'cds_cidadao_col' => $this->firstExistingColumn('tb_cds_visita_domiciliar', ['co_cidadao']),
                 'pec_cidadao_col' => $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']),
             ],
-            'cds_visita_cols'  => $this->listColumns('tb_cds_visita_domiciliar'),
-            'cds_ficha_cols'   => $this->listColumns('tb_cds_ficha_visita_domiciliar'),
-            'address_join_ok' => ($domPkCol && $familyDomFkCol && $familyCitizenCol),
-            'address_cols'    => [
-                'dom_pk'         => $domPkCol,
-                'family_dom_fk'  => $familyDomFkCol,
-                'family_citizen' => $familyCitizenCol,
-                'logradouro'     => $logradouroCol,
-                'numero'         => $numeroCol,
-                'complemento'    => $complementoCol,
-                'bairro'         => $bairroCol,
-                'cep'            => $cepCol,
-            ],
+            'addr_dw_base'  => $dwAddrBase  ? 'OK' : 'null',
+            'addr_cid_base' => $cidAddrBase ? 'OK' : 'null',
+            'addr_cid_cols' => compact('cidLogCol', 'cidNumCol', 'cidCompCol', 'cidBaiCol', 'cidCepCol'),
         ];
         return response()->json($result);
     }
