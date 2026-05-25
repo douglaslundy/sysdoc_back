@@ -179,6 +179,8 @@
         <p>1. XXXXXXXX - DESCRIÇÃO NÃO INFORMADA</p>
       @endif
 
+      <div style="height: 5px;"></div>
+
       <div class="field-inline"><span class="field-label">Responsável Técnico:</span> {{ $responsavel }}</div>
       <div class="field-inline">Este Alvará Sanitário se estende apenas ao(s) CNAE(S) citado(s) acima.</div>
       <div class="field-inline">{{ $municipio }}, {{ $fmtDate($alvara->data_alvara) }}.</div>
