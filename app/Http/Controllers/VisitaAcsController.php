@@ -26,8 +26,12 @@ class VisitaAcsController extends MonitorApsBaseController
      * WHERE clause + bindings compartilhados por todos os endpoints de visitas.
      * $agentName aplica filtro textual exato (usado só em index).
      */
-    private function buildWhere(int $ano, int $mes, ?string $ine, ?string $agentName = null): array
-    {
+    private function buildWhere(
+        int $ano, int $mes, ?string $ine,
+        ?string $agentName = null,
+        ?string $desfecho  = null,
+        ?string $hasGeo    = null
+    ): array {
         $cbos   = implode("','", self::ACS_CBOS);
         $where  = "c.nu_cbo IN ('{$cbos}') AND t.nu_ano = ? AND t.nu_mes = ?";
         $params = [$ano, $mes];
@@ -40,6 +44,17 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($agentName) {
             $where   .= ' AND p.no_profissional = ?';
             $params[] = $agentName;
+        }
+
+        if ($desfecho !== null && $desfecho !== '') {
+            $where   .= ' AND d.co_seq_dim_desfecho_visita = ?';
+            $params[] = (int) $desfecho;
+        }
+
+        if ($hasGeo === 'sim') {
+            $where .= ' AND v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL';
+        } elseif ($hasGeo === 'nao') {
+            $where .= ' AND (v.nu_latitude IS NULL OR v.nu_longitude IS NULL)';
         }
 
         return [$where, $params];
@@ -75,13 +90,15 @@ class VisitaAcsController extends MonitorApsBaseController
 
     private function hasTable(string $table): bool
     {
-        return \Illuminate\Support\Facades\Cache::remember("aps_table_{$table}", 86400, function () use ($table) {
+        return \Illuminate\Support\Facades\Cache::remember("aps_table2_{$table}", 86400, function () use ($table) {
             try {
                 $row = $this->db()->selectOne("
                     SELECT 1
-                    FROM information_schema.tables
-                    WHERE table_schema = 'public'
-                      AND table_name = ?
+                    FROM pg_catalog.pg_class c
+                    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                    WHERE c.relname = ?
+                      AND c.relkind = 'r'
+                      AND n.nspname = 'public'
                     LIMIT 1
                 ", [$table]);
                 return $row !== null;
@@ -303,15 +320,23 @@ class VisitaAcsController extends MonitorApsBaseController
     public function resumo(Request $request): JsonResponse
     {
         $request->validate([
-            'ano' => 'required|integer|min:2020|max:2030',
-            'mes' => 'required|integer|min:1|max:12',
-            'ine' => 'nullable|string',
+            'ano'      => 'required|integer|min:2020|max:2030',
+            'mes'      => 'required|integer|min:1|max:12',
+            'ine'      => 'nullable|string',
+            'agente'   => 'nullable|string',
+            'desfecho' => 'nullable|integer|in:1,2,3',
+            'has_geo'  => 'nullable|string|in:sim,nao',
         ]);
 
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
+        [$where, $params] = $this->buildWhere(
+            $ano, $mes, $request->ine,
+            $request->agente,
+            $request->desfecho,
+            $request->has_geo,
+        );
 
         $totRow = $this->db()->selectOne("
             SELECT
@@ -787,15 +812,22 @@ class VisitaAcsController extends MonitorApsBaseController
     public function agentes(Request $request): JsonResponse
     {
         $request->validate([
-            'ano' => 'required|integer|min:2020|max:2030',
-            'mes' => 'required|integer|min:1|max:12',
-            'ine' => 'nullable|string',
+            'ano'     => 'required|integer|min:2020|max:2030',
+            'mes'     => 'required|integer|min:1|max:12',
+            'ine'     => 'nullable|string',
+            'agente'  => 'nullable|string',
+            'has_geo' => 'nullable|string|in:sim,nao',
         ]);
 
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
+        [$where, $params] = $this->buildWhere(
+            $ano, $mes, $request->ine,
+            $request->agente,
+            null,
+            $request->has_geo,
+        );
 
         $rows = $this->db()->select("
             SELECT
