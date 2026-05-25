@@ -1100,6 +1100,18 @@ class VisitaAcsController extends MonitorApsBaseController
             $request->has_geo,
         );
 
+        $familyExpr = $this->familyIdExpr();
+        $hasFamilies = $familyExpr !== null;
+
+        $familyCols = $hasFamilies ? ",
+            COUNT(DISTINCT {$familyExpr})                                                        AS familias,
+            COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN {$familyExpr} END)   AS familias_acompanhadas"
+            : '';
+
+        $familyJoin = $hasFamilies
+            ? 'LEFT JOIN tb_fat_cad_individual ci ON ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec'
+            : '';
+
         $rows = $this->db()->select("
             SELECT
                 p.no_profissional                                                      AS agente,
@@ -1110,27 +1122,40 @@ class VisitaAcsController extends MonitorApsBaseController
                 SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)    AS recusadas,
                 SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)    AS ausentes,
                 COUNT(DISTINCT v.co_fat_cidadao_pec)                                  AS cidadaos
+                {$familyCols}
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
+            {$familyJoin}
             WHERE {$where}
             GROUP BY p.no_profissional, c.nu_cbo, e.no_equipe
             ORDER BY total DESC
         ", $params);
 
-        $agentes = array_map(fn ($r) => [
-            'agente' => $r->agente,
-            'cbo' => $r->cbo,
-            'cbo_nome' => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
-            'equipe' => ['nome' => $r->equipe_nome],
-            'total' => (int) $r->total,
-            'realizadas' => (int) $r->realizadas,
-            'recusadas' => (int) $r->recusadas,
-            'ausentes' => (int) $r->ausentes,
-            'pct_realizadas' => $r->total > 0
-                ? (int) round($r->realizadas / $r->total * 100)
-                : 0,
-            'cidadaos' => (int) $r->cidadaos,
-        ], $rows);
+        $agentes = array_map(function ($r) use ($hasFamilies) {
+            $familias    = $hasFamilies ? (int) ($r->familias ?? 0) : null;
+            $famAcomp    = $hasFamilies ? (int) ($r->familias_acompanhadas ?? 0) : null;
+            $pctFamilias = ($hasFamilies && $familias > 0)
+                ? (int) round($famAcomp / $familias * 100)
+                : null;
+
+            return [
+                'agente'                => $r->agente,
+                'cbo'                   => $r->cbo,
+                'cbo_nome'              => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+                'equipe'                => ['nome' => $r->equipe_nome],
+                'total'                 => (int) $r->total,
+                'realizadas'            => (int) $r->realizadas,
+                'recusadas'             => (int) $r->recusadas,
+                'ausentes'              => (int) $r->ausentes,
+                'pct_realizadas'        => $r->total > 0
+                    ? (int) round($r->realizadas / $r->total * 100)
+                    : 0,
+                'cidadaos'              => (int) $r->cidadaos,
+                'familias'              => $familias,
+                'familias_acompanhadas' => $famAcomp,
+                'pct_familias'          => $pctFamilias,
+            ];
+        }, $rows);
 
         return response()->json(['agentes' => $agentes]);
     }
