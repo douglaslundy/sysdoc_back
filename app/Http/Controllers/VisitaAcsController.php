@@ -750,7 +750,22 @@ class VisitaAcsController extends MonitorApsBaseController
             return response()->json(['message' => 'Visita não encontrada.'], 404);
         }
 
-        return response()->json($this->formatVisita($row, detail: true));
+        $result = $this->formatVisita($row, detail: true);
+        $result['_debug'] = [
+            'notes_expr'      => $notesExpr,
+            'address_join_ok' => ($domPkCol && $familyDomFkCol && $familyCitizenCol),
+            'address_cols'    => [
+                'dom_pk'         => $domPkCol,
+                'family_dom_fk'  => $familyDomFkCol,
+                'family_citizen' => $familyCitizenCol,
+                'logradouro'     => $logradouroCol,
+                'numero'         => $numeroCol,
+                'complemento'    => $complementoCol,
+                'bairro'         => $bairroCol,
+                'cep'            => $cepCol,
+            ],
+        ];
+        return response()->json($result);
     }
 
     /**
