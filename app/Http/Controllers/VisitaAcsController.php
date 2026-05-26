@@ -514,14 +514,12 @@ class VisitaAcsController extends MonitorApsBaseController
         $familyExpr = $this->familyIdExpr();
 
         if ($familyExpr !== null) {
-            // Family counts are always month-wide (desfecho/geo filters excluded)
-            // so the breakdown reflects the full picture, not just the filtered slice.
+            // Breakdown de famílias visitadas no mês (sem filtro de desfecho/geo)
             [$familyWhere, $familyParams] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
 
             try {
                 $famRow = $this->db()->selectOne("
                     SELECT
-                        COUNT(DISTINCT {$familyExpr})                        AS familias,
                         COUNT(DISTINCT {$familyExpr})
                             FILTER (WHERE d.co_seq_dim_desfecho_visita = 1) AS familias_acompanhadas,
                         COUNT(DISTINCT {$familyExpr})
@@ -536,19 +534,46 @@ class VisitaAcsController extends MonitorApsBaseController
 
                 if ($famRow) {
                     $familyData = [
-                        'familias'              => (int) ($famRow->familias ?? 0),
                         'familias_acompanhadas' => (int) ($famRow->familias_acompanhadas ?? 0),
                         'familias_recusadas'    => (int) ($famRow->familias_recusadas ?? 0),
                         'familias_ausentes'     => (int) ($famRow->familias_ausentes ?? 0),
                     ];
                 }
-            } catch (\Throwable) {
-                // Falha silenciosa — front trata null como "não disponível"
-            }
+            } catch (\Throwable) {}
+        }
+
+        // Total de famílias sob responsabilidade do ACS (sem filtro de mês/desfecho)
+        $familiasTotal = null;
+        if ($familyExpr !== null) {
+            try {
+                $totFamWhere  = 'ci.st_ficha_inativa = 0 AND de.st_registro_valido = 1';
+                $totFamParams = [];
+
+                if ($request->ine) {
+                    $totFamWhere  .= ' AND de.nu_ine = ?';
+                    $totFamParams[] = $request->ine;
+                }
+                if ($request->agente) {
+                    $totFamWhere  .= ' AND dp.no_profissional = ?';
+                    $totFamParams[] = $request->agente;
+                }
+
+                $totFamRow = $this->db()->selectOne("
+                    SELECT COUNT(DISTINCT {$familyExpr}) AS familias_total
+                    FROM tb_fat_cad_individual ci
+                    JOIN tb_dim_equipe de
+                        ON de.co_seq_dim_equipe = ci.co_dim_equipe
+                    LEFT JOIN tb_dim_profissional dp
+                        ON dp.co_seq_dim_profissional = ci.co_dim_profissional
+                    WHERE {$totFamWhere}
+                ", $totFamParams);
+
+                $familiasTotal = (int) ($totFamRow->familias_total ?? 0);
+            } catch (\Throwable) {}
         }
 
         $nullFamily = [
-            'familias'              => null,
+            'familias_total'        => null,
             'familias_acompanhadas' => null,
             'familias_recusadas'    => null,
             'familias_ausentes'     => null,
@@ -557,11 +582,12 @@ class VisitaAcsController extends MonitorApsBaseController
         return response()->json([
             'totais' => array_merge(
                 [
-                    'total'      => (int) ($totRow->total ?? 0),
-                    'realizadas' => (int) ($totRow->realizadas ?? 0),
-                    'recusadas'  => (int) ($totRow->recusadas ?? 0),
-                    'ausentes'   => (int) ($totRow->ausentes ?? 0),
-                    'cidadaos'   => (int) ($totRow->cidadaos ?? 0),
+                    'total'          => (int) ($totRow->total ?? 0),
+                    'realizadas'     => (int) ($totRow->realizadas ?? 0),
+                    'recusadas'      => (int) ($totRow->recusadas ?? 0),
+                    'ausentes'       => (int) ($totRow->ausentes ?? 0),
+                    'cidadaos'       => (int) ($totRow->cidadaos ?? 0),
+                    'familias_total' => $familiasTotal,
                 ],
                 $familyData ?? $nullFamily
             ),
@@ -1109,8 +1135,7 @@ class VisitaAcsController extends MonitorApsBaseController
         $hasFamilies = $familyExpr !== null;
 
         $familyCols = $hasFamilies ? ",
-            COUNT(DISTINCT {$familyExpr})                                                        AS familias,
-            COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN {$familyExpr} END)   AS familias_acompanhadas"
+            COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN {$familyExpr} END) AS familias_acompanhadas"
             : '';
 
         $familyJoin = $hasFamilies
@@ -1120,14 +1145,14 @@ class VisitaAcsController extends MonitorApsBaseController
         try {
             $rows = $this->db()->select("
                 SELECT
-                    p.no_profissional                                                      AS agente,
-                    c.nu_cbo                                                               AS cbo,
-                    e.no_equipe                                                            AS equipe_nome,
-                    COUNT(*)                                                               AS total,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)    AS realizadas,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)    AS recusadas,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)    AS ausentes,
-                    COUNT(DISTINCT v.co_fat_cidadao_pec)                                  AS cidadaos
+                    p.no_profissional                                                     AS agente,
+                    c.nu_cbo                                                              AS cbo,
+                    e.no_equipe                                                           AS equipe_nome,
+                    COUNT(*)                                                              AS total,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)   AS realizadas,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)   AS recusadas,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)   AS ausentes,
+                    COUNT(DISTINCT v.co_fat_cidadao_pec)                                 AS cidadaos
                     {$familyCols}
                 FROM tb_fat_visita_domiciliar v
                 {$this->baseJoins()}
@@ -1141,11 +1166,46 @@ class VisitaAcsController extends MonitorApsBaseController
             return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
         }
 
-        $agentes = array_map(function ($r) use ($hasFamilies) {
-            $familias    = $hasFamilies ? (int) ($r->familias ?? 0) : null;
+        // Total de famílias por agente — baseado em vínculos cadastrais, não visitas
+        $famTotalMap = [];
+        if ($hasFamilies) {
+            try {
+                $totFamWhere  = 'ci.st_ficha_inativa = 0 AND de.st_registro_valido = 1';
+                $totFamParams = [];
+
+                if ($request->ine) {
+                    $totFamWhere  .= ' AND de.nu_ine = ?';
+                    $totFamParams[] = $request->ine;
+                }
+                if ($request->agente) {
+                    $totFamWhere  .= ' AND dp.no_profissional = ?';
+                    $totFamParams[] = $request->agente;
+                }
+
+                $totFamRows = $this->db()->select("
+                    SELECT
+                        dp.no_profissional AS agente,
+                        COUNT(DISTINCT {$familyExpr}) AS familias_total
+                    FROM tb_fat_cad_individual ci
+                    JOIN tb_dim_equipe de
+                        ON de.co_seq_dim_equipe = ci.co_dim_equipe
+                    LEFT JOIN tb_dim_profissional dp
+                        ON dp.co_seq_dim_profissional = ci.co_dim_profissional
+                    WHERE {$totFamWhere}
+                    GROUP BY dp.no_profissional
+                ", $totFamParams);
+
+                foreach ($totFamRows as $tfRow) {
+                    $famTotalMap[$tfRow->agente ?? ''] = (int) ($tfRow->familias_total ?? 0);
+                }
+            } catch (\Throwable) {}
+        }
+
+        $agentes = array_map(function ($r) use ($hasFamilies, $famTotalMap) {
             $famAcomp    = $hasFamilies ? (int) ($r->familias_acompanhadas ?? 0) : null;
-            $pctFamilias = ($hasFamilies && $familias > 0)
-                ? (int) round($famAcomp / $familias * 100)
+            $famTotal    = $hasFamilies ? ($famTotalMap[$r->agente ?? ''] ?? 0) : null;
+            $pctFamilias = ($hasFamilies && $famTotal > 0)
+                ? (int) round($famAcomp / $famTotal * 100)
                 : null;
 
             return [
@@ -1161,7 +1221,7 @@ class VisitaAcsController extends MonitorApsBaseController
                     ? (int) round($r->realizadas / $r->total * 100)
                     : 0,
                 'cidadaos'              => (int) $r->cidadaos,
-                'familias'              => $familias,
+                'familias_total'        => $famTotal,
                 'familias_acompanhadas' => $famAcomp,
                 'pct_familias'          => $pctFamilias,
             ];

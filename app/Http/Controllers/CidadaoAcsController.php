@@ -12,17 +12,25 @@ class CidadaoAcsController extends MonitorApsBaseController
 
     private function resolveColumns(): array
     {
+        $dtNascCol  = $this->firstExistingColumn('tb_fat_cad_individual',
+            ['dt_nascimento', 'dt_nasc', 'dt_data_nascimento']);
+        $stGestCol  = $this->firstExistingColumn('tb_fat_cad_individual',
+            ['st_gestante', 'st_em_gestacao', 'in_gestante']);
+
         return [
-            'cpfCol'  => $this->firstExistingColumn('tb_fat_cad_individual',
+            'cpfCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
                 ['nu_cpf', 'co_cpf'])                          ?? 'nu_cpf',
-            'cnsCol'  => $this->firstExistingColumn('tb_fat_cad_individual',
+            'cnsCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
                 ['nu_cns', 'co_cns'])                          ?? 'nu_cns',
-            'nomeCol' => $this->firstExistingColumn('tb_fat_cad_individual',
+            'nomeCol'   => $this->firstExistingColumn('tb_fat_cad_individual',
                 ['no_cidadao', 'no_nome'])                     ?? 'no_cidadao',
-            'hasCol'  => $this->firstExistingColumn('tb_fat_cad_individual',
+            'hasCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
                 ['st_hipertensao_arterial', 'st_hipertensao']) ?? 'st_hipertensao_arterial',
-            'dmCol'   => $this->firstExistingColumn('tb_fat_cad_individual',
+            'dmCol'     => $this->firstExistingColumn('tb_fat_cad_individual',
                 ['st_diabete', 'st_diabetes'])                 ?? 'st_diabete',
+            'dtNascCol' => $dtNascCol,
+            'stGestCol' => $stGestCol,
+            'hasPecNasc'=> ($dtNascCol === null) && $this->hasTable('tb_fat_cidadao_pec'),
         ];
     }
 
@@ -53,12 +61,36 @@ class CidadaoAcsController extends MonitorApsBaseController
         }
 
         try {
-            $cols    = $this->resolveColumns();
-            $cpfCol  = $cols['cpfCol'];
-            $cnsCol  = $cols['cnsCol'];
-            $nomeCol = $cols['nomeCol'];
-            $hasCol  = $cols['hasCol'];
-            $dmCol   = $cols['dmCol'];
+            $cols       = $this->resolveColumns();
+            $cpfCol     = $cols['cpfCol'];
+            $cnsCol     = $cols['cnsCol'];
+            $nomeCol    = $cols['nomeCol'];
+            $hasCol     = $cols['hasCol'];
+            $dmCol      = $cols['dmCol'];
+            $dtNascCol  = $cols['dtNascCol'];
+            $stGestCol  = $cols['stGestCol'];
+            $hasPecNasc = $cols['hasPecNasc'];
+
+            // Resolve data_nascimento e idade
+            if ($dtNascCol) {
+                $dtNascExpr = "TO_CHAR(fci.{$dtNascCol}, 'DD/MM/YYYY')";
+                $idadeExpr  = "DATE_PART('year', AGE(fci.{$dtNascCol}))::int";
+                $idosoExpr  = "CASE WHEN DATE_PART('year', AGE(fci.{$dtNascCol})) >= 60 THEN 1 ELSE 0 END";
+                $pecJoin    = '';
+            } elseif ($hasPecNasc) {
+                $pecDtCol   = $this->firstExistingColumn('tb_fat_cidadao_pec', ['dt_nascimento', 'dt_nasc']) ?? 'dt_nascimento';
+                $dtNascExpr = "TO_CHAR(pec.{$pecDtCol}, 'DD/MM/YYYY')";
+                $idadeExpr  = "DATE_PART('year', AGE(pec.{$pecDtCol}))::int";
+                $idosoExpr  = "CASE WHEN DATE_PART('year', AGE(pec.{$pecDtCol})) >= 60 THEN 1 ELSE 0 END";
+                $pecJoin    = 'LEFT JOIN tb_fat_cidadao_pec pec ON pec.co_fat_cidadao_pec = fci.co_fat_cidadao_pec';
+            } else {
+                $dtNascExpr = 'NULL';
+                $idadeExpr  = 'NULL';
+                $idosoExpr  = '0';
+                $pecJoin    = '';
+            }
+
+            $gestExpr = $stGestCol ? "fci.{$stGestCol}" : 'NULL';
 
             $where  = 'fci.st_ficha_inativa = 0 AND de.st_registro_valido = 1';
             $params = [];
@@ -83,27 +115,27 @@ class CidadaoAcsController extends MonitorApsBaseController
             $sql = "
                 SELECT
                     fci.co_fat_cidadao_pec,
-                    fci.{$nomeCol}                                              AS nome,
-                    fci.{$cpfCol}                                               AS cpf,
-                    fci.{$cnsCol}                                               AS cns,
-                    TO_CHAR(fci.dt_nascimento, 'DD/MM/YYYY')                   AS data_nascimento,
-                    DATE_PART('year', AGE(fci.dt_nascimento))::int             AS idade,
+                    fci.{$nomeCol}   AS nome,
+                    fci.{$cpfCol}    AS cpf,
+                    fci.{$cnsCol}    AS cns,
+                    {$dtNascExpr}    AS data_nascimento,
+                    {$idadeExpr}     AS idade,
                     de.nu_ine,
                     de.no_equipe,
-                    dp.co_seq_dim_profissional                                 AS profissional_id,
-                    dp.no_profissional                                         AS agente,
-                    dp.nu_cns                                                  AS cns_agente,
-                    fci.st_gestante,
-                    fci.{$hasCol}                                              AS st_has,
-                    fci.{$dmCol}                                               AS st_dm,
-                    CASE WHEN DATE_PART('year', AGE(fci.dt_nascimento)) >= 60
-                         THEN 1 ELSE 0 END                                     AS st_idoso,
-                    COUNT(*) OVER()                                            AS total_count
+                    dp.co_seq_dim_profissional AS profissional_id,
+                    dp.no_profissional         AS agente,
+                    dp.nu_cns                  AS cns_agente,
+                    {$gestExpr}      AS st_gestante,
+                    fci.{$hasCol}    AS st_has,
+                    fci.{$dmCol}     AS st_dm,
+                    {$idosoExpr}     AS st_idoso,
+                    COUNT(*) OVER()  AS total_count
                 FROM tb_fat_cad_individual fci
                 JOIN tb_dim_equipe de
                     ON de.co_seq_dim_equipe = fci.co_dim_equipe
                 LEFT JOIN tb_dim_profissional dp
                     ON dp.co_seq_dim_profissional = fci.co_dim_profissional
+                {$pecJoin}
                 WHERE {$where}
                 ORDER BY fci.{$nomeCol}
                 LIMIT ? OFFSET ?
