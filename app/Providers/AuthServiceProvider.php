@@ -25,14 +25,16 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Gates de acesso aos dashboards analíticos.
-        // O campo `profile` na tabela users define o papel do usuário.
-        // Valores conhecidos: 'admin', 'user' (default).
-        // Para restringir um dashboard a perfis específicos, adicione o perfil
-        // ao array correspondente. Ex: ['admin', 'tfd'] para restringir ao TFD.
-        Gate::define('dashboard-laboratorio', fn ($user) => in_array($user->profile, ['admin', 'user']));
-        Gate::define('dashboard-fila', fn ($user) => in_array($user->profile, ['admin', 'user']));
-        Gate::define('dashboard-tfd', fn ($user) => in_array($user->profile, ['admin', 'user']));
-        Gate::define('dashboard-logs', fn ($user) => $user->profile === 'admin');
+        // Gates de acesso às abas do dashboard analítico.
+        // Permissões gerenciadas via system_pages + profile_page_permissions (tela de Perfis de Acesso).
+        // Admin tem acesso irrestrito; demais perfis consultam o banco.
+        $perm = fn (string $path) => fn ($user) =>
+            $user->profile === 'admin' ||
+            app(\App\Services\Authorization\PagePermissionService::class)->canAccess($user, $path);
+
+        Gate::define('dashboard-laboratorio', $perm('/dashboard/laboratorio'));
+        Gate::define('dashboard-fila',        $perm('/dashboard/fila'));
+        Gate::define('dashboard-tfd',         $perm('/dashboard/tfd'));
+        Gate::define('dashboard-logs',        $perm('/dashboard/logs'));
     }
 }

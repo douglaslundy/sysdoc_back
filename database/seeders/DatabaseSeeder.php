@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             PharmacyCatalogSeeder::class,         // Catalogos auxiliares da Farmacia
             SusMgMedicinesSeeder::class,          // Medicamentos SUS-MG (REMEMG/CEAF + controlados)
             MonitorApsPageSeeder::class,          // Monitor APS - categorias, paginas e permissoes
+            DashboardTabPageSeeder::class,        // Dashboard - abas como system_pages com permissoes por perfil
         ]);
     }
 }
