@@ -49,6 +49,17 @@ abstract class MonitorApsBaseController extends Controller
             try { $password = decrypt($password); } catch (\Throwable) {}
         }
 
+        // PDO::ATTR_TIMEOUT não controla timeout de conexão no pgsql — apenas de statement.
+        // fsockopen com 5s de timeout detecta host inacessível rapidamente e evita que
+        // o PHP estoure max_execution_time (que derruba os headers CORS junto).
+        if ($host) {
+            $socket = @fsockopen($host, (int) $port, $errno, $errstr, 5.0);
+            if ($socket === false) {
+                throw new \RuntimeException("eSUS PEC inacessível ({$host}:{$port}): {$errstr}");
+            }
+            fclose($socket);
+        }
+
         config(['database.connections.pgsql_esus_runtime' => [
             'driver'   => 'pgsql',
             'host'     => $host,
@@ -60,7 +71,7 @@ abstract class MonitorApsBaseController extends Controller
             'prefix'   => '',
             'schema'   => 'public',
             'sslmode'  => 'prefer',
-            'options'  => [PDO::ATTR_TIMEOUT => 30],
+            'options'  => [PDO::ATTR_TIMEOUT => 10],
         ]]);
 
         $this->apsConn = DB::connection('pgsql_esus_runtime');
