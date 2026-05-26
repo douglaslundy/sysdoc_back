@@ -14,7 +14,7 @@ class ExameObserver
 
     public function updated(Exame $model): void
     {
-        $dirty    = $model->getDirty();
+        $dirty = $model->getDirty();
         $original = array_intersect_key($model->getOriginal(), $dirty);
         AuditService::record('UPDATE', $model, $original, $dirty);
     }

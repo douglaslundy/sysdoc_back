@@ -78,7 +78,12 @@ abstract class MonitorApsBaseController extends Controller
 
         try {
             $this->apsConn->statement("SET statement_timeout = '25s'");
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            // SET statement_timeout só falha se a conexão/autenticação falhou.
+            // Propagamos para que o caller receba 503 em vez de uma conexão quebrada
+            // que produziria "Erro ao consultar o banco de dados" em toda query seguinte.
+            throw new \RuntimeException('Falha ao conectar ao banco eSUS PEC: ' . $e->getMessage(), 0, $e);
+        }
 
         return $this->apsConn;
     }
@@ -90,6 +95,47 @@ abstract class MonitorApsBaseController extends Controller
     protected function schemaCacheVersion(): int
     {
         return (int) Cache::get('aps_schema_v', 0);
+    }
+
+    /**
+     * Verifica se uma tabela existe no schema public do banco eSUS.
+     * Usa pg_catalog — independente de versão do PostgreSQL.
+     * Resultado cacheado por 24h com invalidação pela versão do schema.
+     */
+    protected function hasTable(string $table): bool
+    {
+        $v   = $this->schemaCacheVersion();
+        $key = "aps_table2_{$v}_{$table}";
+        return Cache::remember($key, 86400, function () use ($table) {
+            try {
+                $row = $this->db()->selectOne("
+                    SELECT 1
+                    FROM pg_catalog.pg_class c
+                    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                    WHERE c.relname = ?
+                      AND c.relkind = 'r'
+                      AND n.nspname = 'public'
+                    LIMIT 1
+                ", [$table]);
+                return $row !== null;
+            } catch (\Throwable) {
+                return false;
+            }
+        });
+    }
+
+    /**
+     * Retorna o primeiro nome de coluna da lista que existir na tabela dada.
+     * Útil para lidar com variações de schema entre versões do eSUS PEC.
+     */
+    protected function firstExistingColumn(string $table, array $candidates): ?string
+    {
+        foreach ($candidates as $col) {
+            if ($this->hasColumn($table, $col)) {
+                return $col;
+            }
+        }
+        return null;
     }
 
     /**

@@ -146,17 +146,6 @@ class VisitaAcsController extends MonitorApsBaseController
         }
     }
 
-    private function firstExistingColumn(string $table, array $candidates): ?string
-    {
-        foreach ($candidates as $column) {
-            if ($this->hasColumn($table, $column)) {
-                return $column;
-            }
-        }
-
-        return null;
-    }
-
     /**
      * Builds the SQL expression for the visit annotation/notes.
      *
@@ -267,29 +256,6 @@ class VisitaAcsController extends MonitorApsBaseController
     private function textColumnExpr(string $tableAlias, ?string $column): string
     {
         return $column ? "{$tableAlias}.{$column}::text" : 'NULL::text';
-    }
-
-    private function hasTable(string $table): bool
-    {
-        $v = $this->schemaCacheVersion();
-
-        return \Illuminate\Support\Facades\Cache::remember("aps_table2_{$v}_{$table}", 86400, function () use ($table) {
-            try {
-                $row = $this->db()->selectOne("
-                    SELECT 1
-                    FROM pg_catalog.pg_class c
-                    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-                    WHERE c.relname = ?
-                      AND c.relkind = 'r'
-                      AND n.nspname = 'public'
-                    LIMIT 1
-                ", [$table]);
-
-                return $row !== null;
-            } catch (\Throwable) {
-                return false;
-            }
-        });
     }
 
     private function citizenNameExpr(string $visitAlias = 'v'): string
@@ -454,35 +420,40 @@ class VisitaAcsController extends MonitorApsBaseController
 
         [$where, $params] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
 
-        $rows = $this->db()->select("
-            SELECT
-                v.co_seq_fat_visita_domiciliar   AS id,
-                p.no_profissional                AS agent_name,
-                c.nu_cbo                         AS cbo,
-                e.nu_ine                         AS team_ine,
-                e.no_equipe                      AS team_name,
-                t.dt_registro                    AS visited_date,
-                {$this->instrumentExpr()}        AS instrument_label,
-                d.co_seq_dim_desfecho_visita     AS outcome_code,
-                d.ds_desfecho_visita             AS outcome_label,
-                v.st_mot_vis_cad_att,
-                v.st_mot_vis_visita_periodica,
-                v.st_mot_vis_busca_ativa,
-                v.st_mot_vis_acompanhamento,
-                v.st_mot_vis_egresso_internacao,
-                v.st_mot_vis_ctrl_ambnte_vetor,
-                v.st_mot_vis_convte_atvidd_cltva,
-                v.st_mot_vis_orintacao_prevncao,
-                v.st_mot_vis_outros,
-                CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
-                     THEN true ELSE false END    AS has_geo,
-                COUNT(*) OVER()                  AS total_count
-            FROM tb_fat_visita_domiciliar v
-            {$this->baseJoins()}
-            WHERE {$where}
-            ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
-            LIMIT ? OFFSET ?
-        ", array_merge($params, [$perPage, $offset]));
+        try {
+            $rows = $this->db()->select("
+                SELECT
+                    v.co_seq_fat_visita_domiciliar   AS id,
+                    p.no_profissional                AS agent_name,
+                    c.nu_cbo                         AS cbo,
+                    e.nu_ine                         AS team_ine,
+                    e.no_equipe                      AS team_name,
+                    t.dt_registro                    AS visited_date,
+                    {$this->instrumentExpr()}        AS instrument_label,
+                    d.co_seq_dim_desfecho_visita     AS outcome_code,
+                    d.ds_desfecho_visita             AS outcome_label,
+                    v.st_mot_vis_cad_att,
+                    v.st_mot_vis_visita_periodica,
+                    v.st_mot_vis_busca_ativa,
+                    v.st_mot_vis_acompanhamento,
+                    v.st_mot_vis_egresso_internacao,
+                    v.st_mot_vis_ctrl_ambnte_vetor,
+                    v.st_mot_vis_convte_atvidd_cltva,
+                    v.st_mot_vis_orintacao_prevncao,
+                    v.st_mot_vis_outros,
+                    CASE WHEN v.nu_latitude IS NOT NULL AND v.nu_longitude IS NOT NULL
+                         THEN true ELSE false END    AS has_geo,
+                    COUNT(*) OVER()                  AS total_count
+                FROM tb_fat_visita_domiciliar v
+                {$this->baseJoins()}
+                WHERE {$where}
+                ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
+                LIMIT ? OFFSET ?
+            ", array_merge($params, [$perPage, $offset]));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.index: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
 
         $total = (int) ($rows[0]->total_count ?? 0);
 
@@ -522,17 +493,22 @@ class VisitaAcsController extends MonitorApsBaseController
             $request->has_geo,
         );
 
-        $totRow = $this->db()->selectOne("
-            SELECT
-                COUNT(*)                                                              AS total,
-                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)   AS realizadas,
-                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)   AS recusadas,
-                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)   AS ausentes,
-                COUNT(DISTINCT v.co_fat_cidadao_pec)                                 AS cidadaos
-            FROM tb_fat_visita_domiciliar v
-            {$this->baseJoins()}
-            WHERE {$where}
-        ", $params);
+        try {
+            $totRow = $this->db()->selectOne("
+                SELECT
+                    COUNT(*)                                                              AS total,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)   AS realizadas,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)   AS recusadas,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)   AS ausentes,
+                    COUNT(DISTINCT v.co_fat_cidadao_pec)                                 AS cidadaos
+                FROM tb_fat_visita_domiciliar v
+                {$this->baseJoins()}
+                WHERE {$where}
+            ", $params);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.resumo: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
 
         $familyData = null;
         $familyExpr = $this->familyIdExpr();
@@ -721,7 +697,14 @@ class VisitaAcsController extends MonitorApsBaseController
         ";
 
         $sql = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
-        $rows = $this->db()->select($sql, $queryParams);
+
+        try {
+            $rows = $this->db()->select($sql, $queryParams);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.lista: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
+
         $total = (int) ($rows[0]->total_count ?? 0);
 
         $visitas = array_map(fn ($r) => [
@@ -911,7 +894,13 @@ class VisitaAcsController extends MonitorApsBaseController
         ";
 
         $sql = $hasHora ? $sqlFull : $sqlBase;
-        $row = $this->db()->selectOne($sql, [$id]);
+
+        try {
+            $row = $this->db()->selectOne($sql, [$id]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.show: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
 
         if (! $row) {
             return response()->json(['message' => 'Visita não encontrada.'], 404);
@@ -1041,7 +1030,13 @@ class VisitaAcsController extends MonitorApsBaseController
         ";
 
         $sql = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
-        $rows = $this->db()->select($sql, $params);
+
+        try {
+            $rows = $this->db()->select($sql, $params);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.mapa: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
 
         $pontos = array_map(fn ($r) => [
             'id' => (int) $r->id,
@@ -1066,12 +1061,17 @@ class VisitaAcsController extends MonitorApsBaseController
      */
     public function equipes(): JsonResponse
     {
-        $rows = $this->db()->select("
-            SELECT nu_ine AS ine, no_equipe AS name
-            FROM tb_dim_equipe
-            WHERE st_registro_valido = 1 AND nu_ine != '-'
-            ORDER BY no_equipe
-        ");
+        try {
+            $rows = $this->db()->select("
+                SELECT nu_ine AS ine, no_equipe AS name
+                FROM tb_dim_equipe
+                WHERE st_registro_valido = 1 AND nu_ine != '-'
+                ORDER BY no_equipe
+            ");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.equipes: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
 
         return response()->json(['data' => $rows]);
     }
@@ -1112,24 +1112,29 @@ class VisitaAcsController extends MonitorApsBaseController
             ? 'LEFT JOIN tb_fat_cad_individual ci ON ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec'
             : '';
 
-        $rows = $this->db()->select("
-            SELECT
-                p.no_profissional                                                      AS agente,
-                c.nu_cbo                                                               AS cbo,
-                e.no_equipe                                                            AS equipe_nome,
-                COUNT(*)                                                               AS total,
-                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)    AS realizadas,
-                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)    AS recusadas,
-                SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)    AS ausentes,
-                COUNT(DISTINCT v.co_fat_cidadao_pec)                                  AS cidadaos
-                {$familyCols}
-            FROM tb_fat_visita_domiciliar v
-            {$this->baseJoins()}
-            {$familyJoin}
-            WHERE {$where}
-            GROUP BY p.no_profissional, c.nu_cbo, e.no_equipe
-            ORDER BY total DESC
-        ", $params);
+        try {
+            $rows = $this->db()->select("
+                SELECT
+                    p.no_profissional                                                      AS agente,
+                    c.nu_cbo                                                               AS cbo,
+                    e.no_equipe                                                            AS equipe_nome,
+                    COUNT(*)                                                               AS total,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)    AS realizadas,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)    AS recusadas,
+                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)    AS ausentes,
+                    COUNT(DISTINCT v.co_fat_cidadao_pec)                                  AS cidadaos
+                    {$familyCols}
+                FROM tb_fat_visita_domiciliar v
+                {$this->baseJoins()}
+                {$familyJoin}
+                WHERE {$where}
+                GROUP BY p.no_profissional, c.nu_cbo, e.no_equipe
+                ORDER BY total DESC
+            ", $params);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.agentes: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
 
         $agentes = array_map(function ($r) use ($hasFamilies) {
             $familias    = $hasFamilies ? (int) ($r->familias ?? 0) : null;
@@ -1188,17 +1193,22 @@ class VisitaAcsController extends MonitorApsBaseController
         $where .= " AND t.nu_ano IN ({$placeholders})";
         $params = array_merge($params, $anos);
 
-        $rows = $this->db()->select("
-            SELECT
-                t.nu_ano  AS ano,
-                t.nu_mes  AS mes,
-                COUNT(*)  AS total
-            FROM tb_fat_visita_domiciliar v
-            {$this->baseJoins()}
-            WHERE {$where}
-            GROUP BY t.nu_ano, t.nu_mes
-            ORDER BY t.nu_ano, t.nu_mes
-        ", $params);
+        try {
+            $rows = $this->db()->select("
+                SELECT
+                    t.nu_ano  AS ano,
+                    t.nu_mes  AS mes,
+                    COUNT(*)  AS total
+                FROM tb_fat_visita_domiciliar v
+                {$this->baseJoins()}
+                WHERE {$where}
+                GROUP BY t.nu_ano, t.nu_mes
+                ORDER BY t.nu_ano, t.nu_mes
+            ", $params);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.evolucao: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
 
         $index = [];
         foreach ($rows as $row) {

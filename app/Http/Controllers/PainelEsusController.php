@@ -8,20 +8,6 @@ use Illuminate\Http\Request;
 class PainelEsusController extends MonitorApsBaseController
 {
     /**
-     * Tenta candidatos de nome de coluna até encontrar um que existe.
-     * Evita quebrar em versões diferentes do e-SUS PEC.
-     */
-    private function firstExistingColumn(string $table, array $candidates): ?string
-    {
-        foreach ($candidates as $col) {
-            if ($this->hasColumn($table, $col)) {
-                return $col;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Detecta dinamicamente os nomes de colunas em tb_lista_atendimento
      * que variam entre versões do e-SUS PEC.
      */
@@ -90,6 +76,15 @@ class PainelEsusController extends MonitorApsBaseController
         }
 
         try {
+            if (!$this->hasTable('tb_lista_atendimento')) {
+                return response()->json([
+                    'unidade'             => null,
+                    'em_atendimento'      => null,
+                    'ultimos_atendidos'   => [],
+                    'modulo_indisponivel' => true,
+                ]);
+            }
+
             $cols        = $this->resolveListaColumns();
             $cnesCol     = $cols['cnesCol'];
             $cidadaoFk   = $cols['cidadaoFk'];
@@ -172,6 +167,10 @@ class PainelEsusController extends MonitorApsBaseController
         }
 
         try {
+            if (!$this->hasTable('tb_lista_atendimento')) {
+                return response()->json(['error' => 'Módulo de Gestão de Fila não habilitado neste eSUS PEC.'], 503);
+            }
+
             $cols      = $this->resolveListaColumns();
             $cnesCol   = $cols['cnesCol'];
             $cidadaoFk = $cols['cidadaoFk'];
@@ -246,6 +245,10 @@ class PainelEsusController extends MonitorApsBaseController
         }
 
         try {
+            if (!$this->hasTable('tb_lista_atendimento')) {
+                return response()->json(['error' => 'Módulo de Gestão de Fila não habilitado neste eSUS PEC.'], 503);
+            }
+
             $cols     = $this->resolveListaColumns();
             $cnesCol  = $cols['cnesCol'];
             $profFk   = $cols['profFk'];
