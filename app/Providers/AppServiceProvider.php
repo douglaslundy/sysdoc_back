@@ -12,10 +12,12 @@ use App\Models\MedicineItem;
 use App\Models\MedicineMonthlyAcquisition;
 use App\Models\MedicoSolicitante;
 use App\Models\Ordinance;
+use App\Models\PageCategory;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
 use App\Models\Route;
 use App\Models\Speciality;
+use App\Models\SystemPage;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -34,10 +36,12 @@ use App\Observers\MedicineItemObserver;
 use App\Observers\MedicineMonthlyAcquisitionObserver;
 use App\Observers\MedicoSolicitanteObserver;
 use App\Observers\OrdinanceObserver;
+use App\Observers\PageCategoryObserver;
 use App\Observers\PedidoExameObserver;
 use App\Observers\ResultadoExameObserver;
 use App\Observers\RouteObserver;
 use App\Observers\SpecialityObserver;
+use App\Observers\SystemPageObserver;
 use App\Observers\TripObserver;
 use App\Observers\UserObserver;
 use App\Observers\VehicleObserver;
@@ -72,5 +76,7 @@ class AppServiceProvider extends ServiceProvider
         Ordinance::observe(OrdinanceObserver::class);
         Estabelecimento::observe(EstabelecimentoObserver::class);
         Alvara::observe(AlvaraObserver::class);
+        SystemPage::observe(SystemPageObserver::class);
+        PageCategory::observe(PageCategoryObserver::class);
     }
 }

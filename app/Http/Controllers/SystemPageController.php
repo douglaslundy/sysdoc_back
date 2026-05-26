@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\PageCategory;
 use App\Models\SystemPage;
-use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -61,8 +60,6 @@ class SystemPageController extends Controller
             return SystemPage::create($data);
         });
 
-        AuditService::record('CREATE', $page, null, $page->toArray());
-
         return response()->json($page->load('category:id,nome,icone,ordem,ativo'), 201);
     }
 
@@ -82,8 +79,6 @@ class SystemPageController extends Controller
             'ordem' => 'nullable|integer|min:1',
             'ativo' => 'sometimes|boolean',
         ]);
-
-        $old = $page->toArray();
 
         DB::transaction(function () use ($request, $page) {
             $data = $request->only(['titulo', 'path', 'icone', 'categoria', 'category_id', 'ativo']);
@@ -139,7 +134,6 @@ class SystemPageController extends Controller
         });
 
         $page->refresh();
-        AuditService::record('UPDATE', $page, $old, $page->toArray());
 
         return response()->json($page->load('category:id,nome,icone,ordem,ativo'));
     }
@@ -158,7 +152,6 @@ class SystemPageController extends Controller
                 ->where('ordem', '>', $page->ordem)
                 ->decrement('ordem');
 
-            AuditService::record('DELETE', $page, $page->toArray(), null);
             $page->delete();
         });
 

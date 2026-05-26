@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\PageCategory;
-use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -42,8 +41,6 @@ class PageCategoryController extends Controller
             ]);
         });
 
-        AuditService::record('CREATE', $category, null, $category->toArray());
-
         return response()->json($category, 201);
     }
 
@@ -60,8 +57,6 @@ class PageCategoryController extends Controller
             'ordem' => 'nullable|integer|min:0',
             'ativo' => 'nullable|boolean',
         ]);
-
-        $old = $category->toArray();
 
         DB::transaction(function () use ($request, $category) {
             $payload = $request->only(['nome', 'icone', 'ativo']);
@@ -91,7 +86,6 @@ class PageCategoryController extends Controller
         });
 
         $category->refresh();
-        AuditService::record('UPDATE', $category, $old, $category->toArray());
 
         return response()->json($category);
     }
@@ -107,7 +101,6 @@ class PageCategoryController extends Controller
             return response()->json(['error' => 'Categoria em uso por páginas do sistema'], 422);
         }
 
-        AuditService::record('DELETE', $category, $category->toArray(), null);
         $category->delete();
 
         return response()->json(['message' => 'Categoria removida.']);
