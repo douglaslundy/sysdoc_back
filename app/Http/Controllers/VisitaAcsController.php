@@ -950,6 +950,11 @@ class VisitaAcsController extends MonitorApsBaseController
 
         [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
 
+        // Resolve column names for CPF/CNS/nome based on database schema
+        $cpfCol  = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_cpf', 'co_cpf'])     ?? 'nu_cpf';
+        $cnsCol  = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_cns', 'co_cns'])     ?? 'nu_cns';
+        $nomeCol = $this->firstExistingColumn('tb_fat_cad_individual', ['no_cidadao', 'no_nome']) ?? 'no_cidadao';
+
         if ($request->agente) {
             $where .= ' AND p.no_profissional = ?';
             $params[] = $request->agente;
@@ -960,20 +965,20 @@ class VisitaAcsController extends MonitorApsBaseController
             $digits = preg_replace('/\D/', '', $busca);
 
             if (strlen($digits) === 11) {
-                $where   .= ' AND v.co_fat_cidadao_pec IN (
+                $where   .= " AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE nu_cpf = ?)';
+                    WHERE {$cpfCol} = ?)";
                 $params[] = $digits;
             } elseif (strlen($digits) === 15) {
-                $where   .= ' AND v.co_fat_cidadao_pec IN (
+                $where   .= " AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE nu_cns = ?)';
+                    WHERE {$cnsCol} = ?)";
                 $params[] = $digits;
             } else {
-                $where   .= ' AND v.co_fat_cidadao_pec IN (
+                $where   .= " AND v.co_fat_cidadao_pec IN (
                     SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE no_cidadao ILIKE ?)';
-                $params[] = '%'.$busca.'%';
+                    WHERE {$nomeCol} ILIKE ?)";
+                $params[] = '%' . $busca . '%';
             }
         }
         $citizenExpr = $this->citizenNameExpr('v');
