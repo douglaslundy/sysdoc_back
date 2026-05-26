@@ -10,6 +10,7 @@ use App\Http\Controllers\CallController;
 use App\Http\Controllers\CallServiceController;
 use App\Http\Controllers\CampoReferenciaController;
 use App\Http\Controllers\CategoriaExameController;
+use App\Http\Controllers\CidadaoAcsController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardController;
@@ -152,6 +153,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::post('/config/test', [MonitorApsConfigController::class, 'testar']);
             Route::post('/config/save', [MonitorApsConfigController::class, 'save']);
             Route::get('/config/explorar', [MonitorApsConfigController::class, 'explorar']);
+        });
+        Route::prefix('cidadaos')->group(function () {
+            Route::get('/',        [CidadaoAcsController::class, 'index']);
+            Route::get('/agentes', [CidadaoAcsController::class, 'agentes']);
         });
 
     });
