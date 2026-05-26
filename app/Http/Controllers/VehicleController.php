@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVehicleRequest;
 use App\Models\Vehicle;
-use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 
 class VehicleController extends Controller
@@ -27,7 +26,6 @@ class VehicleController extends Controller
 
             $array = ['status' => 'created'];
             $vehicle = Vehicle::create($request->all());
-            AuditService::record('CREATE', $vehicle, null, $vehicle->toArray());
             $array['vehicle'] = $vehicle;
             DB::commit();
 
@@ -54,9 +52,7 @@ class VehicleController extends Controller
         DB::beginTransaction();
         try {
             $array = ['status' => 'updated'];
-            $old = $vehicle->toArray();
             $vehicle->update($request->all());
-            AuditService::record('UPDATE', $vehicle, $old, $vehicle->toArray());
             $array['vehicle'] = $vehicle;
 
             DB::commit();
@@ -74,7 +70,6 @@ class VehicleController extends Controller
     public function destroy($id)
     {
         $vehicle = Vehicle::findOrFail($id);
-        AuditService::record('DELETE', $vehicle, $vehicle->toArray(), null);
         $vehicle->active = false;
         $vehicle->update();
 

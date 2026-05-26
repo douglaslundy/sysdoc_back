@@ -12,9 +12,11 @@ use App\Models\MedicineMonthlyAcquisition;
 use App\Models\MedicoSolicitante;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
+use App\Models\Route;
 use App\Models\Speciality;
 use App\Models\Trip;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\VigilanciaConfig;
 use App\Observers\AccessProfileObserver;
 use App\Observers\CategoriaExameObserver;
@@ -26,9 +28,11 @@ use App\Observers\MedicineMonthlyAcquisitionObserver;
 use App\Observers\MedicoSolicitanteObserver;
 use App\Observers\PedidoExameObserver;
 use App\Observers\ResultadoExameObserver;
+use App\Observers\RouteObserver;
 use App\Observers\SpecialityObserver;
 use App\Observers\TripObserver;
 use App\Observers\UserObserver;
+use App\Observers\VehicleObserver;
 use App\Observers\VigilanciaConfigObserver;
 use Illuminate\Support\ServiceProvider;
 
@@ -54,5 +58,7 @@ class AppServiceProvider extends ServiceProvider
         Exame::observe(ExameObserver::class);
         CategoriaExame::observe(CategoriaExameObserver::class);
         MedicoSolicitante::observe(MedicoSolicitanteObserver::class);
+        Vehicle::observe(VehicleObserver::class);
+        Route::observe(RouteObserver::class);
     }
 }
