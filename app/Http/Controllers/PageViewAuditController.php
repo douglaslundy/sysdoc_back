@@ -11,17 +11,22 @@ class PageViewAuditController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'path' => ['required', 'string', 'max:255'],
-        ], [
-            'path.required' => 'O caminho da pÃ¡gina Ã© obrigatÃ³rio.',
-            'path.string' => 'O caminho da pÃ¡gina deve ser um texto.',
-            'path.max' => 'O caminho da pÃ¡gina deve ter no mÃ¡ximo 255 caracteres.',
+            'path'    => ['required', 'string', 'max:255'],
+            'label'   => ['nullable', 'string', 'max:100'],
+            'filtros' => ['nullable', 'array'],
         ]);
 
-        AuditService::record('VIEW', null, null, [
-            'event' => 'PAGE_VIEW',
-            'path' => $data['path'],
-        ]);
+        $hasFiltros = !empty($data['filtros']);
+        $action     = $hasFiltros ? 'READ' : 'VIEW';
+
+        $payload = array_filter([
+            'event'   => $hasFiltros ? 'FILTER_CHANGE' : 'PAGE_VIEW',
+            'path'    => $data['path'],
+            'label'   => $data['label'] ?? null,
+            'filtros' => $data['filtros'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        AuditService::record($action, null, null, $payload);
 
         return response()->json(['ok' => true]);
     }

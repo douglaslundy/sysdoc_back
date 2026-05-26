@@ -123,7 +123,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/attendance/service/{ticketId}/finish', [AttendanceController::class, 'serviceFinish']);
 
     // Monitor APS — indicadores Portaria GM/MS 6.907/2025
-    Route::prefix('monitor-aps')->middleware(['throttle:60,1', 'audit.read'])->group(function () {
+    // audit.read removido: auditoria granular feita no frontend (1 VIEW por page load, 1 READ por filtro aplicado)
+    Route::prefix('monitor-aps')->middleware(['throttle:60,1'])->group(function () {
         Route::prefix('indicadores')->group(function () {
             Route::get('/resumo', [MonitorApsController::class, 'resumo']);
             Route::get('/vinculo', [MonitorApsController::class, 'vinculo']);
