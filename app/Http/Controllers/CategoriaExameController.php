@@ -46,7 +46,6 @@ class CategoriaExameController extends Controller
             return response()->json(['error' => 'Categoria não encontrada'], 404);
         }
 
-        $old = $categoria->toArray();
         $categoria->nome = strtoupper($request->input('nome'));
         $categoria->ativo = $request->input('ativo', $categoria->ativo);
         $categoria->save();

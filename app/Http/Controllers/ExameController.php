@@ -68,7 +68,6 @@ class ExameController extends Controller
             return response()->json(['error' => 'Exame não encontrado'], 404);
         }
 
-        $old = $exame->toArray();
         $exame->nome = strtoupper($request->input('nome'));
         $exame->codigo = strtoupper($request->input('codigo'));
         $exame->categoria_exame_id = $request->input('categoria_exame_id');
