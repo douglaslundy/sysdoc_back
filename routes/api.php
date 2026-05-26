@@ -85,7 +85,10 @@ Route::get('/public/pharmacy/medicines/monthly-acquisitions', [MedicineTranspare
 Route::get('/attendance/panel/state', [AttendanceController::class, 'panelState']);
 
 // Painel de atendimento eSUS PEC — público (sala de espera)
-Route::middleware('throttle:30,1')->get('/public/painel-esus/estado', [PainelEsusController::class, 'estado']);
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/public/painel-esus/validar-cnes', [PainelEsusController::class, 'validarCnes']);
+    Route::get('/public/painel-esus/estado',       [PainelEsusController::class, 'estado']);
+});
 
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);

@@ -37,6 +37,42 @@ class PainelEsusController extends MonitorApsBaseController
     }
 
     /**
+     * GET /public/painel-esus/validar-cnes?cnes=XXXXXXX
+     * Público — sem autenticação.
+     * Verifica se o CNES existe em tb_unidade_saude.
+     */
+    public function validarCnes(Request $request): JsonResponse
+    {
+        $request->validate(['cnes' => 'required|string|max:20']);
+        $cnes = trim($request->input('cnes'));
+
+        try {
+            $db = $this->db();
+        } catch (\Throwable) {
+            return response()->json(['error' => 'Não foi possível conectar ao e-SUS.'], 503);
+        }
+
+        try {
+            $row = $db->selectOne(
+                "SELECT no_unidade_saude FROM tb_unidade_saude WHERE co_cnes = ? LIMIT 1",
+                [$cnes]
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('PainelEsus.validarCnes: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao consultar o banco de dados.'], 500);
+        }
+
+        if (!$row) {
+            return response()->json(['error' => 'CNES não encontrado na base do e-SUS.'], 404);
+        }
+
+        return response()->json([
+            'cnes' => $cnes,
+            'nome' => $row->no_unidade_saude,
+        ]);
+    }
+
+    /**
      * GET /public/painel-esus/estado?cnes=XXXXXXX
      * Público — sem autenticação.
      * Retorna quem está em atendimento agora e os últimos 5 atendidos no dia.
