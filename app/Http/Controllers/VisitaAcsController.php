@@ -1304,4 +1304,54 @@ class VisitaAcsController extends MonitorApsBaseController
             'raw' => $row,
         ]);
     }
+
+    /**
+     * GET /monitor-aps/visitas/responsabilidade?ine=X
+     * Conta cidadãos cadastrados por ACS via tb_fat_cad_individual.co_dim_profissional.
+     */
+    public function responsabilidade(Request $request): JsonResponse
+    {
+        $ine = $request->query('ine');
+
+        try {
+            $db = $this->db();
+        } catch (\Throwable) {
+            return response()->json(['error' => 'Não foi possível conectar ao e-SUS.'], 503);
+        }
+
+        try {
+            $sql = "
+                SELECT
+                    dp.no_profissional                         AS agente,
+                    dp.nu_cns                                  AS cns,
+                    de.nu_ine,
+                    de.no_equipe,
+                    COUNT(DISTINCT fci.co_fat_cidadao_pec)     AS cadastrados
+                FROM tb_fat_cad_individual fci
+                JOIN tb_dim_equipe de
+                    ON de.co_seq_dim_equipe = fci.co_dim_equipe
+                LEFT JOIN tb_dim_profissional dp
+                    ON dp.co_seq_dim_profissional = fci.co_dim_profissional
+                WHERE fci.st_ficha_inativa = 0
+                  AND de.st_registro_valido = 1
+            ";
+            $params = [];
+
+            if ($ine) {
+                $sql    .= ' AND de.nu_ine = ?';
+                $params[] = $ine;
+            }
+
+            $sql .= '
+                GROUP BY dp.no_profissional, dp.nu_cns, de.nu_ine, de.no_equipe
+                ORDER BY cadastrados DESC
+            ';
+
+            $rows = $db->select($sql, $params);
+            return response()->json(['responsabilidade' => $rows]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.responsabilidade: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao consultar responsabilidade.'], 500);
+        }
+    }
 }
