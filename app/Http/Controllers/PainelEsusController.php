@@ -22,6 +22,42 @@ class PainelEsusController extends MonitorApsBaseController
         ];
     }
 
+    private function resolveUnidadeColumns(): array
+    {
+        return [
+            'cnesCol' => $this->firstExistingColumn('tb_unidade_saude',
+                ['co_cnes', 'nu_cnes', 'co_unico_saude']) ?? 'co_cnes',
+            'nomeCol' => $this->firstExistingColumn('tb_unidade_saude',
+                ['no_unidade_saude', 'ds_nome', 'no_estabelecimento']) ?? 'no_unidade_saude',
+        ];
+    }
+
+    /**
+     * GET /painel-esus/unidades
+     * Autenticado. Lista unidades de saúde do banco e-SUS para o seletor de CNES.
+     */
+    public function unidades(): JsonResponse
+    {
+        try {
+            $db = $this->db();
+        } catch (\Throwable) {
+            return response()->json(['error' => 'Não foi possível conectar ao e-SUS.'], 503);
+        }
+
+        try {
+            $cols = $this->resolveUnidadeColumns();
+            $rows = $db->select(
+                "SELECT {$cols['cnesCol']} AS cnes, {$cols['nomeCol']} AS nome
+                 FROM tb_unidade_saude
+                 ORDER BY {$cols['nomeCol']}"
+            );
+            return response()->json(['unidades' => $rows]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('PainelEsus.unidades: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao consultar unidades de saúde.'], 500);
+        }
+    }
+
     /**
      * GET /public/painel-esus/validar-cnes?cnes=XXXXXXX
      * Público — sem autenticação.
@@ -39,8 +75,12 @@ class PainelEsusController extends MonitorApsBaseController
         }
 
         try {
+            $cols = $this->resolveUnidadeColumns();
             $row = $db->selectOne(
-                "SELECT no_unidade_saude FROM tb_unidade_saude WHERE co_cnes = ? LIMIT 1",
+                "SELECT {$cols['nomeCol']} AS nome
+                 FROM tb_unidade_saude
+                 WHERE {$cols['cnesCol']} = ?
+                 LIMIT 1",
                 [$cnes]
             );
         } catch (\Throwable $e) {
@@ -54,7 +94,7 @@ class PainelEsusController extends MonitorApsBaseController
 
         return response()->json([
             'cnes' => $cnes,
-            'nome' => $row->no_unidade_saude,
+            'nome' => $row->nome,
         ]);
     }
 
@@ -94,8 +134,12 @@ class PainelEsusController extends MonitorApsBaseController
             // Nome da unidade de saúde
             $unidadeRow = null;
             try {
+                $uCols = $this->resolveUnidadeColumns();
                 $unidadeRow = $db->selectOne(
-                    "SELECT no_unidade_saude FROM tb_unidade_saude WHERE co_cnes = ? LIMIT 1",
+                    "SELECT {$uCols['nomeCol']} AS nome
+                     FROM tb_unidade_saude
+                     WHERE {$uCols['cnesCol']} = ?
+                     LIMIT 1",
                     [$cnes]
                 );
             } catch (\Throwable) {}
@@ -133,7 +177,7 @@ class PainelEsusController extends MonitorApsBaseController
             );
 
             return response()->json([
-                'unidade'           => $unidadeRow?->no_unidade_saude ?? 'CNES ' . $cnes,
+                'unidade'           => $unidadeRow?->nome ?? 'CNES ' . $cnes,
                 'em_atendimento'    => $emAtendimento,
                 'ultimos_atendidos' => $ultimosAtendidos,
             ]);

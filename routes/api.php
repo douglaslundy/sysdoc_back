@@ -157,8 +157,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Painel de atendimento eSUS PEC — gestão de fila (autenticado)
     Route::prefix('painel-esus')->group(function () {
-        Route::get('/fila',    [PainelEsusController::class, 'fila']);
-        Route::get('/filtros', [PainelEsusController::class, 'filtros']);
+        Route::get('/fila',     [PainelEsusController::class, 'fila']);
+        Route::get('/filtros',  [PainelEsusController::class, 'filtros']);
+        Route::get('/unidades', [PainelEsusController::class, 'unidades']);
     });
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
