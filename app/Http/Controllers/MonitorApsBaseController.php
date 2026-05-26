@@ -53,7 +53,7 @@ abstract class MonitorApsBaseController extends Controller
         // fsockopen com 5s de timeout detecta host inacessível rapidamente e evita que
         // o PHP estoure max_execution_time (que derruba os headers CORS junto).
         if ($host) {
-            $socket = @fsockopen($host, (int) $port, $errno, $errstr, 5.0);
+            $socket = @fsockopen($host, (int) $port, $errno, $errstr, 3.0);
             if ($socket === false) {
                 throw new \RuntimeException("eSUS PEC inacessível ({$host}:{$port}): {$errstr}");
             }
