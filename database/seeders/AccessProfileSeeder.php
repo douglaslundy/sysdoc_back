@@ -31,12 +31,6 @@ class AccessProfileSeeder extends Seeder
             ['titulo' => 'Ofícios', 'path' => '/letters', 'icone' => 'send', 'categoria' => 'Documentos'],
             ['titulo' => 'Portarias', 'path' => '/ordinance', 'icone' => 'file-text', 'categoria' => 'Documentos'],
             ['titulo' => 'Modelos IA', 'path' => '/models', 'icone' => 'cpu', 'categoria' => 'Administração'],
-            ['titulo' => 'Serviços', 'path' => '/service_calls', 'icone' => 'tool', 'categoria' => 'Administração'],
-            ['titulo' => 'Salas', 'path' => '/rooms', 'icone' => 'grid', 'categoria' => 'Atendimento'],
-            ['titulo' => 'Minha Sala', 'path' => '/listing_calls', 'icone' => 'monitor', 'categoria' => 'Atendimento'],
-            ['titulo' => 'Em Atendimento', 'path' => '/attending', 'icone' => 'activity', 'categoria' => 'Atendimento'],
-            ['titulo' => 'Novo Atendimento', 'path' => '/call', 'icone' => 'plus-circle', 'categoria' => 'Atendimento'],
-            ['titulo' => 'Painel', 'path' => '/panel', 'icone' => 'layout', 'categoria' => 'Administração'],
             ['titulo' => 'Logs de Erro', 'path' => '/errorlogs', 'icone' => 'alert-triangle', 'categoria' => 'Administração'],
             ['titulo' => 'Logs de QRCODE', 'path' => '/qrcodelogs', 'icone' => 'maximize', 'categoria' => 'Administração'],
             ['titulo' => 'Perfis de Acesso', 'path' => '/perfis', 'icone' => 'shield', 'categoria' => 'Administração'],
@@ -91,7 +85,7 @@ class AccessProfileSeeder extends Seeder
             'admin' => [
                 '/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados',
                 '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips',
-                '/letters', '/ordinance', '/models', '/service_calls', '/rooms', '/listing_calls', '/attending', '/call', '/panel', '/errorlogs',
+                '/letters', '/ordinance', '/models', '/errorlogs',
                 '/qrcodelogs', '/perfis', '/paginas-sistema', '/paginas-categorias', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes',
                 '/pharmacy/medicines', '/pharmacy/daily-status', '/pharmacy/monthly-acquisitions', '/pharmacy/compliance',
             ],
@@ -102,7 +96,7 @@ class AccessProfileSeeder extends Seeder
             ],
             'user' => ['/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
             'tfd' => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
-            'driver' => ['/panel', '/trips'],
+            'driver' => ['/trips'],
             'partner' => ['/clients'],
         ];
 
