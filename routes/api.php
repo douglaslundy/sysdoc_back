@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccessProfileController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AgendaColetaController;
 use App\Http\Controllers\AlvaraController;
 use App\Http\Controllers\AttendanceController;
@@ -192,6 +193,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'store']);
         Route::put('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'update']);
         Route::delete('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'destroy']);
+    });
+
+    // Backup do banco de dados (somente admin)
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin/backup/download', [BackupController::class, 'download']);
     });
 
     // Auditoria + perfis de acesso e páginas do sistema (somente admin)
