@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CidadaoAcsController extends MonitorApsBaseController
 {
@@ -121,7 +122,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                 ],
             ]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('CidadaoAcs.index: ' . $e->getMessage());
+            Log::error('CidadaoAcs.index: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao consultar cidadãos.'], 500);
         }
     }
@@ -131,6 +132,9 @@ class CidadaoAcsController extends MonitorApsBaseController
      */
     public function agentes(Request $request): JsonResponse
     {
+        $request->validate([
+            'ine' => 'nullable|string',
+        ]);
         $ine = $request->query('ine');
 
         try {
@@ -140,9 +144,9 @@ class CidadaoAcsController extends MonitorApsBaseController
         }
 
         try {
-            $cbos   = implode("','", self::ACS_CBOS);
-            $where  = "dp.nu_cbo IN ('{$cbos}')";
-            $params = [];
+            $placeholders = implode(',', array_fill(0, count(self::ACS_CBOS), '?'));
+            $where        = "dp.nu_cbo IN ({$placeholders})";
+            $params       = self::ACS_CBOS;
 
             if ($ine) {
                 $where   .= " AND dp.co_seq_dim_profissional IN (
@@ -165,7 +169,7 @@ class CidadaoAcsController extends MonitorApsBaseController
 
             return response()->json(['agentes' => $rows]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('CidadaoAcs.agentes: ' . $e->getMessage());
+            Log::error('CidadaoAcs.agentes: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao consultar agentes.'], 500);
         }
     }
