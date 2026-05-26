@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -229,6 +230,7 @@ class MonitorApsConfigController extends MonitorApsBaseController
             DB::purge('pgsql_esus_runtime');
             Cache::forget('aps_db_config');
             Cache::put('aps_schema_v', time(), 86400 * 30);
+            AuditService::record('UPDATE', null, null, array_diff_key($payload, ['aps_db_password' => '']));
             return response()->json(['success' => true]);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
