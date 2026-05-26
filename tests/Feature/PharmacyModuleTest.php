@@ -12,6 +12,8 @@ use App\Models\PharmacyUnit;
 use App\Models\SystemPage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
 class PharmacyModuleTest extends TestCase
@@ -266,5 +268,155 @@ class PharmacyModuleTest extends TestCase
                 'monthly_acquisitions_count',
                 'has_today_update',
             ]);
+    }
+
+    public function test_importacao_csv_atualiza_status_com_disponibilidade_por_quantidade(): void
+    {
+        $this->seedPharmacyCatalogs();
+        $user = $this->adminUser();
+        $dipirona = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-CSV-1',
+            'active_ingredient' => 'DIPIRONA',
+            'concentration' => '500 MG',
+            'pharmaceutical_form' => 'Comprimido',
+        ]));
+        $paracetamol = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-CSV-2',
+            'active_ingredient' => 'PARACETAMOL',
+            'concentration' => '750 MG',
+            'pharmaceutical_form' => 'Comprimido',
+        ]));
+
+        $csv = implode("\n", [
+            'Medicamento/Produto ;Frmaco ;Quantidade em Estoque ;',
+            'DIPIRONA 500 MG COMPRIMIDO;DIPIRONA;10,00;',
+            'DIPIRONA 500 MG COMPRIMIDO;DIPIRONA;5,00;',
+            'PARACETAMOL 750 MG COMPRIMIDO;PARACETAMOL;0,00;',
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('estoque.csv', $csv);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->post('/api/pharmacy/medicines/stock-import', [
+                'file' => $file,
+            ], ['Accept' => 'application/json']);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('updated_items', 2)
+            ->assertJsonPath('grouped_items', 2);
+
+        $this->assertDatabaseHas('medicine_daily_statuses', [
+            'medicine_item_id' => $dipirona->id,
+            'reference_date' => now()->toDateString(),
+            'availability_status' => 'available',
+            'available_quantity' => 15,
+        ]);
+        $this->assertDatabaseHas('medicine_daily_statuses', [
+            'medicine_item_id' => $paracetamol->id,
+            'reference_date' => now()->toDateString(),
+            'availability_status' => 'unavailable',
+            'available_quantity' => 0,
+        ]);
+    }
+
+    public function test_importacao_csv_substitui_estoque_existente_e_nao_soma_com_banco(): void
+    {
+        $this->seedPharmacyCatalogs();
+        $user = $this->adminUser();
+        $medicine = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-SUBSTITUI-1',
+            'active_ingredient' => 'DIPIRONA',
+            'concentration' => '500 MG',
+            'pharmaceutical_form' => 'Comprimido',
+        ]));
+
+        MedicineDailyStatus::create([
+            'medicine_item_id' => $medicine->id,
+            'reference_date' => now()->toDateString(),
+            'availability_status' => 'available',
+            'available_quantity' => 10,
+            'updated_by_user_id' => $user->id,
+            'public_note' => 'NÃO ALTERAR',
+        ]);
+
+        $csv = implode("\n", [
+            'Medicamento/Produto ;Frmaco ;Quantidade em Estoque ;',
+            'DIPIRONA 500 MG COMPRIMIDO;DIPIRONA;10,00;',
+            'DIPIRONA 500 MG COMPRIMIDO;DIPIRONA;20,00;',
+        ]);
+        $file = UploadedFile::fake()->createWithContent('estoque.csv', $csv);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->post('/api/pharmacy/medicines/stock-import', [
+                'file' => $file,
+            ], ['Accept' => 'application/json']);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('updated_items', 1);
+
+        $status = MedicineDailyStatus::query()
+            ->where('medicine_item_id', $medicine->id)
+            ->whereDate('reference_date', now()->toDateString())
+            ->firstOrFail();
+
+        $this->assertSame('30.00', number_format((float) $status->available_quantity, 2, '.', ''));
+        $this->assertSame('NÃO ALTERAR', $status->public_note);
+    }
+
+    public function test_download_backup_csv_de_estoque_atual(): void
+    {
+        $this->seedPharmacyCatalogs();
+        $user = $this->adminUser();
+        $medicine = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-BACKUP-1',
+            'active_ingredient' => 'DIPIRONA',
+        ]));
+        MedicineDailyStatus::create([
+            'medicine_item_id' => $medicine->id,
+            'reference_date' => '2026-05-26',
+            'availability_status' => 'available',
+            'available_quantity' => 22,
+            'updated_by_user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->get('/api/pharmacy/medicines/stock-import/current-stock');
+
+        $response->assertStatus(200);
+        $this->assertInstanceOf(StreamedResponse::class, $response->baseResponse);
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $response->assertHeader('content-disposition');
+    }
+
+    public function test_importacao_de_csv_backup_restaurar_estoque_por_medicine_item_id(): void
+    {
+        $this->seedPharmacyCatalogs();
+        $user = $this->adminUser();
+        $medicine = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-RESTORE-1',
+            'active_ingredient' => 'DIPIRONA',
+        ]));
+
+        $csv = implode("\n", [
+            'medicine_item_id;internal_code;active_ingredient;concentration;pharmaceutical_form;presentation;reference_date;availability_status;available_quantity',
+            $medicine->id.';MED-RESTORE-1;DIPIRONA;500 MG;COMPRIMIDO;CAIXA;2026-05-20;available;33,00',
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('backup.csv', $csv);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->post('/api/pharmacy/medicines/stock-import', [
+                'file' => $file,
+            ], ['Accept' => 'application/json']);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('updated_items', 1);
+
+        $this->assertDatabaseHas('medicine_daily_statuses', [
+            'medicine_item_id' => $medicine->id,
+            'reference_date' => now()->toDateString(),
+            'availability_status' => 'available',
+            'available_quantity' => 33,
+        ]);
     }
 }
