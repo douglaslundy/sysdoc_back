@@ -27,6 +27,7 @@ use App\Http\Controllers\MedicineDailyStatusController;
 use App\Http\Controllers\MedicineItemController;
 use App\Http\Controllers\MedicineMonthlyAcquisitionController;
 use App\Http\Controllers\MedicinePublicationController;
+use App\Http\Controllers\MedicinePanelSettingController;
 use App\Http\Controllers\MedicineTransparencyPublicController;
 use App\Http\Controllers\MedicoSolicitanteController;
 use App\Http\Controllers\ModelController;
@@ -330,6 +331,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/pharmacy/medicines/publications', [MedicinePublicationController::class, 'store']);
     Route::delete('/pharmacy/medicines/publications/{id}', [MedicinePublicationController::class, 'destroy']);
     Route::get('/pharmacy/medicines/compliance', [MedicineComplianceController::class, 'index']);
+    Route::get('/pharmacy/medicines/panel-settings', [MedicinePanelSettingController::class, 'show']);
+    Route::put('/pharmacy/medicines/panel-settings', [MedicinePanelSettingController::class, 'update']);
     Route::get('/pharmacy/catalogs', [PharmacyCatalogController::class, 'index']);
 
     // Laboratório

@@ -58,10 +58,23 @@ class MedicineDailyStatusService
     private function paginateAllMedicines(array $filters, int $perPage): LengthAwarePaginator
     {
         $fallbackReferenceDate = $filters['reference_date'] ?? Carbon::today()->toDateString();
+        $requestedDate = $fallbackReferenceDate;
+        $hasStatusesForRequestedDate = MedicineDailyStatus::query()
+            ->whereDate('reference_date', $requestedDate)
+            ->exists();
+
+        // If the selected date has no records, fallback to latest date with records
+        // to avoid returning every item as "Sem lançamento" by default.
+        if (! $hasStatusesForRequestedDate) {
+            $latestReferenceDate = MedicineDailyStatus::query()->max('reference_date');
+            if ($latestReferenceDate) {
+                $fallbackReferenceDate = Carbon::parse($latestReferenceDate)->toDateString();
+            }
+        }
         $statusFilter = $filters['availability_status'] ?? null;
 
-        $query = MedicineItem::with(['dailyStatuses' => function ($q) {
-                $q->orderByDesc('reference_date')
+        $query = MedicineItem::with(['dailyStatuses' => function ($q) use ($fallbackReferenceDate) {
+                $q->whereDate('reference_date', $fallbackReferenceDate)
                     ->orderByDesc('id');
             }])
             ->where('active', true)
@@ -72,8 +85,9 @@ class MedicineDailyStatusService
                 $q->whereDate('reference_date', $fallbackReferenceDate);
             });
         } elseif ($statusFilter) {
-            $query->whereHas('dailyStatuses', function ($q) use ($statusFilter) {
-                $q->where('availability_status', $statusFilter);
+            $query->whereHas('dailyStatuses', function ($q) use ($statusFilter, $fallbackReferenceDate) {
+                $q->whereDate('reference_date', $fallbackReferenceDate)
+                    ->where('availability_status', $statusFilter);
             });
         }
 
@@ -117,6 +131,8 @@ class MedicineDailyStatusService
         AuditService::record('VIEW', null, null, [
             'event' => 'LIST_DAILY_STATUSES_ALL_MEDICINES',
             'filters' => $filters,
+            'requested_reference_date' => $requestedDate,
+            'effective_reference_date' => $fallbackReferenceDate,
             'per_page' => $perPage,
             'total' => $result->total(),
         ]);

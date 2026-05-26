@@ -49,6 +49,18 @@ class MedicineItemService
             $query->where('is_free_distribution', filter_var($filters['is_free_distribution'], FILTER_VALIDATE_BOOLEAN));
         }
 
+        if (array_key_exists('is_controlled', $filters)) {
+            $query->where('is_controlled', filter_var($filters['is_controlled'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if (array_key_exists('is_judicial_order', $filters)) {
+            $query->where('is_judicial_order', filter_var($filters['is_judicial_order'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if (array_key_exists('is_high_cost', $filters)) {
+            $query->where('is_high_cost', filter_var($filters['is_high_cost'], FILTER_VALIDATE_BOOLEAN));
+        }
+
         $result = $query->paginate($perPage);
 
         AuditService::record('VIEW', null, null, [

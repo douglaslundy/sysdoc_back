@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\MedicineDailyStatus;
 use App\Models\MedicineItem;
 use App\Models\MedicineMonthlyAcquisition;
+use App\Models\PharmacyMedicinePanelSetting;
 use Carbon\Carbon;
 
 class MedicineTransparencyService
@@ -53,9 +54,10 @@ class MedicineTransparencyService
     public function getPublicPanelList(?string $date = null): array
     {
         $referenceDate = $date ? Carbon::parse($date)->toDateString() : null;
+        $settings = PharmacyMedicinePanelSetting::current();
 
         $statusesQuery = MedicineDailyStatus::with('medicineItem')
-            ->whereHas('medicineItem', fn ($q) => $q->where('active', true));
+            ->whereHas('medicineItem', fn ($q) => $this->applyPanelFiltersToMedicineQuery($q, $settings));
 
         if ($referenceDate) {
             $statusesQuery->whereDate('reference_date', $referenceDate);
@@ -69,7 +71,7 @@ class MedicineTransparencyService
             ->keyBy('medicine_item_id');
 
         $medicines = MedicineItem::query()
-            ->where('active', true)
+            ->tap(fn ($q) => $this->applyPanelFiltersToMedicineQuery($q, $settings))
             ->orderBy('active_ingredient')
             ->orderBy('concentration')
             ->get();
@@ -166,5 +168,43 @@ class MedicineTransparencyService
         }
 
         return Carbon::parse($value)->toDateTimeString();
+    }
+
+    private function applyPanelFiltersToMedicineQuery($query, PharmacyMedicinePanelSetting $settings): void
+    {
+        if ($settings->filter_active) {
+            $query->where('active', true);
+        }
+
+        $categoryColumns = [];
+        if ($settings->filter_is_free_distribution) {
+            $categoryColumns[] = 'is_free_distribution';
+        }
+        if ($settings->filter_is_controlled) {
+            $categoryColumns[] = 'is_controlled';
+        }
+        if ($settings->filter_is_judicial_order) {
+            $categoryColumns[] = 'is_judicial_order';
+        }
+        if ($settings->filter_is_high_cost) {
+            $categoryColumns[] = 'is_high_cost';
+        }
+
+        if ($settings->filter_show_all) {
+            return;
+        }
+
+        if (count($categoryColumns) === 0) {
+            $query->whereRaw('1 = 0');
+            return;
+        }
+
+        if (count($categoryColumns) > 0) {
+            $query->where(function ($q) use ($categoryColumns) {
+                foreach ($categoryColumns as $column) {
+                    $q->orWhere($column, true);
+                }
+            });
+        }
     }
 }

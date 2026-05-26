@@ -25,6 +25,7 @@ class MedicineItem extends Model
         'is_free_distribution',
         'is_controlled',
         'is_judicial_order',
+        'is_high_cost',
         'active',
         'technical_notes',
     ];
@@ -33,6 +34,7 @@ class MedicineItem extends Model
         'is_free_distribution' => 'boolean',
         'is_controlled' => 'boolean',
         'is_judicial_order' => 'boolean',
+        'is_high_cost' => 'boolean',
         'active' => 'boolean',
     ];
 
