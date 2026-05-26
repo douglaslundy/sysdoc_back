@@ -6,10 +6,12 @@ use App\Models\AccessProfile;
 use App\Models\CategoriaExame;
 use App\Models\Client;
 use App\Models\Exame;
+use App\Models\Letter;
 use App\Models\MedicineDailyStatus;
 use App\Models\MedicineItem;
 use App\Models\MedicineMonthlyAcquisition;
 use App\Models\MedicoSolicitante;
+use App\Models\Ordinance;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
 use App\Models\Route;
@@ -22,10 +24,12 @@ use App\Observers\AccessProfileObserver;
 use App\Observers\CategoriaExameObserver;
 use App\Observers\ClientObserver;
 use App\Observers\ExameObserver;
+use App\Observers\LetterObserver;
 use App\Observers\MedicineDailyStatusObserver;
 use App\Observers\MedicineItemObserver;
 use App\Observers\MedicineMonthlyAcquisitionObserver;
 use App\Observers\MedicoSolicitanteObserver;
+use App\Observers\OrdinanceObserver;
 use App\Observers\PedidoExameObserver;
 use App\Observers\ResultadoExameObserver;
 use App\Observers\RouteObserver;
@@ -60,5 +64,7 @@ class AppServiceProvider extends ServiceProvider
         MedicoSolicitante::observe(MedicoSolicitanteObserver::class);
         Vehicle::observe(VehicleObserver::class);
         Route::observe(RouteObserver::class);
+        Letter::observe(LetterObserver::class);
+        Ordinance::observe(OrdinanceObserver::class);
     }
 }

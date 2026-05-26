@@ -9,6 +9,18 @@ class Letter extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'id_user',
+        'number',
+        'subject_matter',
+        'sender',
+        'recipient',
+        'obs',
+        'fileurl',
+        'summary',
+        'dispatched',
+    ];
+
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'id_user');

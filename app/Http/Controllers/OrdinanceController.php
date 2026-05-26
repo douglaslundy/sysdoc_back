@@ -6,7 +6,6 @@ use App\Http\Requests\StoreOrdinanceRequest;
 use App\Http\Requests\UpdateOrdinanceRequest;
 use App\Models\Models;
 use App\Models\Ordinance;
-use App\Services\AuditService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -67,7 +66,6 @@ class OrdinanceController extends Controller
             }
 
             $ordinance->save();
-            AuditService::record('CREATE', $ordinance, null, $ordinance->toArray());
 
             $array['ordinance'] = $ordinance->load('user')->loadCount('attachments');
 
@@ -85,7 +83,6 @@ class OrdinanceController extends Controller
 
         try {
             $data = $request->validated();
-            $old = $ordinance->toArray();
 
             $ordinance->type = $data['type'];
             $ordinance->title = $data['title'];
@@ -109,7 +106,6 @@ class OrdinanceController extends Controller
             }
 
             $ordinance->save();
-            AuditService::record('UPDATE', $ordinance, $old, $ordinance->toArray());
 
             $array['ordinance'] = $ordinance->load('user')->loadCount('attachments');
 
@@ -136,7 +132,6 @@ class OrdinanceController extends Controller
                 Storage::disk('public')->delete($ordinance->file_path);
             }
 
-            AuditService::record('DELETE', $ordinance, $ordinance->toArray(), null);
             $ordinance->delete();
 
             return response()->json($array);
