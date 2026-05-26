@@ -90,8 +90,6 @@ class AlvaraController extends Controller
             $alvara = Alvara::create($dados);
             $alvara->load('estabelecimento');
 
-            AuditService::record('CREATE', $alvara, null, $alvara->toArray());
-
             return $alvara;
         });
 
@@ -106,10 +104,8 @@ class AlvaraController extends Controller
             return response()->json(['error' => 'Alvará não encontrado'], 404);
         }
 
-        $old = $alvara->toArray();
         $alvara->update($request->validated());
         $alvara->load('estabelecimento');
-        AuditService::record('UPDATE', $alvara, $old, $alvara->toArray());
 
         return response()->json(new AlvaraResource($alvara));
     }
@@ -122,7 +118,6 @@ class AlvaraController extends Controller
             return response()->json(['error' => 'Alvará não encontrado'], 404);
         }
 
-        AuditService::record('DELETE', $alvara, $alvara->toArray(), null);
         $alvara->delete();
 
         return response()->json(['message' => 'Alvará excluído com sucesso']);

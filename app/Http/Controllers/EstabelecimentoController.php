@@ -85,7 +85,6 @@ class EstabelecimentoController extends Controller
             return $estabelecimento;
         });
 
-        AuditService::record('CREATE', $estabelecimento, null, $estabelecimento->toArray());
         return response()->json(new EstabelecimentoResource($estabelecimento), 201);
     }
 
@@ -96,7 +95,6 @@ class EstabelecimentoController extends Controller
             return response()->json(['error' => 'Estabelecimento não encontrado'], 404);
         }
 
-        $old = $estabelecimento->load('cnaes')->toArray();
         $dados = $request->validated();
         $codigos = $dados['cnaes'] ?? null;
         unset($dados['cnaes']);
@@ -109,7 +107,6 @@ class EstabelecimentoController extends Controller
         });
 
         $estabelecimento->load('cnaes');
-        AuditService::record('UPDATE', $estabelecimento, $old, $estabelecimento->toArray());
         return response()->json(new EstabelecimentoResource($estabelecimento));
     }
 
@@ -120,7 +117,6 @@ class EstabelecimentoController extends Controller
             return response()->json(['error' => 'Estabelecimento não encontrado'], 404);
         }
 
-        AuditService::record('DELETE', $estabelecimento, $estabelecimento->toArray(), null);
         $estabelecimento->delete();
         return response()->json(['message' => 'Estabelecimento excluído com sucesso']);
     }

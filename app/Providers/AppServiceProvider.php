@@ -19,8 +19,12 @@ use App\Models\Speciality;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\Alvara;
+use App\Models\Estabelecimento;
 use App\Models\VigilanciaConfig;
 use App\Observers\AccessProfileObserver;
+use App\Observers\AlvaraObserver;
+use App\Observers\EstabelecimentoObserver;
 use App\Observers\CategoriaExameObserver;
 use App\Observers\ClientObserver;
 use App\Observers\ExameObserver;
@@ -66,5 +70,7 @@ class AppServiceProvider extends ServiceProvider
         Route::observe(RouteObserver::class);
         Letter::observe(LetterObserver::class);
         Ordinance::observe(OrdinanceObserver::class);
+        Estabelecimento::observe(EstabelecimentoObserver::class);
+        Alvara::observe(AlvaraObserver::class);
     }
 }
