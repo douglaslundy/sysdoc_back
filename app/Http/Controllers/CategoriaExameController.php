@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCategoriaExameRequest;
 use App\Models\CategoriaExame;
-use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class CategoriaExameController extends Controller
@@ -34,8 +33,6 @@ class CategoriaExameController extends Controller
             'nome' => strtoupper($request->input('nome')),
             'ativo' => $request->input('ativo', true),
         ]);
-        AuditService::record('CREATE', $categoria, null, $categoria->toArray());
-
         return response()->json([
             'message' => 'Categoria criada com sucesso!',
             'categoria' => $categoria,
@@ -53,7 +50,6 @@ class CategoriaExameController extends Controller
         $categoria->nome = strtoupper($request->input('nome'));
         $categoria->ativo = $request->input('ativo', $categoria->ativo);
         $categoria->save();
-        AuditService::record('UPDATE', $categoria, $old, $categoria->toArray());
 
         return response()->json([
             'message' => 'Categoria atualizada com sucesso!',
@@ -68,7 +64,6 @@ class CategoriaExameController extends Controller
             return response()->json(['error' => 'Categoria não encontrada'], 404);
         }
 
-        AuditService::record('DELETE', $categoria, $categoria->toArray(), null);
         $categoria->delete();
 
         return response()->json(['message' => 'Categoria removida com sucesso!']);
