@@ -88,14 +88,32 @@ class PainelEsusController extends MonitorApsBaseController
             ";
             $cidExpr = "COALESCE(c.no_cidadao, 'Cidadao')::text";
 
+            // Para pacientes aguardando, tb_atend.co_atend_prof é NULL até o
+            // profissional abrir o prontuário. Usamos a FK reversa co_atend em
+            // tb_atend_prof como fallback para exibir o profissional já na fila.
+            $fbJoin      = '';
+            $lotacaoExpr = 'ap.co_lotacao';
+            if ($this->hasColumn('tb_atend_prof', 'co_atend')) {
+                $fbJoin = "
+                LEFT JOIN LATERAL (
+                    SELECT fb.co_lotacao
+                    FROM tb_atend_prof fb
+                    WHERE fb.co_atend = la.co_seq_atend
+                    ORDER BY fb.co_seq_atend_prof ASC
+                    LIMIT 1
+                ) ap_fb ON la.{$profFk} IS NULL";
+                $lotacaoExpr = 'COALESCE(ap.co_lotacao, ap_fb.co_lotacao)';
+            }
+
             $profJoin = "
                 LEFT JOIN tb_atend_prof ap ON ap.co_seq_atend_prof = la.{$profFk}
+                {$fbJoin}
                 LEFT JOIN (
                     SELECT DISTINCT ON (co_ator_papel)
                         co_ator_papel, co_unidade_saude, co_prof, co_equipe
                     FROM tb_lotacao
                     ORDER BY co_ator_papel, dt_desativacao_lotacao NULLS FIRST
-                ) l ON l.co_ator_papel = ap.co_lotacao
+                ) l ON l.co_ator_papel = {$lotacaoExpr}
                 LEFT JOIN tb_unidade_saude us ON us.co_seq_unidade_saude = la.co_unidade_saude
                 LEFT JOIN (
                     SELECT DISTINCT ON (co_seq_prof)

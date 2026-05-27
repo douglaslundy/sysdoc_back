@@ -6,6 +6,7 @@ use App\Models\AccessProfile;
 use App\Models\MedicineDailyStatus;
 use App\Models\MedicineItem;
 use App\Models\MedicineMonthlyAcquisition;
+use App\Models\PharmacyMedicinePanelSetting;
 use App\Models\PharmacyPharmaceuticalForm;
 use App\Models\PharmacyPresentation;
 use App\Models\PharmacyUnit;
@@ -233,6 +234,71 @@ class PharmacyModuleTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['month']);
+    }
+
+    public function test_painel_publico_exclui_medicamento_com_flag_desabilitada(): void
+    {
+        $this->seedPharmacyCatalogs();
+
+        PharmacyMedicinePanelSetting::create([
+            'filter_is_free_distribution' => true,
+            'filter_is_controlled' => false,
+            'filter_is_judicial_order' => false,
+            'filter_is_high_cost' => false,
+            'filter_active' => true,
+            'filter_show_all' => false,
+        ]);
+
+        $free = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-PAINEL-1',
+            'active_ingredient' => 'Medicamento Livre',
+            'is_free_distribution' => true,
+            'is_controlled' => false,
+        ]));
+        $freeAndControlled = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-PAINEL-2',
+            'active_ingredient' => 'Medicamento Controlado',
+            'is_free_distribution' => true,
+            'is_controlled' => true,
+        ]));
+        $freeAndHighCost = MedicineItem::create($this->medicinePayload([
+            'internal_code' => 'MED-PAINEL-3',
+            'active_ingredient' => 'Medicamento Alto Custo',
+            'is_free_distribution' => true,
+            'is_high_cost' => true,
+        ]));
+
+        $response = $this->getJson('/api/public/pharmacy/medicines/panel');
+
+        $response->assertStatus(200);
+        $medicineIds = collect($response->json('items'))->pluck('medicine_id');
+
+        $this->assertTrue($medicineIds->contains($free->id));
+        $this->assertFalse($medicineIds->contains($freeAndControlled->id));
+        $this->assertFalse($medicineIds->contains($freeAndHighCost->id));
+    }
+
+    public function test_configuracao_do_painel_marca_todos_os_filtros_quando_todos_estiver_ativo(): void
+    {
+        $user = $this->adminUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/pharmacy/medicines/panel-settings', [
+                'filter_is_free_distribution' => false,
+                'filter_is_controlled' => false,
+                'filter_is_judicial_order' => false,
+                'filter_is_high_cost' => false,
+                'filter_active' => false,
+                'filter_show_all' => true,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('filter_is_free_distribution', true)
+            ->assertJsonPath('filter_is_controlled', true)
+            ->assertJsonPath('filter_is_judicial_order', true)
+            ->assertJsonPath('filter_is_high_cost', true)
+            ->assertJsonPath('filter_active', true)
+            ->assertJsonPath('filter_show_all', true);
     }
 
     public function test_compliance_retorna_estrutura_padronizada(): void

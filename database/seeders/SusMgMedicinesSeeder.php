@@ -112,6 +112,7 @@ class SusMgMedicinesSeeder extends Seeder
                     'ean_code' => null,
                     'is_free_distribution' => true,
                     'is_controlled' => $item['controlled'],
+                    'is_high_cost' => $component === 'CEAF',
                     'active' => true,
                     'technical_notes' => "Fonte oficial SES-MG ({$component}) + RENAME/ANVISA controle especial. Seed inicial de referência.",
                 ]

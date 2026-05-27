@@ -176,35 +176,47 @@ class MedicineTransparencyService
             $query->where('active', true);
         }
 
-        $categoryColumns = [];
-        if ($settings->filter_is_free_distribution) {
-            $categoryColumns[] = 'is_free_distribution';
-        }
-        if ($settings->filter_is_controlled) {
-            $categoryColumns[] = 'is_controlled';
-        }
-        if ($settings->filter_is_judicial_order) {
-            $categoryColumns[] = 'is_judicial_order';
-        }
-        if ($settings->filter_is_high_cost) {
-            $categoryColumns[] = 'is_high_cost';
+        $filtersByColumn = [
+            'is_free_distribution' => $settings->filter_is_free_distribution,
+            'is_controlled' => $settings->filter_is_controlled,
+            'is_judicial_order' => $settings->filter_is_judicial_order,
+            'is_high_cost' => $settings->filter_is_high_cost,
+            'active' => $settings->filter_active,
+        ];
+
+        foreach ($filtersByColumn as $column => $isAllowed) {
+            if (! $isAllowed) {
+                $query->where($column, false);
+            }
         }
 
         if ($settings->filter_show_all) {
             return;
         }
 
-        if (count($categoryColumns) === 0) {
+        $allowedCategoryColumns = [];
+        if ($settings->filter_is_free_distribution) {
+            $allowedCategoryColumns[] = 'is_free_distribution';
+        }
+        if ($settings->filter_is_controlled) {
+            $allowedCategoryColumns[] = 'is_controlled';
+        }
+        if ($settings->filter_is_judicial_order) {
+            $allowedCategoryColumns[] = 'is_judicial_order';
+        }
+        if ($settings->filter_is_high_cost) {
+            $allowedCategoryColumns[] = 'is_high_cost';
+        }
+
+        if (count($allowedCategoryColumns) === 0) {
             $query->whereRaw('1 = 0');
             return;
         }
 
-        if (count($categoryColumns) > 0) {
-            $query->where(function ($q) use ($categoryColumns) {
-                foreach ($categoryColumns as $column) {
-                    $q->orWhere($column, true);
-                }
-            });
-        }
+        $query->where(function ($q) use ($allowedCategoryColumns) {
+            foreach ($allowedCategoryColumns as $column) {
+                $q->orWhere($column, true);
+            }
+        });
     }
 }
