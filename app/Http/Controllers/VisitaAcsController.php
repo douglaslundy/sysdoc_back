@@ -316,6 +316,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'domicilios_total' => null,
             'domicilios_com_moradores' => null,
             'domicilios_casa_vazia' => null,
+            'domicilios_fa' => null,
         ];
 
         if (!$this->hasDomicilioCadastro()) {
@@ -331,9 +332,6 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($this->hasColumn('tb_fat_cad_domiciliar', 'st_recusa_cadastro')) {
             $where[] = 'COALESCE(d.st_recusa_cadastro, 0) = 0';
         }
-        if ($this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')) {
-            $where[] = "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') <> 'FA'";
-        }
         if ($ine) {
             $where[] = 'de.nu_ine = ?';
             $params[] = $ine;
@@ -344,13 +342,20 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
+        $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
+            ? "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') <> 'FA'"
+            : 'TRUE';
+        $domicilioFa = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
+            ? "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') = 'FA'"
+            : 'FALSE';
 
         try {
             $row = $this->db()->selectOne("
                 SELECT
-                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) AS domicilios_total,
-                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$hasMoradores}) AS domicilios_com_moradores,
-                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE NOT {$hasMoradores}) AS domicilios_casa_vazia
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio}) AS domicilios_total,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio} AND {$hasMoradores}) AS domicilios_com_moradores,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio} AND NOT {$hasMoradores}) AS domicilios_casa_vazia,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$domicilioFa}) AS domicilios_fa
                 FROM tb_fat_cad_domiciliar d
                 JOIN tb_dim_equipe de
                     ON de.co_seq_dim_equipe = d.co_dim_equipe
@@ -366,6 +371,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'domicilios_total' => (int) ($row->domicilios_total ?? 0),
             'domicilios_com_moradores' => (int) ($row->domicilios_com_moradores ?? 0),
             'domicilios_casa_vazia' => (int) ($row->domicilios_casa_vazia ?? 0),
+            'domicilios_fa' => (int) ($row->domicilios_fa ?? 0),
         ];
     }
 
@@ -384,9 +390,6 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($this->hasColumn('tb_fat_cad_domiciliar', 'st_recusa_cadastro')) {
             $where[] = 'COALESCE(d.st_recusa_cadastro, 0) = 0';
         }
-        if ($this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')) {
-            $where[] = "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') <> 'FA'";
-        }
         if ($ine) {
             $where[] = 'de.nu_ine = ?';
             $params[] = $ine;
@@ -397,14 +400,21 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
+        $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
+            ? "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') <> 'FA'"
+            : 'TRUE';
+        $domicilioFa = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
+            ? "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') = 'FA'"
+            : 'FALSE';
 
         try {
             $rows = $this->db()->select("
                 SELECT
                     dp.no_profissional AS agente,
-                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) AS domicilios_total,
-                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$hasMoradores}) AS domicilios_com_moradores,
-                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE NOT {$hasMoradores}) AS domicilios_casa_vazia
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio}) AS domicilios_total,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio} AND {$hasMoradores}) AS domicilios_com_moradores,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio} AND NOT {$hasMoradores}) AS domicilios_casa_vazia,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$domicilioFa}) AS domicilios_fa
                 FROM tb_fat_cad_domiciliar d
                 JOIN tb_dim_equipe de
                     ON de.co_seq_dim_equipe = d.co_dim_equipe
@@ -423,6 +433,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 'domicilios_total' => (int) ($row->domicilios_total ?? 0),
                 'domicilios_com_moradores' => (int) ($row->domicilios_com_moradores ?? 0),
                 'domicilios_casa_vazia' => (int) ($row->domicilios_casa_vazia ?? 0),
+                'domicilios_fa' => (int) ($row->domicilios_fa ?? 0),
             ];
         }
 
@@ -432,6 +443,7 @@ class VisitaAcsController extends MonitorApsBaseController
     private function domicilioVisitaStats(int $ano, int $mes, ?string $ine, ?string $agentName): array
     {
         $empty = [
+            'domicilios_visitados' => null,
             'domicilios_acompanhados' => null,
             'domicilios_recusados' => null,
             'domicilios_ausentes' => null,
@@ -443,30 +455,49 @@ class VisitaAcsController extends MonitorApsBaseController
 
         [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName);
         $familiaWhere = str_replace('d.', 'dom.', $this->domicilioFamiliaWhere('f'));
+        $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
+            ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
+            : 'TRUE';
 
         try {
             $row = $this->db()->selectOne("
+                WITH visitas_domicilio AS (
+                    SELECT DISTINCT
+                        dom.co_seq_fat_cad_domiciliar AS domicilio_id,
+                        d.co_seq_dim_desfecho_visita AS desfecho
+                    FROM tb_fat_visita_domiciliar v
+                    {$this->baseJoins()}
+                    LEFT JOIN tb_fat_cad_dom_familia f
+                        ON f.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    LEFT JOIN tb_fat_cad_domiciliar dom
+                        ON dom.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar
+                    WHERE {$where}
+                      AND {$familiaWhere}
+                      AND {$regularDomicilio}
+                      AND dom.co_seq_fat_cad_domiciliar IS NOT NULL
+                ),
+                domicilio_status AS (
+                    SELECT
+                        domicilio_id,
+                        BOOL_OR(desfecho = 1) AS tem_realizada,
+                        BOOL_OR(desfecho = 2) AS tem_recusada,
+                        BOOL_OR(desfecho = 3) AS tem_ausente
+                    FROM visitas_domicilio
+                    GROUP BY domicilio_id
+                )
                 SELECT
-                    COUNT(DISTINCT dom.co_seq_fat_cad_domiciliar)
-                        FILTER (WHERE d.co_seq_dim_desfecho_visita = 1) AS domicilios_acompanhados,
-                    COUNT(DISTINCT dom.co_seq_fat_cad_domiciliar)
-                        FILTER (WHERE d.co_seq_dim_desfecho_visita = 2) AS domicilios_recusados,
-                    COUNT(DISTINCT dom.co_seq_fat_cad_domiciliar)
-                        FILTER (WHERE d.co_seq_dim_desfecho_visita = 3) AS domicilios_ausentes
-                FROM tb_fat_visita_domiciliar v
-                {$this->baseJoins()}
-                LEFT JOIN tb_fat_cad_dom_familia f
-                    ON f.co_fat_cidadao_pec = v.co_fat_cidadao_pec
-                LEFT JOIN tb_fat_cad_domiciliar dom
-                    ON dom.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar
-                WHERE {$where}
-                  AND {$familiaWhere}
+                    COUNT(*) AS domicilios_visitados,
+                    COUNT(*) FILTER (WHERE tem_realizada AND NOT tem_ausente) AS domicilios_acompanhados,
+                    COUNT(*) FILTER (WHERE tem_recusada) AS domicilios_recusados,
+                    COUNT(*) FILTER (WHERE tem_ausente) AS domicilios_ausentes
+                FROM domicilio_status
             ", $params);
         } catch (\Throwable) {
             return $empty;
         }
 
         return [
+            'domicilios_visitados' => (int) ($row->domicilios_visitados ?? 0),
             'domicilios_acompanhados' => (int) ($row->domicilios_acompanhados ?? 0),
             'domicilios_recusados' => (int) ($row->domicilios_recusados ?? 0),
             'domicilios_ausentes' => (int) ($row->domicilios_ausentes ?? 0),
@@ -716,10 +747,10 @@ class VisitaAcsController extends MonitorApsBaseController
         try {
             $totRow = $this->db()->selectOne("
                 SELECT
-                    COUNT(*)                                                              AS total,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)   AS realizadas,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)   AS recusadas,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)   AS ausentes,
+                    COUNT(DISTINCT v.co_seq_fat_visita_domiciliar) AS total,
+                    COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN v.co_seq_fat_visita_domiciliar END) AS realizadas,
+                    COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN v.co_seq_fat_visita_domiciliar END) AS recusadas,
+                    COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN v.co_seq_fat_visita_domiciliar END) AS ausentes,
                     COUNT(DISTINCT v.co_fat_cidadao_pec)                                 AS cidadaos
                 FROM tb_fat_visita_domiciliar v
                 {$this->baseJoins()}
@@ -1415,6 +1446,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'mes' => 'required|integer|min:1|max:12',
             'ine' => 'nullable|string',
             'agente' => 'nullable|string',
+            'desfecho' => 'nullable|integer|in:1,2,3',
             'has_geo' => 'nullable|string|in:sim,nao',
         ]);
 
@@ -1424,7 +1456,7 @@ class VisitaAcsController extends MonitorApsBaseController
         [$where, $params] = $this->buildWhere(
             $ano, $mes, $request->ine,
             $request->agente,
-            null,
+            $request->desfecho,
             $request->has_geo,
         );
 
@@ -1445,10 +1477,10 @@ class VisitaAcsController extends MonitorApsBaseController
                     p.no_profissional                                                     AS agente,
                     c.nu_cbo                                                              AS cbo,
                     e.no_equipe                                                           AS equipe_nome,
-                    COUNT(*)                                                              AS total,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN 1 ELSE 0 END)   AS realizadas,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN 1 ELSE 0 END)   AS recusadas,
-                    SUM(CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN 1 ELSE 0 END)   AS ausentes,
+                    COUNT(DISTINCT v.co_seq_fat_visita_domiciliar) AS total,
+                    COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 1 THEN v.co_seq_fat_visita_domiciliar END) AS realizadas,
+                    COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 2 THEN v.co_seq_fat_visita_domiciliar END) AS recusadas,
+                    COUNT(DISTINCT CASE WHEN d.co_seq_dim_desfecho_visita = 3 THEN v.co_seq_fat_visita_domiciliar END) AS ausentes,
                     COUNT(DISTINCT v.co_fat_cidadao_pec)                                 AS cidadaos
                     {$familyCols}
                 FROM tb_fat_visita_domiciliar v
