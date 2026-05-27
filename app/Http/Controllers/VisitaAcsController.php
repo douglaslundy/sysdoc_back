@@ -976,10 +976,20 @@ class VisitaAcsController extends MonitorApsBaseController
 
         [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
 
-        // Resolve column names for CPF/CNS/nome based on database schema
-        $cpfCol  = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_cpf', 'co_cpf'])     ?? 'nu_cpf';
-        $cnsCol  = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_cns', 'co_cns'])     ?? 'nu_cns';
-        $nomeCol = $this->firstExistingColumn('tb_fat_cad_individual', ['no_cidadao', 'no_nome']) ?? 'no_cidadao';
+        // Resolve column names for CPF/CNS/nome based on database schema.
+        $visitCpfCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_cpf_cidadao', 'nu_cpf']);
+        $visitCnsCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_cns', 'nu_cns_cidadao']);
+        $cpfCol      = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_cpf_cidadao', 'nu_cpf', 'co_cpf']);
+        $cnsCol      = $this->firstExistingColumn('tb_fat_cad_individual', ['nu_cns', 'co_cns']);
+        $nomeCol     = $this->firstExistingColumn('tb_fat_cad_individual', ['no_cidadao', 'no_nome', 'no_nome_social']);
+        $pecCpfCol   = $this->firstExistingColumn('tb_fat_cidadao_pec', ['nu_cpf_cidadao', 'nu_cpf']);
+        $pecCnsCol   = $this->firstExistingColumn('tb_fat_cidadao_pec', ['nu_cns']);
+        $pecNomeCol  = $this->firstExistingColumn('tb_fat_cidadao_pec', ['no_cidadao', 'no_social_cidadao']);
+        $cidCpfCol   = $this->firstExistingColumn('tb_cidadao', ['nu_cpf']);
+        $cidCnsCol   = $this->firstExistingColumn('tb_cidadao', ['nu_cns']);
+        $cidNomeCol  = $this->firstExistingColumn('tb_cidadao', ['no_cidadao', 'no_cidadao_filtro']);
+        $pecCidCol   = $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']);
+        $cidPkCol    = $this->firstExistingColumn('tb_cidadao', ['co_seq_cidadao']);
 
         if ($request->agente) {
             $where .= ' AND p.no_profissional = ?';
@@ -989,25 +999,92 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($request->busca) {
             $busca  = trim($request->busca);
             $digits = preg_replace('/\D/', '', $busca);
+            $likeBusca = '%' . $busca . '%';
+            $likeDigits = '%' . $digits . '%';
+            $searchWhere = [];
+            $searchParams = [];
 
-            if (strlen($digits) === 11) {
-                $where   .= " AND v.co_fat_cidadao_pec IN (
-                    SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE {$cpfCol} = ?)";
-                $params[] = $digits;
-            } elseif (strlen($digits) === 15) {
-                $where   .= " AND v.co_fat_cidadao_pec IN (
-                    SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE {$cnsCol} = ?)";
-                $params[] = $digits;
-            } else {
-                $where   .= " AND v.co_fat_cidadao_pec IN (
-                    SELECT co_fat_cidadao_pec FROM tb_fat_cad_individual
-                    WHERE {$nomeCol} ILIKE ?)";
-                $params[] = '%' . $busca . '%';
+            if ($digits !== '') {
+                foreach ([['v', $visitCpfCol], ['v', $visitCnsCol]] as [$alias, $col]) {
+                    if ($col) {
+                        $searchWhere[] = "REGEXP_REPLACE(COALESCE({$alias}.{$col}::text, ''), '\\D', '', 'g') LIKE ?";
+                        $searchParams[] = $likeDigits;
+                    }
+                }
+            }
+
+            $cadWhere = [];
+            $cadParams = [];
+            if ($digits !== '') {
+                foreach (array_filter([$cpfCol, $cnsCol]) as $col) {
+                    $cadWhere[] = "REGEXP_REPLACE(COALESCE(ci.{$col}::text, ''), '\\D', '', 'g') LIKE ?";
+                    $cadParams[] = $likeDigits;
+                }
+            }
+            if ($nomeCol) {
+                $cadWhere[] = "ci.{$nomeCol} ILIKE ?";
+                $cadParams[] = $likeBusca;
+            }
+            if ($cadWhere) {
+                $searchWhere[] = "EXISTS (
+                    SELECT 1
+                    FROM tb_fat_cad_individual ci
+                    WHERE ci.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                      AND (" . implode(' OR ', $cadWhere) . ")
+                )";
+                array_push($searchParams, ...$cadParams);
+            }
+
+            $pecWhere = [];
+            $pecParams = [];
+            $cidWhere = [];
+            $cidParams = [];
+            if ($digits !== '') {
+                foreach (array_filter([$pecCpfCol, $pecCnsCol]) as $col) {
+                    $pecWhere[] = "REGEXP_REPLACE(COALESCE(cp.{$col}::text, ''), '\\D', '', 'g') LIKE ?";
+                    $pecParams[] = $likeDigits;
+                }
+                foreach (array_filter([$cidCpfCol, $cidCnsCol]) as $col) {
+                    $cidWhere[] = "REGEXP_REPLACE(COALESCE(cid.{$col}::text, ''), '\\D', '', 'g') LIKE ?";
+                    $cidParams[] = $likeDigits;
+                }
+            }
+            if ($pecNomeCol) {
+                $pecWhere[] = "cp.{$pecNomeCol} ILIKE ?";
+                $pecParams[] = $likeBusca;
+            }
+            if ($cidNomeCol) {
+                $cidWhere[] = "cid.{$cidNomeCol} ILIKE ?";
+                $cidParams[] = $likeBusca;
+            }
+            if ($cidWhere && $pecCidCol && $cidPkCol) {
+                $pecWhere = array_merge($pecWhere, $cidWhere);
+                $pecParams = array_merge($pecParams, $cidParams);
+                $searchWhere[] = "EXISTS (
+                    SELECT 1
+                    FROM tb_fat_cidadao_pec cp
+                    LEFT JOIN tb_cidadao cid ON cid.{$cidPkCol} = cp.{$pecCidCol}
+                    WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec
+                      AND (" . implode(' OR ', $pecWhere) . ")
+                )";
+                array_push($searchParams, ...$pecParams);
+            } elseif ($pecWhere) {
+                $searchWhere[] = "EXISTS (
+                    SELECT 1
+                    FROM tb_fat_cidadao_pec cp
+                    WHERE cp.co_seq_fat_cidadao_pec = v.co_fat_cidadao_pec
+                      AND (" . implode(' OR ', $pecWhere) . ")
+                )";
+                array_push($searchParams, ...$pecParams);
+            }
+
+            if ($searchWhere) {
+                $where .= ' AND (' . implode(' OR ', $searchWhere) . ')';
+                array_push($params, ...$searchParams);
             }
         }
         $citizenExpr = $this->citizenNameExpr('v');
+        $cadNomeSelect = $nomeCol ? $nomeCol : 'NULL::text';
 
         // Query completa: LATERAL direto no FROM + nu_hora + nome do cidadÃƒÂ£o
         $sqlFull = "
@@ -1027,7 +1104,7 @@ class VisitaAcsController extends MonitorApsBaseController
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
             LEFT JOIN LATERAL (
-                SELECT no_cidadao
+                SELECT {$cadNomeSelect} AS no_cidadao
                 FROM   tb_fat_cad_individual
                 WHERE  co_fat_cidadao_pec = v.co_fat_cidadao_pec
                 LIMIT  1

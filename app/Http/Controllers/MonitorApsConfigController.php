@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\AuditService;
+use Illuminate\Encryption\MissingAppKeyException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -216,7 +217,13 @@ class MonitorApsConfigController extends MonitorApsBaseController
         ];
 
         if (!empty($data['password'])) {
-            $payload['aps_db_password'] = encrypt($data['password']);
+            try {
+                $payload['aps_db_password'] = encrypt($data['password']);
+            } catch (MissingAppKeyException $e) {
+                // Ambiente sem APP_KEY: mantém funcionalidade de salvar configuração
+                // com fallback em texto puro (decriptado por try/catch no load/db()).
+                $payload['aps_db_password'] = $data['password'];
+            }
         }
 
         try {

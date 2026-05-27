@@ -14,8 +14,8 @@ class PainelEsusController extends MonitorApsBaseController
      */
     private function resolveFilaTable(): ?string
     {
-        if ($this->hasTable('tb_lista_atendimento')) return 'tb_lista_atendimento';
-        if ($this->hasTable('ta_agendado'))          return 'ta_agendado';
+        if ($this->hasTable('tb_atend'))              return 'tb_atend';
+        if ($this->hasTable('tb_lista_atendimento'))  return 'tb_lista_atendimento';
         return null;
     }
 
@@ -25,6 +25,36 @@ class PainelEsusController extends MonitorApsBaseController
      */
     private function resolveListaColumns(string $table): array
     {
+        if ($table === 'tb_atend') {
+            return [
+                'cnesCol'     => 'nu_cnes',
+                'cidadaoFk'   => 'co_prontuario',
+                'profFk'      => 'co_atend_prof',
+                'equipeFk'    => 'co_equipe',
+                'hrInicioCol' => 'dt_inicio',
+                'hrChegadaCol'=> 'dt_inicio',
+                'hrSaidaCol'  => 'dt_fim',
+                'dtCol'       => 'dt_inicio',
+                'statusCol'   => 'st_atend',
+                'pkCol'       => 'co_seq_atend',
+            ];
+        }
+
+        if ($table === 'ta_agendado') {
+            return [
+                'cnesCol'     => 'nu_cnes',
+                'cidadaoFk'   => 'co_prontuario',
+                'profFk'      => 'co_lotacao_agendada',
+                'equipeFk'    => 'co_lotacao_agendada',
+                'hrInicioCol' => 'hr_inicial_agendado',
+                'hrChegadaCol'=> 'hr_inicial_agendado',
+                'hrSaidaCol'  => null,
+                'dtCol'       => 'dt_agendado',
+                'statusCol'   => 'st_agendado',
+                'pkCol'       => 'co_seq_taagendado',
+            ];
+        }
+
         return [
             'cnesCol'     => $this->firstExistingColumn($table, ['nu_cnes', 'co_unico_saude', 'co_cnes']) ?? 'nu_cnes',
             'cidadaoFk'   => $this->firstExistingColumn($table, ['co_seq_cidadao', 'co_cidadao']) ?? 'co_seq_cidadao',
@@ -32,6 +62,7 @@ class PainelEsusController extends MonitorApsBaseController
             'equipeFk'    => $this->firstExistingColumn($table, ['co_seq_equipe', 'co_equipe']) ?? 'co_seq_equipe',
             'hrInicioCol' => $this->firstExistingColumn($table, ['hr_inicio_atendimento', 'hr_atendimento', 'hr_agendado', 'hr_chegada']) ?? 'hr_inicio_atendimento',
             'hrChegadaCol'=> $this->firstExistingColumn($table, ['hr_chegada', 'hr_agendado', 'hr_inicio_atendimento']) ?? 'hr_chegada',
+            'hrSaidaCol'  => $this->firstExistingColumn($table, ['hr_fim_atendimento', 'dt_fim', 'hr_saida']),
             'dtCol'       => $this->firstExistingColumn($table, ['dt_lista_atendimento', 'dt_agendado', 'dt_consulta']) ?? 'dt_lista_atendimento',
             'statusCol'   => $this->firstExistingColumn($table, ['tp_situacao_lista_atendimento', 'tp_situacao_agendado', 'co_situacao_agendado']) ?? 'tp_situacao_lista_atendimento',
             'pkCol'       => $this->firstExistingColumn($table, ['co_seq_lista_atendimento', 'co_seq_agendado', 'co_agendado']) ?? 'co_seq_lista_atendimento',
@@ -50,41 +81,63 @@ class PainelEsusController extends MonitorApsBaseController
         $profFk   = $cols['profFk'];
         $equipeFk = $cols['equipeFk'];
 
+        if ($table === 'tb_atend') {
+            $cidJoin = "
+                LEFT JOIN tb_prontuario pr ON pr.co_seq_prontuario = la.{$cidFk}
+                LEFT JOIN tb_cidadao c ON c.co_seq_cidadao = pr.co_cidadao
+            ";
+            $cidExpr = "COALESCE(c.no_cidadao, 'Cidadao')::text";
+
+            $profJoin = "
+                LEFT JOIN tb_atend_prof ap ON ap.co_seq_atend_prof = la.{$profFk}
+                LEFT JOIN (
+                    SELECT DISTINCT ON (co_ator_papel)
+                        co_ator_papel, co_unidade_saude, co_prof, co_equipe
+                    FROM tb_lotacao
+                    ORDER BY co_ator_papel, dt_desativacao_lotacao NULLS FIRST
+                ) l ON l.co_ator_papel = ap.co_lotacao
+                LEFT JOIN tb_unidade_saude us ON us.co_seq_unidade_saude = la.co_unidade_saude
+                LEFT JOIN (
+                    SELECT DISTINCT ON (co_seq_prof)
+                        co_seq_prof, no_profissional
+                    FROM ta_prof
+                    ORDER BY co_seq_prof, dt_auditoria DESC NULLS LAST, co_seq_taprof DESC
+                ) p ON p.co_seq_prof = l.co_prof
+            ";
+            $profExpr = "COALESCE(p.no_profissional, '')::text";
+
+            $eqJoin = "LEFT JOIN tb_equipe e ON e.co_seq_equipe = COALESCE(la.{$equipeFk}, l.co_equipe)";
+            $eqExpr = "COALESCE(e.no_equipe, '')::text";
+
+            return compact('cidJoin', 'cidExpr', 'profJoin', 'profExpr', 'eqJoin', 'eqExpr');
+        }
+
         if ($table === 'ta_agendado') {
-            // Cidadão
-            $cidJoin = '';
-            $cidExpr = "'Cidadão'::text";
-            if ($this->hasTable('ta_cidadao')) {
-                $cidPk   = $this->firstExistingColumn('ta_cidadao', ['co_seq_cidadao', 'co_cidadao']) ?? 'co_seq_cidadao';
-                $cidNome = $this->firstExistingColumn('ta_cidadao', ['no_cidadao', 'nm_cidadao']) ?? 'no_cidadao';
-                $cidJoin = "LEFT JOIN ta_cidadao c ON c.{$cidPk} = la.{$cidFk}";
-                $cidExpr = "COALESCE(c.{$cidNome}, 'Cidadão')::text";
-            }
+            $cidJoin = "
+                LEFT JOIN tb_prontuario pr ON pr.co_seq_prontuario = la.{$cidFk}
+                LEFT JOIN tb_cidadao c ON c.co_seq_cidadao = pr.co_cidadao
+            ";
+            $cidExpr = "COALESCE(c.no_cidadao, 'Cidadão')::text";
 
-            // Profissional — tenta join direto ou via ta_lotacao
-            $profJoin = '';
-            $profExpr = "''::text";
-            if ($profFk !== 'co_lotacao' && $this->hasTable('tb_profissional')) {
-                $profJoin = "LEFT JOIN tb_profissional p ON p.co_seq_profissional = la.{$profFk}";
-                $profExpr = "COALESCE(p.no_profissional, '')::text";
-            } elseif ($this->hasTable('ta_lotacao')) {
-                $lotPk   = $this->firstExistingColumn('ta_lotacao', ['co_seq_lotacao', 'co_lotacao']) ?? 'co_seq_lotacao';
-                $lotNome = $this->firstExistingColumn('ta_lotacao', ['no_profissional']) ?? null;
-                if ($lotNome) {
-                    $profJoin = "LEFT JOIN ta_lotacao p ON p.{$lotPk} = la.{$profFk}";
-                    $profExpr = "COALESCE(p.{$lotNome}, '')::text";
-                }
-            }
+            $profJoin = "
+                LEFT JOIN (
+                    SELECT DISTINCT ON (co_ator_papel)
+                        co_ator_papel, co_unidade_saude, co_prof, co_equipe
+                    FROM tb_lotacao
+                    ORDER BY co_ator_papel, dt_desativacao_lotacao NULLS FIRST
+                ) l ON l.co_ator_papel = la.{$profFk}
+                LEFT JOIN tb_unidade_saude us ON us.co_seq_unidade_saude = l.co_unidade_saude
+                LEFT JOIN (
+                    SELECT DISTINCT ON (co_seq_prof)
+                        co_seq_prof, no_profissional
+                    FROM ta_prof
+                    ORDER BY co_seq_prof, dt_auditoria DESC NULLS LAST, co_seq_taprof DESC
+                ) p ON p.co_seq_prof = l.co_prof
+            ";
+            $profExpr = "COALESCE(p.no_profissional, '')::text";
 
-            // Equipe
-            $eqJoin = '';
-            $eqExpr = "''::text";
-            if ($this->hasTable('ta_equipe')) {
-                $eqPk   = $this->firstExistingColumn('ta_equipe', ['co_seq_equipe', 'co_equipe']) ?? 'co_seq_equipe';
-                $eqNome = $this->firstExistingColumn('ta_equipe', ['no_equipe', 'ds_nome_equipe']) ?? 'no_equipe';
-                $eqJoin = "LEFT JOIN ta_equipe e ON e.{$eqPk} = la.{$equipeFk}";
-                $eqExpr = "COALESCE(e.{$eqNome}, '')::text";
-            }
+            $eqJoin = "LEFT JOIN tb_equipe e ON e.co_seq_equipe = l.co_equipe";
+            $eqExpr = "COALESCE(e.no_equipe, '')::text";
 
             return compact('cidJoin', 'cidExpr', 'profJoin', 'profExpr', 'eqJoin', 'eqExpr');
         }
@@ -200,6 +253,9 @@ class PainelEsusController extends MonitorApsBaseController
 
             $cols  = $this->resolveListaColumns($filaTable);
             $joins = $this->buildFilaJoins($filaTable, $cols);
+            $cnesWhere = in_array($filaTable, ['ta_agendado', 'tb_atend'], true)
+                ? 'us.nu_cnes = ?'
+                : "la.{$cols['cnesCol']} = ?";
 
             $allJoins = implode("\n", array_filter([$joins['cidJoin'], $joins['profJoin']]));
 
@@ -220,25 +276,34 @@ class PainelEsusController extends MonitorApsBaseController
                     TO_CHAR(la.{$cols['hrInicioCol']}, 'HH24:MI') AS hr_inicio
                 FROM {$filaTable} la
                 {$allJoins}
-                WHERE la.{$cols['cnesCol']} = ?
-                  AND la.{$cols['dtCol']} = ?
+                WHERE {$cnesWhere}
+                  AND la.{$cols['dtCol']}::date = ?
             ";
 
             // Status 4 = Em Atendimento, status 2 = Atendido (último fallback)
+            $emAtendimentoStatus = $filaTable === 'tb_atend' ? 3 : 4;
+            $atendidoStatus      = $filaTable === 'tb_atend' ? 4 : 2;
+            $aguardandoStatus    = $filaTable === 'ta_agendado' ? 0 : 1;
+
             $emAtendimento = $db->selectOne(
-                $baseSelect . " AND la.{$cols['statusCol']} = 4 ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 1",
+                $baseSelect . " AND la.{$cols['statusCol']} = {$emAtendimentoStatus} ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 1",
                 [$cnes, $hoje]
             );
 
             if (!$emAtendimento) {
                 $emAtendimento = $db->selectOne(
-                    $baseSelect . " AND la.{$cols['statusCol']} = 2 ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 1",
+                    $baseSelect . " AND la.{$cols['statusCol']} = {$atendidoStatus} ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 1",
                     [$cnes, $hoje]
                 );
             }
 
             $ultimosAtendidos = $db->select(
-                $baseSelect . " AND la.{$cols['statusCol']} = 2 ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 5",
+                $baseSelect . " AND la.{$cols['statusCol']} = {$atendidoStatus} ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 5",
+                [$cnes, $hoje]
+            );
+
+            $aguardando = $db->select(
+                $baseSelect . " AND la.{$cols['statusCol']} = {$aguardandoStatus} ORDER BY la.{$cols['hrChegadaCol']} ASC NULLS LAST LIMIT 8",
                 [$cnes, $hoje]
             );
 
@@ -246,6 +311,7 @@ class PainelEsusController extends MonitorApsBaseController
                 'unidade'           => $unidadeRow?->nome ?? 'CNES ' . $cnes,
                 'em_atendimento'    => $emAtendimento,
                 'ultimos_atendidos' => $ultimosAtendidos,
+                'aguardando'        => $aguardando,
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('PainelEsus.estado: ' . $e->getMessage());
@@ -263,12 +329,15 @@ class PainelEsusController extends MonitorApsBaseController
             'cnes'         => 'required|string|max:20',
             'equipe'       => 'nullable|integer',
             'profissional' => 'nullable|integer',
+            'data'         => 'nullable|date_format:Y-m-d',
+            'situacao'     => 'nullable|in:aguardando,atendidos,nao_aguardaram',
         ]);
 
         $cnes     = trim($request->input('cnes'));
         $equipeId = $request->input('equipe');
         $profId   = $request->input('profissional');
-        $hoje     = now()->toDateString();
+        $hoje     = $request->input('data') ?: now()->toDateString();
+        $situacao = $request->input('situacao', 'aguardando');
 
         try {
             $db = $this->db();
@@ -285,44 +354,87 @@ class PainelEsusController extends MonitorApsBaseController
 
             $cols  = $this->resolveListaColumns($filaTable);
             $joins = $this->buildFilaJoins($filaTable, $cols);
+            $cnesWhere = in_array($filaTable, ['ta_agendado', 'tb_atend'], true)
+                ? 'us.nu_cnes = ?'
+                : "la.{$cols['cnesCol']} = ?";
+            $aguardandoStatus = $filaTable === 'ta_agendado' ? 0 : 1;
+            $counterJoins = in_array($filaTable, ['ta_agendado', 'tb_atend'], true) ? $joins['profJoin'] : '';
 
-            $where  = "la.{$cols['cnesCol']} = ? AND la.{$cols['dtCol']} = ?";
+            $where  = "{$cnesWhere} AND la.{$cols['dtCol']}::date = ?";
             $params = [$cnes, $hoje];
 
             if ($equipeId !== null) {
-                $where   .= " AND la.{$cols['equipeFk']} = ?";
+                if ($filaTable === 'ta_agendado') {
+                    $where .= " AND l.co_equipe = ?";
+                } elseif ($filaTable === 'tb_atend') {
+                    $where .= " AND COALESCE(la.{$cols['equipeFk']}, l.co_equipe) = ?";
+                } else {
+                    $where .= " AND la.{$cols['equipeFk']} = ?";
+                }
                 $params[] = (int) $equipeId;
             }
             if ($profId !== null) {
-                $where   .= " AND la.{$cols['profFk']} = ?";
+                $where   .= in_array($filaTable, ['ta_agendado', 'tb_atend'], true)
+                    ? " AND l.co_prof = ?"
+                    : " AND la.{$cols['profFk']} = ?";
                 $params[] = (int) $profId;
             }
 
+            $atendidosCond = $filaTable === 'tb_atend'
+                ? "la.{$cols['statusCol']} = 4"
+                : "la.{$cols['statusCol']} IN (2, 4)";
+            $naoAguardaramStatus = $filaTable === 'tb_atend' ? 5 : 3;
+            $listaStatusCond = match ($situacao) {
+                'atendidos' => $atendidosCond,
+                'nao_aguardaram' => "la.{$cols['statusCol']} = {$naoAguardaramStatus}",
+                default => "la.{$cols['statusCol']} = {$aguardandoStatus}",
+            };
+            $listaOrder = $situacao === 'aguardando' ? 'ASC' : 'DESC';
+            $saidaBaseExpr = $filaTable === 'tb_atend'
+                ? "COALESCE(ap.dt_fim, la.dt_fim, CASE WHEN la.{$cols['statusCol']} IN (4, 5) THEN la.dt_ultima_alteracao_status END)"
+                : ($cols['hrSaidaCol'] ? "la.{$cols['hrSaidaCol']}" : "NULL");
+            $tempoFimExpr = "COALESCE({$saidaBaseExpr}, NOW())";
             $contadores = $db->selectOne("
                 SELECT
-                    COUNT(*) FILTER (WHERE la.{$cols['statusCol']} = 1)        AS aguardando,
-                    COUNT(*) FILTER (WHERE la.{$cols['statusCol']} IN (2, 4))  AS atendidos,
-                    COUNT(*) FILTER (WHERE la.{$cols['statusCol']} = 3)        AS nao_aguardaram
+                    COUNT(*) FILTER (WHERE la.{$cols['statusCol']} = {$aguardandoStatus}) AS aguardando,
+                    COUNT(*) FILTER (WHERE {$atendidosCond}) AS atendidos,
+                    COUNT(*) FILTER (WHERE la.{$cols['statusCol']} = {$naoAguardaramStatus}) AS nao_aguardaram,
+                    CONCAT(
+                        FLOOR(COALESCE(AVG(EXTRACT(EPOCH FROM ({$tempoFimExpr} - la.{$cols['hrChegadaCol']}))) FILTER (WHERE {$listaStatusCond}), 0) / 3600)::int,
+                        'h ',
+                        LPAD((FLOOR(COALESCE(AVG(EXTRACT(EPOCH FROM ({$tempoFimExpr} - la.{$cols['hrChegadaCol']}))) FILTER (WHERE {$listaStatusCond}), 0) / 60)::int % 60)::text, 2, '0'),
+                        'min'
+                    ) AS tempo_medio_espera
                 FROM {$filaTable} la
+                {$counterJoins}
                 WHERE {$where}
             ", $params);
 
             $allJoins = implode("\n", array_filter([
                 $joins['cidJoin'], $joins['profJoin'], $joins['eqJoin'],
             ]));
+            $saidaExpr = "TO_CHAR({$saidaBaseExpr}, 'HH24:MI')";
 
             $aguardando = $db->select("
                 SELECT
                     la.{$cols['pkCol']}                              AS id,
                     {$joins['cidExpr']}                              AS cidadao,
+                    TO_CHAR(la.{$cols['dtCol']}, 'DD/MM/YYYY')       AS data_atendimento,
                     TO_CHAR(la.{$cols['hrChegadaCol']}, 'HH24:MI')  AS hr_chegada,
+                    {$saidaExpr}                                     AS hr_saida,
+                    CONCAT(
+                        FLOOR(EXTRACT(EPOCH FROM ({$tempoFimExpr} - la.{$cols['hrChegadaCol']})) / 3600)::int,
+                        'h ',
+                        LPAD((FLOOR(EXTRACT(EPOCH FROM ({$tempoFimExpr} - la.{$cols['hrChegadaCol']})) / 60)::int % 60)::text, 2, '0'),
+                        'min'
+                    )                                                AS tempo_espera,
                     {$joins['eqExpr']}                               AS equipe,
                     {$joins['profExpr']}                             AS profissional
                 FROM {$filaTable} la
                 {$allJoins}
                 WHERE {$where}
-                  AND la.{$cols['statusCol']} = 1
-                ORDER BY la.{$cols['hrChegadaCol']} ASC NULLS LAST
+                  AND {$listaStatusCond}
+                ORDER BY la.{$cols['hrChegadaCol']} {$listaOrder} NULLS LAST
             ", $params);
 
             return response()->json([
@@ -330,6 +442,7 @@ class PainelEsusController extends MonitorApsBaseController
                     'aguardando'     => (int) ($contadores?->aguardando ?? 0),
                     'atendidos'      => (int) ($contadores?->atendidos ?? 0),
                     'nao_aguardaram' => (int) ($contadores?->nao_aguardaram ?? 0),
+                    'tempo_medio_espera' => $contadores?->tempo_medio_espera ?? '0h 00min',
                 ],
                 'aguardando' => $aguardando,
             ]);
@@ -345,9 +458,12 @@ class PainelEsusController extends MonitorApsBaseController
      */
     public function filtros(Request $request): JsonResponse
     {
-        $request->validate(['cnes' => 'required|string|max:20']);
+        $request->validate([
+            'cnes' => 'required|string|max:20',
+            'data' => 'nullable|date_format:Y-m-d',
+        ]);
         $cnes = trim($request->input('cnes'));
-        $hoje = now()->toDateString();
+        $hoje = $request->input('data') ?: now()->toDateString();
 
         try {
             $db = $this->db();
@@ -368,39 +484,36 @@ class PainelEsusController extends MonitorApsBaseController
             $equipeFk = $cols['equipeFk'];
             $profFk   = $cols['profFk'];
             $dtCol    = $cols['dtCol'];
+            $cnesWhere = in_array($filaTable, ['ta_agendado', 'tb_atend'], true)
+                ? 'us.nu_cnes = ?'
+                : "la.{$cnesCol} = ?";
 
-            if ($filaTable === 'ta_agendado') {
+            if (in_array($filaTable, ['ta_agendado', 'tb_atend'], true)) {
                 $equipes = [];
                 if ($joins['eqJoin']) {
-                    $eqPk   = $this->firstExistingColumn('ta_equipe', ['co_seq_equipe', 'co_equipe']) ?? 'co_seq_equipe';
-                    $eqNome = $this->firstExistingColumn('ta_equipe', ['no_equipe', 'ds_nome_equipe']) ?? 'no_equipe';
                     try {
                         $equipes = $db->select("
-                            SELECT DISTINCT e.{$eqPk} AS id, e.{$eqNome} AS nome
+                            SELECT DISTINCT e.co_seq_equipe AS id, e.no_equipe AS nome
                             FROM {$filaTable} la
+                            {$joins['profJoin']}
                             {$joins['eqJoin']}
-                            WHERE la.{$cnesCol} = ? AND la.{$dtCol} = ?
-                            ORDER BY e.{$eqNome}
+                            WHERE us.nu_cnes = ? AND la.{$dtCol}::date = ?
+                              AND e.co_seq_equipe IS NOT NULL
+                            ORDER BY e.no_equipe
                         ", [$cnes, $hoje]);
                     } catch (\Throwable) {}
                 }
 
                 $profissionais = [];
                 if ($joins['profJoin']) {
-                    $profIsLot = str_contains($joins['profJoin'], 'ta_lotacao');
-                    $pPk   = $profIsLot
-                        ? ($this->firstExistingColumn('ta_lotacao', ['co_seq_lotacao', 'co_lotacao']) ?? 'co_seq_lotacao')
-                        : 'co_seq_profissional';
-                    $pNome = $profIsLot
-                        ? ($this->firstExistingColumn('ta_lotacao', ['no_profissional']) ?? 'no_profissional')
-                        : 'no_profissional';
                     try {
                         $profissionais = $db->select("
-                            SELECT DISTINCT p.{$pPk} AS id, p.{$pNome} AS nome
+                            SELECT DISTINCT p.co_seq_prof AS id, p.no_profissional AS nome
                             FROM {$filaTable} la
                             {$joins['profJoin']}
-                            WHERE la.{$cnesCol} = ? AND la.{$dtCol} = ?
-                            ORDER BY p.{$pNome}
+                            WHERE us.nu_cnes = ? AND la.{$dtCol}::date = ?
+                              AND p.co_seq_prof IS NOT NULL
+                            ORDER BY p.no_profissional
                         ", [$cnes, $hoje]);
                     } catch (\Throwable) {}
                 }
