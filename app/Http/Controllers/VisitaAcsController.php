@@ -99,7 +99,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
     private function baseJoins(): string
     {
-        return '
+        $joins = '
             JOIN tb_dim_profissional    p  ON p.co_seq_dim_profissional    = v.co_dim_profissional
             JOIN tb_dim_cbo             c  ON c.co_seq_dim_cbo             = v.co_dim_cbo
             JOIN tb_dim_equipe          e  ON e.co_seq_dim_equipe          = v.co_dim_equipe
@@ -107,28 +107,58 @@ class VisitaAcsController extends MonitorApsBaseController
             JOIN tb_dim_desfecho_visita d  ON d.co_seq_dim_desfecho_visita = v.co_dim_desfecho_visita
             JOIN tb_dim_tipo_ficha      tf ON tf.co_seq_dim_tipo_ficha     = v.co_dim_tipo_ficha
         ';
+
+        if ($this->hasCdsFichaOrigem()) {
+            $joins .= '
+                LEFT JOIN tb_cds_ficha_visita_domiciliar cfv
+                    ON cfv.co_unico_ficha = v.nu_uuid_ficha
+                LEFT JOIN tb_cds_tipo_origem cto
+                    ON cto.co_cds_tipo_origem = cfv.tp_cds_origem
+            ';
+        }
+
+        return $joins;
+    }
+
+    private function hasCdsFichaOrigem(): bool
+    {
+        return $this->hasColumn('tb_fat_visita_domiciliar', 'nu_uuid_ficha')
+            && $this->hasTable('tb_cds_ficha_visita_domiciliar')
+            && $this->hasColumn('tb_cds_ficha_visita_domiciliar', 'co_unico_ficha')
+            && $this->hasColumn('tb_cds_ficha_visita_domiciliar', 'tp_cds_origem')
+            && $this->hasTable('tb_cds_tipo_origem')
+            && $this->hasColumn('tb_cds_tipo_origem', 'co_cds_tipo_origem')
+            && $this->hasColumn('tb_cds_tipo_origem', 'no_cds_tipo_origem');
     }
 
     /**
      * Expressão SQL para o instrumento de registro.
      *
-     * tb_dim_tipo_ficha.ds_tipo_ficha armazena o NOME DA FICHA (template), que é sempre
-     * "CDS Ficha de Visita Domiciliar" independente do canal de entrada. O campo correto
-     * para distinguir tablet/CDS é st_tipo_instrumento_registro:
-     *   1 = CDS (offline/papel)  |  3 = PEC (tablet)  |  4 = App e-SUS APS
+     * tb_dim_tipo_ficha.ds_tipo_ficha armazena o nome da ficha/template, que é igual
+     * para todas as visitas domiciliares. A coluna da tela precisa refletir a origem
+     * real do dado, quando disponível no DW.
      */
     private function instrumentExpr(string $alias = 'v'): string
     {
+        $parts = [];
+
+        if ($this->hasCdsFichaOrigem()) {
+            $parts[] = 'NULLIF(cto.no_cds_tipo_origem, \'\')';
+        }
+
         if ($this->hasColumn('tb_fat_visita_domiciliar', 'st_tipo_instrumento_registro')) {
-            return "CASE {$alias}.st_tipo_instrumento_registro
+            $parts[] = "CASE {$alias}.st_tipo_instrumento_registro
                         WHEN 1 THEN 'CDS'
                         WHEN 3 THEN 'PEC (Tablet)'
                         WHEN 4 THEN 'App e-SUS APS'
-                        ELSE COALESCE(tf.ds_tipo_ficha, 'Desconhecido')
+                        ELSE NULL
                     END";
         }
 
-        return 'tf.ds_tipo_ficha';
+        $parts[] = 'NULLIF(tf.ds_tipo_ficha, \'\')';
+        $parts[] = "'Desconhecido'";
+
+        return 'COALESCE(' . implode(', ', $parts) . ')';
     }
 
     private function listColumns(string $table): array
@@ -251,6 +281,196 @@ class VisitaAcsController extends MonitorApsBaseController
 
         // Apenas flag disponível: identifica somente os responsáveis
         return "CASE WHEN {$alias}.{$stCol} = 1 THEN {$alias}.co_fat_cidadao_pec ELSE NULL END";
+    }
+
+    private function hasDomicilioCadastro(): bool
+    {
+        return $this->hasTable('tb_fat_cad_domiciliar')
+            && $this->hasColumn('tb_fat_cad_domiciliar', 'co_seq_fat_cad_domiciliar')
+            && $this->hasColumn('tb_fat_cad_domiciliar', 'co_dim_profissional')
+            && $this->hasColumn('tb_fat_cad_domiciliar', 'co_dim_equipe')
+            && $this->hasTable('tb_fat_cad_dom_familia')
+            && $this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cad_domiciliar');
+    }
+
+    private function domicilioFamiliaWhere(string $alias = 'f'): string
+    {
+        $where = ["{$alias}.co_fat_cad_domiciliar = d.co_seq_fat_cad_domiciliar"];
+
+        if ($this->hasColumn('tb_fat_cad_dom_familia', 'st_recusa_cadastro')) {
+            $where[] = "COALESCE({$alias}.st_recusa_cadastro, 0) = 0";
+        }
+        if ($this->hasColumn('tb_fat_cad_dom_familia', 'st_mudou')) {
+            $where[] = "COALESCE({$alias}.st_mudou, 0) = 0";
+        }
+        if ($this->hasColumn('tb_fat_cad_dom_familia', 'co_dim_tempo_validade')) {
+            $where[] = "{$alias}.co_dim_tempo_validade = 30001231";
+        }
+
+        return implode(' AND ', $where);
+    }
+
+    private function domicilioCadastroStats(?string $ine, ?string $agentName): array
+    {
+        $empty = [
+            'domicilios_total' => null,
+            'domicilios_com_moradores' => null,
+            'domicilios_casa_vazia' => null,
+        ];
+
+        if (!$this->hasDomicilioCadastro()) {
+            return $empty;
+        }
+
+        $where = ['de.st_registro_valido = 1'];
+        $params = [];
+
+        if ($this->hasColumn('tb_fat_cad_domiciliar', 'co_dim_tempo_validade')) {
+            $where[] = 'd.co_dim_tempo_validade = 30001231';
+        }
+        if ($this->hasColumn('tb_fat_cad_domiciliar', 'st_recusa_cadastro')) {
+            $where[] = 'COALESCE(d.st_recusa_cadastro, 0) = 0';
+        }
+        if ($this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')) {
+            $where[] = "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') <> 'FA'";
+        }
+        if ($ine) {
+            $where[] = 'de.nu_ine = ?';
+            $params[] = $ine;
+        }
+        if ($agentName) {
+            $where[] = 'dp.no_profissional = ?';
+            $params[] = $agentName;
+        }
+
+        $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
+
+        try {
+            $row = $this->db()->selectOne("
+                SELECT
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) AS domicilios_total,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$hasMoradores}) AS domicilios_com_moradores,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE NOT {$hasMoradores}) AS domicilios_casa_vazia
+                FROM tb_fat_cad_domiciliar d
+                JOIN tb_dim_equipe de
+                    ON de.co_seq_dim_equipe = d.co_dim_equipe
+                LEFT JOIN tb_dim_profissional dp
+                    ON dp.co_seq_dim_profissional = d.co_dim_profissional
+                WHERE " . implode(' AND ', $where) . "
+            ", $params);
+        } catch (\Throwable) {
+            return $empty;
+        }
+
+        return [
+            'domicilios_total' => (int) ($row->domicilios_total ?? 0),
+            'domicilios_com_moradores' => (int) ($row->domicilios_com_moradores ?? 0),
+            'domicilios_casa_vazia' => (int) ($row->domicilios_casa_vazia ?? 0),
+        ];
+    }
+
+    private function domicilioCadastroStatsPorAgente(?string $ine, ?string $agentName): array
+    {
+        if (!$this->hasDomicilioCadastro()) {
+            return [];
+        }
+
+        $where = ['de.st_registro_valido = 1'];
+        $params = [];
+
+        if ($this->hasColumn('tb_fat_cad_domiciliar', 'co_dim_tempo_validade')) {
+            $where[] = 'd.co_dim_tempo_validade = 30001231';
+        }
+        if ($this->hasColumn('tb_fat_cad_domiciliar', 'st_recusa_cadastro')) {
+            $where[] = 'COALESCE(d.st_recusa_cadastro, 0) = 0';
+        }
+        if ($this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')) {
+            $where[] = "COALESCE(UPPER(TRIM(d.nu_micro_area)), '') <> 'FA'";
+        }
+        if ($ine) {
+            $where[] = 'de.nu_ine = ?';
+            $params[] = $ine;
+        }
+        if ($agentName) {
+            $where[] = 'dp.no_profissional = ?';
+            $params[] = $agentName;
+        }
+
+        $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
+
+        try {
+            $rows = $this->db()->select("
+                SELECT
+                    dp.no_profissional AS agente,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) AS domicilios_total,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$hasMoradores}) AS domicilios_com_moradores,
+                    COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE NOT {$hasMoradores}) AS domicilios_casa_vazia
+                FROM tb_fat_cad_domiciliar d
+                JOIN tb_dim_equipe de
+                    ON de.co_seq_dim_equipe = d.co_dim_equipe
+                LEFT JOIN tb_dim_profissional dp
+                    ON dp.co_seq_dim_profissional = d.co_dim_profissional
+                WHERE " . implode(' AND ', $where) . "
+                GROUP BY dp.no_profissional
+            ", $params);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row->agente ?? ''] = [
+                'domicilios_total' => (int) ($row->domicilios_total ?? 0),
+                'domicilios_com_moradores' => (int) ($row->domicilios_com_moradores ?? 0),
+                'domicilios_casa_vazia' => (int) ($row->domicilios_casa_vazia ?? 0),
+            ];
+        }
+
+        return $map;
+    }
+
+    private function domicilioVisitaStats(int $ano, int $mes, ?string $ine, ?string $agentName): array
+    {
+        $empty = [
+            'domicilios_acompanhados' => null,
+            'domicilios_recusados' => null,
+            'domicilios_ausentes' => null,
+        ];
+
+        if (!$this->hasDomicilioCadastro() || !$this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cidadao_pec')) {
+            return $empty;
+        }
+
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName);
+        $familiaWhere = str_replace('d.', 'dom.', $this->domicilioFamiliaWhere('f'));
+
+        try {
+            $row = $this->db()->selectOne("
+                SELECT
+                    COUNT(DISTINCT dom.co_seq_fat_cad_domiciliar)
+                        FILTER (WHERE d.co_seq_dim_desfecho_visita = 1) AS domicilios_acompanhados,
+                    COUNT(DISTINCT dom.co_seq_fat_cad_domiciliar)
+                        FILTER (WHERE d.co_seq_dim_desfecho_visita = 2) AS domicilios_recusados,
+                    COUNT(DISTINCT dom.co_seq_fat_cad_domiciliar)
+                        FILTER (WHERE d.co_seq_dim_desfecho_visita = 3) AS domicilios_ausentes
+                FROM tb_fat_visita_domiciliar v
+                {$this->baseJoins()}
+                LEFT JOIN tb_fat_cad_dom_familia f
+                    ON f.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                LEFT JOIN tb_fat_cad_domiciliar dom
+                    ON dom.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar
+                WHERE {$where}
+                  AND {$familiaWhere}
+            ", $params);
+        } catch (\Throwable) {
+            return $empty;
+        }
+
+        return [
+            'domicilios_acompanhados' => (int) ($row->domicilios_acompanhados ?? 0),
+            'domicilios_recusados' => (int) ($row->domicilios_recusados ?? 0),
+            'domicilios_ausentes' => (int) ($row->domicilios_ausentes ?? 0),
+        ];
     }
 
     private function textColumnExpr(string $tableAlias, ?string $column): string
@@ -510,10 +730,10 @@ class VisitaAcsController extends MonitorApsBaseController
             return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
         }
 
-        $familyData = null;
-        $familyExpr = $this->familyIdExpr();
+        $domicilioCadastro = $this->domicilioCadastroStats($request->ine, $request->agente);
+        $domicilioVisitas  = $this->domicilioVisitaStats($ano, $mes, $request->ine, $request->agente);
 
-        if ($familyExpr !== null) {
+        if (false) {
             // Breakdown de famílias visitadas no mês (sem filtro de desfecho/geo)
             [$familyWhere, $familyParams] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
 
@@ -544,7 +764,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
         // Total de famílias sob responsabilidade do ACS (sem filtro de mês/desfecho)
         $familiasTotal = null;
-        if ($familyExpr !== null) {
+        if (false) {
             try {
                 $totFamWhere  = 'ci.st_ficha_inativa = 0 AND de.st_registro_valido = 1';
                 $totFamParams = [];
@@ -582,14 +802,14 @@ class VisitaAcsController extends MonitorApsBaseController
         return response()->json([
             'totais' => array_merge(
                 [
-                    'total'          => (int) ($totRow->total ?? 0),
-                    'realizadas'     => (int) ($totRow->realizadas ?? 0),
-                    'recusadas'      => (int) ($totRow->recusadas ?? 0),
-                    'ausentes'       => (int) ($totRow->ausentes ?? 0),
-                    'cidadaos'       => (int) ($totRow->cidadaos ?? 0),
-                    'familias_total' => $familiasTotal,
+                    'total'      => (int) ($totRow->total ?? 0),
+                    'realizadas' => (int) ($totRow->realizadas ?? 0),
+                    'recusadas'  => (int) ($totRow->recusadas ?? 0),
+                    'ausentes'   => (int) ($totRow->ausentes ?? 0),
+                    'cidadaos'   => (int) ($totRow->cidadaos ?? 0),
                 ],
-                $familyData ?? $nullFamily
+                $domicilioCadastro,
+                $domicilioVisitas
             ),
         ]);
     }
@@ -1278,11 +1498,21 @@ class VisitaAcsController extends MonitorApsBaseController
             } catch (\Throwable) {}
         }
 
-        $agentes = array_map(function ($r) use ($hasFamilies, $famTotalMap) {
+        $domicilioMap = $this->domicilioCadastroStatsPorAgente($request->ine, $request->agente);
+
+        $agentes = array_map(function ($r) use ($hasFamilies, $famTotalMap, $domicilioMap) {
             $famAcomp    = $hasFamilies ? (int) ($r->familias_acompanhadas ?? 0) : null;
             $famTotal    = $hasFamilies ? ($famTotalMap[$r->agente ?? ''] ?? 0) : null;
             $pctFamilias = ($hasFamilies && $famTotal > 0)
                 ? (int) round($famAcomp / $famTotal * 100)
+                : null;
+            $domicilios = $domicilioMap[$r->agente ?? ''] ?? [
+                'domicilios_total' => null,
+                'domicilios_com_moradores' => null,
+                'domicilios_casa_vazia' => null,
+            ];
+            $pctDomicilios = (($domicilios['domicilios_total'] ?? 0) > 0)
+                ? (int) round(($domicilios['domicilios_com_moradores'] ?? 0) / $domicilios['domicilios_total'] * 100)
                 : null;
 
             return [
@@ -1301,6 +1531,10 @@ class VisitaAcsController extends MonitorApsBaseController
                 'familias_total'        => $famTotal,
                 'familias_acompanhadas' => $famAcomp,
                 'pct_familias'          => $pctFamilias,
+                'domicilios_total' => $domicilios['domicilios_total'],
+                'domicilios_com_moradores' => $domicilios['domicilios_com_moradores'],
+                'domicilios_casa_vazia' => $domicilios['domicilios_casa_vazia'],
+                'pct_domicilios_com_moradores' => $pctDomicilios,
             ];
         }, $rows);
 
