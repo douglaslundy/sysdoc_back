@@ -19,15 +19,15 @@ class CidadaoAcsController extends MonitorApsBaseController
 
         return [
             'cpfCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
-                ['nu_cpf', 'nu_cpf_cidadao', 'co_cpf'])        ?? 'nu_cpf',
+                ['nu_cpf', 'nu_cpf_cidadao', 'co_cpf']),
             'cnsCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
-                ['nu_cns', 'co_cns'])                          ?? 'nu_cns',
+                ['nu_cns', 'co_cns']),
             'nomeCol'   => $this->firstExistingColumn('tb_fat_cad_individual',
-                ['no_cidadao', 'no_nome'])                     ?? 'no_cidadao',
+                ['no_cidadao', 'no_nome']),
             'hasCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
-                ['st_hipertensao_arterial', 'st_hipertensao']) ?? 'st_hipertensao_arterial',
+                ['st_hipertensao_arterial', 'st_hipertensao']),
             'dmCol'     => $this->firstExistingColumn('tb_fat_cad_individual',
-                ['st_diabete', 'st_diabetes'])                 ?? 'st_diabete',
+                ['st_diabete', 'st_diabetes']),
             'dtNascCol' => $dtNascCol,
             'stGestCol' => $stGestCol,
             'hasPec'    => $this->hasTable('tb_fat_cidadao_pec'),
@@ -78,24 +78,33 @@ class CidadaoAcsController extends MonitorApsBaseController
             $hasPec      = $cols['hasPec'];
             $hasCidadao  = $cols['hasCidadao'];
             $hasPecNasc = $cols['hasPecNasc'];
-            $pecJoin     = $hasPec
-                ? 'LEFT JOIN tb_fat_cidadao_pec pec ON pec.co_seq_fat_cidadao_pec = fci.co_fat_cidadao_pec'
+            $pecPkCol    = $hasPec ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_seq_fat_cidadao_pec', 'co_fat_cidadao_pec']) : null;
+            $pecCidCol   = $hasPec ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']) : null;
+            $cidPkCol    = $hasCidadao ? $this->firstExistingColumn('tb_cidadao', ['co_seq_cidadao', 'co_cidadao']) : null;
+            $pecJoin     = ($hasPec && $pecPkCol)
+                ? "LEFT JOIN tb_fat_cidadao_pec pec ON pec.{$pecPkCol} = fci.co_fat_cidadao_pec"
                 : '';
-            $cidadaoJoin = ($hasPec && $hasCidadao)
-                ? 'LEFT JOIN tb_cidadao cid ON cid.co_seq_cidadao = pec.co_cidadao'
+            $cidadaoJoin = ($pecJoin && $hasCidadao && $pecCidCol && $cidPkCol)
+                ? "LEFT JOIN tb_cidadao cid ON cid.{$cidPkCol} = pec.{$pecCidCol}"
                 : '';
             $pecNomeCol  = $hasPec ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['no_cidadao', 'no_nome']) : null;
-            $cidNomeCol  = $hasCidadao ? $this->firstExistingColumn('tb_cidadao', ['no_cidadao', 'no_nome']) : null;
+            $cidNomeCol  = $cidadaoJoin ? $this->firstExistingColumn('tb_cidadao', ['no_cidadao', 'no_nome']) : null;
             $nomeParts   = [];
-            if ($cidNomeCol && $hasPec) {
+            if ($cidNomeCol) {
                 $nomeParts[] = "NULLIF(CASE WHEN cid.{$cidNomeCol} ~ '^[0-9a-f]{64}$' THEN NULL ELSE cid.{$cidNomeCol} END, '')";
             }
-            if ($pecNomeCol) {
+            if ($pecJoin && $pecNomeCol) {
                 $nomeParts[] = "NULLIF(CASE WHEN pec.{$pecNomeCol} ~ '^[0-9a-f]{64}$' THEN NULL ELSE pec.{$pecNomeCol} END, '')";
             }
-            $nomeParts[] = "NULLIF(CASE WHEN fci.{$nomeCol} ~ '^[0-9a-f]{64}$' THEN NULL ELSE fci.{$nomeCol} END, '')";
+            if ($nomeCol) {
+                $nomeParts[] = "NULLIF(CASE WHEN fci.{$nomeCol} ~ '^[0-9a-f]{64}$' THEN NULL ELSE fci.{$nomeCol} END, '')";
+            }
             $nomeParts[] = "'Nome não disponível'";
             $nomeExpr = count($nomeParts) > 1 ? 'COALESCE(' . implode(', ', $nomeParts) . ')' : $nomeParts[0];
+            $cpfExpr  = $cpfCol ? "fci.{$cpfCol}" : 'NULL::text';
+            $cnsExpr  = $cnsCol ? "fci.{$cnsCol}" : 'NULL::text';
+            $hasExpr  = $hasCol ? "fci.{$hasCol}" : '0';
+            $dmExpr   = $dmCol ? "fci.{$dmCol}" : '0';
 
             // Resolve data_nascimento e idade
             if ($dtNascCol) {
@@ -141,10 +150,17 @@ class CidadaoAcsController extends MonitorApsBaseController
             if ($busca) {
                 $b        = trim($busca);
                 $digits   = preg_replace('/\D/', '', $b);
-                $where   .= " AND ({$nomeExpr} ILIKE ? OR fci.{$cpfCol} = ? OR fci.{$cnsCol} = ?)";
+                $searchParts = ["{$nomeExpr} ILIKE ?"];
                 $params[] = '%' . $b . '%';
-                $params[] = $digits;
-                $params[] = $digits;
+                if ($cpfCol) {
+                    $searchParts[] = "fci.{$cpfCol} = ?";
+                    $params[] = $digits;
+                }
+                if ($cnsCol) {
+                    $searchParts[] = "fci.{$cnsCol} = ?";
+                    $params[] = $digits;
+                }
+                $where .= ' AND (' . implode(' OR ', $searchParts) . ')';
             }
 
             $sql = "
@@ -170,8 +186,8 @@ class CidadaoAcsController extends MonitorApsBaseController
                     SELECT
                         fci.co_fat_cidadao_pec,
                         {$nomeExpr}      AS nome,
-                        fci.{$cpfCol}    AS cpf,
-                        fci.{$cnsCol}    AS cns,
+                        {$cpfExpr}       AS cpf,
+                        {$cnsExpr}       AS cns,
                         {$dtNascExpr}    AS data_nascimento,
                         {$idadeExpr}     AS idade,
                         TO_CHAR(TO_DATE(fci.co_dim_tempo::text, 'YYYYMMDD'), 'DD/MM/YYYY') AS data_atualizacao,
@@ -181,8 +197,8 @@ class CidadaoAcsController extends MonitorApsBaseController
                         dp.no_profissional         AS agente,
                         dp.nu_cns                  AS cns_agente,
                         {$gestExpr}      AS st_gestante,
-                        fci.{$hasCol}    AS st_has,
-                        fci.{$dmCol}     AS st_dm,
+                        {$hasExpr}       AS st_has,
+                        {$dmExpr}        AS st_dm,
                         {$idosoExpr}     AS st_idoso,
                         ROW_NUMBER() OVER (
                             PARTITION BY fci.co_fat_cidadao_pec
