@@ -128,6 +128,12 @@ class TripClientRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            // Ao editar (id preenchido), não verifica capacidade — o número
+            // de passageiros não aumenta, apenas os dados são atualizados.
+            if ($this->id) {
+                return;
+            }
+
             // Recupera a viagem (trip) a partir do trip_id
             $trip = Trip::find($this->trip_id);
 
