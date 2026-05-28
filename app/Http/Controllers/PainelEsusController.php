@@ -88,21 +88,36 @@ class PainelEsusController extends MonitorApsBaseController
             ";
             $cidExpr = "COALESCE(c.no_cidadao, 'Cidadao')::text";
 
-            // Para pacientes aguardando, tb_atend.co_atend_prof é NULL até o
-            // profissional abrir o prontuário. Usamos a FK reversa co_atend em
-            // tb_atend_prof como fallback para exibir o profissional já na fila.
+            // Fonte 1: co_atend_prof — FK direta para pacientes já em atendimento
             $fbJoin      = '';
             $lotacaoExpr = 'ap.co_lotacao';
+
+            // Fonte 2: FK reversa via tb_atend_prof.co_atend — cobre pacientes
+            // aguardando (co_atend_prof ainda NULL) que já têm um profissional ligado
             if ($this->hasColumn('tb_atend_prof', 'co_atend')) {
                 $fbJoin = "
                 LEFT JOIN LATERAL (
                     SELECT fb.co_lotacao
                     FROM tb_atend_prof fb
                     WHERE fb.co_atend = la.co_seq_atend
+                      AND fb.co_lotacao IS NOT NULL
                     ORDER BY fb.co_seq_atend_prof ASC
                     LIMIT 1
                 ) ap_fb ON la.{$profFk} IS NULL";
                 $lotacaoExpr = 'COALESCE(ap.co_lotacao, ap_fb.co_lotacao)';
+            }
+
+            // Fonte 3: coluna direta em tb_atend com co_ator_papel do responsável.
+            // co_responsavel está confirmado no schema deste banco e-SUS.
+            $responsavelCol = $this->firstExistingColumn('tb_atend', [
+                'co_responsavel',
+                'co_ator_papel_responsavel',
+                'co_ator_papel',
+                'co_lotacao_atend',
+                'co_lotacao_responsavel',
+            ]);
+            if ($responsavelCol) {
+                $lotacaoExpr = "COALESCE({$lotacaoExpr}, la.{$responsavelCol})";
             }
 
             $profJoin = "
@@ -115,14 +130,9 @@ class PainelEsusController extends MonitorApsBaseController
                     ORDER BY co_ator_papel, dt_desativacao_lotacao NULLS FIRST
                 ) l ON l.co_ator_papel = {$lotacaoExpr}
                 LEFT JOIN tb_unidade_saude us ON us.co_seq_unidade_saude = la.co_unidade_saude
-                LEFT JOIN (
-                    SELECT DISTINCT ON (co_seq_prof)
-                        co_seq_prof, no_profissional
-                    FROM ta_prof
-                    ORDER BY co_seq_prof, dt_auditoria DESC NULLS LAST, co_seq_taprof DESC
-                ) p ON p.co_seq_prof = l.co_prof
+                LEFT JOIN tb_prof p ON p.co_seq_prof = l.co_prof
             ";
-            $profExpr = "COALESCE(p.no_profissional, '')::text";
+            $profExpr = "COALESCE(NULLIF(p.no_civil_profissional, ''), NULLIF(p.no_social_profissional, ''), '')::text";
 
             $eqJoin = "LEFT JOIN tb_equipe e ON e.co_seq_equipe = COALESCE(la.{$equipeFk}, l.co_equipe)";
             $eqExpr = "COALESCE(e.no_equipe, '')::text";
@@ -145,14 +155,9 @@ class PainelEsusController extends MonitorApsBaseController
                     ORDER BY co_ator_papel, dt_desativacao_lotacao NULLS FIRST
                 ) l ON l.co_ator_papel = la.{$profFk}
                 LEFT JOIN tb_unidade_saude us ON us.co_seq_unidade_saude = l.co_unidade_saude
-                LEFT JOIN (
-                    SELECT DISTINCT ON (co_seq_prof)
-                        co_seq_prof, no_profissional
-                    FROM ta_prof
-                    ORDER BY co_seq_prof, dt_auditoria DESC NULLS LAST, co_seq_taprof DESC
-                ) p ON p.co_seq_prof = l.co_prof
+                LEFT JOIN tb_prof p ON p.co_seq_prof = l.co_prof
             ";
-            $profExpr = "COALESCE(p.no_profissional, '')::text";
+            $profExpr = "COALESCE(NULLIF(p.no_civil_profissional, ''), NULLIF(p.no_social_profissional, ''), '')::text";
 
             $eqJoin = "LEFT JOIN tb_equipe e ON e.co_seq_equipe = l.co_equipe";
             $eqExpr = "COALESCE(e.no_equipe, '')::text";
@@ -289,8 +294,9 @@ class PainelEsusController extends MonitorApsBaseController
 
             $baseSelect = "
                 SELECT
-                    {$joins['cidExpr']}  AS cidadao,
-                    {$joins['profExpr']} AS profissional,
+                    la.{$cols['pkCol']}             AS id,
+                    {$joins['cidExpr']}             AS cidadao,
+                    {$joins['profExpr']}            AS profissional,
                     TO_CHAR(la.{$cols['hrInicioCol']}, 'HH24:MI') AS hr_inicio
                 FROM {$filaTable} la
                 {$allJoins}
@@ -303,14 +309,27 @@ class PainelEsusController extends MonitorApsBaseController
             $atendidoStatus      = $filaTable === 'tb_atend' ? 4 : 2;
             $aguardandoStatus    = $filaTable === 'ta_agendado' ? 0 : 1;
 
-            $emAtendimento = $db->selectOne(
-                $baseSelect . " AND la.{$cols['statusCol']} = {$emAtendimentoStatus} ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 1",
+            // Ordena pelo momento em que o status foi alterado (chamada mais recente),
+            // caindo para hr_inicio quando a coluna não existir.
+            $ultimaAlteracaoCol = $filaTable === 'tb_atend'
+                ? $this->firstExistingColumn('tb_atend', ['dt_ultima_alteracao_status', 'dt_alteracao_status', 'dt_atualizacao'])
+                : null;
+            $orderEmAtendimento = $ultimaAlteracaoCol
+                ? "la.{$ultimaAlteracaoCol} DESC NULLS LAST, la.{$cols['pkCol']} DESC"
+                : "la.{$cols['hrInicioCol']} DESC NULLS LAST";
+
+            // Todos em atendimento agora, do mais recente ao mais antigo (para o frontend
+            // anunciar do mais antigo → mais recente e exibir o mais recente no topo)
+            $chamadosRecentes = $db->select(
+                $baseSelect . " AND la.{$cols['statusCol']} = {$emAtendimentoStatus} ORDER BY {$orderEmAtendimento} LIMIT 10",
                 [$cnes, $hoje]
             );
 
+            $emAtendimento = $chamadosRecentes[0] ?? null;
+
             if (!$emAtendimento) {
                 $emAtendimento = $db->selectOne(
-                    $baseSelect . " AND la.{$cols['statusCol']} = {$atendidoStatus} ORDER BY la.{$cols['hrInicioCol']} DESC NULLS LAST LIMIT 1",
+                    $baseSelect . " AND la.{$cols['statusCol']} = {$atendidoStatus} ORDER BY {$orderEmAtendimento} LIMIT 1",
                     [$cnes, $hoje]
                 );
             }
@@ -328,6 +347,7 @@ class PainelEsusController extends MonitorApsBaseController
             return response()->json([
                 'unidade'           => $unidadeRow?->nome ?? 'CNES ' . $cnes,
                 'em_atendimento'    => $emAtendimento,
+                'chamados_recentes' => $chamadosRecentes,
                 'ultimos_atendidos' => $ultimosAtendidos,
                 'aguardando'        => $aguardando,
             ]);
@@ -526,12 +546,17 @@ class PainelEsusController extends MonitorApsBaseController
                 if ($joins['profJoin']) {
                     try {
                         $profissionais = $db->select("
-                            SELECT DISTINCT p.co_seq_prof AS id, p.no_profissional AS nome
-                            FROM {$filaTable} la
-                            {$joins['profJoin']}
-                            WHERE us.nu_cnes = ? AND la.{$dtCol}::date = ?
-                              AND p.co_seq_prof IS NOT NULL
-                            ORDER BY p.no_profissional
+                            SELECT id, nome FROM (
+                                SELECT DISTINCT
+                                    p.co_seq_prof AS id,
+                                    COALESCE(NULLIF(p.no_civil_profissional,''), NULLIF(p.no_social_profissional,''), '') AS nome
+                                FROM {$filaTable} la
+                                {$joins['profJoin']}
+                                WHERE us.nu_cnes = ? AND la.{$dtCol}::date = ?
+                                  AND p.co_seq_prof IS NOT NULL
+                                  AND COALESCE(p.no_civil_profissional, p.no_social_profissional) IS NOT NULL
+                            ) sub
+                            ORDER BY nome
                         ", [$cnes, $hoje]);
                     } catch (\Throwable) {}
                 }

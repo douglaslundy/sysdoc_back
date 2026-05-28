@@ -310,6 +310,27 @@ class VisitaAcsController extends MonitorApsBaseController
         return implode(' AND ', $where);
     }
 
+    /**
+     * Condições de status de tb_fat_cad_dom_familia sem a cláusula de JOIN.
+     * Usado em CTEs que precisam do cadastro mais recente por cidadão.
+     */
+    private function domicilioFamiliaFilters(string $alias = 'f'): string
+    {
+        $conds = [];
+
+        if ($this->hasColumn('tb_fat_cad_dom_familia', 'st_recusa_cadastro')) {
+            $conds[] = "COALESCE({$alias}.st_recusa_cadastro, 0) = 0";
+        }
+        if ($this->hasColumn('tb_fat_cad_dom_familia', 'st_mudou')) {
+            $conds[] = "COALESCE({$alias}.st_mudou, 0) = 0";
+        }
+        if ($this->hasColumn('tb_fat_cad_dom_familia', 'co_dim_tempo_validade')) {
+            $conds[] = "{$alias}.co_dim_tempo_validade = 30001231";
+        }
+
+        return $conds ? implode(' AND ', $conds) : 'TRUE';
+    }
+
     private function domicilioCadastroStats(?string $ine, ?string $agentName): array
     {
         $empty = [
@@ -454,25 +475,33 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName);
-        $familiaWhere = str_replace('d.', 'dom.', $this->domicilioFamiliaWhere('f'));
+        $familiaFilters = $this->domicilioFamiliaFilters('f');
         $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
             ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
             : 'TRUE';
 
         try {
             $row = $this->db()->selectOne("
-                WITH visitas_domicilio AS (
+                WITH citizen_domicilio AS (
+                    -- Um domicílio por cidadão: o mais recentemente cadastrado (maior PK).
+                    SELECT DISTINCT ON (f.co_fat_cidadao_pec)
+                        f.co_fat_cidadao_pec,
+                        f.co_fat_cad_domiciliar
+                    FROM tb_fat_cad_dom_familia f
+                    WHERE {$familiaFilters}
+                    ORDER BY f.co_fat_cidadao_pec, f.co_fat_cad_domiciliar DESC
+                ),
+                visitas_domicilio AS (
                     SELECT DISTINCT
                         dom.co_seq_fat_cad_domiciliar AS domicilio_id,
-                        d.co_seq_dim_desfecho_visita AS desfecho
+                        d.co_seq_dim_desfecho_visita  AS desfecho
                     FROM tb_fat_visita_domiciliar v
                     {$this->baseJoins()}
-                    LEFT JOIN tb_fat_cad_dom_familia f
-                        ON f.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    LEFT JOIN citizen_domicilio cd
+                        ON cd.co_fat_cidadao_pec = v.co_fat_cidadao_pec
                     LEFT JOIN tb_fat_cad_domiciliar dom
-                        ON dom.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar
+                        ON dom.co_seq_fat_cad_domiciliar = cd.co_fat_cad_domiciliar
                     WHERE {$where}
-                      AND {$familiaWhere}
                       AND {$regularDomicilio}
                       AND dom.co_seq_fat_cad_domiciliar IS NOT NULL
                 ),
@@ -504,6 +533,79 @@ class VisitaAcsController extends MonitorApsBaseController
         ];
     }
 
+    private function domicilioVisitaStatsPorAgente(int $ano, int $mes, ?string $ine, ?string $agentName): array
+    {
+        if (!$this->hasDomicilioCadastro() || !$this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cidadao_pec')) {
+            return [];
+        }
+
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName);
+        $familiaFilters = $this->domicilioFamiliaFilters('f');
+        $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
+            ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
+            : 'TRUE';
+
+        try {
+            $rows = $this->db()->select("
+                WITH citizen_domicilio AS (
+                    SELECT DISTINCT ON (f.co_fat_cidadao_pec)
+                        f.co_fat_cidadao_pec,
+                        f.co_fat_cad_domiciliar
+                    FROM tb_fat_cad_dom_familia f
+                    WHERE {$familiaFilters}
+                    ORDER BY f.co_fat_cidadao_pec, f.co_fat_cad_domiciliar DESC
+                ),
+                visitas_domicilio AS (
+                    SELECT DISTINCT
+                        p.no_profissional                 AS agente,
+                        dom.co_seq_fat_cad_domiciliar     AS domicilio_id,
+                        d.co_seq_dim_desfecho_visita      AS desfecho
+                    FROM tb_fat_visita_domiciliar v
+                    {$this->baseJoins()}
+                    LEFT JOIN citizen_domicilio cd
+                        ON cd.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                    LEFT JOIN tb_fat_cad_domiciliar dom
+                        ON dom.co_seq_fat_cad_domiciliar = cd.co_fat_cad_domiciliar
+                    WHERE {$where}
+                      AND {$regularDomicilio}
+                      AND dom.co_seq_fat_cad_domiciliar IS NOT NULL
+                ),
+                domicilio_status AS (
+                    SELECT
+                        agente,
+                        domicilio_id,
+                        BOOL_OR(desfecho = 1) AS tem_realizada,
+                        BOOL_OR(desfecho = 2) AS tem_recusada,
+                        BOOL_OR(desfecho = 3) AS tem_ausente
+                    FROM visitas_domicilio
+                    GROUP BY agente, domicilio_id
+                )
+                SELECT
+                    agente,
+                    COUNT(*) AS domicilios_visitados,
+                    COUNT(*) FILTER (WHERE tem_realizada AND NOT tem_ausente) AS domicilios_acompanhados,
+                    COUNT(*) FILTER (WHERE tem_recusada) AS domicilios_recusados,
+                    COUNT(*) FILTER (WHERE tem_ausente) AS domicilios_ausentes
+                FROM domicilio_status
+                GROUP BY agente
+            ", $params);
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row->agente ?? ''] = [
+                'domicilios_visitados'    => (int) ($row->domicilios_visitados ?? 0),
+                'domicilios_acompanhados' => (int) ($row->domicilios_acompanhados ?? 0),
+                'domicilios_recusados'    => (int) ($row->domicilios_recusados ?? 0),
+                'domicilios_ausentes'     => (int) ($row->domicilios_ausentes ?? 0),
+            ];
+        }
+
+        return $map;
+    }
+
     private function textColumnExpr(string $tableAlias, ?string $column): string
     {
         return $column ? "{$tableAlias}.{$column}::text" : 'NULL::text';
@@ -511,12 +613,20 @@ class VisitaAcsController extends MonitorApsBaseController
 
     private function citizenNameExpr(string $visitAlias = 'v'): string
     {
+        // Filtra hashes/UUIDs que o e-SUS armazena no lugar do nome (SHA-256, MD5, UUID).
+        // ~* = case-insensitive; {32,} cobre MD5(32), SHA-1(40), SHA-256(64) e outros.
+        $hashGuard = fn(string $col) =>
+            "NULLIF(CASE WHEN {$col} ~* '^[0-9a-f]{32,}$'"
+            . "             OR {$col} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'"
+            . "          THEN NULL ELSE {$col} END, '')";
+
         if (
             $this->hasTable('tb_fat_cad_individual')
             && $this->hasColumn('tb_fat_cad_individual', 'no_cidadao')
             && $this->hasColumn('tb_fat_cad_individual', 'co_fat_cidadao_pec')
         ) {
-            return "(SELECT ci.no_cidadao FROM tb_fat_cad_individual ci WHERE ci.co_fat_cidadao_pec = {$visitAlias}.co_fat_cidadao_pec LIMIT 1)";
+            $expr = $hashGuard('ci.no_cidadao');
+            return "(SELECT {$expr} FROM tb_fat_cad_individual ci WHERE ci.co_fat_cidadao_pec = {$visitAlias}.co_fat_cidadao_pec LIMIT 1)";
         }
 
         if (
@@ -524,7 +634,8 @@ class VisitaAcsController extends MonitorApsBaseController
             && $this->hasColumn('tb_fat_cidadao_pec', 'no_cidadao')
             && $this->hasColumn('tb_fat_cidadao_pec', 'co_seq_fat_cidadao_pec')
         ) {
-            return "(SELECT cp.no_cidadao FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = {$visitAlias}.co_fat_cidadao_pec LIMIT 1)";
+            $expr = $hashGuard('cp.no_cidadao');
+            return "(SELECT {$expr} FROM tb_fat_cidadao_pec cp WHERE cp.co_seq_fat_cidadao_pec = {$visitAlias}.co_fat_cidadao_pec LIMIT 1)";
         }
 
         return 'NULL::text';
@@ -1335,9 +1446,43 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
         $citizenExpr = $this->citizenNameExpr('v');
-        $cadNomeSelect = $nomeCol ? $nomeCol : 'NULL::text';
+        $cadNomeSelect = $nomeCol
+            ? "NULLIF(CASE WHEN {$nomeCol} ~* '^[0-9a-f]{32,}$'"
+              . "             OR {$nomeCol} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'"
+              . "          THEN NULL ELSE {$nomeCol} END, '')"
+            : 'NULL::text';
 
-        // Query completa: LATERAL direto no FROM + nu_hora + nome do cidadÃƒÂ£o
+        // Endereço do domicílio — pega o cadastro mais recente por cidadão
+        $hasDomAddr = $this->hasDomicilioCadastro()
+            && $this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cidadao_pec');
+        $logCol  = $hasDomAddr ? $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_logradouro', 'ds_logradouro', 'logradouro']) : null;
+        $numCol  = $hasDomAddr ? $this->firstExistingColumn('tb_fat_cad_domiciliar', ['nu_num_logradouro', 'nu_numero', 'nu_endereco']) : null;
+        $compCol = $hasDomAddr ? $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_complemento', 'ds_complemento', 'complemento']) : null;
+        $baiCol  = $hasDomAddr ? $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_bairro', 'ds_bairro', 'bairro']) : null;
+        $famFilters = $this->domicilioFamiliaFilters('fdom');
+        $addrCols = "\n                NULL::text AS logradouro, NULL::text AS num_endereco,\n                NULL::text AS complemento, NULL::text AS bairro";
+        $addrLateral = '';
+        if ($hasDomAddr && $logCol) {
+            $lExpr = "d_addr.{$logCol}::text";
+            $nExpr = $numCol  ? "d_addr.{$numCol}::text"  : 'NULL::text';
+            $cExpr = $compCol ? "d_addr.{$compCol}::text" : 'NULL::text';
+            $bExpr = $baiCol  ? "d_addr.{$baiCol}::text"  : 'NULL::text';
+            $addrCols = "\n                addr_dom.logradouro, addr_dom.num_endereco,\n                addr_dom.complemento, addr_dom.bairro";
+            $addrLateral = "
+            LEFT JOIN LATERAL (
+                SELECT {$lExpr} AS logradouro, {$nExpr} AS num_endereco,
+                       {$cExpr} AS complemento, {$bExpr} AS bairro
+                FROM tb_fat_cad_dom_familia fdom
+                JOIN tb_fat_cad_domiciliar d_addr
+                    ON d_addr.co_seq_fat_cad_domiciliar = fdom.co_fat_cad_domiciliar
+                WHERE fdom.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                  AND {$famFilters}
+                ORDER BY fdom.co_fat_cad_domiciliar DESC
+                LIMIT 1
+            ) addr_dom ON true";
+        }
+
+        // Query completa: LATERAL direto no FROM + nu_hora + nome do cidadão
         $sqlFull = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
@@ -1351,15 +1496,11 @@ class VisitaAcsController extends MonitorApsBaseController
                 t.nu_hora                        AS hora,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
                 v.nu_micro_area                  AS micro_area,
-                ci.no_cidadao                    AS cidadao
+                {$citizenExpr}                   AS cidadao,
+                {$addrCols}
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
-            LEFT JOIN LATERAL (
-                SELECT {$cadNomeSelect} AS no_cidadao
-                FROM   tb_fat_cad_individual
-                WHERE  co_fat_cidadao_pec = v.co_fat_cidadao_pec
-                LIMIT  1
-            ) ci ON true
+            {$addrLateral}
             WHERE {$where}
               AND v.nu_latitude  IS NOT NULL
               AND v.nu_longitude IS NOT NULL
@@ -1379,9 +1520,11 @@ class VisitaAcsController extends MonitorApsBaseController
                 t.dt_registro                    AS data,
                 d.co_seq_dim_desfecho_visita     AS desfecho,
                 v.nu_micro_area                  AS micro_area,
-                {$citizenExpr}                   AS cidadao
+                {$citizenExpr}                   AS cidadao,
+                {$addrCols}
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
+            {$addrLateral}
             WHERE {$where}
               AND v.nu_latitude  IS NOT NULL
               AND v.nu_longitude IS NOT NULL
@@ -1389,6 +1532,8 @@ class VisitaAcsController extends MonitorApsBaseController
         ";
 
         $sql = $this->hasColumn('tb_dim_tempo', 'nu_hora') ? $sqlFull : $sqlBase;
+
+        \Illuminate\Support\Facades\Log::info('VisitaAcs.mapa SQL: ' . preg_replace('/\s+/', ' ', $sql));
 
         try {
             $rows = $this->db()->select($sql, $params);
@@ -1398,18 +1543,22 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         $pontos = array_map(fn ($r) => [
-            'id' => (int) $r->id,
-            'lat' => (float) $r->lat,
-            'lng' => (float) $r->lng,
-            'agente' => $r->agente,
-            'cbo' => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
-            'equipe_ine' => $r->equipe_ine,
-            'equipe' => $r->equipe_nome,
-            'cidadao' => $r->cidadao ?? null,
-            'data' => $r->data,
-            'hora' => isset($r->hora) ? (int) $r->hora : null,
-            'desfecho' => (int) $r->desfecho,
-            'micro_area' => $r->micro_area,
+            'id'           => (int) $r->id,
+            'lat'          => (float) $r->lat,
+            'lng'          => (float) $r->lng,
+            'agente'       => $r->agente,
+            'cbo'          => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
+            'equipe_ine'   => $r->equipe_ine,
+            'equipe'       => $r->equipe_nome,
+            'cidadao'      => $r->cidadao ?? null,
+            'logradouro'   => $r->logradouro   ?? null,
+            'num_endereco' => $r->num_endereco  ?? null,
+            'complemento'  => $r->complemento   ?? null,
+            'bairro'       => $r->bairro         ?? null,
+            'data'         => $r->data,
+            'hora'         => isset($r->hora) ? (int) $r->hora : null,
+            'desfecho'     => (int) $r->desfecho,
+            'micro_area'   => $r->micro_area,
         ], $rows);
 
         return response()->json(['pontos' => $pontos]);
@@ -1530,9 +1679,10 @@ class VisitaAcsController extends MonitorApsBaseController
             } catch (\Throwable) {}
         }
 
-        $domicilioMap = $this->domicilioCadastroStatsPorAgente($request->ine, $request->agente);
+        $domicilioMap      = $this->domicilioCadastroStatsPorAgente($request->ine, $request->agente);
+        $domicilioVisitMap = $this->domicilioVisitaStatsPorAgente($ano, $mes, $request->ine, $request->agente);
 
-        $agentes = array_map(function ($r) use ($hasFamilies, $famTotalMap, $domicilioMap) {
+        $agentes = array_map(function ($r) use ($hasFamilies, $famTotalMap, $domicilioMap, $domicilioVisitMap) {
             $famAcomp    = $hasFamilies ? (int) ($r->familias_acompanhadas ?? 0) : null;
             $famTotal    = $hasFamilies ? ($famTotalMap[$r->agente ?? ''] ?? 0) : null;
             $pctFamilias = ($hasFamilies && $famTotal > 0)
@@ -1543,8 +1693,16 @@ class VisitaAcsController extends MonitorApsBaseController
                 'domicilios_com_moradores' => null,
                 'domicilios_casa_vazia' => null,
             ];
-            $pctDomicilios = (($domicilios['domicilios_total'] ?? 0) > 0)
-                ? (int) round(($domicilios['domicilios_com_moradores'] ?? 0) / $domicilios['domicilios_total'] * 100)
+            $domVisita = $domicilioVisitMap[$r->agente ?? ''] ?? [
+                'domicilios_visitados'    => null,
+                'domicilios_acompanhados' => null,
+                'domicilios_recusados'    => null,
+                'domicilios_ausentes'     => null,
+            ];
+            $domComMoradores = (int) ($domicilios['domicilios_com_moradores'] ?? 0);
+            $domAcompanhados = $domVisita['domicilios_acompanhados'] ?? null;
+            $pctDomAcomp = ($domComMoradores > 0 && $domAcompanhados !== null)
+                ? (int) round($domAcompanhados / $domComMoradores * 100)
                 : null;
 
             return [
@@ -1563,10 +1721,14 @@ class VisitaAcsController extends MonitorApsBaseController
                 'familias_total'        => $famTotal,
                 'familias_acompanhadas' => $famAcomp,
                 'pct_familias'          => $pctFamilias,
-                'domicilios_total' => $domicilios['domicilios_total'],
-                'domicilios_com_moradores' => $domicilios['domicilios_com_moradores'],
-                'domicilios_casa_vazia' => $domicilios['domicilios_casa_vazia'],
-                'pct_domicilios_com_moradores' => $pctDomicilios,
+                'domicilios_visitados'        => $domVisita['domicilios_visitados'],
+                'domicilios_acompanhados'     => $domAcompanhados,
+                'domicilios_recusados_visita' => $domVisita['domicilios_recusados'],
+                'domicilios_ausentes_visita'  => $domVisita['domicilios_ausentes'],
+                'pct_dom_acompanhados'        => $pctDomAcomp,
+                'domicilios_total'            => $domicilios['domicilios_total'],
+                'domicilios_com_moradores'    => $domicilios['domicilios_com_moradores'],
+                'domicilios_casa_vazia'       => $domicilios['domicilios_casa_vazia'],
             ];
         }, $rows);
 
@@ -1601,18 +1763,56 @@ class VisitaAcsController extends MonitorApsBaseController
         $where .= " AND t.nu_ano IN ({$placeholders})";
         $params = array_merge($params, $anos);
 
-        try {
-            $rows = $this->db()->select("
+        $hasDom = $this->hasDomicilioCadastro()
+            && $this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cidadao_pec');
+
+        $familiaFilters  = $this->domicilioFamiliaFilters('f');
+        $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
+            ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
+            : 'TRUE';
+
+        if ($hasDom) {
+            $sql = "
+                WITH citizen_domicilio AS (
+                    SELECT DISTINCT ON (f.co_fat_cidadao_pec)
+                        f.co_fat_cidadao_pec,
+                        f.co_fat_cad_domiciliar
+                    FROM tb_fat_cad_dom_familia f
+                    WHERE {$familiaFilters}
+                    ORDER BY f.co_fat_cidadao_pec, f.co_fat_cad_domiciliar DESC
+                )
                 SELECT
                     t.nu_ano  AS ano,
                     t.nu_mes  AS mes,
-                    COUNT(*)  AS total
+                    COUNT(DISTINCT dom.co_seq_fat_cad_domiciliar) AS total
+                FROM tb_fat_visita_domiciliar v
+                {$this->baseJoins()}
+                LEFT JOIN citizen_domicilio cd
+                    ON cd.co_fat_cidadao_pec = v.co_fat_cidadao_pec
+                LEFT JOIN tb_fat_cad_domiciliar dom
+                    ON dom.co_seq_fat_cad_domiciliar = cd.co_fat_cad_domiciliar
+                WHERE {$where}
+                  AND dom.co_seq_fat_cad_domiciliar IS NOT NULL
+                  AND {$regularDomicilio}
+                GROUP BY t.nu_ano, t.nu_mes
+                ORDER BY t.nu_ano, t.nu_mes
+            ";
+        } else {
+            $sql = "
+                SELECT
+                    t.nu_ano  AS ano,
+                    t.nu_mes  AS mes,
+                    COUNT(DISTINCT v.co_fat_cidadao_pec) AS total
                 FROM tb_fat_visita_domiciliar v
                 {$this->baseJoins()}
                 WHERE {$where}
                 GROUP BY t.nu_ano, t.nu_mes
                 ORDER BY t.nu_ano, t.nu_mes
-            ", $params);
+            ";
+        }
+
+        try {
+            $rows = $this->db()->select($sql, $params);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('VisitaAcs.evolucao: ' . $e->getMessage());
             return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);

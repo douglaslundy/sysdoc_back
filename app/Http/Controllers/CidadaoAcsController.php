@@ -42,13 +42,14 @@ class CidadaoAcsController extends MonitorApsBaseController
     public function index(Request $request): JsonResponse
     {
         $request->validate([
-            'ine'             => 'nullable|string',
-            'profissional_id' => 'nullable|integer',
-            'agente'          => 'nullable|string|max:255',
-            'condicao'        => 'nullable|string|in:gestante,has,dm,idoso',
-            'busca'           => 'nullable|string|min:3|max:100',
-            'page'            => 'nullable|integer|min:1',
-            'per_page'        => 'nullable|integer|min:10|max:200',
+            'ine'              => 'nullable|string',
+            'profissional_id'  => 'nullable|integer',
+            'agente'           => 'nullable|string|max:255',
+            'condicao'         => 'nullable|string|in:gestante,has,dm,idoso',
+            'busca'            => 'nullable|string|min:3|max:100',
+            'multi_domicilio'  => 'nullable|boolean',
+            'page'             => 'nullable|integer|min:1',
+            'per_page'         => 'nullable|integer|min:10|max:200',
         ]);
 
         $ine            = $request->query('ine');
@@ -56,6 +57,7 @@ class CidadaoAcsController extends MonitorApsBaseController
         $agente         = $request->query('agente');
         $condicao       = $request->query('condicao');
         $busca          = $request->query('busca');
+        $multiDomicilio = filter_var($request->query('multi_domicilio', false), FILTER_VALIDATE_BOOLEAN);
         $page           = max(1, (int) ($request->query('page', 1)));
         $perPage        = min(200, max(10, (int) ($request->query('per_page', 50))));
         $offset         = ($page - 1) * $perPage;
@@ -89,6 +91,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                 : '';
             $pecNomeCol  = $hasPec ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['no_cidadao', 'no_nome']) : null;
             $cidNomeCol  = $cidadaoJoin ? $this->firstExistingColumn('tb_cidadao', ['no_cidadao', 'no_nome']) : null;
+            $pecCnsCol   = $pecJoin ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['nu_cns', 'co_cns']) : null;
             $nomeParts   = [];
             if ($cidNomeCol) {
                 $nomeParts[] = "NULLIF(CASE WHEN cid.{$cidNomeCol} ~ '^[0-9a-f]{64}$' THEN NULL ELSE cid.{$cidNomeCol} END, '')";
@@ -102,7 +105,14 @@ class CidadaoAcsController extends MonitorApsBaseController
             $nomeParts[] = "'Nome não disponível'";
             $nomeExpr = count($nomeParts) > 1 ? 'COALESCE(' . implode(', ', $nomeParts) . ')' : $nomeParts[0];
             $cpfExpr  = $cpfCol ? "fci.{$cpfCol}" : 'NULL::text';
-            $cnsExpr  = $cnsCol ? "fci.{$cnsCol}" : 'NULL::text';
+            // fci.nu_cns armazena '0' como sentinela quando CNS não foi digitado.
+            // pec.nu_cns tem o CNS real. Priorizamos pec e filtramos '0' com NULLIF.
+            $cnsParts = [];
+            if ($pecCnsCol) $cnsParts[] = "NULLIF(TRIM(pec.{$pecCnsCol}), '0')";
+            if ($cnsCol)    $cnsParts[] = "NULLIF(TRIM(fci.{$cnsCol}), '0')";
+            $cnsExpr  = count($cnsParts) > 0
+                ? 'COALESCE(' . implode(', ', $cnsParts) . ')'
+                : 'NULL::text';
             $hasExpr  = $hasCol ? "fci.{$hasCol}" : '0';
             $dmExpr   = $dmCol ? "fci.{$dmCol}" : '0';
 
@@ -123,6 +133,87 @@ class CidadaoAcsController extends MonitorApsBaseController
             }
 
             $gestExpr = $stGestCol ? "fci.{$stGestCol}" : 'NULL';
+
+            // ── Múltiplos domicílios ──────────────────────────────────────────
+            $hasFamilia    = $this->hasTable('tb_fat_cad_dom_familia')
+                && $this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cidadao_pec')
+                && $this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cad_domiciliar');
+            $hasDomiciliar = $this->hasTable('tb_fat_cad_domiciliar')
+                && $this->hasColumn('tb_fat_cad_domiciliar', 'co_seq_fat_cad_domiciliar');
+
+            $multiDomicilioFilter = null;
+
+            if ($hasFamilia && $hasDomiciliar) {
+                $domLogCol    = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_logradouro', 'ds_logradouro', 'logradouro']);
+                $domNumCol    = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['nu_num_logradouro', 'nu_numero', 'nu_endereco']);
+                $domBairroCol = $this->firstExistingColumn('tb_fat_cad_domiciliar', ['no_bairro', 'ds_bairro', 'bairro']);
+
+                // Filtra valores hasheados (MD5/SHA-256) que o e-SUS armazena em vez do texto real
+                $hashFilter = fn(string $col) =>
+                    "NULLIF(CASE WHEN d.{$col}::text ~ '^[0-9a-f]{32,64}$' THEN NULL ELSE NULLIF(TRIM(d.{$col}::text), '') END, '')";
+
+                $concatParts = array_filter([
+                    $domLogCol    ? $hashFilter($domLogCol)    : null,
+                    $domNumCol    ? $hashFilter($domNumCol)    : null,
+                    $domBairroCol ? $hashFilter($domBairroCol) : null,
+                ]);
+
+                // Quando campos de endereço estiverem todos hasheados/nulos, exibe ID do domicílio como fallback
+                $addrExpr = count($concatParts) > 0
+                    ? 'NULLIF(CONCAT_WS(\', \', ' . implode(', ', $concatParts) . '), \'\')'
+                    : 'NULL';
+                $concatExpr = ($addrExpr !== 'NULL')
+                    ? "COALESCE({$addrExpr}, 'Domicílio #' || d.co_seq_fat_cad_domiciliar::text)"
+                    : "'Domicílio #' || d.co_seq_fat_cad_domiciliar::text";
+
+                // Filtros de cadastro ativo — padrão das tabelas DW do e-SUS
+                // co_dim_tempo_validade = 30001231 → registro vigente (sem data de fim)
+                // st_recusa / st_mudou → membro não recusou cadastro e não mudou
+                $famFilters = [];
+                if ($this->hasColumn('tb_fat_cad_dom_familia', 'co_dim_tempo_validade')) {
+                    $famFilters[] = 'f.co_dim_tempo_validade = 30001231';
+                }
+                if ($this->hasColumn('tb_fat_cad_dom_familia', 'st_recusa_cadastro')) {
+                    $famFilters[] = 'COALESCE(f.st_recusa_cadastro, 0) = 0';
+                }
+                if ($this->hasColumn('tb_fat_cad_dom_familia', 'st_mudou')) {
+                    $famFilters[] = 'COALESCE(f.st_mudou, 0) = 0';
+                }
+                $famAtivoFilter = $famFilters ? ('AND ' . implode(' AND ', $famFilters)) : '';
+
+                $domFilters = [];
+                if ($this->hasColumn('tb_fat_cad_domiciliar', 'co_dim_tempo_validade')) {
+                    $domFilters[] = 'd.co_dim_tempo_validade = 30001231';
+                }
+                if ($this->hasColumn('tb_fat_cad_domiciliar', 'st_recusa_cadastro')) {
+                    $domFilters[] = 'COALESCE(d.st_recusa_cadastro, 0) = 0';
+                }
+                $domAtivoFilter = $domFilters ? ('AND ' . implode(' AND ', $domFilters)) : '';
+
+                $domiciliosExpr = "(
+                    SELECT STRING_AGG(DISTINCT {$concatExpr}, ' | ')
+                    FROM tb_fat_cad_dom_familia f
+                    JOIN tb_fat_cad_domiciliar d
+                        ON d.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar
+                    WHERE f.co_fat_cidadao_pec = fci.co_fat_cidadao_pec
+                      {$famAtivoFilter}
+                      {$domAtivoFilter}
+                )";
+
+                // Filtro de múltiplos domicílios: mesmos joins e filtros de ativo para consistência
+                $multiDomicilioFilter = "(
+                    SELECT COUNT(DISTINCT f.co_fat_cad_domiciliar)
+                    FROM tb_fat_cad_dom_familia f
+                    JOIN tb_fat_cad_domiciliar d
+                        ON d.co_seq_fat_cad_domiciliar = f.co_fat_cad_domiciliar
+                    WHERE f.co_fat_cidadao_pec = base.co_fat_cidadao_pec
+                      {$famAtivoFilter}
+                      {$domAtivoFilter}
+                ) > 1";
+            } else {
+                $domiciliosExpr = 'NULL::text';
+            }
+
             $condicaoColumns = [
                 'gestante' => 'st_gestante',
                 'has'      => 'st_has',
@@ -147,6 +238,9 @@ class CidadaoAcsController extends MonitorApsBaseController
                 $outerWhere   .= ' AND base.agente = ?';
                 $outerParams[] = $agente;
             }
+            if ($multiDomicilio && $multiDomicilioFilter) {
+                $outerWhere .= " AND {$multiDomicilioFilter}";
+            }
             if ($busca) {
                 $b        = trim($busca);
                 $digits   = preg_replace('/\D/', '', $b);
@@ -158,6 +252,10 @@ class CidadaoAcsController extends MonitorApsBaseController
                 }
                 if ($cnsCol) {
                     $searchParts[] = "fci.{$cnsCol} = ?";
+                    $params[] = $digits;
+                }
+                if ($pecCnsCol) {
+                    $searchParts[] = "pec.{$pecCnsCol} = ?";
                     $params[] = $digits;
                 }
                 $where .= ' AND (' . implode(' OR ', $searchParts) . ')';
@@ -181,6 +279,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                     base.st_has,
                     base.st_dm,
                     base.st_idoso,
+                    base.domicilios,
                     COUNT(*) OVER() AS total_count
                 FROM (
                     SELECT
@@ -200,6 +299,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                         {$hasExpr}       AS st_has,
                         {$dmExpr}        AS st_dm,
                         {$idosoExpr}     AS st_idoso,
+                        {$domiciliosExpr} AS domicilios,
                         ROW_NUMBER() OVER (
                             PARTITION BY fci.co_fat_cidadao_pec
                             ORDER BY fci.co_dim_tempo DESC NULLS LAST, fci.co_seq_fat_cad_individual DESC
