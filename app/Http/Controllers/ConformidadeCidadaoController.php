@@ -101,7 +101,7 @@ class ConformidadeCidadaoController extends Controller
         $sync->update(['aplicado_por' => $request->user()->id]);
         AplicarSincronizacaoJob::dispatch($sync);
 
-        return response()->json(['message' => 'Aplicação iniciada.'], 202);
+        return response()->json(['job_id' => $sync->job_id, 'message' => 'Aplicação iniciada.'], 202);
     }
 
     public function historico(Request $request): JsonResponse
