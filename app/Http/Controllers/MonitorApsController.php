@@ -107,6 +107,7 @@ class MonitorApsController extends MonitorApsBaseController
         return response()->json([
             'is_rt'     => $isRt,
             'all_teams' => $allTeams,
+            'restrito'  => $restrito,
             'equipes'   => $restrito
                 ? $user->equipeAps->map(fn($e) => [
                     'nu_ine'    => $e->nu_ine,
