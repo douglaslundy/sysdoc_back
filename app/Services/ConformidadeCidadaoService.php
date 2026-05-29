@@ -270,29 +270,37 @@ class ConformidadeCidadaoService
         }
     }
 
+    private function quoteCol(?string $col): string
+    {
+        if ($col === null) return 'NULL';
+        return '"' . str_replace('"', '', $col) . '"';
+    }
+
     private function chunkEsus(array $cols, callable $callback): void
     {
-        $cpfExpr    = $cols['cpf']        ? "fci.{$cols['cpf']}"        : 'NULL';
-        $cnsExpr    = $cols['cns']        ? "fci.{$cols['cns']}"        : 'NULL';
-        $nomeExpr   = $cols['nome']       ? "fci.{$cols['nome']}"       : 'NULL';
-        $dtNascExpr = $cols['dt_nasc']    ? "fci.{$cols['dt_nasc']}"    : 'NULL';
-        $falExpr    = $cols['st_faleceu'] ? "fci.{$cols['st_faleceu']}" : 'NULL';
-        $obitoExpr  = $cols['dt_obito']   ? "fci.{$cols['dt_obito']}"   : 'NULL';
-        $telExpr    = $cols['telefone']   ? "fci.{$cols['telefone']}"   : 'NULL';
-        $updExpr    = $cols['atualizado'] ? "fci.{$cols['atualizado']}" : 'NULL';
+        $cpfExpr    = $cols['cpf']        ? 'fci.' . $this->quoteCol($cols['cpf'])        : 'NULL';
+        $cnsExpr    = $cols['cns']        ? 'fci.' . $this->quoteCol($cols['cns'])        : 'NULL';
+        $nomeExpr   = $cols['nome']       ? 'fci.' . $this->quoteCol($cols['nome'])       : 'NULL';
+        $dtNascExpr = $cols['dt_nasc']    ? 'fci.' . $this->quoteCol($cols['dt_nasc'])    : 'NULL';
+        $falExpr    = $cols['st_faleceu'] ? 'fci.' . $this->quoteCol($cols['st_faleceu']) : 'NULL';
+        $obitoExpr  = $cols['dt_obito']   ? 'fci.' . $this->quoteCol($cols['dt_obito'])   : 'NULL';
+        $telExpr    = $cols['telefone']   ? 'fci.' . $this->quoteCol($cols['telefone'])   : 'NULL';
+        $updExpr    = $cols['atualizado'] ? 'fci.' . $this->quoteCol($cols['atualizado']) : 'NULL';
 
         $domJoin = '';
         $logExpr = 'NULL'; $numExpr = 'NULL'; $compExpr = 'NULL';
         $cepExpr = 'NULL'; $baiExpr = 'NULL'; $munExpr  = 'NULL';
 
         if ($cols['hasDom'] && $cols['dom_fk'] && $cols['dom_pk']) {
-            $domJoin = "LEFT JOIN tb_fat_cad_domiciliar dom ON dom.{$cols['dom_pk']} = fci.{$cols['dom_fk']}";
-            if ($cols['logradouro'])  $logExpr  = "dom.{$cols['logradouro']}";
-            if ($cols['numero'])      $numExpr  = "dom.{$cols['numero']}";
-            if ($cols['complemento']) $compExpr = "dom.{$cols['complemento']}";
-            if ($cols['cep'])         $cepExpr  = "dom.{$cols['cep']}";
-            if ($cols['bairro'])      $baiExpr  = "dom.{$cols['bairro']}";
-            if ($cols['municipio'])   $munExpr  = "dom.{$cols['municipio']}";
+            $domPk   = $this->quoteCol($cols['dom_pk']);
+            $domFk   = $this->quoteCol($cols['dom_fk']);
+            $domJoin = "LEFT JOIN tb_fat_cad_domiciliar dom ON dom.{$domPk} = fci.{$domFk}";
+            if ($cols['logradouro'])  $logExpr  = 'dom.' . $this->quoteCol($cols['logradouro']);
+            if ($cols['numero'])      $numExpr  = 'dom.' . $this->quoteCol($cols['numero']);
+            if ($cols['complemento']) $compExpr = 'dom.' . $this->quoteCol($cols['complemento']);
+            if ($cols['cep'])         $cepExpr  = 'dom.' . $this->quoteCol($cols['cep']);
+            if ($cols['bairro'])      $baiExpr  = 'dom.' . $this->quoteCol($cols['bairro']);
+            if ($cols['municipio'])   $munExpr  = 'dom.' . $this->quoteCol($cols['municipio']);
         }
 
         $chunkSize = 500;
@@ -432,12 +440,20 @@ class ConformidadeCidadaoService
                 });
             });
 
+            $counts = $sync->itens()
+                ->selectRaw('acao, COUNT(*) as n')
+                ->where('aplicado', true)
+                ->groupBy('acao')
+                ->pluck('n', 'acao');
+
+            $errosCount = $sync->itens()->whereNotNull('erro')->count();
+
             $sync->update([
                 'status'             => 'completed',
-                'result_criados'     => $criados,
-                'result_atualizados' => $atualizados,
-                'result_obitos'      => $obitos,
-                'result_erros'       => $erros,
+                'result_criados'     => $counts['criar']     ?? 0,
+                'result_atualizados' => $counts['atualizar'] ?? 0,
+                'result_obitos'      => $counts['obito']     ?? 0,
+                'result_erros'       => $errosCount,
                 'aplicado_em'        => now(),
             ]);
 
