@@ -36,6 +36,8 @@ class UserRequest extends FormRequest
             'email_verified_at' => ['nullable', 'date'],
             'active' => ['Boolean'],
             'inactive_date' => ['nullable', 'date'],
+            'is_rt_psf'    => ['nullable', 'boolean'],
+            'rt_all_teams' => ['nullable', 'boolean'],
         ];
     }
 
