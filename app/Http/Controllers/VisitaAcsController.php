@@ -30,8 +30,7 @@ class VisitaAcsController extends MonitorApsBaseController
         int $ano, int $mes, ?string $ine,
         ?string $agentName = null,
         ?string $desfecho = null,
-        ?string $hasGeo = null,
-        ?array $allowedInes = null
+        ?string $hasGeo = null
     ): array {
         $cbos = implode("','", self::ACS_CBOS);
         $where = "c.nu_cbo IN ('{$cbos}') AND t.nu_ano = ? AND t.nu_mes = ?";
@@ -40,14 +39,6 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($ine) {
             $where .= ' AND e.nu_ine = ?';
             $params[] = $ine;
-        } elseif ($allowedInes !== null) {
-            if (empty($allowedInes)) {
-                $where .= ' AND 1=0';
-            } else {
-                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
-                $where .= " AND e.nu_ine IN ({$ph})";
-                $params = array_merge($params, $allowedInes);
-            }
         }
 
         if ($agentName) {
@@ -76,7 +67,8 @@ class VisitaAcsController extends MonitorApsBaseController
         ?string $ine,
         ?string $agentName = null,
         ?string $desfecho = null,
-        ?string $hasGeo = null
+        ?string $hasGeo = null,
+        ?array $allowedInes = null
     ): array {
         $cbos = implode("','", self::ACS_CBOS);
         $where = "c.nu_cbo IN ('{$cbos}')";
@@ -85,6 +77,14 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($ine) {
             $where .= ' AND e.nu_ine = ?';
             $params[] = $ine;
+        } elseif ($allowedInes !== null) {
+            if (empty($allowedInes)) {
+                $where .= ' AND 1=0';
+            } else {
+                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                $where .= " AND e.nu_ine IN ({$ph})";
+                $params = array_merge($params, $allowedInes);
+            }
         }
 
         if ($agentName) {
@@ -340,7 +340,7 @@ class VisitaAcsController extends MonitorApsBaseController
         return $conds ? implode(' AND ', $conds) : 'TRUE';
     }
 
-    private function domicilioCadastroStats(?string $ine, ?string $agentName): array
+    private function domicilioCadastroStats(?string $ine, ?string $agentName, ?array $allowedInes = null): array
     {
         $empty = [
             'domicilios_total' => null,
@@ -365,6 +365,14 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($ine) {
             $where[] = 'de.nu_ine = ?';
             $params[] = $ine;
+        } elseif ($allowedInes !== null) {
+            if (empty($allowedInes)) {
+                $where[] = '1=0';
+            } else {
+                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                $where[] = "de.nu_ine IN ({$ph})";
+                $params = array_merge($params, $allowedInes);
+            }
         }
         if ($agentName) {
             $where[] = 'dp.no_profissional = ?';
@@ -405,7 +413,7 @@ class VisitaAcsController extends MonitorApsBaseController
         ];
     }
 
-    private function domicilioCadastroStatsPorAgente(?string $ine, ?string $agentName): array
+    private function domicilioCadastroStatsPorAgente(?string $ine, ?string $agentName, ?array $allowedInes = null): array
     {
         if (!$this->hasDomicilioCadastro()) {
             return [];
@@ -423,6 +431,14 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($ine) {
             $where[] = 'de.nu_ine = ?';
             $params[] = $ine;
+        } elseif ($allowedInes !== null) {
+            if (empty($allowedInes)) {
+                $where[] = '1=0';
+            } else {
+                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                $where[] = "de.nu_ine IN ({$ph})";
+                $params = array_merge($params, $allowedInes);
+            }
         }
         if ($agentName) {
             $where[] = 'dp.no_profissional = ?';
@@ -470,7 +486,7 @@ class VisitaAcsController extends MonitorApsBaseController
         return $map;
     }
 
-    private function domicilioVisitaStats(int $ano, int $mes, ?string $ine, ?string $agentName): array
+    private function domicilioVisitaStats(int $ano, int $mes, ?string $ine, ?string $agentName, ?array $allowedInes = null): array
     {
         $empty = [
             'domicilios_visitados' => null,
@@ -483,7 +499,7 @@ class VisitaAcsController extends MonitorApsBaseController
             return $empty;
         }
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, null, null, $allowedInes);
         $familiaFilters = $this->domicilioFamiliaFilters('f');
         $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
             ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
@@ -542,13 +558,13 @@ class VisitaAcsController extends MonitorApsBaseController
         ];
     }
 
-    private function domicilioVisitaStatsPorAgente(int $ano, int $mes, ?string $ine, ?string $agentName): array
+    private function domicilioVisitaStatsPorAgente(int $ano, int $mes, ?string $ine, ?string $agentName, ?array $allowedInes = null): array
     {
         if (!$this->hasDomicilioCadastro() || !$this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cidadao_pec')) {
             return [];
         }
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, null, null, $allowedInes);
         $familiaFilters = $this->domicilioFamiliaFilters('f');
         $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
             ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
@@ -789,7 +805,11 @@ class VisitaAcsController extends MonitorApsBaseController
         $page = (int) ($request->page ?? 1);
         $offset = ($page - 1) * $perPage;
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
 
         try {
             $rows = $this->db()->select("
@@ -857,11 +877,16 @@ class VisitaAcsController extends MonitorApsBaseController
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
         [$where, $params] = $this->buildWhere(
-            $ano, $mes, $request->ine,
+            $ano, $mes, $ine,
             $request->agente,
             $request->desfecho,
             $request->has_geo,
+            $allowedInes,
         );
 
         try {
@@ -881,12 +906,12 @@ class VisitaAcsController extends MonitorApsBaseController
             return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
         }
 
-        $domicilioCadastro = $this->domicilioCadastroStats($request->ine, $request->agente);
-        $domicilioVisitas  = $this->domicilioVisitaStats($ano, $mes, $request->ine, $request->agente);
+        $domicilioCadastro = $this->domicilioCadastroStats($ine, $request->agente, $allowedInes);
+        $domicilioVisitas  = $this->domicilioVisitaStats($ano, $mes, $ine, $request->agente, $allowedInes);
 
         if (false) {
             // Breakdown de famílias visitadas no mês (sem filtro de desfecho/geo)
-            [$familyWhere, $familyParams] = $this->buildWhere($ano, $mes, $request->ine, $request->agente);
+            [$familyWhere, $familyParams] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
 
             try {
                 $famRow = $this->db()->selectOne("
@@ -989,7 +1014,11 @@ class VisitaAcsController extends MonitorApsBaseController
         $page = (int) ($request->page ?? 1);
         $offset = ($page - 1) * $perPage;
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, null, null, null, $allowedInes);
 
         if ($request->agente) {
             $where .= ' AND p.no_profissional ILIKE ?';
@@ -1345,7 +1374,11 @@ class VisitaAcsController extends MonitorApsBaseController
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $request->ine);
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, null, null, null, $allowedInes);
 
         // Resolve column names for CPF/CNS/nome based on database schema.
         $visitCpfCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_cpf_cidadao', 'nu_cpf']);
@@ -1580,15 +1613,20 @@ class VisitaAcsController extends MonitorApsBaseController
     /**
      * GET /visitas/equipes
      */
-    public function equipes(): JsonResponse
+    public function equipes(Request $request): JsonResponse
     {
+        $allowedInes = $this->resolveAllowedInes($request);
+        [$ineWhere, $ineParams] = $this->buildIneWhere(null, $allowedInes, 'nu_ine');
+
+        $extraWhere = $ineWhere ? " AND {$ineWhere}" : '';
+
         try {
             $rows = $this->db()->select("
                 SELECT nu_ine AS ine, no_equipe AS name
                 FROM tb_dim_equipe
-                WHERE st_registro_valido = 1 AND nu_ine != '-'
+                WHERE st_registro_valido = 1 AND nu_ine != '-'{$extraWhere}
                 ORDER BY no_equipe
-            ");
+            ", $ineParams);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('VisitaAcs.equipes: ' . $e->getMessage());
             return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
@@ -1615,11 +1653,16 @@ class VisitaAcsController extends MonitorApsBaseController
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
         [$where, $params] = $this->buildWhere(
-            $ano, $mes, $request->ine,
+            $ano, $mes, $ine,
             $request->agente,
             $request->desfecho,
             $request->has_geo,
+            $allowedInes,
         );
 
         $familyExpr = $this->familyIdExpr();
@@ -1664,9 +1707,17 @@ class VisitaAcsController extends MonitorApsBaseController
                 $totFamWhere  = 'ci.st_ficha_inativa = 0 AND de.st_registro_valido = 1';
                 $totFamParams = [];
 
-                if ($request->ine) {
+                if ($ine) {
                     $totFamWhere  .= ' AND de.nu_ine = ?';
-                    $totFamParams[] = $request->ine;
+                    $totFamParams[] = $ine;
+                } elseif ($allowedInes !== null) {
+                    if (empty($allowedInes)) {
+                        $totFamWhere .= ' AND 1=0';
+                    } else {
+                        $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                        $totFamWhere .= " AND de.nu_ine IN ({$ph})";
+                        $totFamParams = array_merge($totFamParams, $allowedInes);
+                    }
                 }
                 if ($request->agente) {
                     $totFamWhere  .= ' AND dp.no_profissional = ?';
@@ -1692,8 +1743,8 @@ class VisitaAcsController extends MonitorApsBaseController
             } catch (\Throwable) {}
         }
 
-        $domicilioMap      = $this->domicilioCadastroStatsPorAgente($request->ine, $request->agente);
-        $domicilioVisitMap = $this->domicilioVisitaStatsPorAgente($ano, $mes, $request->ine, $request->agente);
+        $domicilioMap      = $this->domicilioCadastroStatsPorAgente($ine, $request->agente, $allowedInes);
+        $domicilioVisitMap = $this->domicilioVisitaStatsPorAgente($ano, $mes, $ine, $request->agente, $allowedInes);
 
         $agentes = array_map(function ($r) use ($hasFamilies, $famTotalMap, $domicilioMap, $domicilioVisitMap) {
             $famAcomp    = $hasFamilies ? (int) ($r->familias_acompanhadas ?? 0) : null;
@@ -1797,11 +1848,16 @@ class VisitaAcsController extends MonitorApsBaseController
             ? [(int) $request->ano]
             : [$anoAtual, $anoAtual - 1, $anoAtual - 2];
 
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
         [$where, $params] = $this->buildWhereFilters(
-            $request->ine,
+            $ine,
             $request->agente,
             $request->desfecho,
             $request->has_geo,
+            $allowedInes,
         );
 
         $placeholders = implode(',', array_fill(0, count($anos), '?'));
@@ -1959,7 +2015,9 @@ class VisitaAcsController extends MonitorApsBaseController
      */
     public function responsabilidade(Request $request): JsonResponse
     {
-        $ine = $request->query('ine');
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
 
         try {
             $db = $this->db();
@@ -1988,6 +2046,14 @@ class VisitaAcsController extends MonitorApsBaseController
             if ($ine) {
                 $sql    .= ' AND de.nu_ine = ?';
                 $params[] = $ine;
+            } elseif ($allowedInes !== null) {
+                if (empty($allowedInes)) {
+                    $sql .= ' AND 1=0';
+                } else {
+                    $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                    $sql .= " AND de.nu_ine IN ({$ph})";
+                    $params = array_merge($params, $allowedInes);
+                }
             }
 
             $sql .= '
