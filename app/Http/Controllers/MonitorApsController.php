@@ -193,13 +193,27 @@ class MonitorApsController extends MonitorApsBaseController
     {
         set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
+        $allowedInes    = $this->resolveAllowedInes($request);
+        $restrictSuffix = $this->cacheRestrictSuffix($allowedInes);
         try {
-            $data = Cache::remember("aps_repasse_{$ano}_{$quad}", 600, function () use ($ano, $quad) {
+            $data = Cache::remember("aps_repasse_{$ano}_{$quad}{$restrictSuffix}", 600, function () use ($ano, $quad, $allowedInes) {
                 $estrato  = $this->apsConfig()->estrato_ied;
-                $equipes  = $this->db()->select(
-                    'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
-                );
-                $vinculos = $this->calcularVinculo($ano, $quad);
+                [$ineWhere, $ineBindings] = $this->buildIneWhere(null, $allowedInes, 'nu_ine');
+                $equipeSql = 'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
+                if ($ineWhere) $equipeSql .= ' AND ' . $ineWhere;
+                $equipeSql .= ' ORDER BY no_equipe';
+                $equipes  = $this->db()->select($equipeSql, $ineBindings);
+
+                if (empty($equipes)) {
+                    return [
+                        'periodo'         => ['ano' => $ano, 'quadrimestre' => $quad],
+                        'estrato_ied'     => $estrato,
+                        'repasse'         => [],
+                        'total_municipal' => 0,
+                    ];
+                }
+
+                $vinculos = $this->calcularVinculo($ano, $quad, null, $allowedInes);
                 $indESF   = $this->calcularESFBatch($equipes, $ano, $quad);
 
                 $classQualidade = $this->mediaClassificacaoPorEquipe($indESF);
