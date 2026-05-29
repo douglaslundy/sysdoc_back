@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use PDO;
@@ -163,5 +164,67 @@ abstract class MonitorApsBaseController extends Controller
                 return false;
             }
         });
+    }
+
+    /**
+     * Retorna null (sem restrição) ou array de INEs permitidos para o usuário.
+     * Definido pelo middleware EnsureEquipeAps.
+     */
+    protected function resolveAllowedInes(Request $request): ?array
+    {
+        return $request->attributes->get('_ines_permitidos');
+    }
+
+    /**
+     * Aborta com 403 se o INE requisitado não estiver na lista de INEs permitidos.
+     * Não faz nada se a lista for null (sem restrição) ou se $ine for null.
+     */
+    protected function assertIneAllowed(Request $request, ?string $ine): void
+    {
+        if ($ine === null) return;
+        $allowed = $this->resolveAllowedInes($request);
+        if ($allowed !== null && !in_array($ine, $allowed, true)) {
+            abort(403, 'Equipe não autorizada.');
+        }
+    }
+
+    /**
+     * Retorna o fragmento WHERE + bindings para filtrar por INE(s).
+     *
+     * Casos:
+     *   - $ine preenchido: filtra exatamente por esse INE.
+     *   - $ine null + $allowedInes null: sem filtro (retorna ['', []]).
+     *   - $ine null + $allowedInes []: WHERE 1=0 (RT sem equipes = sem resultados).
+     *   - $ine null + $allowedInes ['A','B']: WHERE $column IN ('A','B').
+     *
+     * @param string $column  Nome da coluna INE na query (ex: 'e.nu_ine' ou 'nu_ine').
+     */
+    protected function buildIneWhere(?string $ine, ?array $allowedInes, string $column = 'nu_ine'): array
+    {
+        if ($ine !== null) {
+            return ["{$column} = ?", [$ine]];
+        }
+
+        if ($allowedInes === null) {
+            return ['', []];
+        }
+
+        if (empty($allowedInes)) {
+            return ['1=0', []];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($allowedInes), '?'));
+        return ["{$column} IN ({$placeholders})", $allowedInes];
+    }
+
+    /**
+     * Retorna um sufixo para chave de cache que previne colisão entre
+     * usuários com restrições diferentes de equipe.
+     */
+    protected function cacheRestrictSuffix(?array $allowedInes): string
+    {
+        if ($allowedInes === null) return '';
+        if (empty($allowedInes)) return '_r_empty';
+        return '_r' . substr(md5(implode(',', $allowedInes)), 0, 8);
     }
 }
