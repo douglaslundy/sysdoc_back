@@ -14,7 +14,7 @@ class User extends Authenticatable implements JWTSubject
 
     public $timestamps = false;
 
-    protected $fillable = ['profile', 'name', 'email', 'cpf', 'is_driver', 'password', 'active', 'inactive_date'];
+    protected $fillable = ['profile', 'name', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date'];
 
     protected $hidden = ['password'];
 
@@ -41,5 +41,10 @@ class User extends Authenticatable implements JWTSubject
     public function ordinances()
     {
         return $this->hasMany(Ordinance::class, 'user_id');
+    }
+
+    public function equipeAps()
+    {
+        return $this->hasMany(UserEquipeAps::class, 'user_id');
     }
 }
