@@ -13,6 +13,7 @@ use App\Http\Controllers\CampoReferenciaController;
 use App\Http\Controllers\CategoriaExameController;
 use App\Http\Controllers\CidadaoAcsController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ConformidadeCidadaoController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EndedController;
@@ -396,5 +397,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/resultados/{resultado}/campos', [ResultadoExameController::class, 'salvarCampos']);
         Route::post('/resultados/{resultado}/liberar', [ResultadoExameController::class, 'liberar']);
         Route::get('/resultados/{resultado}/pdf', [ResultadoExameController::class, 'downloadPdf']);
+    });
+
+    // Conformidade de Cidadãos — sync Sysdoc x e-SUS PEC
+    Route::prefix('conformidade-cidadao')->group(function () {
+        Route::post('analisar', [ConformidadeCidadaoController::class, 'analisar']);
+        Route::get('status/{job_id}', [ConformidadeCidadaoController::class, 'status']);
+        Route::post('aplicar/{job_id}', [ConformidadeCidadaoController::class, 'aplicar']);
+        Route::get('historico', [ConformidadeCidadaoController::class, 'historico']);
     });
 });
