@@ -240,10 +240,11 @@ class ConformidadeCidadaoService
                             $atualizados++;
                         }
 
-                        if (count($itens) >= 200) {
-                            SincronizacaoItem::insert($itens);
-                            $itens = [];
-                        }
+                    }
+
+                    if (count($itens) >= 200) {
+                        SincronizacaoItem::insert($itens);
+                        $itens = [];
                     }
                 }
             });
@@ -391,6 +392,8 @@ class ConformidadeCidadaoService
                 $addrDiff['district'] = ['de' => $addr?->district, 'para' => $row['bairro']];
             if (($row['cep'] ?? null) && $row['cep'] !== $addr?->zip_code)
                 $addrDiff['zip_code'] = ['de' => $addr?->zip_code, 'para' => $row['cep']];
+            if (($row['complemento'] ?? null) && $row['complemento'] !== $addr?->complement)
+                $addrDiff['complement'] = ['de' => $addr?->complement, 'para' => $row['complemento']];
             if (($row['municipio'] ?? null) && $row['municipio'] !== $addr?->city)
                 $addrDiff['city'] = ['de' => $addr?->city, 'para' => $row['municipio']];
             if (!empty($addrDiff)) $diff['address'] = $addrDiff;
@@ -449,30 +452,28 @@ class ConformidadeCidadaoService
     {
         $payload = $item->payload;
 
-        DB::transaction(function () use ($item, $payload) {
-            $client = Client::create([
-                'name'      => $payload['name'],
-                'cpf'       => $item->cpf,
-                'cns'       => $item->cns,
-                'born_date' => $payload['born_date'],
-                'phone'     => $payload['phone'] ?? null,
-                'sexo'      => $payload['sexo'] ?? 'INDETERMINATE',
-                'active'    => true,
-            ]);
+        $client = Client::create([
+            'name'      => $payload['name'],
+            'cpf'       => $item->cpf,
+            'cns'       => $item->cns,
+            'born_date' => $payload['born_date'],
+            'phone'     => $payload['phone'] ?? null,
+            'sexo'      => $payload['sexo'] ?? 'INDETERMINATE',
+            'active'    => true,
+        ]);
 
-            if (!empty($payload['address']) && !empty($payload['address']['street'])) {
-                Addresses::create([
-                    'id_client'  => $client->id,
-                    'street'     => $payload['address']['street'],
-                    'number'     => $payload['address']['number']     ?? '',
-                    'complement' => $payload['address']['complement'] ?? null,
-                    'zip_code'   => $payload['address']['zip_code']   ?? null,
-                    'district'   => $payload['address']['district']   ?? '',
-                    'city'       => $payload['address']['city']       ?? '',
-                    'active'     => true,
-                ]);
-            }
-        });
+        if (!empty($payload['address']) && !empty($payload['address']['street'])) {
+            Addresses::create([
+                'id_client'  => $client->id,
+                'street'     => $payload['address']['street'],
+                'number'     => $payload['address']['number']     ?? '',
+                'complement' => $payload['address']['complement'] ?? null,
+                'zip_code'   => $payload['address']['zip_code']   ?? null,
+                'district'   => $payload['address']['district']   ?? '',
+                'city'       => $payload['address']['city']       ?? '',
+                'active'     => true,
+            ]);
+        }
 
         return true;
     }
@@ -509,6 +510,11 @@ class ConformidadeCidadaoService
     private function aplicarObito(SincronizacaoItem $item): bool
     {
         $client  = Client::findOrFail($item->client_id);
+
+        if (!$client->active) {
+            return true; // já inativo, nada a fazer
+        }
+
         $payload = $item->payload;
 
         $dtObito     = $payload['dt_obito'] ?? null;
