@@ -1463,10 +1463,14 @@ class VisitaAcsController extends MonitorApsBaseController
         $addrCols = "\n                NULL::text AS logradouro, NULL::text AS num_endereco,\n                NULL::text AS complemento, NULL::text AS bairro";
         $addrLateral = '';
         if ($hasDomAddr && $logCol) {
-            $lExpr = "d_addr.{$logCol}::text";
-            $nExpr = $numCol  ? "d_addr.{$numCol}::text"  : 'NULL::text';
-            $cExpr = $compCol ? "d_addr.{$compCol}::text" : 'NULL::text';
-            $bExpr = $baiCol  ? "d_addr.{$baiCol}::text"  : 'NULL::text';
+            $hashGuard = fn(string $col) =>
+                "NULLIF(CASE WHEN {$col} ~* '^[0-9a-f]{32,}$'"
+                . " OR {$col} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'"
+                . " THEN NULL ELSE {$col} END, '')";
+            $lExpr = $hashGuard("d_addr.{$logCol}::text");
+            $nExpr = $numCol  ? $hashGuard("d_addr.{$numCol}::text")  : 'NULL::text';
+            $cExpr = $compCol ? $hashGuard("d_addr.{$compCol}::text") : 'NULL::text';
+            $bExpr = $baiCol  ? $hashGuard("d_addr.{$baiCol}::text")  : 'NULL::text';
             $addrCols = "\n                addr_dom.logradouro, addr_dom.num_endereco,\n                addr_dom.complemento, addr_dom.bairro";
             $addrLateral = "
             LEFT JOIN LATERAL (
