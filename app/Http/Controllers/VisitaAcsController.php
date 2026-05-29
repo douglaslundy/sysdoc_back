@@ -30,7 +30,8 @@ class VisitaAcsController extends MonitorApsBaseController
         int $ano, int $mes, ?string $ine,
         ?string $agentName = null,
         ?string $desfecho = null,
-        ?string $hasGeo = null
+        ?string $hasGeo = null,
+        ?array $allowedInes = null
     ): array {
         $cbos = implode("','", self::ACS_CBOS);
         $where = "c.nu_cbo IN ('{$cbos}') AND t.nu_ano = ? AND t.nu_mes = ?";
@@ -39,6 +40,14 @@ class VisitaAcsController extends MonitorApsBaseController
         if ($ine) {
             $where .= ' AND e.nu_ine = ?';
             $params[] = $ine;
+        } elseif ($allowedInes !== null) {
+            if (empty($allowedInes)) {
+                $where .= ' AND 1=0';
+            } else {
+                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                $where .= " AND e.nu_ine IN ({$ph})";
+                $params = array_merge($params, $allowedInes);
+            }
         }
 
         if ($agentName) {
