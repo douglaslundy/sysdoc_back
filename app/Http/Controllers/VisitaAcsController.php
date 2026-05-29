@@ -1838,9 +1838,9 @@ class VisitaAcsController extends MonitorApsBaseController
     }
 
     /**
-     * GET /visitas/evolucao?[ine=Z&agente=W&desfecho=N&has_geo=X]
-     * Contagem mensal de visitas para o ano atual e os 2 anos anteriores.
-     * Retorna 3 séries, cada uma com 12 valores (índice 0 = Janeiro).
+     * GET /visitas/evolucao?[ine=Z&agente=W&desfecho=N&has_geo=X&ano=YYYY]
+     * Sem ?ano: retorna 3 séries (ano atual e 2 anteriores).
+     * Com ?ano=YYYY: retorna 1 série para o ano informado.
      */
     public function evolucao(Request $request): JsonResponse
     {
