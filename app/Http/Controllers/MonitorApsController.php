@@ -47,13 +47,22 @@ class MonitorApsController extends MonitorApsBaseController
     {
         set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad] = $this->params($request);
+        $allowedInes = $this->resolveAllowedInes($request);
         try {
-            $data = Cache::remember("aps_resumo_{$ano}_{$quad}", 600, function () use ($ano, $quad) {
-                $cfg     = $this->apsConfig();
-                $equipes = $this->db()->select(
-                    'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\' ORDER BY no_equipe'
-                );
-                $vinculos = $this->calcularVinculo($ano, $quad);
+            $restrictSuffix = $this->cacheRestrictSuffix($allowedInes);
+            $data = Cache::remember("aps_resumo_{$ano}_{$quad}{$restrictSuffix}", 600, function () use ($ano, $quad, $allowedInes) {
+                $cfg = $this->apsConfig();
+                [$ineWhere, $ineBindings] = $this->buildIneWhere(null, $allowedInes, 'nu_ine');
+                $equipeSql = 'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
+                if ($ineWhere) $equipeSql .= ' AND ' . $ineWhere;
+                $equipeSql .= ' ORDER BY no_equipe';
+                if ($ineWhere === '1=0') return [
+                    'municipio' => $cfg->municipio_nome, 'ibge' => $cfg->municipio_ibge,
+                    'periodo' => ['ano' => $ano, 'quadrimestre' => $quad],
+                    'total_equipes' => 0, 'vinculos' => [], 'qualidade' => ['esf' => [], 'esb' => []], 'repasse' => [],
+                ];
+                $equipes = $this->db()->select($equipeSql, $ineBindings);
+                $vinculos = $this->calcularVinculo($ano, $quad, null, $allowedInes);
                 $indESF   = $this->calcularESFBatch($equipes, $ano, $quad);
 
                 $classQualidade = $this->mediaClassificacaoPorEquipe($indESF);
@@ -110,9 +119,13 @@ class MonitorApsController extends MonitorApsBaseController
     public function vinculo(Request $request)
     {
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine] = $this->params($request);
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
         try {
-            $cacheKey = 'aps_vinculo_' . $ano . '_' . $quad . '_' . ($ine ?? 'all');
-            $data = Cache::remember($cacheKey, 600, fn() => $this->calcularVinculo($ano, $quad, $ine));
+            $restrictSuffix = $this->cacheRestrictSuffix($allowedInes);
+            $cacheKey = 'aps_vinculo_' . $ano . '_' . $quad . '_' . ($ine ?? 'all') . $restrictSuffix;
+            $data = Cache::remember($cacheKey, 600, fn() => $this->calcularVinculo($ano, $quad, $ine, $allowedInes));
             return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'equipes' => $data]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -123,12 +136,21 @@ class MonitorApsController extends MonitorApsBaseController
     {
         set_time_limit(120);
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine, 'bloco' => $bloco] = $this->params($request);
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
+
         try {
-            $cacheKey = 'aps_qualidade_' . $ano . '_' . $quad . '_' . ($ine ?? 'all') . '_' . ($bloco ?? 'esf');
-            $indicadores = Cache::remember($cacheKey, 600, function () use ($ano, $quad, $ine, $bloco) {
+            $restrictSuffix = $this->cacheRestrictSuffix($allowedInes);
+            $cacheKey = 'aps_qualidade_' . $ano . '_' . $quad . '_' . ($ine ?? 'all') . '_' . ($bloco ?? 'esf') . $restrictSuffix;
+            $indicadores = Cache::remember($cacheKey, 600, function () use ($ano, $quad, $ine, $bloco, $allowedInes) {
                 $sql = 'SELECT nu_ine, no_equipe FROM tb_dim_equipe WHERE st_registro_valido = 1 AND nu_ine != \'-\'';
                 $bindings = [];
-                if ($ine) { $sql .= ' AND nu_ine = ?'; $bindings[] = $ine; }
+                [$ineWhere, $ineBindings] = $this->buildIneWhere($ine, $allowedInes, 'nu_ine');
+                if ($ineWhere) {
+                    $sql .= ' AND ' . $ineWhere;
+                    $bindings = array_merge($bindings, $ineBindings);
+                }
+                if ($ineWhere === '1=0') return [];
                 $sql .= ' ORDER BY no_equipe';
 
                 $equipes = $this->db()->select($sql, $bindings);
@@ -148,6 +170,7 @@ class MonitorApsController extends MonitorApsBaseController
     {
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine] = $this->params($request);
         if (!$ine) return response()->json(['error' => 'Parâmetro ine é obrigatório'], 400);
+        $this->assertIneAllowed($request, $ine);
 
         $mapa = [
             1 => 'calcularInd1',  2 => 'calcularInd2',  3 => 'calcularInd3',
@@ -207,6 +230,7 @@ class MonitorApsController extends MonitorApsBaseController
         ['ine' => $ine] = $this->params($request);
         $indicadorId = (int) $request->query('indicador_id');
         if (!$ine) return response()->json(['error' => 'ine é obrigatório'], 400);
+        $this->assertIneAllowed($request, $ine);
 
         $mapa = [
             1 => 'calcularInd1',   2 => 'calcularInd2',  3 => 'calcularInd3',
@@ -220,7 +244,9 @@ class MonitorApsController extends MonitorApsBaseController
 
         $anos      = array_map('intval', explode(',', $request->query('anos', (string) date('Y'))));
         $anosKey   = implode('_', $anos);
-        $cacheKey  = "aps_historico_{$ine}_{$indicadorId}_{$anosKey}";
+        $allowedInes = $this->resolveAllowedInes($request);
+        $restrictSuffix = $this->cacheRestrictSuffix($allowedInes);
+        $cacheKey  = "aps_historico_{$ine}_{$indicadorId}_{$anosKey}{$restrictSuffix}";
 
         try {
             $historico = Cache::remember($cacheKey, 600, function () use ($anos, $ine, $method) {
@@ -334,7 +360,7 @@ class MonitorApsController extends MonitorApsBaseController
         return $this->equipeNomeCache[$ine];
     }
 
-    private function calcularVinculo(int $ano, int $quad, ?string $ine = null): array
+    private function calcularVinculo(int $ano, int $quad, ?string $ine = null, ?array $allowedInes = null): array
     {
         // tb_dim_equipe não tem tp_equipe nem nu_cnes — apenas nu_ine e no_equipe
         // st_ativo → st_registro_valido = 1 AND nu_ine != '-'
@@ -358,7 +384,12 @@ class MonitorApsController extends MonitorApsBaseController
             WHERE de.st_registro_valido = 1 AND de.nu_ine != '-' AND fci.st_ficha_inativa = 0
         ";
         $bindings = [$ano, ...$this->quadMeses($quad)];
-        if ($ine) { $sql .= ' AND de.nu_ine = ?'; $bindings[] = $ine; }
+        [$ineWhere, $ineBindings] = $this->buildIneWhere($ine, $allowedInes, 'de.nu_ine');
+        if ($ineWhere) {
+            $sql .= ' AND ' . $ineWhere;
+            $bindings = array_merge($bindings, $ineBindings);
+        }
+        if ($ineWhere === '1=0') return [];
         $sql .= ' GROUP BY de.nu_ine, de.no_equipe ORDER BY de.no_equipe';
 
         $t = self::THRESHOLDS['vinculo'];
