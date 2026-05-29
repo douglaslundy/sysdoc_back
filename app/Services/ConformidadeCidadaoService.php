@@ -303,6 +303,14 @@ class ConformidadeCidadaoService
             if ($cols['municipio'])   $munExpr  = 'dom.' . $this->quoteCol($cols['municipio']);
         }
 
+        // Resolvê defesivamente qual coluna usar para ORDER BY
+        $pkCol = $this->firstCol('tb_fat_cad_individual', [
+            'co_seq_fat_cad_individual',
+            'co_fat_cad_individual',
+            'id',
+        ]);
+        $orderBy = $pkCol ? 'fci.' . $this->quoteCol($pkCol) : '1';
+
         $chunkSize = 500;
         $offset    = 0;
 
@@ -326,7 +334,7 @@ class ConformidadeCidadaoService
                 FROM tb_fat_cad_individual fci
                 {$domJoin}
                 WHERE ({$cpfExpr} IS NOT NULL OR {$cnsExpr} IS NOT NULL)
-                ORDER BY fci.co_seq_fat_cad_individual
+                ORDER BY {$orderBy}
                 LIMIT {$chunkSize} OFFSET {$offset}
             ";
 

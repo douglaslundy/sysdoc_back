@@ -31,9 +31,4 @@ class SincronizacaoCidadao extends Model
     {
         return $this->belongsTo(User::class, 'iniciado_por');
     }
-
-    public function estaEmAndamento(): bool
-    {
-        return in_array($this->status, ['pending', 'analyzing', 'applying']);
-    }
 }
