@@ -1813,9 +1813,10 @@ class VisitaAcsController extends MonitorApsBaseController
      * Retorna os anos distintos que possuem visitas registradas no eSUS PEC,
      * respeitando os filtros de unidade/CNES do contexto autenticado.
      */
-    public function anosDisponiveis(): JsonResponse
+    public function anosDisponiveis(Request $request): JsonResponse
     {
-        [$where, $params] = $this->buildWhereFilters(null, null, null, null);
+        $allowedInes = $this->resolveAllowedInes($request);
+        [$where, $params] = $this->buildWhereFilters(null, null, null, null, $allowedInes);
 
         $sql = "
             SELECT DISTINCT t.nu_ano AS ano
