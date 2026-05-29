@@ -56,6 +56,7 @@ use App\Http\Controllers\StateController;
 use App\Http\Controllers\SystemPageController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserEquipeApsController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VigilanciaConfigController;
 use App\Http\Controllers\VisitaAcsController;
@@ -128,7 +129,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Monitor APS — indicadores Portaria GM/MS 6.907/2025
     // audit.read removido: auditoria granular feita no frontend (1 VIEW por page load, 1 READ por filtro aplicado)
-    Route::prefix('monitor-aps')->middleware(['throttle:60,1'])->group(function () {
+    Route::prefix('monitor-aps')->middleware(['throttle:60,1', 'equipe.aps'])->group(function () {
+        Route::get('/minhas-equipes', [MonitorApsController::class, 'minhasEquipes']);
         Route::prefix('indicadores')->group(function () {
             Route::get('/resumo', [MonitorApsController::class, 'resumo']);
             Route::get('/vinculo', [MonitorApsController::class, 'vinculo']);
@@ -233,6 +235,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // users
     Route::apiResource('users', UserController::class);
+
+    // Equipes APS por usuário (admin)
+    Route::middleware('admin')->group(function () {
+        Route::get('/users/{user}/equipe-aps', [UserEquipeApsController::class, 'show']);
+        Route::put('/users/{user}/equipe-aps', [UserEquipeApsController::class, 'update']);
+    });
 
     // Models
     Route::apiResource('models', ModelController::class);
