@@ -52,7 +52,9 @@ class CidadaoAcsController extends MonitorApsBaseController
             'per_page'         => 'nullable|integer|min:10|max:200',
         ]);
 
-        $ine            = $request->query('ine');
+        $ine            = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes    = $this->resolveAllowedInes($request);
         $profissionalId = $request->query('profissional_id');
         $agente         = $request->query('agente');
         $condicao       = $request->query('condicao');
@@ -226,9 +228,10 @@ class CidadaoAcsController extends MonitorApsBaseController
             $outerWhere  = '';
             $outerParams = [];
 
-            if ($ine) {
-                $outerWhere   .= ' AND base.nu_ine = ?';
-                $outerParams[] = $ine;
+            [$ineWhere, $ineBindings] = $this->buildIneWhere($ine, $allowedInes, 'base.nu_ine');
+            if ($ineWhere) {
+                $outerWhere   .= " AND {$ineWhere}";
+                $outerParams   = array_merge($outerParams, $ineBindings);
             }
             if ($profissionalId) {
                 $outerWhere   .= ' AND base.profissional_id = ?';
@@ -346,7 +349,9 @@ class CidadaoAcsController extends MonitorApsBaseController
         $request->validate([
             'ine' => 'nullable|string',
         ]);
-        $ine = $request->query('ine');
+        $ine = $request->query('ine') ?: null;
+        $this->assertIneAllowed($request, $ine);
+        $allowedInes = $this->resolveAllowedInes($request);
 
         try {
             $db = $this->db();
@@ -358,9 +363,10 @@ class CidadaoAcsController extends MonitorApsBaseController
             $outerWhere  = '';
             $outerParams = [];
 
-            if ($ine) {
-                $outerWhere   .= ' AND base.nu_ine = ?';
-                $outerParams[] = $ine;
+            [$ineWhere, $ineBindings] = $this->buildIneWhere($ine, $allowedInes, 'base.nu_ine');
+            if ($ineWhere) {
+                $outerWhere   .= " AND {$ineWhere}";
+                $outerParams   = array_merge($outerParams, $ineBindings);
             }
 
             $rows = $db->select("
