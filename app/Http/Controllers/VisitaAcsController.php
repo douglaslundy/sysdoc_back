@@ -1740,6 +1740,35 @@ class VisitaAcsController extends MonitorApsBaseController
     }
 
     /**
+     * GET /visitas/evolucao/anos
+     * Retorna os anos distintos que possuem visitas registradas no eSUS PEC,
+     * respeitando os filtros de unidade/CNES do contexto autenticado.
+     */
+    public function anosDisponiveis(): JsonResponse
+    {
+        [$where, $params] = $this->buildWhereFilters(null, null, null, null);
+
+        $sql = "
+            SELECT DISTINCT t.nu_ano AS ano
+            FROM tb_fat_visita_domiciliar v
+            {$this->baseJoins()}
+            WHERE {$where}
+            ORDER BY ano DESC
+        ";
+
+        try {
+            $rows = $this->db()->select($sql, $params);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('VisitaAcs.anosDisponiveis: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+        }
+
+        return response()->json([
+            'anos' => array_map(fn($r) => (int) $r->ano, $rows),
+        ]);
+    }
+
+    /**
      * GET /visitas/evolucao?[ine=Z&agente=W&desfecho=N&has_geo=X]
      * Contagem mensal de visitas para o ano atual e os 2 anos anteriores.
      * Retorna 3 séries, cada uma com 12 valores (índice 0 = Janeiro).

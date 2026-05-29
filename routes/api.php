@@ -144,6 +144,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::get('/mapa', [VisitaAcsController::class, 'mapa']);     // pins georreferenciados
             Route::get('/equipes', [VisitaAcsController::class, 'equipes']);  // equipes com ACS
             Route::get('/agentes', [VisitaAcsController::class, 'agentes']);  // stats por agente
+            Route::get('/evolucao/anos', [VisitaAcsController::class, 'anosDisponiveis']);
             Route::get('/evolucao', [VisitaAcsController::class, 'evolucao']);
             Route::get('/responsabilidade', [VisitaAcsController::class, 'responsabilidade']);
             Route::get('/debug/{id}', [VisitaAcsController::class, 'showDebug'])->whereNumber('id');
