@@ -102,7 +102,7 @@ class MonitorApsController extends MonitorApsBaseController
 
         $isRt     = (bool) $user->is_rt_psf;
         $allTeams = (bool) $user->rt_all_teams;
-        $restrito = $isRt && !$allTeams;
+        $restrito = $user->profile !== 'admin' && $isRt && !$allTeams;
 
         return response()->json([
             'is_rt'     => $isRt,

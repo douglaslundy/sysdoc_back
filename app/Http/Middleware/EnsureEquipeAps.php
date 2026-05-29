@@ -12,7 +12,7 @@ class EnsureEquipeAps
     {
         $user = $request->user();
 
-        if (!$user || !$user->is_rt_psf || $user->rt_all_teams) {
+        if (!$user || $user->profile === 'admin' || !$user->is_rt_psf || $user->rt_all_teams) {
             $request->attributes->set('_ines_permitidos', null);
             return $next($request);
         }
