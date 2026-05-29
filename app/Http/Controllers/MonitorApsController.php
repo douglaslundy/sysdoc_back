@@ -81,6 +81,32 @@ class MonitorApsController extends MonitorApsBaseController
         }
     }
 
+    /**
+     * GET /monitor-aps/minhas-equipes
+     * Retorna as equipes que o usuário logado pode visualizar.
+     * Se irrestrito: equipes vazias + flags indicando acesso total.
+     * Se restrito: lista de equipes do user_equipe_aps.
+     */
+    public function minhasEquipes(Request $request)
+    {
+        $user = $request->user();
+
+        $isRt     = (bool) $user->is_rt_psf;
+        $allTeams = (bool) $user->rt_all_teams;
+        $restrito = $isRt && !$allTeams;
+
+        return response()->json([
+            'is_rt'     => $isRt,
+            'all_teams' => $allTeams,
+            'equipes'   => $restrito
+                ? $user->equipeAps->map(fn($e) => [
+                    'nu_ine'    => $e->nu_ine,
+                    'no_equipe' => $e->no_equipe,
+                  ])->values()
+                : [],
+        ]);
+    }
+
     public function vinculo(Request $request)
     {
         ['ano' => $ano, 'quadrimestre' => $quad, 'ine' => $ine] = $this->params($request);
