@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
@@ -154,23 +155,51 @@ class ClientController extends Controller
             $addressData = $data['addresses'];
             unset($data['addresses']);
 
+            // Proteção: se inativo E já tem data_obito, ignorar tentativa de alterar esses campos
+            $jaInativoPorObito = !$client->active && $client->data_obito !== null;
+            if ($jaInativoPorObito) {
+                unset($data['data_obito'], $data['st_falecido'], $data['active']);
+            }
+
+            // Regra de óbito: cliente ativo + data_obito informada → inativar tudo
+            $inativandoAgora = $client->active && !empty($data['data_obito']);
+            if ($inativandoAgora) {
+                $data['active']      = false;
+                $data['st_falecido'] = true;
+            }
+
             $client->update($data);
+
+            if ($inativandoAgora) {
+                $dtFormatada = Carbon::parse($data['data_obito'])->format('d/m/Y');
+                $obsTexto = "Baixa automática devido ao óbito ocorrido em {$dtFormatada}";
+                $client->queue()->where('done', false)->each(function ($queue) use ($obsTexto) {
+                    $novaObs = $queue->obs
+                        ? $queue->obs . ' | ' . $obsTexto
+                        : $obsTexto;
+                    $queue->update([
+                        'done'             => true,
+                        'date_of_realized' => now()->toDateString(),
+                        'obs'              => substr($novaObs, 0, 200),
+                    ]);
+                });
+            }
 
             $address = Addresses::firstOrNew(['id_client' => $client->id]);
             $address->fill([
-                'id_client' => $client->id,
-                'zip_code' => $addressData['zip_code'],
-                'city' => $addressData['city'],
-                'street' => $addressData['street'],
-                'number' => $addressData['number'],
-                'district' => $addressData['district'],
+                'id_client'  => $client->id,
+                'zip_code'   => $addressData['zip_code'],
+                'city'       => $addressData['city'],
+                'street'     => $addressData['street'],
+                'number'     => $addressData['number'],
+                'district'   => $addressData['district'],
                 'complement' => $addressData['complement'] ?? null,
             ])->save();
         });
 
         return response()->json([
             'message' => 'Client updated successfully!',
-            'client' => $client->load('addresses'),
+            'client'  => $client->fresh()->load('addresses'),
         ]);
     }
 
