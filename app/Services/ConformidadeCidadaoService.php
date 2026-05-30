@@ -138,10 +138,10 @@ class ConformidadeCidadaoService
             'pec_cpf'     => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['nu_cpf_cidadao', 'nu_cpf', 'co_cpf']) : null,
             'pec_cns'     => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['nu_cns']) : null,
             'raca_cor_fk'  => $this->firstCol('tb_fat_cad_individual', ['co_dim_raca_cor']),
-            'raca_cor_pk'  => $this->hasTable('tb_dim_raca_cor')
+            'raca_cor_pk'  => ($hasRaca = $this->hasTable('tb_dim_raca_cor'))
                 ? $this->firstCol('tb_dim_raca_cor', ['co_seq_dim_raca_cor'])
                 : null,
-            'raca_cor_ds'  => $this->hasTable('tb_dim_raca_cor')
+            'raca_cor_ds'  => $hasRaca
                 ? $this->firstCol('tb_dim_raca_cor', ['ds_raca_cor'])
                 : null,
         ];
