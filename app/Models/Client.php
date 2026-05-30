@@ -11,6 +11,13 @@ class Client extends Model
 
     protected $fillable = ['name', 'mother', 'father', 'cns', 'born_date', 'sexo', 'raca_cor', 'data_obito', 'st_falecido', 'cpf', 'email', 'phone', 'obs', 'active'];
 
+    protected $casts = [
+        'born_date'   => 'date',
+        'data_obito'  => 'date',
+        'st_falecido' => 'boolean',
+        'active'      => 'boolean',
+    ];
+
     // public function addresses()
     // {
     //     return $this->hasOne(Addresses::class, 'id_client')->join('clients', 'clients.id', '=', 'addresses.id_client');
