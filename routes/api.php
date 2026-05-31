@@ -404,6 +404,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('analisar', [ConformidadeCidadaoController::class, 'analisar']);
         Route::get('status/{job_id}', [ConformidadeCidadaoController::class, 'status']);
         Route::post('aplicar/{job_id}', [ConformidadeCidadaoController::class, 'aplicar']);
+        Route::post('cancelar/{job_id}', [ConformidadeCidadaoController::class, 'cancelar']);
+        Route::get('erros/{job_id}', [ConformidadeCidadaoController::class, 'erros']);
         Route::get('historico', [ConformidadeCidadaoController::class, 'historico']);
     });
 });
