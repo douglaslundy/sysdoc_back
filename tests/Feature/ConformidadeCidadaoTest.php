@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\SincronizacaoCidadao;
+use App\Models\SincronizacaoItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -105,5 +106,42 @@ class ConformidadeCidadaoTest extends TestCase
             'preview_criados', 'preview_atualizados', 'preview_obitos',
         ]);
         $this->assertEquals('preview_ready', $r->json('status'));
+    }
+
+    public function test_erros_retorna_404_para_job_inexistente(): void
+    {
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/conformidade-cidadao/erros/uuid-inexistente');
+        $r->assertStatus(404);
+    }
+
+    public function test_erros_retorna_itens_com_erro(): void
+    {
+        $sync = SincronizacaoCidadao::create([
+            'job_id'       => Str::uuid(),
+            'status'       => 'completed',
+            'iniciado_por' => $this->admin->id,
+        ]);
+
+        SincronizacaoItem::create([
+            'sincronizacao_id' => $sync->id,
+            'acao'             => 'atualizar',
+            'cpf'              => '12345678900',
+            'cns'              => null,
+            'nome_esus'        => 'Fulano',
+            'client_id'        => 1,
+            'payload'          => ['foo' => 'bar'],
+            'aplicado'         => false,
+            'erro'             => 'Falha ao atualizar cliente',
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/conformidade-cidadao/erros/{$sync->job_id}");
+
+        $r->assertStatus(200)->assertJsonStructure([
+            'data' => [['id', 'acao', 'cpf', 'nome_esus', 'erro']],
+            'meta' => ['total', 'per_page', 'current_page', 'last_page'],
+        ]);
+        $this->assertEquals(1, $r->json('meta.total'));
     }
 }
