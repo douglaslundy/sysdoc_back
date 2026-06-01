@@ -20,6 +20,7 @@ class SincronizacaoCidadaoJob implements ShouldQueue
 
     public function handle(ConformidadeCidadaoService $service): void
     {
+        set_time_limit(0);
         $service->analisar($this->sync);
     }
 

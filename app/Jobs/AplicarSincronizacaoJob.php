@@ -20,6 +20,7 @@ class AplicarSincronizacaoJob implements ShouldQueue
 
     public function handle(ConformidadeCidadaoService $service): void
     {
+        set_time_limit(0);
         $service->aplicar($this->sync);
     }
 
