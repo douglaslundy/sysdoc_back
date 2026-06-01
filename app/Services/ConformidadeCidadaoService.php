@@ -114,6 +114,9 @@ class ConformidadeCidadaoService
         $hasPec      = $this->hasTable('tb_fat_cidadao_pec');
         $hasFamilia  = $this->hasTable('tb_fat_cad_dom_familia');
         $hasCidadao  = $this->hasTable('tb_cidadao');
+        if (!$hasDom) {
+            Log::warning('[ConformidadeCidadao] tb_fat_cad_domiciliar nao encontrada - enderecos nao serao sincronizados');
+        }
 
         return [
             // Identificadores — CPF em fci é em texto claro; CNS em fci costuma ser "0"
@@ -125,6 +128,8 @@ class ConformidadeCidadaoService
             'dt_obito'    => $this->firstCol('tb_fat_cad_individual', ['dt_obito', 'dt_data_obito']),
             // Telefone e sexo em fci estão hasheados/como FK — buscamos de pec/cidadao
             'fci_sexo'    => $this->firstCol('tb_fat_cad_individual', ['co_dim_sexo']),
+            'fci_escolaridade_fk' => $this->firstCol('tb_fat_cad_individual', ['co_dim_tipo_escolaridade', 'co_escolaridade']),
+            'fci_nacionalidade_fk' => $this->firstCol('tb_fat_cad_individual', ['co_dim_nacionalidade', 'co_nacionalidade']),
             'atualizado'  => $this->firstCol('tb_fat_cad_individual', ['dh_ultima_atualizacao', 'dt_ultima_atualizacao', 'updated_at']),
             // Endereço via tb_fat_cad_dom_familia (fci não tem FK direta para domiciliar)
             'hasDom'         => $hasDom,
@@ -137,6 +142,7 @@ class ConformidadeCidadaoService
             'complemento'    => $hasDom ? $this->firstCol('tb_fat_cad_domiciliar', ['no_complemento', 'ds_complemento']) : null,
             'cep'            => $hasDom ? $this->firstCol('tb_fat_cad_domiciliar', ['nu_cep', 'co_cep', 'ds_cep']) : null,
             'bairro'         => $hasDom ? $this->firstCol('tb_fat_cad_domiciliar', ['no_bairro', 'ds_bairro']) : null,
+            'municipio'      => $hasDom ? $this->firstCol('tb_fat_cad_domiciliar', ['no_municipio', 'ds_municipio']) : null,
             // tb_fat_cidadao_pec: nome real, CPF/CNS limpos, sexo, telefone
             'pec_fk'      => $hasPec ? $this->firstCol('tb_fat_cad_individual', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec', 'co_cidadao_pec']) : null,
             'pec_pk'      => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['co_seq_fat_cidadao_pec']) : null,
@@ -146,6 +152,7 @@ class ConformidadeCidadaoService
             'pec_sexo'    => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['co_dim_sexo']) : null,
             'pec_telefone'=> $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['nu_telefone_celular']) : null,
             'pec_cid_fk'  => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['co_cidadao']) : null,
+            'pec_st_faleceu' => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['st_faleceu']) : null,
             // tb_cidadao: nome da mãe em texto claro (fci.no_nome_mae é SHA-1)
             'hasCidadao'      => $hasCidadao,
             'cid_pk'          => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['co_seq_cidadao']) : null,
@@ -155,6 +162,12 @@ class ConformidadeCidadaoService
             'cid_complemento' => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['ds_complemento', 'no_complemento']) : null,
             'cid_cep'         => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['ds_cep', 'nu_cep']) : null,
             'cid_bairro'      => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['no_bairro', 'ds_bairro']) : null,
+            'cid_municipio'   => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['no_municipio', 'ds_municipio']) : null,
+            'cid_st_faleceu'  => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['st_faleceu']) : null,
+            'cid_dt_obito'    => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['dt_obito']) : null,
+            'dom_municipio_fk'=> $hasDom ? $this->firstCol('tb_fat_cad_domiciliar', ['co_dim_municipio', 'co_dim_municipio_cidadao']) : null,
+            'dim_mun_pk'      => $this->hasTable('tb_dim_municipio') ? $this->firstCol('tb_dim_municipio', ['co_seq_dim_municipio']) : null,
+            'dim_mun_nome'    => $this->hasTable('tb_dim_municipio') ? $this->firstCol('tb_dim_municipio', ['no_municipio']) : null,
             // raça/cor
             'raca_cor_fk'  => $this->firstCol('tb_fat_cad_individual', ['co_dim_raca_cor']),
             'raca_cor_pk'  => ($hasRaca = $this->hasTable('tb_dim_raca_cor'))
@@ -162,6 +175,18 @@ class ConformidadeCidadaoService
                 : null,
             'raca_cor_ds'  => $hasRaca
                 ? $this->firstCol('tb_dim_raca_cor', ['ds_raca_cor'])
+                : null,
+            'esc_dim_pk'   => ($hasEsc = $this->hasTable('tb_dim_tipo_escolaridade'))
+                ? $this->firstCol('tb_dim_tipo_escolaridade', ['co_seq_dim_tipo_escolaridade'])
+                : null,
+            'esc_dim_ds'   => $hasEsc
+                ? $this->firstCol('tb_dim_tipo_escolaridade', ['ds_dim_tipo_escolaridade'])
+                : null,
+            'nac_dim_pk'   => ($hasNac = $this->hasTable('tb_dim_nacionalidade'))
+                ? $this->firstCol('tb_dim_nacionalidade', ['co_seq_dim_nacionalidade', 'co_nacionalidade'])
+                : null,
+            'nac_dim_ds'   => $hasNac
+                ? $this->firstCol('tb_dim_nacionalidade', ['ds_nacionalidade'])
                 : null,
         ];
     }
@@ -198,6 +223,17 @@ class ConformidadeCidadaoService
             $sync->update(['status' => 'analyzing']);
 
             $cols = $this->resolveEsusCols();
+            Log::info('[ConformidadeCidadao] Colunas resolvidas', [
+                'st_faleceu' => $cols['st_faleceu'] ?? null,
+                'pec_st_faleceu' => $cols['pec_st_faleceu'] ?? null,
+                'cid_st_faleceu' => $cols['cid_st_faleceu'] ?? null,
+                'dt_obito'   => $cols['dt_obito'] ?? null,
+                'cid_dt_obito' => $cols['cid_dt_obito'] ?? null,
+                'dt_nasc'    => $cols['dt_nasc'] ?? null,
+                'logradouro' => $cols['logradouro'] ?? null,
+                'municipio'  => $cols['municipio'] ?? null,
+                'hasDom'     => $cols['hasDom'] ?? null,
+            ]);
 
             // Conta total de registros eSUS para cálculo de progresso
             $totalPrevisto = $this->countEsus($cols);
@@ -277,7 +313,8 @@ class ConformidadeCidadaoService
                         $sysdocUpdated = $client->updated_at;
 
                         // Só processa se e-SUS for mais recente (ou não tiver timestamp)
-                        if ($esusUpdated && $sysdocUpdated && $esusUpdated->lte($sysdocUpdated)) {
+                        $temCampoNuloRelevante = empty($client->born_date);
+                        if (!$temCampoNuloRelevante && $esusUpdated && $sysdocUpdated && $esusUpdated->lte($sysdocUpdated)) {
                             $semAlteracao++;
                             continue;
                         }
@@ -319,8 +356,8 @@ class ConformidadeCidadaoService
                     }
                 }
 
-                // Atualiza progresso a cada 2000 registros para feedback em tempo real
-                if ($totalEsus - $lastProgress >= 2000) {
+                // Atualiza progresso a cada 200 registros para feedback em tempo real
+                if ($totalEsus - $lastProgress >= 200) {
                     $sync->update(['total_esus' => $totalEsus]);
                     $lastProgress = $totalEsus;
                 }
@@ -377,8 +414,8 @@ class ConformidadeCidadaoService
         };
 
         $dtNascExpr = $cols['dt_nasc']    ? 'fci.' . $this->quoteCol($cols['dt_nasc'])    : 'NULL';
-        $falExpr    = $cols['st_faleceu'] ? 'fci.' . $this->quoteCol($cols['st_faleceu']) : 'NULL';
-        $obitoExpr  = $cols['dt_obito']   ? 'fci.' . $this->quoteCol($cols['dt_obito'])   : 'NULL';
+        $falExpr    = 'NULL';
+        $obitoExpr  = 'NULL';
         $updExpr    = $cols['atualizado'] ? 'fci.' . $this->quoteCol($cols['atualizado']) : 'NULL';
 
         // Telefone: fci.nu_celular é MD5 hashed — usar pec.nu_telefone_celular
@@ -412,6 +449,24 @@ class ConformidadeCidadaoService
             $racaExpr = 'rc.' . $this->quoteCol($cols['raca_cor_ds']);
         }
 
+        $escJoin = '';
+        $escExpr = 'NULL';
+        if ($cols['fci_escolaridade_fk'] && $cols['esc_dim_pk'] && $cols['esc_dim_ds']) {
+            $escJoin = 'LEFT JOIN tb_dim_tipo_escolaridade esc ON esc.'
+                . $this->quoteCol($cols['esc_dim_pk'])
+                . ' = fci.' . $this->quoteCol($cols['fci_escolaridade_fk']);
+            $escExpr = 'esc.' . $this->quoteCol($cols['esc_dim_ds']);
+        }
+
+        $nacJoin = '';
+        $nacExpr = 'NULL';
+        if ($cols['fci_nacionalidade_fk'] && $cols['nac_dim_pk'] && $cols['nac_dim_ds']) {
+            $nacJoin = 'LEFT JOIN tb_dim_nacionalidade nac ON nac.'
+                . $this->quoteCol($cols['nac_dim_pk'])
+                . ' = fci.' . $this->quoteCol($cols['fci_nacionalidade_fk']);
+            $nacExpr = 'nac.' . $this->quoteCol($cols['nac_dim_ds']);
+        }
+
         $fciNomeCol = $cols['nome'] ? 'fci.' . $this->quoteCol($cols['nome']) : null;
 
         if ($cols['pec_fk'] && $cols['pec_pk'] && $cols['pec_nome']) {
@@ -443,13 +498,32 @@ class ConformidadeCidadaoService
             $maeExpr   = "NULLIF(CASE WHEN {$cidMaeCol} ~* '^[0-9a-f]{32,}$' THEN NULL ELSE {$cidMaeCol} END, '')";
         }
 
+        $fciFal = $cols['st_faleceu'] ? 'fci.' . $this->quoteCol($cols['st_faleceu']) : null;
+        $pecFal = ($cols['pec_fk'] && $cols['pec_st_faleceu']) ? 'pec.' . $this->quoteCol($cols['pec_st_faleceu']) : null;
+        $cidFal = ($cols['cid_pk'] && $cols['cid_st_faleceu']) ? 'cid.' . $this->quoteCol($cols['cid_st_faleceu']) : null;
+        $falExpr = $fciFal ?? $pecFal ?? $cidFal ?? 'NULL';
+        if ($pecFal || $cidFal) {
+            $parts = [];
+            if ($fciFal) $parts[] = $fciFal;
+            if ($pecFal) $parts[] = $pecFal;
+            if ($cidFal) $parts[] = $cidFal;
+            $falExpr = 'COALESCE(' . implode(', ', $parts) . ')';
+        }
+
+        $fciObito = $cols['dt_obito'] ? 'fci.' . $this->quoteCol($cols['dt_obito']) : null;
+        $cidObito = ($cols['cid_pk'] && $cols['cid_dt_obito']) ? 'cid.' . $this->quoteCol($cols['cid_dt_obito']) : null;
+        $obitoExpr = $fciObito ?? $cidObito ?? 'NULL';
+        if ($fciObito && $cidObito) {
+            $obitoExpr = "COALESCE({$fciObito}, {$cidObito})";
+        }
+
         // Endereço: fci não tem FK direta para domiciliar — LATERAL via tb_fat_cad_dom_familia.
         // tb_fat_cad_domiciliar pode ter campos hasheados → hash guard + fallback em tb_cidadao.
         $hg = fn(string $col) => "NULLIF(CASE WHEN {$col} ~* '^[0-9a-f]{32,}$' THEN NULL ELSE {$col} END, '')";
 
         $domLateral = '';
         $logExpr = 'NULL'; $numExpr = 'NULL'; $compExpr = 'NULL';
-        $cepExpr = 'NULL'; $baiExpr = 'NULL';
+        $cepExpr = 'NULL'; $baiExpr = 'NULL'; $munExpr = 'NULL';
 
         // Expressões de fallback via tb_cidadao (texto limpo)
         $cidLog  = ($cols['cid_pk'] && $cols['cid_logradouro'])  ? 'cid.' . $this->quoteCol($cols['cid_logradouro'])  : null;
@@ -457,6 +531,7 @@ class ConformidadeCidadaoService
         $cidComp = ($cols['cid_pk'] && $cols['cid_complemento']) ? 'cid.' . $this->quoteCol($cols['cid_complemento']) : null;
         $cidCep  = ($cols['cid_pk'] && $cols['cid_cep'])         ? 'cid.' . $this->quoteCol($cols['cid_cep'])         : null;
         $cidBai  = ($cols['cid_pk'] && $cols['cid_bairro'])      ? 'cid.' . $this->quoteCol($cols['cid_bairro'])      : null;
+        $cidMun  = ($cols['cid_pk'] && $cols['cid_municipio'])   ? 'cid.' . $this->quoteCol($cols['cid_municipio'])   : null;
 
         if (
             $cols['hasDom'] && $cols['hasFamilia']
@@ -474,13 +549,30 @@ class ConformidadeCidadaoService
             $dComp = $cols['complemento'] ? $hg('d.' . $this->quoteCol($cols['complemento'])) : 'NULL';
             $dCep  = $cols['cep']         ? $hg('d.' . $this->quoteCol($cols['cep']))         : 'NULL';
             $dBai  = $cols['bairro']      ? $hg('d.' . $this->quoteCol($cols['bairro']))      : 'NULL';
+            $dMun  = $cols['municipio']   ? $hg('d.' . $this->quoteCol($cols['municipio']))   : 'NULL';
+            if (
+                !$cols['municipio']
+                && $cols['dom_municipio_fk']
+                && $cols['dim_mun_pk']
+                && $cols['dim_mun_nome']
+            ) {
+                $dMun = $hg('dm.' . $this->quoteCol($cols['dim_mun_nome']));
+            }
+
+            $dimMunJoin = '';
+            if ($cols['dom_municipio_fk'] && $cols['dim_mun_pk']) {
+                $dimMunJoin = 'LEFT JOIN tb_dim_municipio dm ON dm.'
+                    . $this->quoteCol($cols['dim_mun_pk'])
+                    . ' = d.' . $this->quoteCol($cols['dom_municipio_fk']);
+            }
 
             $domLateral = "
             LEFT JOIN LATERAL (
                 SELECT {$dLog} AS logradouro, {$dNum} AS numero,
-                       {$dComp} AS complemento, {$dCep} AS cep, {$dBai} AS bairro
+                       {$dComp} AS complemento, {$dCep} AS cep, {$dBai} AS bairro, {$dMun} AS municipio
                 FROM tb_fat_cad_dom_familia f
                 JOIN tb_fat_cad_domiciliar d ON d.{$domPkQ} = f.{$famDomFkQ}
+                {$dimMunJoin}
                 WHERE f.{$famCidFkQ} = fci.{$fciPecFkQ}
                 ORDER BY f.{$famDomFkQ} DESC
                 LIMIT 1
@@ -492,6 +584,7 @@ class ConformidadeCidadaoService
             $compExpr = $cidComp ? "COALESCE(dom_addr.complemento, {$cidComp})" : 'dom_addr.complemento';
             $cepExpr  = $cidCep  ? "COALESCE(dom_addr.cep, {$cidCep})"         : 'dom_addr.cep';
             $baiExpr  = $cidBai  ? "COALESCE(dom_addr.bairro, {$cidBai})"      : 'dom_addr.bairro';
+            $munExpr  = $cidMun  ? "COALESCE(dom_addr.municipio, {$cidMun})"   : 'dom_addr.municipio';
 
         } elseif ($cidLog) {
             // Sem dom_familia — usar tb_cidadao diretamente
@@ -500,6 +593,7 @@ class ConformidadeCidadaoService
             $compExpr = $cidComp ?? 'NULL';
             $cepExpr  = $cidCep  ?? 'NULL';
             $baiExpr  = $cidBai  ?? 'NULL';
+            $munExpr  = $cidMun  ?? 'NULL';
         }
 
         $pkCol = $this->firstCol('tb_fat_cad_individual', [
@@ -537,11 +631,16 @@ class ConformidadeCidadaoService
                         {$compExpr}   AS complemento,
                         {$cepExpr}    AS cep,
                         {$baiExpr}    AS bairro,
-                        {$racaExpr}   AS raca_cor
+                        {$munExpr}    AS municipio,
+                        {$racaExpr}   AS raca_cor,
+                        {$escExpr}    AS escolaridade,
+                        {$nacExpr}    AS nacionalidade
                     FROM tb_fat_cad_individual fci
                     {$pecJoin}
                     {$cidJoin}
                     {$racaJoin}
+                    {$escJoin}
+                    {$nacJoin}
                     {$domLateral}
                     WHERE ({$cpfExpr} IS NOT NULL OR {$cnsExpr} IS NOT NULL) {$cursorWhere}
                     ORDER BY {$pkExpr} ASC
@@ -580,11 +679,16 @@ class ConformidadeCidadaoService
                         {$compExpr}   AS complemento,
                         {$cepExpr}    AS cep,
                         {$baiExpr}    AS bairro,
-                        {$racaExpr}   AS raca_cor
+                        {$munExpr}    AS municipio,
+                        {$racaExpr}   AS raca_cor,
+                        {$escExpr}    AS escolaridade,
+                        {$nacExpr}    AS nacionalidade
                     FROM tb_fat_cad_individual fci
                     {$pecJoin}
                     {$cidJoin}
                     {$racaJoin}
+                    {$escJoin}
+                    {$nacJoin}
                     {$domLateral}
                     WHERE ({$cpfExpr} IS NOT NULL OR {$cnsExpr} IS NOT NULL)
                     ORDER BY 1
@@ -610,6 +714,8 @@ class ConformidadeCidadaoService
 
     private function buildCreatePayload(array $row, array $cols): array
     {
+        $addrNorm = $this->normalizeAddressFromRow($row);
+
         $payload = [
             'name'      => $row['nome'],
             'mother'    => $row['mae']      ?? null,
@@ -617,16 +723,18 @@ class ConformidadeCidadaoService
             'phone'     => $row['telefone'] ?? null,
             'sexo'      => $row['sexo']     ?? 'INDETERMINATE',
             'raca_cor'  => $row['raca_cor'] ?? null,
+            'escolaridade' => $row['escolaridade'] ?? null,
+            'nacionalidade' => $row['nacionalidade'] ?? null,
         ];
 
-        if ($row['logradouro'] ?? null) {
+        if (!empty($addrNorm['street'])) {
             $payload['address'] = [
-                'street'     => $row['logradouro'],
-                'number'     => $row['numero']      ?? '',
-                'complement' => $row['complemento'] ?? null,
-                'zip_code'   => $row['cep']         ?? null,
-                'district'   => $row['bairro']      ?? '',
-                'city'       => '',
+                'street'     => $addrNorm['street'],
+                'number'     => $addrNorm['number'],
+                'complement' => $addrNorm['complement'],
+                'zip_code'   => $addrNorm['zip_code'],
+                'district'   => $addrNorm['district'],
+                'city'       => $addrNorm['city'],
             ];
         }
 
@@ -635,6 +743,7 @@ class ConformidadeCidadaoService
 
     private function buildDiffPayload(Client $client, array $row, array $cols): array
     {
+        $addrNorm = $this->normalizeAddressFromRow($row);
         $diff = [];
 
         if ($row['nome'] && $row['nome'] !== $client->name) {
@@ -653,9 +762,9 @@ class ConformidadeCidadaoService
             }
         }
 
-        // Atualiza sexo só se Sysdoc ainda tem INDETERMINATE e e-SUS tem valor real
+        // Atualiza sexo quando e-SUS tem valor determinado e diverge do Sysdoc
         $rowSexo = $row['sexo'] ?? null;
-        if ($rowSexo && $rowSexo !== 'INDETERMINATE' && $client->sexo === 'INDETERMINATE') {
+        if ($rowSexo && $rowSexo !== 'INDETERMINATE' && $rowSexo !== $client->sexo) {
             $diff['sexo'] = ['de' => $client->sexo, 'para' => $rowSexo];
         }
 
@@ -666,20 +775,28 @@ class ConformidadeCidadaoService
         if (($row['raca_cor'] ?? null) && $row['raca_cor'] !== $client->raca_cor) {
             $diff['raca_cor'] = ['de' => $client->raca_cor, 'para' => $row['raca_cor']];
         }
+        if (($row['escolaridade'] ?? null) && $row['escolaridade'] !== $client->escolaridade) {
+            $diff['escolaridade'] = ['de' => $client->escolaridade, 'para' => $row['escolaridade']];
+        }
+        if (($row['nacionalidade'] ?? null) && $row['nacionalidade'] !== $client->nacionalidade) {
+            $diff['nacionalidade'] = ['de' => $client->nacionalidade, 'para' => $row['nacionalidade']];
+        }
 
         $addr = $client->addresses;
-        if ($row['logradouro'] ?? null) {
+        if (!empty($addrNorm['street'])) {
             $addrDiff = [];
-            if (($row['logradouro'] ?? null) && $row['logradouro'] !== $addr?->street)
-                $addrDiff['street'] = ['de' => $addr?->street, 'para' => $row['logradouro']];
-            if (($row['numero'] ?? null) && $row['numero'] !== $addr?->number)
-                $addrDiff['number'] = ['de' => $addr?->number, 'para' => $row['numero']];
-            if (($row['bairro'] ?? null) && $row['bairro'] !== $addr?->district)
-                $addrDiff['district'] = ['de' => $addr?->district, 'para' => $row['bairro']];
-            if (($row['cep'] ?? null) && $row['cep'] !== $addr?->zip_code)
-                $addrDiff['zip_code'] = ['de' => $addr?->zip_code, 'para' => $row['cep']];
-            if (($row['complemento'] ?? null) && $row['complemento'] !== $addr?->complement)
-                $addrDiff['complement'] = ['de' => $addr?->complement, 'para' => $row['complemento']];
+            if ($addrNorm['street'] !== ($addr?->street ?? null))
+                $addrDiff['street'] = ['de' => $addr?->street, 'para' => $addrNorm['street']];
+            if ($addrNorm['number'] !== ($addr?->number ?? null))
+                $addrDiff['number'] = ['de' => $addr?->number, 'para' => $addrNorm['number']];
+            if ($addrNorm['district'] !== ($addr?->district ?? null))
+                $addrDiff['district'] = ['de' => $addr?->district, 'para' => $addrNorm['district']];
+            if (($addrNorm['zip_code'] ?? null) !== ($addr?->zip_code ?? null))
+                $addrDiff['zip_code'] = ['de' => $addr?->zip_code, 'para' => $addrNorm['zip_code']];
+            if (($addrNorm['complement'] ?? null) !== ($addr?->complement ?? null))
+                $addrDiff['complement'] = ['de' => $addr?->complement, 'para' => $addrNorm['complement']];
+            if ($addrNorm['city'] !== ($addr?->city ?? null))
+                $addrDiff['city'] = ['de' => $addr?->city, 'para' => $addrNorm['city']];
             if (!empty($addrDiff)) $diff['address'] = $addrDiff;
         }
 
@@ -723,6 +840,17 @@ class ConformidadeCidadaoService
                 ->pluck('n', 'acao');
 
             $errosCount = $sync->itens()->whereNotNull('erro')->count();
+            $resumoErros = null;
+            if ($errosCount > 0) {
+                $primeiros = $sync->itens()
+                    ->whereNotNull('erro')
+                    ->orderBy('id')
+                    ->limit(10)
+                    ->pluck('erro', 'nome_esus')
+                    ->map(fn($err, $nome) => "{$nome}: {$err}")
+                    ->implode(' | ');
+                $resumoErros = substr("Erros ({$errosCount}): " . $primeiros, 0, 1000);
+            }
 
             $sync->update([
                 'status'             => 'completed',
@@ -730,6 +858,7 @@ class ConformidadeCidadaoService
                 'result_atualizados' => $counts['atualizar'] ?? 0,
                 'result_obitos'      => $counts['obito']     ?? 0,
                 'result_erros'       => $errosCount,
+                'erro_mensagem'      => $resumoErros,
                 'aplicado_em'        => now(),
             ]);
 
@@ -753,18 +882,21 @@ class ConformidadeCidadaoService
             'phone'     => $payload['phone']    ?? null,
             'sexo'      => $payload['sexo']     ?? 'INDETERMINATE',
             'raca_cor'  => $payload['raca_cor'] ?? null,
+            'escolaridade' => $payload['escolaridade'] ?? null,
+            'nacionalidade' => $payload['nacionalidade'] ?? null,
             'active'    => true,
         ]);
 
         if (!empty($payload['address']) && !empty($payload['address']['street'])) {
+            $address = $this->sanitizeAddressData($payload['address']);
             Addresses::create([
                 'id_client'  => $client->id,
-                'street'     => $payload['address']['street'],
-                'number'     => $payload['address']['number']     ?? '',
-                'complement' => $payload['address']['complement'] ?? null,
-                'zip_code'   => $payload['address']['zip_code']   ?? null,
-                'district'   => $payload['address']['district']   ?? '',
-                'city'       => $payload['address']['city']       ?? '',
+                'street'     => $address['street'],
+                'number'     => $address['number'],
+                'complement' => $address['complement'],
+                'zip_code'   => $address['zip_code'],
+                'district'   => $address['district'],
+                'city'       => $address['city'],
                 'active'     => true,
             ]);
         }
@@ -784,6 +916,8 @@ class ConformidadeCidadaoService
         if (isset($payload['sexo']))      $clientData['sexo']      = $payload['sexo']['para'];
         if (isset($payload['phone']))     $clientData['phone']     = $payload['phone']['para'];
         if (isset($payload['raca_cor']))  $clientData['raca_cor']  = $payload['raca_cor']['para'];
+        if (isset($payload['escolaridade'])) $clientData['escolaridade'] = $payload['escolaridade']['para'];
+        if (isset($payload['nacionalidade'])) $clientData['nacionalidade'] = $payload['nacionalidade']['para'];
 
         if (!empty($clientData)) {
             $client->update($clientData);
@@ -794,6 +928,7 @@ class ConformidadeCidadaoService
             foreach ($payload['address'] as $field => $change) {
                 $addrData[$field] = $change['para'];
             }
+            $addrData = $this->sanitizeAddressData($addrData);
             if ($client->addresses) {
                 $client->addresses->update($addrData);
             } else {
@@ -802,6 +937,55 @@ class ConformidadeCidadaoService
         }
 
         return true;
+    }
+
+    private function normalizeAddressFromRow(array $row): array
+    {
+        $rawNumber = trim((string) ($row['numero'] ?? ''));
+        $rawComplement = trim((string) ($row['complemento'] ?? ''));
+
+        $number = $rawNumber;
+        $complement = $rawComplement !== '' ? $rawComplement : null;
+
+        if ($rawNumber !== '' && preg_match('/^(\d+)\s*([A-Za-z].*)$/u', $rawNumber, $m)) {
+            $number = $m[1];
+            $suffix = trim($m[2]);
+            if ($suffix !== '') {
+                $complement = $complement ? "{$suffix} {$complement}" : $suffix;
+            }
+        }
+
+        $base = [
+            'street' => $row['logradouro'] ?? null,
+            'number' => $number !== '' ? $number : '',
+            'complement' => $complement,
+            'zip_code' => $row['cep'] ?? null,
+            'district' => $row['bairro'] ?? '',
+            'city' => !empty($row['municipio']) ? $row['municipio'] : 'Ilicinea',
+        ];
+
+        return $this->sanitizeAddressData($base);
+    }
+
+    private function sanitizeAddressData(array $data): array
+    {
+        $sanitize = function ($value, int $max, bool $allowNull = false): ?string {
+            if ($value === null) return $allowNull ? null : '';
+            $v = trim((string) $value);
+            if ($v === '' && $allowNull) return null;
+            return mb_substr($v, 0, $max);
+        };
+
+        $zip = isset($data['zip_code']) ? preg_replace('/\D/', '', (string) $data['zip_code']) : null;
+
+        return [
+            'city' => $sanitize($data['city'] ?? 'Ilicinea', 50),
+            'street' => $sanitize($data['street'] ?? '', 100),
+            'number' => $sanitize($data['number'] ?? '', 6),
+            'complement' => $sanitize($data['complement'] ?? null, 50, true),
+            'zip_code' => $sanitize($zip, 10, true),
+            'district' => $sanitize($data['district'] ?? '', 100),
+        ];
     }
 
     private function aplicarObito(SincronizacaoItem $item): bool
