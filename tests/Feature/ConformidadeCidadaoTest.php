@@ -85,6 +85,21 @@ class ConformidadeCidadaoTest extends TestCase
         $r->assertStatus(409);
     }
 
+    public function test_cancelar_descarta_preview_ready(): void
+    {
+        $sync = SincronizacaoCidadao::create([
+            'job_id'       => Str::uuid(),
+            'status'       => 'preview_ready',
+            'iniciado_por' => $this->admin->id,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/conformidade-cidadao/cancelar/{$sync->job_id}");
+
+        $r->assertStatus(200);
+        $this->assertSame('failed', $sync->fresh()->status);
+    }
+
     public function test_status_retorna_estrutura_correta(): void
     {
         $sync = SincronizacaoCidadao::create([
@@ -143,5 +158,37 @@ class ConformidadeCidadaoTest extends TestCase
             'meta' => ['total', 'per_page', 'current_page', 'last_page'],
         ]);
         $this->assertEquals(1, $r->json('meta.total'));
+    }
+
+    public function test_itens_retorna_atualizacoes_do_historico(): void
+    {
+        $sync = SincronizacaoCidadao::create([
+            'job_id'       => Str::uuid(),
+            'status'       => 'completed',
+            'iniciado_por' => $this->admin->id,
+        ]);
+
+        SincronizacaoItem::create([
+            'sincronizacao_id' => $sync->id,
+            'acao'             => 'atualizar',
+            'cpf'              => '12345678900',
+            'cns'              => '123456789012345',
+            'nome_esus'        => 'Fulano',
+            'client_id'        => 1,
+            'payload'          => ['phone' => '35999999999'],
+            'aplicado'         => true,
+            'erro'             => null,
+        ]);
+
+        $r = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/conformidade-cidadao/itens/{$sync->job_id}");
+
+        $r->assertStatus(200)->assertJsonStructure([
+            'sync' => ['job_id', 'status', 'created_at', 'iniciado_por'],
+            'data' => [['id', 'acao', 'cpf', 'cns', 'nome_esus', 'payload', 'aplicado', 'erro']],
+            'meta' => ['total', 'per_page', 'current_page', 'last_page'],
+        ]);
+        $this->assertEquals(1, $r->json('meta.total'));
+        $this->assertTrue($r->json('data.0.aplicado'));
     }
 }

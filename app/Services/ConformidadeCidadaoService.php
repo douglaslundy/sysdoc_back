@@ -147,6 +147,7 @@ class ConformidadeCidadaoService
             'pec_fk'      => $hasPec ? $this->firstCol('tb_fat_cad_individual', ['co_fat_cidadao_pec', 'co_seq_fat_cidadao_pec', 'co_cidadao_pec']) : null,
             'pec_pk'      => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['co_seq_fat_cidadao_pec']) : null,
             'pec_nome'    => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['no_cidadao', 'no_nome_cidadao']) : null,
+            'pec_dt_nasc' => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['dt_nascimento', 'dt_nasc', 'dt_data_nascimento', 'dt_nascimento_cidadao']) : null,
             'pec_cpf'     => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['nu_cpf_cidadao', 'nu_cpf', 'co_cpf']) : null,
             'pec_cns'     => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['nu_cns']) : null,
             'pec_sexo'    => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['co_dim_sexo']) : null,
@@ -157,6 +158,7 @@ class ConformidadeCidadaoService
             'hasCidadao'      => $hasCidadao,
             'cid_pk'          => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['co_seq_cidadao']) : null,
             'cid_mae'         => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['no_mae', 'no_mae_filtro', 'no_nome_mae']) : null,
+            'cid_dt_nasc'     => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['dt_nascimento', 'dt_nasc', 'dt_data_nascimento', 'dt_nascimento_cidadao']) : null,
             'cid_logradouro'  => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['ds_logradouro', 'no_logradouro']) : null,
             'cid_numero'      => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['nu_numero', 'nu_num_logradouro']) : null,
             'cid_complemento' => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['ds_complemento', 'no_complemento']) : null,
@@ -195,8 +197,40 @@ class ConformidadeCidadaoService
 
     private function countEsus(array $cols): int
     {
-        $cpfExpr = $cols['cpf'] ? 'fci.' . $this->quoteCol($cols['cpf']) : 'NULL';
-        $cnsExpr = $cols['cns'] ? 'fci.' . $this->quoteCol($cols['cns']) : 'NULL';
+        $pecJoin = '';
+        $fciCpf = $cols['cpf'] ? "NULLIF(NULLIF(trim(fci." . $this->quoteCol($cols['cpf']) . "::text), ''), '0')" : null;
+        $pecCpf = null;
+        $fciCns = $cols['cns'] ? "NULLIF(NULLIF(trim(fci." . $this->quoteCol($cols['cns']) . "::text), ''), '0')" : null;
+        $pecCns = null;
+
+        if ($cols['pec_fk'] && $cols['pec_pk']) {
+            $pecJoin = 'LEFT JOIN tb_fat_cidadao_pec pec ON pec.'
+                . $this->quoteCol($cols['pec_pk'])
+                . ' = fci.'
+                . $this->quoteCol($cols['pec_fk']);
+
+            if ($cols['pec_cpf']) {
+                $pecCpf = "NULLIF(NULLIF(trim(pec." . $this->quoteCol($cols['pec_cpf']) . "::text), ''), '0')";
+            }
+
+            if ($cols['pec_cns']) {
+                $pecCns = "NULLIF(NULLIF(trim(pec." . $this->quoteCol($cols['pec_cns']) . "::text), ''), '0')";
+            }
+        }
+
+        $cpfExpr = match (true) {
+            $fciCpf && $pecCpf => "COALESCE({$fciCpf}, {$pecCpf})",
+            (bool) $fciCpf     => $fciCpf,
+            (bool) $pecCpf     => $pecCpf,
+            default            => 'NULL',
+        };
+
+        $cnsExpr = match (true) {
+            $fciCns && $pecCns => "COALESCE({$fciCns}, {$pecCns})",
+            (bool) $fciCns     => $fciCns,
+            (bool) $pecCns     => $pecCns,
+            default            => 'NULL',
+        };
 
         // Conta cidadãos únicos: tb_fat_cad_individual tem múltiplas fichas por cidadão
         // (diferentes equipes, períodos distintos). Usar DISTINCT para contar pessoas, não fichas.
@@ -207,10 +241,14 @@ class ConformidadeCidadaoService
                     ELSE 'n:' || {$cnsExpr}
                  END) AS total
                  FROM tb_fat_cad_individual fci
+                 {$pecJoin}
                  WHERE ({$cpfExpr} IS NOT NULL OR {$cnsExpr} IS NOT NULL)"
             );
             return (int) ($result->total ?? 0);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::warning('[ConformidadeCidadao] Falha ao contar eSUS para progresso', [
+                'error' => $e->getMessage(),
+            ]);
             return 0;
         }
     }
@@ -230,6 +268,8 @@ class ConformidadeCidadaoService
                 'dt_obito'   => $cols['dt_obito'] ?? null,
                 'cid_dt_obito' => $cols['cid_dt_obito'] ?? null,
                 'dt_nasc'    => $cols['dt_nasc'] ?? null,
+                'pec_dt_nasc' => $cols['pec_dt_nasc'] ?? null,
+                'cid_dt_nasc' => $cols['cid_dt_nasc'] ?? null,
                 'logradouro' => $cols['logradouro'] ?? null,
                 'municipio'  => $cols['municipio'] ?? null,
                 'hasDom'     => $cols['hasDom'] ?? null,
@@ -267,8 +307,8 @@ class ConformidadeCidadaoService
                 &$obitos, &$semAlteracao, &$itens, &$lastProgress, &$seenKeys, $sync, $cols
             ) {
                 foreach ($rows as $row) {
-                    $cpfRaw = $row['cpf'] ? preg_replace('/\D/', '', $row['cpf']) : null;
-                    $cnsRaw = $row['cns'] ? preg_replace('/\D/', '', $row['cns']) : null;
+                    $cpfRaw = $this->normalizeDocument($row['cpf'] ?? null, 11);
+                    $cnsRaw = $this->normalizeDocument($row['cns'] ?? null, 15);
 
                     if (!$cpfRaw && !$cnsRaw) {
                         continue;
@@ -298,8 +338,8 @@ class ConformidadeCidadaoService
                         $itens[] = [
                             'sincronizacao_id' => $sync->id,
                             'acao'      => 'criar',
-                            'cpf'       => $row['cpf'] ? substr($row['cpf'], 0, 18) : null,
-                            'cns'       => $row['cns'] ? substr($row['cns'], 0, 15) : null,
+                            'cpf'       => $cpfRaw ? substr($cpfRaw, 0, 18) : null,
+                            'cns'       => $cnsRaw ? substr($cnsRaw, 0, 15) : null,
                             'nome_esus' => substr($row['nome'] ?? '', 0, 150),
                             'client_id' => null,
                             'payload'   => json_encode($payload),
@@ -311,21 +351,22 @@ class ConformidadeCidadaoService
                         $isFalecido    = $this->isTruthy($row['st_faleceu'] ?? null);
                         $esusUpdated   = $row['atualizado'] ? Carbon::parse($row['atualizado']) : null;
                         $sysdocUpdated = $client->updated_at;
+                        $esusMaisRecente = $esusUpdated && (!$sysdocUpdated || $esusUpdated->gt($sysdocUpdated));
 
                         // Só processa se e-SUS for mais recente (ou não tiver timestamp)
-                        $temCampoNuloRelevante = empty($client->born_date);
-                        if (!$temCampoNuloRelevante && $esusUpdated && $sysdocUpdated && $esusUpdated->lte($sysdocUpdated)) {
+                        $temCampoNuloRelevante = $this->hasMissingCriticalData($client);
+                        if (!$temCampoNuloRelevante && !$esusMaisRecente) {
                             $semAlteracao++;
                             continue;
                         }
 
-                        if ($isFalecido && $client->active) {
+                        if ($isFalecido && $client->active && $esusMaisRecente) {
                             $dtObito = $row['dt_obito'] ?? null;
                             $itens[] = [
                                 'sincronizacao_id' => $sync->id,
                                 'acao'      => 'obito',
-                                'cpf'       => $row['cpf'] ? substr($row['cpf'], 0, 18) : null,
-                                'cns'       => $row['cns'] ? substr($row['cns'], 0, 15) : null,
+                                'cpf'       => $cpfRaw ? substr($cpfRaw, 0, 18) : null,
+                                'cns'       => $cnsRaw ? substr($cnsRaw, 0, 15) : null,
                                 'nome_esus' => substr($row['nome'] ?? $client->name, 0, 150),
                                 'client_id' => $client->id,
                                 'payload'   => json_encode(['dt_obito' => $dtObito]),
@@ -333,13 +374,13 @@ class ConformidadeCidadaoService
                             ];
                             $obitos++;
                         } else {
-                            $diff = $this->buildDiffPayload($client, $row, $cols);
+                            $diff = $this->buildDiffPayload($client, $row, $cols, $esusMaisRecente);
                             if (empty($diff)) { $semAlteracao++; continue; }
                             $itens[] = [
                                 'sincronizacao_id' => $sync->id,
                                 'acao'      => 'atualizar',
-                                'cpf'       => $row['cpf'] ? substr($row['cpf'], 0, 18) : null,
-                                'cns'       => $row['cns'] ? substr($row['cns'], 0, 15) : null,
+                                'cpf'       => $cpfRaw ? substr($cpfRaw, 0, 18) : null,
+                                'cns'       => $cnsRaw ? substr($cnsRaw, 0, 15) : null,
                                 'nome_esus' => substr($row['nome'] ?? $client->name, 0, 150),
                                 'client_id' => $client->id,
                                 'payload'   => json_encode($diff),
@@ -392,9 +433,11 @@ class ConformidadeCidadaoService
 
     private function chunkEsus(array $cols, callable $callback): void
     {
-        // CPF: fci.nu_cpf_cidadao tem valor limpo; pec como fallback
-        $fciCpf = $cols['cpf'] ? 'fci.' . $this->quoteCol($cols['cpf']) : null;
-        $pecCpf = ($cols['pec_fk'] && $cols['pec_cpf']) ? 'pec.' . $this->quoteCol($cols['pec_cpf']) : null;
+        // CPF/CNS podem vir numericos ou zerados no e-SUS; normaliza na SQL antes do COALESCE.
+        $fciCpf = $cols['cpf'] ? "NULLIF(NULLIF(trim(fci." . $this->quoteCol($cols['cpf']) . "::text), ''), '0')" : null;
+        $pecCpf = ($cols['pec_fk'] && $cols['pec_pk'] && $cols['pec_cpf'])
+            ? "NULLIF(NULLIF(trim(pec." . $this->quoteCol($cols['pec_cpf']) . "::text), ''), '0')"
+            : null;
         $cpfExpr = match (true) {
             $fciCpf && $pecCpf => "COALESCE({$fciCpf}, {$pecCpf})",
             (bool) $fciCpf     => $fciCpf,
@@ -403,9 +446,10 @@ class ConformidadeCidadaoService
         };
 
         // CNS: fci.nu_cns costuma ser "0" (placeholder) — filtrar antes de usar; real vem de pec
-        $fciCnsRaw = $cols['cns'] ? 'fci.' . $this->quoteCol($cols['cns']) : null;
-        $fciCns    = $fciCnsRaw ? "NULLIF(NULLIF(trim({$fciCnsRaw}::text), ''), '0')" : null;
-        $pecCns    = ($cols['pec_fk'] && $cols['pec_cns']) ? 'pec.' . $this->quoteCol($cols['pec_cns']) : null;
+        $fciCns = $cols['cns'] ? "NULLIF(NULLIF(trim(fci." . $this->quoteCol($cols['cns']) . "::text), ''), '0')" : null;
+        $pecCns = ($cols['pec_fk'] && $cols['pec_pk'] && $cols['pec_cns'])
+            ? "NULLIF(NULLIF(trim(pec." . $this->quoteCol($cols['pec_cns']) . "::text), ''), '0')"
+            : null;
         $cnsExpr = match (true) {
             $fciCns && $pecCns => "COALESCE({$fciCns}, {$pecCns})",
             (bool) $fciCns     => $fciCns,
@@ -413,7 +457,8 @@ class ConformidadeCidadaoService
             default            => 'NULL',
         };
 
-        $dtNascExpr = $cols['dt_nasc']    ? 'fci.' . $this->quoteCol($cols['dt_nasc'])    : 'NULL';
+        $fciDtNasc = $cols['dt_nasc'] ? 'fci.' . $this->quoteCol($cols['dt_nasc']) : null;
+        $dtNascExpr = $fciDtNasc ?? 'NULL';
         $falExpr    = 'NULL';
         $obitoExpr  = 'NULL';
         $updExpr    = $cols['atualizado'] ? 'fci.' . $this->quoteCol($cols['atualizado']) : 'NULL';
@@ -469,19 +514,30 @@ class ConformidadeCidadaoService
 
         $fciNomeCol = $cols['nome'] ? 'fci.' . $this->quoteCol($cols['nome']) : null;
 
-        if ($cols['pec_fk'] && $cols['pec_pk'] && $cols['pec_nome']) {
+        $needsPecJoin = $cols['pec_nome']
+            || $cols['pec_dt_nasc']
+            || $cols['pec_cpf']
+            || $cols['pec_cns']
+            || $cols['pec_sexo']
+            || $cols['pec_telefone']
+            || $cols['pec_cid_fk']
+            || $cols['pec_st_faleceu'];
+
+        if ($cols['pec_fk'] && $cols['pec_pk'] && $needsPecJoin) {
             $pecPk   = $this->quoteCol($cols['pec_pk']);
             $pecFk   = $this->quoteCol($cols['pec_fk']);
-            $pecNome = 'pec.' . $this->quoteCol($cols['pec_nome']);
             $pecJoin = "LEFT JOIN tb_fat_cidadao_pec pec ON pec.{$pecPk} = fci.{$pecFk}";
 
-            $filterPec = "NULLIF(CASE WHEN {$pecNome} ~* '^[0-9a-f]{32,}$' OR {$pecNome} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN NULL ELSE {$pecNome} END, '')";
+            if ($cols['pec_nome']) {
+                $pecNome = 'pec.' . $this->quoteCol($cols['pec_nome']);
+                $filterPec = "NULLIF(CASE WHEN {$pecNome} ~* '^[0-9a-f]{32,}$' OR {$pecNome} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN NULL ELSE {$pecNome} END, '')";
 
-            if ($fciNomeCol) {
-                $filterFci = "NULLIF(CASE WHEN {$fciNomeCol} ~* '^[0-9a-f]{32,}$' OR {$fciNomeCol} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN NULL ELSE {$fciNomeCol} END, '')";
-                $nomeExpr  = "COALESCE({$filterPec}, {$filterFci})";
-            } else {
-                $nomeExpr = $filterPec;
+                if ($fciNomeCol) {
+                    $filterFci = "NULLIF(CASE WHEN {$fciNomeCol} ~* '^[0-9a-f]{32,}$' OR {$fciNomeCol} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN NULL ELSE {$fciNomeCol} END, '')";
+                    $nomeExpr  = "COALESCE({$filterPec}, {$filterFci})";
+                } else {
+                    $nomeExpr = $filterPec;
+                }
             }
         } elseif ($fciNomeCol) {
             $nomeExpr = "NULLIF(CASE WHEN {$fciNomeCol} ~* '^[0-9a-f]{32,}$' OR {$fciNomeCol} ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN NULL ELSE {$fciNomeCol} END, '')";
@@ -490,13 +546,35 @@ class ConformidadeCidadaoService
         // Nome da mãe: fci.no_nome_mae é SHA-1 hashed — vem de tb_cidadao via pec.co_cidadao
         $cidJoin = '';
         $maeExpr = 'NULL';
-        if ($cols['pec_fk'] && $cols['pec_pk'] && $cols['pec_cid_fk'] && $cols['cid_pk'] && $cols['cid_mae']) {
+        $needsCidJoin = $cols['cid_mae']
+            || $cols['cid_dt_nasc']
+            || $cols['cid_logradouro']
+            || $cols['cid_numero']
+            || $cols['cid_complemento']
+            || $cols['cid_cep']
+            || $cols['cid_bairro']
+            || $cols['cid_municipio']
+            || $cols['cid_st_faleceu']
+            || $cols['cid_dt_obito'];
+
+        if ($cols['pec_fk'] && $cols['pec_pk'] && $cols['pec_cid_fk'] && $cols['cid_pk'] && $needsCidJoin) {
             $pecCidFkQ = $this->quoteCol($cols['pec_cid_fk']);
             $cidPkQ    = $this->quoteCol($cols['cid_pk']);
             $cidJoin   = "LEFT JOIN tb_cidadao cid ON cid.{$cidPkQ} = pec.{$pecCidFkQ}";
-            $cidMaeCol = 'cid.' . $this->quoteCol($cols['cid_mae']);
-            $maeExpr   = "NULLIF(CASE WHEN {$cidMaeCol} ~* '^[0-9a-f]{32,}$' THEN NULL ELSE {$cidMaeCol} END, '')";
+            if ($cols['cid_mae']) {
+                $cidMaeCol = 'cid.' . $this->quoteCol($cols['cid_mae']);
+                $maeExpr   = "NULLIF(CASE WHEN {$cidMaeCol} ~* '^[0-9a-f]{32,}$' THEN NULL ELSE {$cidMaeCol} END, '')";
+            }
         }
+
+        $dtNascParts = array_values(array_filter([
+            $fciDtNasc,
+            ($cols['pec_dt_nasc'] && $pecJoin) ? 'pec.' . $this->quoteCol($cols['pec_dt_nasc']) : null,
+            ($cols['cid_dt_nasc'] && $cidJoin) ? 'cid.' . $this->quoteCol($cols['cid_dt_nasc']) : null,
+        ]));
+        $dtNascExpr = count($dtNascParts) > 1
+            ? 'COALESCE(' . implode(', ', $dtNascParts) . ')'
+            : ($dtNascParts[0] ?? 'NULL');
 
         $fciFal = $cols['st_faleceu'] ? 'fci.' . $this->quoteCol($cols['st_faleceu']) : null;
         $pecFal = ($cols['pec_fk'] && $cols['pec_st_faleceu']) ? 'pec.' . $this->quoteCol($cols['pec_st_faleceu']) : null;
@@ -712,6 +790,35 @@ class ConformidadeCidadaoService
         return in_array(strtolower((string) $val), ['t', 'true', '1', 'yes', 's', 'sim'], true);
     }
 
+    private function normalizeDocument(mixed $value, int $expectedLength): ?string
+    {
+        if ($value === null) return null;
+        $digits = preg_replace('/\D/', '', (string) $value);
+        if ($digits === '' || preg_match('/^0+$/', $digits)) return null;
+
+        return strlen($digits) <= $expectedLength ? $digits : substr($digits, 0, $expectedLength);
+    }
+
+    private function hasMissingCriticalData(Client $client): bool
+    {
+        $address = $client->addresses;
+
+        return empty($client->born_date)
+            || empty($client->cpf)
+            || empty($client->cns)
+            || !$address
+            || empty($address->zip_code)
+            || empty($address->street)
+            || empty($address->number)
+            || empty($address->district)
+            || empty($address->complement);
+    }
+
+    private function hasFilledValue(mixed $value): bool
+    {
+        return $value !== null && trim((string) $value) !== '';
+    }
+
     private function buildCreatePayload(array $row, array $cols): array
     {
         $addrNorm = $this->normalizeAddressFromRow($row);
@@ -741,61 +848,81 @@ class ConformidadeCidadaoService
         return $payload;
     }
 
-    private function buildDiffPayload(Client $client, array $row, array $cols): array
+    private function shouldSyncField(mixed $newValue, mixed $currentValue, bool $allowOverwrite): bool
+    {
+        if (!$this->hasFilledValue($newValue)) return false;
+
+        $new = trim((string) $newValue);
+        $current = $currentValue === null ? '' : trim((string) $currentValue);
+
+        return $new !== $current && ($allowOverwrite || $current === '');
+    }
+
+    private function buildDiffPayload(Client $client, array $row, array $cols, bool $allowOverwrite = false): array
     {
         $addrNorm = $this->normalizeAddressFromRow($row);
         $diff = [];
 
-        if ($row['nome'] && $row['nome'] !== $client->name) {
+        if ($this->shouldSyncField($row['nome'] ?? null, $client->name, $allowOverwrite)) {
             $diff['nome'] = ['de' => $client->name, 'para' => $row['nome']];
         }
 
-        if (($row['mae'] ?? null) && $row['mae'] !== $client->mother) {
+        if ($this->shouldSyncField($row['mae'] ?? null, $client->mother, $allowOverwrite)) {
             $diff['mother'] = ['de' => $client->mother, 'para' => $row['mae']];
+        }
+
+        $cpf = $this->normalizeDocument($row['cpf'] ?? null, 11);
+        if ($this->shouldSyncField($cpf, $this->normalizeDocument($client->cpf, 11), $allowOverwrite)) {
+            $diff['cpf'] = ['de' => $client->cpf, 'para' => $cpf];
+        }
+
+        $cns = $this->normalizeDocument($row['cns'] ?? null, 15);
+        if ($this->shouldSyncField($cns, $this->normalizeDocument($client->cns, 15), $allowOverwrite)) {
+            $diff['cns'] = ['de' => $client->cns, 'para' => $cns];
         }
 
         if ($row['dt_nasc']) {
             $esusDate   = Carbon::parse($row['dt_nasc'])->format('Y-m-d');
             $sysdocDate = $client->born_date ? Carbon::parse($client->born_date)->format('Y-m-d') : null;
-            if ($esusDate !== $sysdocDate) {
+            if ($this->shouldSyncField($esusDate, $sysdocDate, $allowOverwrite)) {
                 $diff['born_date'] = ['de' => $sysdocDate, 'para' => $esusDate];
             }
         }
 
         // Atualiza sexo quando e-SUS tem valor determinado e diverge do Sysdoc
         $rowSexo = $row['sexo'] ?? null;
-        if ($rowSexo && $rowSexo !== 'INDETERMINATE' && $rowSexo !== $client->sexo) {
+        if ($rowSexo && $rowSexo !== 'INDETERMINATE' && $this->shouldSyncField($rowSexo, $client->sexo, $allowOverwrite)) {
             $diff['sexo'] = ['de' => $client->sexo, 'para' => $rowSexo];
         }
 
-        if (($row['telefone'] ?? null) && $row['telefone'] !== $client->phone) {
+        if ($this->shouldSyncField($row['telefone'] ?? null, $client->phone, $allowOverwrite)) {
             $diff['phone'] = ['de' => $client->phone, 'para' => $row['telefone']];
         }
 
-        if (($row['raca_cor'] ?? null) && $row['raca_cor'] !== $client->raca_cor) {
+        if ($this->shouldSyncField($row['raca_cor'] ?? null, $client->raca_cor, $allowOverwrite)) {
             $diff['raca_cor'] = ['de' => $client->raca_cor, 'para' => $row['raca_cor']];
         }
-        if (($row['escolaridade'] ?? null) && $row['escolaridade'] !== $client->escolaridade) {
+        if ($this->shouldSyncField($row['escolaridade'] ?? null, $client->escolaridade, $allowOverwrite)) {
             $diff['escolaridade'] = ['de' => $client->escolaridade, 'para' => $row['escolaridade']];
         }
-        if (($row['nacionalidade'] ?? null) && $row['nacionalidade'] !== $client->nacionalidade) {
+        if ($this->shouldSyncField($row['nacionalidade'] ?? null, $client->nacionalidade, $allowOverwrite)) {
             $diff['nacionalidade'] = ['de' => $client->nacionalidade, 'para' => $row['nacionalidade']];
         }
 
         $addr = $client->addresses;
         if (!empty($addrNorm['street'])) {
             $addrDiff = [];
-            if ($addrNorm['street'] !== ($addr?->street ?? null))
+            if ($this->shouldSyncField($addrNorm['street'], $addr?->street, $allowOverwrite))
                 $addrDiff['street'] = ['de' => $addr?->street, 'para' => $addrNorm['street']];
-            if ($addrNorm['number'] !== ($addr?->number ?? null))
+            if ($this->shouldSyncField($addrNorm['number'], $addr?->number, $allowOverwrite))
                 $addrDiff['number'] = ['de' => $addr?->number, 'para' => $addrNorm['number']];
-            if ($addrNorm['district'] !== ($addr?->district ?? null))
+            if ($this->shouldSyncField($addrNorm['district'], $addr?->district, $allowOverwrite))
                 $addrDiff['district'] = ['de' => $addr?->district, 'para' => $addrNorm['district']];
-            if (($addrNorm['zip_code'] ?? null) !== ($addr?->zip_code ?? null))
+            if ($this->shouldSyncField($addrNorm['zip_code'] ?? null, $addr?->zip_code, $allowOverwrite))
                 $addrDiff['zip_code'] = ['de' => $addr?->zip_code, 'para' => $addrNorm['zip_code']];
-            if (($addrNorm['complement'] ?? null) !== ($addr?->complement ?? null))
+            if ($this->shouldSyncField($addrNorm['complement'] ?? null, $addr?->complement, $allowOverwrite))
                 $addrDiff['complement'] = ['de' => $addr?->complement, 'para' => $addrNorm['complement']];
-            if ($addrNorm['city'] !== ($addr?->city ?? null))
+            if ($this->shouldSyncField($addrNorm['city'], $addr?->city, $allowOverwrite))
                 $addrDiff['city'] = ['de' => $addr?->city, 'para' => $addrNorm['city']];
             if (!empty($addrDiff)) $diff['address'] = $addrDiff;
         }
@@ -912,6 +1039,8 @@ class ConformidadeCidadaoService
         $clientData = [];
         if (isset($payload['nome']))      $clientData['name']      = $payload['nome']['para'];
         if (isset($payload['mother']))    $clientData['mother']    = $payload['mother']['para'];
+        if (isset($payload['cpf']))       $clientData['cpf']       = $payload['cpf']['para'];
+        if (isset($payload['cns']))       $clientData['cns']       = $payload['cns']['para'];
         if (isset($payload['born_date'])) $clientData['born_date'] = $payload['born_date']['para'];
         if (isset($payload['sexo']))      $clientData['sexo']      = $payload['sexo']['para'];
         if (isset($payload['phone']))     $clientData['phone']     = $payload['phone']['para'];
@@ -924,13 +1053,25 @@ class ConformidadeCidadaoService
         }
 
         if (isset($payload['address'])) {
-            $addrData = [];
+            $address = $client->addresses;
+            $addrData = $address ? [
+                'street'     => $address->street,
+                'number'     => $address->number,
+                'complement' => $address->complement,
+                'zip_code'   => $address->zip_code,
+                'district'   => $address->district,
+                'city'       => $address->city,
+            ] : [];
+
             foreach ($payload['address'] as $field => $change) {
-                $addrData[$field] = $change['para'];
+                $newValue = $change['para'] ?? null;
+                if ($this->hasFilledValue($newValue)) {
+                    $addrData[$field] = $newValue;
+                }
             }
             $addrData = $this->sanitizeAddressData($addrData);
-            if ($client->addresses) {
-                $client->addresses->update($addrData);
+            if ($address) {
+                $address->update($addrData);
             } else {
                 Addresses::create(array_merge($addrData, ['id_client' => $client->id, 'active' => true]));
             }

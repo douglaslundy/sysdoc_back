@@ -28,7 +28,7 @@ class StoreClientRequest extends FormRequest
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
             'obs' => 'nullable|string|max:200',
-            'born_date' => 'nullable|date',
+            'born_date' => 'required|date',
             'sexo' => 'required|in:MASCULINE,FEMININE,INDETERMINATE',
             'active' => 'boolean',
         ];

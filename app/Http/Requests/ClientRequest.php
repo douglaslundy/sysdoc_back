@@ -39,7 +39,7 @@ class ClientRequest extends FormRequest
             'email' => ['nullable', 'string', 'email', 'max:100'],
             'phone' => [new PhoneValidation],
             'obs' => ['nullable', 'string', 'max:500'],
-            'born_date' => ['nullable', 'date'],
+            'born_date' => ['required', 'date'],
             'sexo' => ['nullable', Rule::in(['MASCULINE', 'FEMININE', 'INDETERMINATE'])],
             'raca_cor'    => ['nullable', 'string', 'max:30'],
             'data_obito'  => ['nullable', 'date'],

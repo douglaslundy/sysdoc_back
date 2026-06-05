@@ -124,7 +124,7 @@ class ConformidadeCidadaoController extends Controller
             return response()->json(['message' => 'Sincronização não encontrada.'], 404);
         }
 
-        if (!in_array($sync->status, ['pending', 'analyzing', 'applying'])) {
+        if (!in_array($sync->status, ['pending', 'analyzing', 'preview_ready', 'applying'])) {
             return response()->json(['message' => 'Não é possível cancelar no status atual.'], 409);
         }
 
@@ -189,6 +189,54 @@ class ConformidadeCidadaoController extends Controller
             ->count();
 
         return response()->json([
+            'data' => $itens,
+            'meta' => [
+                'total'        => $total,
+                'per_page'     => $perPage,
+                'current_page' => $page,
+                'last_page'    => max(1, (int) ceil($total / $perPage)),
+            ],
+        ]);
+    }
+
+    public function itens(Request $request, string $jobId): JsonResponse
+    {
+        if (!$this->autorizado($request)) {
+            return response()->json(['message' => 'Sem permissao.'], 403);
+        }
+
+        $sync = SincronizacaoCidadao::where('job_id', $jobId)
+            ->with('iniciadoPor:id,name')
+            ->first();
+        if (!$sync) {
+            return response()->json(['message' => 'Sincronizacao nao encontrada.'], 404);
+        }
+
+        $perPage = min(500, max(10, (int) $request->query('per_page', 50)));
+        $page    = max(1, (int) $request->query('page', 1));
+
+        $query = SincronizacaoItem::where('sincronizacao_id', $sync->id)
+            ->select(['id', 'acao', 'cpf', 'cns', 'nome_esus', 'client_id', 'payload', 'aplicado', 'erro'])
+            ->orderBy('id');
+
+        $total = (clone $query)->count();
+        $itens = $query->forPage($page, $perPage)->get();
+
+        return response()->json([
+            'sync' => [
+                'job_id' => $sync->job_id,
+                'status' => $sync->status,
+                'created_at' => $sync->created_at,
+                'aplicado_em' => $sync->aplicado_em,
+                'preview_criados' => $sync->preview_criados,
+                'preview_atualizados' => $sync->preview_atualizados,
+                'preview_obitos' => $sync->preview_obitos,
+                'result_criados' => $sync->result_criados,
+                'result_atualizados' => $sync->result_atualizados,
+                'result_obitos' => $sync->result_obitos,
+                'result_erros' => $sync->result_erros,
+                'iniciado_por' => $sync->iniciadoPor,
+            ],
             'data' => $itens,
             'meta' => [
                 'total'        => $total,
