@@ -1048,13 +1048,13 @@ class VisitaAcsController extends MonitorApsBaseController
         $queryParams = array_merge($params, [$perPage, $offset]);
         $citizenExpr = $this->citizenNameExpr('v');
 
-        // Query completa: citizen via LATERAL + nu_hora
+        // Query completa: citizen via citizenNameExpr (tb_fat_cidadao_pec) + nu_hora
         $sqlFull = "
             SELECT
                 v.co_seq_fat_visita_domiciliar   AS id,
                 t.dt_registro                    AS data,
                 t.nu_hora                        AS hora,
-                ci.no_cidadao                    AS cidadao,
+                {$citizenExpr}                   AS cidadao,
                 p.no_profissional                AS agente,
                 c.nu_cbo                         AS cbo,
                 e.nu_ine                         AS equipe_ine,
@@ -1082,12 +1082,6 @@ class VisitaAcsController extends MonitorApsBaseController
                 COUNT(*) OVER()                  AS total_count
             FROM tb_fat_visita_domiciliar v
             {$this->baseJoins()}
-            LEFT JOIN LATERAL (
-                SELECT no_cidadao
-                FROM   tb_fat_cad_individual
-                WHERE  co_fat_cidadao_pec = v.co_fat_cidadao_pec
-                LIMIT  1
-            ) ci ON true
             WHERE {$where}
             ORDER BY t.dt_registro DESC, v.co_seq_fat_visita_domiciliar DESC
             LIMIT ? OFFSET ?

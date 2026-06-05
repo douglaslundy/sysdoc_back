@@ -318,7 +318,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::delete('/ordinances/{ordinance}/attachments/{attachment}', [OrdinanceAttachmentController::class, 'destroy']);
 
     // Alvarás e Estabelecimentos (Vigilância Sanitária)
-    // ATENÇÃO: rotas estáticas ANTES de apiResource para não conflitar com {id}
+    // ATENCAO: rotas estaticas ANTES de apiResource para nao conflitar com {id}
     Route::get('/estabelecimentos/select', [EstabelecimentoController::class, 'select']);
     Route::get('/cnaes/select', [EstabelecimentoController::class, 'cnaesSelect']);
     Route::apiResource('estabelecimentos', EstabelecimentoController::class);

@@ -1768,6 +1768,349 @@ git commit -m "feat: página conformidade-cidadao"
 
 ---
 
+---
+
+## Task 11: Debug e Fix — Óbitos + Exposição de Erros
+
+**Files:**
+- Modify: `sysdoc_back/app/Services/ConformidadeCidadaoService.php`
+- Modify: `sysdoc_back/app/Http/Controllers/ConformidadeCidadaoController.php`
+- Modify: `sysdoc_back/routes/api.php`
+- Modify: `sysdoc_front/src/components/conformidadeCidadao/index.js`
+- Modify: `sysdoc_front/src/services/conformidadeCidadaoApi.js`
+
+- [ ] **Step 1: Diagnosticar colunas reais do e-SUS**
+
+Conectar ao PostgreSQL do e-SUS e executar:
+
+```sql
+SELECT column_name
+FROM information_schema.columns
+WHERE table_name = 'tb_fat_cad_individual'
+ORDER BY column_name;
+```
+
+Identificar qual coluna contém o flag de óbito e qual coluna contém a data de óbito. Atualizar a lista de candidatas em `resolveEsusCols()`:
+
+```php
+'st_faleceu' => $this->firstCol('tb_fat_cad_individual', [
+    'st_faleceu', 'in_falecido', 'st_obito', 'tp_situacao_cadastro',
+    /* adicionar aqui o nome real encontrado */
+]),
+'dt_obito' => $this->firstCol('tb_fat_cad_individual', [
+    'dt_obito', 'dt_data_obito', 'dt_falecimento',
+    /* adicionar aqui o nome real encontrado */
+]),
+```
+
+- [ ] **Step 2: Adicionar log de diagnóstico no início de `analisar()`**
+
+Logo após `$cols = $this->resolveEsusCols();`:
+
+```php
+Log::info('[ConformidadeCidadao] Colunas resolvidas', [
+    'st_faleceu' => $cols['st_faleceu'],
+    'dt_obito'   => $cols['dt_obito'],
+    'dt_nasc'    => $cols['dt_nasc'],
+    'logradouro' => $cols['logradouro'],
+    'municipio'  => $cols['municipio'],
+    'hasDom'     => $cols['hasDom'],
+]);
+```
+
+- [ ] **Step 3: Persistir resumo de erros em `sincronizacoes_cidadao.erro_mensagem` ao concluir**
+
+No final de `aplicar()`, antes do `$sync->update(['status' => 'completed', ...])`:
+
+```php
+$resumoErros = null;
+if ($erros > 0) {
+    $primeiros = $sync->itens()
+        ->whereNotNull('erro')
+        ->orderBy('id')
+        ->limit(10)
+        ->pluck('erro', 'nome_esus')
+        ->map(fn($err, $nome) => "{$nome}: {$err}")
+        ->implode(' | ');
+    $resumoErros = substr("Erros ({$erros}): " . $primeiros, 0, 1000);
+}
+```
+
+E incluir `'erro_mensagem' => $resumoErros` no array do `$sync->update`.
+
+- [ ] **Step 4: Novo endpoint `GET /erros/{job_id}`**
+
+Em `ConformidadeCidadaoController`:
+
+```php
+public function erros(Request $request, string $jobId): JsonResponse
+{
+    if (!$this->autorizado($request)) {
+        return response()->json(['message' => 'Sem permissão.'], 403);
+    }
+
+    $sync = SincronizacaoCidadao::where('job_id', $jobId)->first();
+    if (!$sync) {
+        return response()->json(['message' => 'Sincronização não encontrada.'], 404);
+    }
+
+    $perPage = min(100, max(10, (int) $request->query('per_page', 50)));
+    $page    = max(1, (int) $request->query('page', 1));
+
+    $itens = SincronizacaoItem::where('sincronizacao_id', $sync->id)
+        ->whereNotNull('erro')
+        ->select(['id', 'acao', 'cpf', 'cns', 'nome_esus', 'client_id', 'erro'])
+        ->forPage($page, $perPage)
+        ->get();
+
+    $total = SincronizacaoItem::where('sincronizacao_id', $sync->id)->whereNotNull('erro')->count();
+
+    return response()->json([
+        'data' => $itens,
+        'meta' => [
+            'total'        => $total,
+            'per_page'     => $perPage,
+            'current_page' => $page,
+            'last_page'    => max(1, (int) ceil($total / $perPage)),
+        ],
+    ]);
+}
+```
+
+Em `routes/api.php`, dentro do grupo `conformidade-cidadao`:
+
+```php
+Route::get('erros/{job_id}', [ConformidadeCidadaoController::class, 'erros']);
+```
+
+- [ ] **Step 5: Frontend — exibir erros após conclusão**
+
+Em `conformidadeCidadaoApi.js`, adicionar:
+
+```js
+erros: (jobId, page = 1, perPage = 50) =>
+    api.get(`${BASE}/erros/${jobId}`, { params: { page, per_page: perPage } }).then(r => r.data),
+```
+
+No componente `ConformidadeCidadao`, dentro do bloco `fase === 'done'`, se `syncData.result_erros > 0`, exibir tabela com os primeiros erros (carregar via `conformidadeCidadaoApi.erros(jobId)`):
+
+```js
+// Estado adicional
+const [errosDetalhe, setErrosDetalhe] = useState([]);
+
+// No handleAplicar, após concluído:
+if (syncData.result_erros > 0) {
+    const errosData = await conformidadeCidadaoApi.erros(jobId);
+    setErrosDetalhe(errosData.data);
+}
+```
+
+Tabela de erros:
+- Colunas: Nome (e-SUS), CPF, Ação, Motivo do erro
+- Botão "Exportar PDF" (abre `window.print()` ou chama endpoint de PDF)
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add app/Services/ConformidadeCidadaoService.php \
+        app/Http/Controllers/ConformidadeCidadaoController.php \
+        routes/api.php
+git commit -m "fix: diagnóstico de colunas e-SUS, log de óbitos, endpoint de erros"
+
+cd ../sysdoc_front
+git add src/services/conformidadeCidadaoApi.js src/components/conformidadeCidadao/index.js
+git commit -m "feat: exibir erros detalhados após sincronização com falhas"
+```
+
+---
+
+## Task 12: Fix — Endereço, born_date e Cidade Padrão
+
+**Files:**
+- Modify: `sysdoc_back/app/Services/ConformidadeCidadaoService.php`
+
+- [ ] **Step 1: Garantir que born_date null no Sysdoc entra no diff**
+
+Em `buildDiffPayload()`, a lógica atual já detecta a diferença quando `$client->born_date` é null e o e-SUS tem data — pois `null !== '2000-01-01'`. Verificar se o bloqueio está na condição de timestamp:
+
+```php
+// Bloco atual — só processa se e-SUS for mais recente:
+if ($esusUpdated && $sysdocUpdated && $esusUpdated->lte($sysdocUpdated)) {
+    $semAlteracao++;
+    continue;
+}
+```
+
+Quando `$client->born_date` é null, `$client->updated_at` pode ser muito antigo, mas o timestamp do e-SUS também pode ser antigo. Solução: **ignorar o filtro de timestamp quando campos obrigatórios (`born_date`) estiverem nulos no Sysdoc**:
+
+```php
+$temCampoNulo = !$client->born_date;
+
+if (!$temCampoNulo && $esusUpdated && $sysdocUpdated && $esusUpdated->lte($sysdocUpdated)) {
+    $semAlteracao++;
+    continue;
+}
+```
+
+- [ ] **Step 2: Cidade padrão "Ilicínea"**
+
+Em `buildCreatePayload()`, na montagem do endereço:
+
+```php
+'city' => $row['municipio'] ?: 'Ilicínea',
+```
+
+Em `buildDiffPayload()`, na comparação de cidade:
+
+```php
+$cidadeEsus = ($row['municipio'] ?? null) ?: 'Ilicínea';
+if ($cidadeEsus !== $addr?->city) {
+    $addrDiff['city'] = ['de' => $addr?->city, 'para' => $cidadeEsus];
+}
+```
+
+Remover a condição `if (($row['municipio'] ?? null) && ...)` para `city` — substituir por comparação com fallback.
+
+- [ ] **Step 3: Diagnóstico se `tb_fat_cad_domiciliar` não existe**
+
+Em `resolveEsusCols()`, se `$hasDom = false`, adicionar log:
+
+```php
+if (!$hasDom) {
+    Log::warning('[ConformidadeCidadao] tb_fat_cad_domiciliar não encontrada — endereços não serão sincronizados');
+}
+```
+
+Verificar se a tabela existe na instalação local. Se não existir, avaliar se os dados de endereço estão em outra tabela (ex.: `tb_fat_cad_individual` com colunas de endereço inline) e expandir `resolveEsusCols()` para buscar nesses candidatos alternativos.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/Services/ConformidadeCidadaoService.php
+git commit -m "fix: born_date nulo entra no diff; cidade padrão Ilicínea; log de endereço"
+```
+
+---
+
+## Task 13: Feature — Sincronizar Todos os Campos da Tabela clients
+
+**Files:**
+- Modify: `sysdoc_back/app/Services/ConformidadeCidadaoService.php`
+
+- [ ] **Step 1: Listar os campos atuais da tabela clients**
+
+Executar no MySQL do Sysdoc:
+
+```sql
+DESCRIBE clients;
+```
+
+Identificar todos os campos que podem ter correspondência no e-SUS. Candidatos além dos já sincronizados:
+
+| Campo clients | Coluna e-SUS candidata |
+|---|---|
+| `raca_cor` | `co_raca_cor`, `tp_raca_cor` |
+| `sexo` | `co_sexo` (já em criar; adicionar em atualizar) |
+| `st_falecido` | `st_faleceu` (mesmo da Task 11) |
+| `escolaridade` | `co_nivel_escolaridade` |
+| `nacionalidade` | `co_nacionalidade_cidadao` |
+| `situacao_usuario` | `tp_situacao_usuario_cidadao` |
+
+- [ ] **Step 2: Expandir `resolveEsusCols()` com as novas colunas**
+
+```php
+'co_sexo'        => $this->firstCol('tb_fat_cad_individual', ['co_sexo', 'tp_sexo']),
+'raca_cor'       => $this->firstCol('tb_fat_cad_individual', ['co_raca_cor', 'tp_raca_cor']),
+'escolaridade'   => $this->firstCol('tb_fat_cad_individual', ['co_nivel_escolaridade', 'tp_nivel_escolaridade']),
+'nacionalidade'  => $this->firstCol('tb_fat_cad_individual', ['co_nacionalidade_cidadao', 'tp_nacionalidade']),
+```
+
+- [ ] **Step 3: Expandir `chunkEsus()` para selecionar as novas colunas**
+
+Adicionar as expressões no SELECT da query:
+
+```php
+$sexoExpr    = $cols['co_sexo']      ? "fci.{$cols['co_sexo']}"      : 'NULL';
+$racaExpr    = $cols['raca_cor']     ? "fci.{$cols['raca_cor']}"     : 'NULL';
+$escolaExpr  = $cols['escolaridade'] ? "fci.{$cols['escolaridade']}" : 'NULL';
+$naciExpr    = $cols['nacionalidade']? "fci.{$cols['nacionalidade']}" : 'NULL';
+```
+
+Incluir no SELECT:
+```sql
+{$sexoExpr}   AS co_sexo,
+{$racaExpr}   AS raca_cor,
+{$escolaExpr} AS escolaridade,
+{$naciExpr}   AS nacionalidade,
+```
+
+- [ ] **Step 4: Mapeamento de valores e-SUS → Sysdoc**
+
+Criar método privado de mapeamento:
+
+```php
+private function mapSexo(?string $coSexo): string
+{
+    return match (strtoupper((string) $coSexo)) {
+        'M', '1' => 'MASCULINE',
+        'F', '2' => 'FEMININE',
+        default  => 'INDETERMINATE',
+    };
+}
+
+private function mapRacaCor(?string $co): ?string
+{
+    // Mapear conforme tabela RNDS: 01=Branca, 02=Preta, 03=Parda, 04=Amarela, 05=Indígena, 99=Sem informação
+    return match ((string) $co) {
+        '01' => 'BRANCA',
+        '02' => 'PRETA',
+        '03' => 'PARDA',
+        '04' => 'AMARELA',
+        '05' => 'INDIGENA',
+        default => null,
+    };
+}
+```
+
+- [ ] **Step 5: Atualizar `buildDiffPayload()` com novos campos**
+
+```php
+// Sexo
+$sexoEsus = $this->mapSexo($row['co_sexo'] ?? null);
+if ($sexoEsus !== 'INDETERMINATE' && $sexoEsus !== $client->sexo) {
+    $diff['sexo'] = ['de' => $client->sexo, 'para' => $sexoEsus];
+}
+
+// Raça/Cor
+$racaEsus = $this->mapRacaCor($row['raca_cor'] ?? null);
+if ($racaEsus && $racaEsus !== $client->raca_cor) {
+    $diff['raca_cor'] = ['de' => $client->raca_cor, 'para' => $racaEsus];
+}
+```
+
+- [ ] **Step 6: Atualizar `buildCreatePayload()` com novos campos**
+
+```php
+'sexo'     => $this->mapSexo($row['co_sexo'] ?? null),
+'raca_cor' => $this->mapRacaCor($row['raca_cor'] ?? null),
+```
+
+- [ ] **Step 7: Atualizar `aplicarAtualizar()` para incluir novos campos**
+
+```php
+if (isset($payload['sexo']))     $clientData['sexo']     = $payload['sexo']['para'];
+if (isset($payload['raca_cor'])) $clientData['raca_cor'] = $payload['raca_cor']['para'];
+```
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add app/Services/ConformidadeCidadaoService.php
+git commit -m "feat: sincroniza sexo e raca_cor do e-SUS; mapeia todos os campos disponíveis"
+```
+
+---
+
 ## Self-Review
 
 ### Cobertura da spec

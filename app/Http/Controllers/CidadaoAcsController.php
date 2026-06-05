@@ -16,6 +16,10 @@ class CidadaoAcsController extends MonitorApsBaseController
             ['dt_nascimento', 'dt_nasc', 'dt_data_nascimento']);
         $stGestCol  = $this->firstExistingColumn('tb_fat_cad_individual',
             ['st_gestante', 'st_em_gestacao', 'in_gestante']);
+        $dtObitoCol = $this->firstExistingColumn('tb_fat_cad_individual',
+            ['dt_obito', 'dt_data_obito', 'dt_falecimento', 'data_obito']);
+        $stObitoCol = $this->firstExistingColumn('tb_fat_cad_individual',
+            ['st_obito', 'st_falecido', 'in_obito', 'in_falecido']);
 
         return [
             'cpfCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
@@ -30,6 +34,8 @@ class CidadaoAcsController extends MonitorApsBaseController
                 ['st_diabete', 'st_diabetes']),
             'dtNascCol' => $dtNascCol,
             'stGestCol' => $stGestCol,
+            'dtObitoCol'=> $dtObitoCol,
+            'stObitoCol'=> $stObitoCol,
             'hasPec'    => $this->hasTable('tb_fat_cidadao_pec'),
             'hasCidadao'=> $this->hasTable('tb_cidadao'),
             'hasPecNasc'=> ($dtNascCol === null) && $this->hasTable('tb_fat_cidadao_pec'),
@@ -45,9 +51,11 @@ class CidadaoAcsController extends MonitorApsBaseController
             'ine'              => 'nullable|string',
             'profissional_id'  => 'nullable|integer',
             'agente'           => 'nullable|string|max:255',
-            'condicao'         => 'nullable|string|in:gestante,has,dm,idoso',
+            'condicao'         => 'nullable|string|in:gestante,has,dm,idoso,obito',
             'busca'            => 'nullable|string|min:3|max:100',
             'multi_domicilio'  => 'nullable|boolean',
+            'sort'             => 'nullable|string|in:nome,idade',
+            'dir'              => 'nullable|string|in:asc,desc',
             'page'             => 'nullable|integer|min:1',
             'per_page'         => 'nullable|integer|min:10|max:200',
         ]);
@@ -60,6 +68,8 @@ class CidadaoAcsController extends MonitorApsBaseController
         $condicao       = $request->query('condicao');
         $busca          = $request->query('busca');
         $multiDomicilio = filter_var($request->query('multi_domicilio', false), FILTER_VALIDATE_BOOLEAN);
+        $sort           = $request->query('sort', 'nome');
+        $dir            = strtolower((string) $request->query('dir', 'asc')) === 'desc' ? 'DESC' : 'ASC';
         $page           = max(1, (int) ($request->query('page', 1)));
         $perPage        = min(200, max(10, (int) ($request->query('per_page', 50))));
         $offset         = ($page - 1) * $perPage;
@@ -79,6 +89,8 @@ class CidadaoAcsController extends MonitorApsBaseController
             $dmCol      = $cols['dmCol'];
             $dtNascCol  = $cols['dtNascCol'];
             $stGestCol  = $cols['stGestCol'];
+            $dtObitoCol = $cols['dtObitoCol'];
+            $stObitoCol = $cols['stObitoCol'];
             $hasPec      = $cols['hasPec'];
             $hasCidadao  = $cols['hasCidadao'];
             $hasPecNasc = $cols['hasPecNasc'];
@@ -94,6 +106,10 @@ class CidadaoAcsController extends MonitorApsBaseController
             $pecNomeCol  = $hasPec ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['no_cidadao', 'no_nome']) : null;
             $cidNomeCol  = $cidadaoJoin ? $this->firstExistingColumn('tb_cidadao', ['no_cidadao', 'no_nome']) : null;
             $pecCnsCol   = $pecJoin ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['nu_cns', 'co_cns']) : null;
+            $pecDtObitoCol = $pecJoin ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['dt_obito', 'dt_data_obito', 'dt_falecimento', 'data_obito']) : null;
+            $pecStObitoCol = $pecJoin ? $this->firstExistingColumn('tb_fat_cidadao_pec', ['st_obito', 'st_falecido', 'in_obito', 'in_falecido']) : null;
+            $cidDtObitoCol = $cidadaoJoin ? $this->firstExistingColumn('tb_cidadao', ['dt_obito', 'dt_data_obito', 'dt_falecimento', 'data_obito']) : null;
+            $cidStObitoCol = $cidadaoJoin ? $this->firstExistingColumn('tb_cidadao', ['st_obito', 'st_falecido', 'in_obito', 'in_falecido']) : null;
             $nomeParts   = [];
             if ($cidNomeCol) {
                 $nomeParts[] = "NULLIF(CASE WHEN cid.{$cidNomeCol} ~ '^[0-9a-f]{64}$' THEN NULL ELSE cid.{$cidNomeCol} END, '')";
@@ -135,6 +151,43 @@ class CidadaoAcsController extends MonitorApsBaseController
             }
 
             $gestExpr = $stGestCol ? "fci.{$stGestCol}" : 'NULL';
+            $truthyExpr = static fn(string $expr): string =>
+                "LOWER(TRIM(COALESCE({$expr}::text, '0'))) IN ('1','t','true','s','sim','y','yes')";
+            $stObitoTruthy = $stObitoCol ? $truthyExpr("fci.{$stObitoCol}") : null;
+            $pecStObitoTruthy = $pecStObitoCol ? $truthyExpr("pec.{$pecStObitoCol}") : null;
+            $cidStObitoTruthy = $cidStObitoCol ? $truthyExpr("cid.{$cidStObitoCol}") : null;
+
+            $obitoChecks = [];
+            if ($dtObitoCol) $obitoChecks[] = "fci.{$dtObitoCol} IS NOT NULL";
+            if ($stObitoTruthy) $obitoChecks[] = $stObitoTruthy;
+            if ($pecDtObitoCol) $obitoChecks[] = "pec.{$pecDtObitoCol} IS NOT NULL";
+            if ($pecStObitoTruthy) $obitoChecks[] = $pecStObitoTruthy;
+            if ($cidDtObitoCol) $obitoChecks[] = "cid.{$cidDtObitoCol} IS NOT NULL";
+            if ($cidStObitoTruthy) $obitoChecks[] = $cidStObitoTruthy;
+            $obitoExpr = count($obitoChecks) > 0
+                ? "CASE WHEN (" . implode(' OR ', $obitoChecks) . ") THEN 1 ELSE 0 END"
+                : '0';
+
+            $dataObitoParts = [];
+            if ($dtObitoCol) $dataObitoParts[] = "fci.{$dtObitoCol}";
+            if ($pecDtObitoCol) $dataObitoParts[] = "pec.{$pecDtObitoCol}";
+            if ($cidDtObitoCol) $dataObitoParts[] = "cid.{$cidDtObitoCol}";
+            if (count($dataObitoParts) > 0) {
+                $dataObitoExpr = "TO_CHAR(COALESCE(" . implode(', ', $dataObitoParts) . ")::date, 'DD/MM/YYYY')";
+            } else {
+                $dataObitoExpr = 'NULL::text';
+            }
+
+            $fonteObitoWhen = [];
+            if ($dtObitoCol) $fonteObitoWhen[] = "WHEN fci.{$dtObitoCol} IS NOT NULL THEN 'fci_dt_obito'";
+            if ($stObitoTruthy) $fonteObitoWhen[] = "WHEN {$stObitoTruthy} THEN 'fci_st_obito'";
+            if ($pecDtObitoCol) $fonteObitoWhen[] = "WHEN pec.{$pecDtObitoCol} IS NOT NULL THEN 'pec_dt_obito'";
+            if ($pecStObitoTruthy) $fonteObitoWhen[] = "WHEN {$pecStObitoTruthy} THEN 'pec_st_obito'";
+            if ($cidDtObitoCol) $fonteObitoWhen[] = "WHEN cid.{$cidDtObitoCol} IS NOT NULL THEN 'cid_dt_obito'";
+            if ($cidStObitoTruthy) $fonteObitoWhen[] = "WHEN {$cidStObitoTruthy} THEN 'cid_st_obito'";
+            $fonteObitoExpr = count($fonteObitoWhen) > 0
+                ? ("CASE " . implode(' ', $fonteObitoWhen) . " ELSE NULL END")
+                : "NULL::text";
 
             // ── Múltiplos domicílios ──────────────────────────────────────────
             $hasFamilia    = $this->hasTable('tb_fat_cad_dom_familia')
@@ -221,6 +274,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                 'has'      => 'st_has',
                 'dm'       => 'st_dm',
                 'idoso'    => 'st_idoso',
+                'obito'    => 'st_obito',
             ];
 
             $where  = 'fci.st_ficha_inativa = 0 AND de.st_registro_valido = 1';
@@ -264,6 +318,13 @@ class CidadaoAcsController extends MonitorApsBaseController
                 $where .= ' AND (' . implode(' OR ', $searchParts) . ')';
             }
 
+            $orderBy = 'base.nome ASC';
+            if ($sort === 'idade') {
+                $orderBy = "base.idade {$dir} NULLS LAST, base.nome ASC";
+            } elseif ($sort === 'nome') {
+                $orderBy = "base.nome {$dir}";
+            }
+
             $sql = "
                 SELECT
                     base.co_fat_cidadao_pec,
@@ -282,6 +343,9 @@ class CidadaoAcsController extends MonitorApsBaseController
                     base.st_has,
                     base.st_dm,
                     base.st_idoso,
+                    base.st_obito,
+                    base.data_obito,
+                    base.fonte_obito,
                     base.domicilios,
                     COUNT(*) OVER() AS total_count
                 FROM (
@@ -302,6 +366,9 @@ class CidadaoAcsController extends MonitorApsBaseController
                         {$hasExpr}       AS st_has,
                         {$dmExpr}        AS st_dm,
                         {$idosoExpr}     AS st_idoso,
+                        {$obitoExpr}     AS st_obito,
+                        {$dataObitoExpr} AS data_obito,
+                        {$fonteObitoExpr} AS fonte_obito,
                         {$domiciliosExpr} AS domicilios,
                         ROW_NUMBER() OVER (
                             PARTITION BY fci.co_fat_cidadao_pec
@@ -319,7 +386,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                 WHERE base.row_num = 1
                   " . ($condicao ? "AND base.{$condicaoColumns[$condicao]} = 1" : '') . "
                   {$outerWhere}
-                ORDER BY base.nome
+                ORDER BY {$orderBy}
                 LIMIT ? OFFSET ?
             ";
 

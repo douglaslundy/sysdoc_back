@@ -243,3 +243,48 @@ Estado gerenciado localmente no componente (sem Redux slice).
 ## Permissão
 
 A permissão `conformidade-cidadao-sincronizar` será adicionada à lista de capacidades configuráveis do `AccessProfileController`, seguindo o padrão já existente no sistema.
+
+---
+
+## Correções e Melhorias — Fase 2
+
+### Bug 1 — Óbitos retornando zero
+
+**Causa provável:** nenhuma das colunas candidatas (`st_faleceu`, `in_falecido`, `st_obito`) existe na instalação local do e-SUS, fazendo `resolveEsusCols()` retornar `null` para `st_faleceu` e, consequentemente, `isTruthy(null) = false` para todos os registros.
+
+**Solução:**
+- Executar `SELECT column_name FROM information_schema.columns WHERE table_name = 'tb_fat_cad_individual'` para listar as colunas reais do banco e-SUS local
+- Expandir a lista de candidatas em `resolveEsusCols()` com os nomes encontrados
+- Adicionar log de diagnóstico no início de `analisar()` reportando qual coluna foi resolvida para cada campo crítico
+
+### Bug 2 — 671 itens com erro: visualização e persistência
+
+Os erros individuais já são gravados em `sincronizacao_itens.erro`, mas não há forma de visualizá-los.
+
+**Solução:**
+- Novo endpoint `GET /api/conformidade-cidadao/erros/{job_id}` — lista itens onde `erro IS NOT NULL`, paginado
+- Após sincronização com `result_erros > 0`, exibir na tela tabela dos itens com erro (nome, CPF, mensagem)
+- Persistir um resumo dos primeiros erros em `sincronizacoes_cidadao.erro_mensagem` (ex.: primeiros 5 erros concatenados) para acesso rápido no histórico
+- Botão "Exportar erros (PDF)" disponível quando `result_erros > 0`
+
+### Bug 3 — Endereço e data de nascimento não sendo atualizados
+
+**`born_date`:** se `clients.born_date` é `null` no Sysdoc e o e-SUS tem data, a comparação `$esusDate !== $sysdocDate` deve detectar a diferença (null ≠ string). Verificar se o bloqueio ocorre porque o e-SUS local não retorna a coluna `dt_nascimento`/`dt_nasc` — mesmo investigação de colunas do Bug 1.
+
+**Endereço:** o join com `tb_fat_cad_domiciliar` só ocorre se `hasTable('tb_fat_cad_domiciliar') = true`. Se a tabela não existe na instalação local, endereços nunca são comparados. Adicionar diagnóstico e documentar limitação.
+
+**Cidade padrão:** quando `municipio` do e-SUS for `null` ou vazio (endereço presente mas sem município), gravar `city = 'Ilicínea'` tanto na criação quanto na atualização.
+
+### Feature — Sincronizar todos os campos da tabela `clients`
+
+Mapear todos os campos da tabela `clients` do Sysdoc para colunas correspondentes no e-SUS PEC, incluindo campos ainda não sincronizados:
+
+| Campo Sysdoc | Coluna candidata e-SUS | Observação |
+|---|---|---|
+| `raca_cor` | `co_raca_cor` / `tp_raca_cor` | Mapear código → string |
+| `sexo` | `co_sexo` | Já implementado em criar; adicionar em atualizar |
+| `st_falecido` | `st_faleceu` (mesmo fix do Bug 1) | Bool |
+| `escolaridade` | `co_nivel_escolaridade` | Se existir |
+| `nacionalidade` | `co_nacionalidade` | Se existir |
+
+Adicionar esses campos em `buildDiffPayload()`, `buildCreatePayload()` e `aplicarAtualizar()`.
