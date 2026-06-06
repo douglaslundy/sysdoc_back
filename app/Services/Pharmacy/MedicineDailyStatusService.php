@@ -45,22 +45,14 @@ class MedicineDailyStatusService
 
         $result = $query->paginate($perPage);
 
-        AuditService::record('VIEW', null, null, [
-            'event' => 'LIST_DAILY_STATUSES',
-            'filters' => $filters,
-            'per_page' => $perPage,
-            'total' => $result->total(),
-        ]);
-
         return $result;
     }
 
     private function paginateAllMedicines(array $filters, int $perPage): LengthAwarePaginator
     {
         $fallbackReferenceDate = $filters['reference_date'] ?? Carbon::today()->toDateString();
-        $requestedDate = $fallbackReferenceDate;
         $hasStatusesForRequestedDate = MedicineDailyStatus::query()
-            ->whereDate('reference_date', $requestedDate)
+            ->whereDate('reference_date', $fallbackReferenceDate)
             ->exists();
 
         // If the selected date has no records, fallback to latest date with records
@@ -128,15 +120,6 @@ class MedicineDailyStatusService
             return $syntheticStatus;
         });
 
-        AuditService::record('VIEW', null, null, [
-            'event' => 'LIST_DAILY_STATUSES_ALL_MEDICINES',
-            'filters' => $filters,
-            'requested_reference_date' => $requestedDate,
-            'effective_reference_date' => $fallbackReferenceDate,
-            'per_page' => $perPage,
-            'total' => $result->total(),
-        ]);
-
         return $result;
     }
 
@@ -185,7 +168,7 @@ class MedicineDailyStatusService
     {
         $status = MedicineDailyStatus::find($id);
         if (! $status) {
-            throw new ModelNotFoundException('Status diÃ¡rio nÃ£o encontrado.');
+            throw new ModelNotFoundException('Status diário não encontrado.');
         }
 
         return $status;

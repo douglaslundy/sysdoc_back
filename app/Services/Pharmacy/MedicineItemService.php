@@ -63,13 +63,6 @@ class MedicineItemService
 
         $result = $query->paginate($perPage);
 
-        AuditService::record('VIEW', null, null, [
-            'event' => 'LIST_MEDICINES',
-            'filters' => $filters,
-            'per_page' => $perPage,
-            'total' => $result->total(),
-        ]);
-
         return $result;
     }
 
@@ -85,7 +78,7 @@ class MedicineItemService
     {
         $medicine = MedicineItem::find($id);
         if (! $medicine) {
-            throw new ModelNotFoundException('Medicamento nÃ£o encontrado.');
+            throw new ModelNotFoundException('Medicamento não encontrado.');
         }
 
         return $medicine;

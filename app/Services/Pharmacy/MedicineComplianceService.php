@@ -4,7 +4,6 @@ namespace App\Services\Pharmacy;
 
 use App\Models\MedicineDailyStatus;
 use App\Models\MedicineMonthlyAcquisition;
-use App\Services\AuditService;
 
 class MedicineComplianceService
 {
@@ -29,8 +28,6 @@ class MedicineComplianceService
             'monthly_acquisitions_count' => $currentMonthAcquisitions,
             'has_today_update' => MedicineDailyStatus::whereDate('reference_date', $today)->exists(),
         ];
-
-        AuditService::record('VIEW_MEDICINE_COMPLIANCE', null, null, $summary);
 
         return $summary;
     }

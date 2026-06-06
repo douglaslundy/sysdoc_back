@@ -16,6 +16,7 @@ class ClientObserver
     {
         $dirty = $client->getDirty();
         $original = array_intersect_key($client->getOriginal(), $dirty);
+        $dirty['__audit_subject_name'] = $client->name;
         AuditService::record('UPDATE', $client, $original, $dirty);
     }
 

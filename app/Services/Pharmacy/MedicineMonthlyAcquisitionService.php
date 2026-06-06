@@ -25,13 +25,6 @@ class MedicineMonthlyAcquisitionService
 
         $result = $query->paginate($perPage);
 
-        AuditService::record('VIEW', null, null, [
-            'event' => 'LIST_MONTHLY_ACQUISITIONS',
-            'filters' => $filters,
-            'per_page' => $perPage,
-            'total' => $result->total(),
-        ]);
-
         return $result;
     }
 
@@ -80,7 +73,7 @@ class MedicineMonthlyAcquisitionService
     {
         $acquisition = MedicineMonthlyAcquisition::find($id);
         if (! $acquisition) {
-            throw new ModelNotFoundException('AquisiÃ§Ã£o mensal nÃ£o encontrada.');
+            throw new ModelNotFoundException('Aquisição mensal não encontrada.');
         }
 
         return $acquisition;

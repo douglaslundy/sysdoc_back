@@ -27,16 +27,6 @@ class QueueController extends Controller
             ->orderBy('id', 'asc')
             ->paginate($perPage);
 
-        AuditService::record('VIEW', null, null, [
-            'event' => 'LIST_QUEUES',
-            'has_search' => ! empty($validated['search']),
-            'done' => $validated['done'] ?? null,
-            'urgency' => $validated['urgency'] ?? null,
-            'speciality_id' => $validated['speciality_id'] ?? null,
-            'per_page' => $perPage,
-            'total' => $queues->total(),
-        ]);
-
         return QueueListResource::collection($queues);
     }
 
