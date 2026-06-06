@@ -29,13 +29,6 @@ class ClientController extends Controller
         $perPage = (int) ($validated['per_page'] ?? 10);
         $result = $this->listQuery($validated)->paginate($perPage);
 
-        AuditService::record('VIEW', null, null, [
-            'event' => 'LIST_CLIENTS',
-            'has_search' => ! empty($validated['search']),
-            'per_page' => $perPage,
-            'total' => $result->total(),
-        ]);
-
         return ClientListResource::collection($result);
     }
 
@@ -54,7 +47,23 @@ class ClientController extends Controller
     private function listQuery(array $filters): Builder
     {
         $query = Client::query()
-            ->select(['id', 'name', 'mother', 'cpf', 'cns', 'phone', 'born_date'])
+            ->select([
+                'id',
+                'name',
+                'mother',
+                'father',
+                'cpf',
+                'cns',
+                'phone',
+                'email',
+                'obs',
+                'born_date',
+                'sexo',
+                'raca_cor',
+                'data_obito',
+                'active',
+                'st_falecido',
+            ])
             ->with(['addresses:id_client,street,number,district,city'])
             ->where('active', true);
 
