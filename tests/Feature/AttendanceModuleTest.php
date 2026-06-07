@@ -54,11 +54,13 @@ class AttendanceModuleTest extends TestCase
             ->postJson('/api/attendance/tickets', [
                 'clientId' => $client->id,
                 'prefix' => 'A',
+                'roomId' => $this->room->id,
             ]);
 
         $create->assertStatus(201)
             ->assertJsonPath('status', 'aguardando')
-            ->assertJsonPath('client_id', $client->id);
+            ->assertJsonPath('client_id', $client->id)
+            ->assertJsonPath('room_id', $this->room->id);
 
         $queue = $this->actingAs($this->user, 'sanctum')
             ->getJson('/api/attendance/queue');
@@ -68,12 +70,46 @@ class AttendanceModuleTest extends TestCase
         $this->assertSame('aguardando', $queue->json('0.status'));
     }
 
+    public function test_fila_pode_ser_filtrada_por_sala(): void
+    {
+        $otherRoom = AttendanceRoom::create([
+            'name' => 'Sala 02',
+            'description' => 'Outra sala',
+            'active' => true,
+        ]);
+
+        $clientOne = $this->createClient('100.000.000-31');
+        $clientTwo = $this->createClient('100.000.000-32');
+
+        $ticketOne = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/attendance/tickets', [
+                'clientId' => $clientOne->id,
+                'roomId' => $this->room->id,
+            ])
+            ->json();
+
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/attendance/tickets', [
+                'clientId' => $clientTwo->id,
+                'roomId' => $otherRoom->id,
+            ])
+            ->assertStatus(201);
+
+        $queue = $this->actingAs($this->user, 'sanctum')
+            ->getJson('/api/attendance/queue?'.http_build_query(['roomId' => $this->room->id]));
+
+        $queue->assertStatus(200);
+        $this->assertCount(1, $queue->json());
+        $this->assertSame($ticketOne['id'], $queue->json('0.id'));
+        $this->assertSame($this->room->id, $queue->json('0.room_id'));
+    }
+
     public function test_chama_proximo_altera_status_e_bloqueia_chamada_duplicada(): void
     {
         $client = $this->createClient('100.000.000-02');
 
         $ticket = $this->actingAs($this->user, 'sanctum')
-            ->postJson('/api/attendance/tickets', ['clientId' => $client->id])
+            ->postJson('/api/attendance/tickets', ['clientId' => $client->id, 'roomId' => $this->room->id])
             ->json();
 
         $call = $this->actingAs($this->user, 'sanctum')
@@ -100,7 +136,7 @@ class AttendanceModuleTest extends TestCase
         $client = $this->createClient('100.000.000-03');
 
         $ticketId = $this->actingAs($this->user, 'sanctum')
-            ->postJson('/api/attendance/tickets', ['clientId' => $client->id])
+            ->postJson('/api/attendance/tickets', ['clientId' => $client->id, 'roomId' => $this->room->id])
             ->json('id');
 
         $this->actingAs($this->user, 'sanctum')
@@ -139,7 +175,7 @@ class AttendanceModuleTest extends TestCase
         $ticketIds = [];
         foreach ($clientIds as $clientId) {
             $ticketIds[] = $this->actingAs($this->user, 'sanctum')
-                ->postJson('/api/attendance/tickets', ['clientId' => $clientId])
+                ->postJson('/api/attendance/tickets', ['clientId' => $clientId, 'roomId' => $this->room->id])
                 ->json('id');
         }
 
@@ -155,7 +191,7 @@ class AttendanceModuleTest extends TestCase
 
         $oldClientId = $this->createClient('100.000.000-99')->id;
         $oldTicket = $this->actingAs($this->user, 'sanctum')
-            ->postJson('/api/attendance/tickets', ['clientId' => $oldClientId])
+            ->postJson('/api/attendance/tickets', ['clientId' => $oldClientId, 'roomId' => $this->room->id])
             ->json();
         $oldTicketId = $oldTicket['id'];
         $oldTicketCode = $oldTicket['display_code'] ?? null;
@@ -207,7 +243,7 @@ class AttendanceModuleTest extends TestCase
         $client = $this->createClient('100.000.000-21');
 
         $ticketId = $this->actingAs($this->user, 'sanctum')
-            ->postJson('/api/attendance/tickets', ['clientId' => $client->id])
+            ->postJson('/api/attendance/tickets', ['clientId' => $client->id, 'roomId' => $this->room->id])
             ->json('id');
 
         $this->actingAs($this->user, 'sanctum')

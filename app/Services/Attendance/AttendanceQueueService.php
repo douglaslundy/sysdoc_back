@@ -19,14 +19,19 @@ class AttendanceQueueService
     ) {
     }
 
-    public function getQueue(): Collection
+    public function getQueue(?int $roomId = null): Collection
     {
-        return AttendanceTicket::query()
+        $query = AttendanceTicket::query()
             ->with(['client', 'room', 'assignedUser'])
             ->where('status', AttendanceTicket::STATUS_AGUARDANDO)
             ->orderBy('issued_at')
-            ->orderBy('id')
-            ->get();
+            ->orderBy('id');
+
+        if ($roomId !== null) {
+            $query->where('room_id', $roomId);
+        }
+
+        return $query->get();
     }
 
     public function callNext(int $userId, int $roomId): AttendanceTicket
@@ -37,13 +42,14 @@ class AttendanceQueueService
 
             $ticket = AttendanceTicket::query()
                 ->where('status', AttendanceTicket::STATUS_AGUARDANDO)
+                ->where('room_id', $room->id)
                 ->orderBy('issued_at')
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->first();
 
             if (! $ticket) {
-                throw new DomainException('Nenhuma senha aguardando atendimento.');
+                throw new DomainException('Nenhuma senha aguardando atendimento nesta sala.');
             }
 
             return $this->callLockedTicket($ticket, $user->id, $room->id);
@@ -58,6 +64,9 @@ class AttendanceQueueService
 
             $ticket = AttendanceTicket::query()->lockForUpdate()->findOrFail($ticketId);
             $this->statusService->assertCanCall($ticket->status);
+            if ((int) $ticket->room_id !== $room->id) {
+                throw new DomainException('Senha nao pertence a sala selecionada.');
+            }
 
             return $this->callLockedTicket($ticket, $user->id, $room->id);
         });

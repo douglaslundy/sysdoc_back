@@ -3,6 +3,7 @@
 namespace App\Services\Attendance;
 
 use App\Models\AttendanceTicket;
+use App\Models\AttendanceRoom;
 use App\Models\Client;
 use App\Services\AuditService;
 use Carbon\Carbon;
@@ -16,11 +17,14 @@ class AttendanceTicketService
     ) {
     }
 
-    public function issueTicket(int $clientId, ?int $createdByUserId = null, string $prefix = 'A'): AttendanceTicket
+    public function issueTicket(int $clientId, ?int $createdByUserId = null, string $prefix = 'A', ?int $roomId = null): AttendanceTicket
     {
         Client::query()->findOrFail($clientId);
+        if ($roomId !== null) {
+            AttendanceRoom::query()->where('active', true)->findOrFail($roomId);
+        }
 
-        $ticket = DB::transaction(function () use ($clientId, $createdByUserId, $prefix) {
+        $ticket = DB::transaction(function () use ($clientId, $createdByUserId, $prefix, $roomId) {
             $now = Carbon::now();
             $number = $this->numberService->nextNumberForDate($now);
 
@@ -31,6 +35,7 @@ class AttendanceTicketService
                 'client_id' => $clientId,
                 'status' => AttendanceTicket::STATUS_AGUARDANDO,
                 'issued_at' => $now,
+                'room_id' => $roomId,
                 'created_by_user_id' => $createdByUserId,
             ]);
 

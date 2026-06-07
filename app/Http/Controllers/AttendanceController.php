@@ -30,12 +30,14 @@ class AttendanceController extends Controller
         $validated = $request->validate([
             'clientId' => 'required|integer|exists:clients,id',
             'prefix' => 'nullable|string|max:3',
+            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
         ]);
 
         $ticket = $this->ticketService->issueTicket(
             (int) $validated['clientId'],
             auth()->id(),
-            $validated['prefix'] ?? 'A'
+            $validated['prefix'] ?? 'A',
+            isset($validated['roomId']) ? (int) $validated['roomId'] : null
         );
 
         return response()->json($ticket, 201);
@@ -98,9 +100,15 @@ class AttendanceController extends Controller
         }
     }
 
-    public function queue(): JsonResponse
+    public function queue(Request $request): JsonResponse
     {
-        $queue = $this->queueService->getQueue()->map(function ($ticket) {
+        $validated = $request->validate([
+            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
+        ]);
+
+        $queue = $this->queueService->getQueue(
+            isset($validated['roomId']) ? (int) $validated['roomId'] : null
+        )->map(function ($ticket) {
             $ticket->waitingMinutes = (int) now()->diffInMinutes($ticket->issued_at);
 
             return $ticket;
