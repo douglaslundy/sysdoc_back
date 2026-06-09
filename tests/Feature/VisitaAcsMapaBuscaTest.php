@@ -3,22 +3,20 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class VisitaAcsMapaBuscaTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private User $user;
-
-    protected function setUp(): void
+    private function actingAsAdmin(): self
     {
-        parent::setUp();
-        $this->user = User::factory()->create([
-            'profile' => 'admin',
-            'active'  => true,
-        ]);
+        $user = new User();
+        $user->id = 1;
+        $user->profile = 'admin';
+        $user->active = true;
+
+        Sanctum::actingAs($user);
+        return $this;
     }
 
     public function test_mapa_requer_autenticacao(): void
@@ -29,7 +27,7 @@ class VisitaAcsMapaBuscaTest extends TestCase
 
     public function test_mapa_rejeita_ano_ausente(): void
     {
-        $this->actingAs($this->user, 'sanctum')
+        $this->actingAsAdmin()
             ->getJson('/api/monitor-aps/visitas/mapa?mes=1')
             ->assertStatus(422)
             ->assertJsonValidationErrors(['ano']);
@@ -37,7 +35,7 @@ class VisitaAcsMapaBuscaTest extends TestCase
 
     public function test_mapa_rejeita_mes_ausente(): void
     {
-        $this->actingAs($this->user, 'sanctum')
+        $this->actingAsAdmin()
             ->getJson('/api/monitor-aps/visitas/mapa?ano=2025')
             ->assertStatus(422)
             ->assertJsonValidationErrors(['mes']);
@@ -45,7 +43,7 @@ class VisitaAcsMapaBuscaTest extends TestCase
 
     public function test_mapa_rejeita_busca_muito_longa(): void
     {
-        $this->actingAs($this->user, 'sanctum')
+        $this->actingAsAdmin()
             ->getJson('/api/monitor-aps/visitas/mapa?ano=2025&mes=1&busca=' . str_repeat('x', 201))
             ->assertStatus(422)
             ->assertJsonValidationErrors(['busca']);

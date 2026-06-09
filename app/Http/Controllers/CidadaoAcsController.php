@@ -477,6 +477,7 @@ class CidadaoAcsController extends MonitorApsBaseController
         }
 
         try {
+            $cols       = $this->resolveColumns();
             $outerWhere  = '';
             $outerParams = [];
 
