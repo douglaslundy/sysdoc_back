@@ -140,6 +140,39 @@ class ConformidadeCidadaoServiceTest extends TestCase
         $this->assertSame('1985-03-04', $diff['born_date']['para']);
     }
 
+    public function test_is_obito_row_considera_data_de_obito_mesmo_sem_flag(): void
+    {
+        $service = new ConformidadeCidadaoService();
+        $method = new ReflectionMethod($service, 'isObitoRow');
+        $method->setAccessible(true);
+
+        $this->assertTrue($method->invoke($service, [
+            'st_faleceu' => null,
+            'dt_obito' => '2026-01-01',
+        ]));
+    }
+
+    public function test_should_process_obito_when_client_is_active_and_row_indicates_obito(): void
+    {
+        $service = new ConformidadeCidadaoService();
+        $method = new ReflectionMethod($service, 'shouldProcessObito');
+        $method->setAccessible(true);
+
+        $client = new Client(['active' => true]);
+
+        $this->assertTrue($method->invoke($service, $client, [
+            'st_faleceu' => '1',
+            'dt_obito' => null,
+        ]));
+
+        $client->active = false;
+
+        $this->assertFalse($method->invoke($service, $client, [
+            'st_faleceu' => '1',
+            'dt_obito' => null,
+        ]));
+    }
+
     private function buildDiff(Client $client, array $row, bool $allowOverwrite): array
     {
         $service = new ConformidadeCidadaoService();

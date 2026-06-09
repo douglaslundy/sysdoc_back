@@ -14,12 +14,24 @@ class CidadaoAcsController extends MonitorApsBaseController
     {
         $dtNascCol  = $this->firstExistingColumn('tb_fat_cad_individual',
             ['dt_nascimento', 'dt_nasc', 'dt_data_nascimento']);
+        $fciInativaCol = $this->firstExistingColumn('tb_fat_cad_individual',
+            ['st_ficha_inativa', 'in_ficha_inativa']);
+        $fciAtivaCol = $this->firstExistingColumn('tb_fat_cad_individual',
+            ['st_ativo', 'in_ativo']);
         $stGestCol  = $this->firstExistingColumn('tb_fat_cad_individual',
             ['st_gestante', 'st_em_gestacao', 'in_gestante']);
         $dtObitoCol = $this->firstExistingColumn('tb_fat_cad_individual',
             ['dt_obito', 'dt_data_obito', 'dt_falecimento', 'data_obito']);
         $stObitoCol = $this->firstExistingColumn('tb_fat_cad_individual',
             ['st_obito', 'st_falecido', 'in_obito', 'in_falecido']);
+        $deValidaCol = $this->firstExistingColumn('tb_dim_equipe',
+            ['st_registro_valido', 'in_registro_valido']);
+        $deAtivaCol = $this->firstExistingColumn('tb_dim_equipe',
+            ['st_ativo', 'in_ativo']);
+        $dpValidaCol = $this->firstExistingColumn('tb_dim_profissional',
+            ['st_registro_valido', 'in_registro_valido']);
+        $dpAtivaCol = $this->firstExistingColumn('tb_dim_profissional',
+            ['st_ativo', 'in_ativo']);
 
         return [
             'cpfCol'    => $this->firstExistingColumn('tb_fat_cad_individual',
@@ -33,13 +45,35 @@ class CidadaoAcsController extends MonitorApsBaseController
             'dmCol'     => $this->firstExistingColumn('tb_fat_cad_individual',
                 ['st_diabete', 'st_diabetes']),
             'dtNascCol' => $dtNascCol,
+            'fciInativaCol' => $fciInativaCol,
+            'fciAtivaCol' => $fciAtivaCol,
             'stGestCol' => $stGestCol,
             'dtObitoCol'=> $dtObitoCol,
             'stObitoCol'=> $stObitoCol,
+            'deValidaCol' => $deValidaCol,
+            'deAtivaCol' => $deAtivaCol,
+            'dpValidaCol' => $dpValidaCol,
+            'dpAtivaCol' => $dpAtivaCol,
             'hasPec'    => $this->hasTable('tb_fat_cidadao_pec'),
             'hasCidadao'=> $this->hasTable('tb_cidadao'),
             'hasPecNasc'=> ($dtNascCol === null) && $this->hasTable('tb_fat_cidadao_pec'),
         ];
+    }
+
+    private function truthySql(string $expr): string
+    {
+        return "LOWER(TRIM(COALESCE({$expr}::text, '0'))) IN ('1','t','true','s','sim','y','yes')";
+    }
+
+    private function statusFilter(?string $expr, bool $expectedTruthy = true): ?string
+    {
+        if (!$expr) {
+            return null;
+        }
+
+        $truthyExpr = $this->truthySql($expr);
+
+        return $expectedTruthy ? $truthyExpr : "NOT ({$truthyExpr})";
     }
 
     /**
@@ -277,7 +311,18 @@ class CidadaoAcsController extends MonitorApsBaseController
                 'obito'    => 'st_obito',
             ];
 
-            $where  = 'fci.st_ficha_inativa = 0 AND de.st_registro_valido = 1';
+            $whereParts = [];
+            if ($filter = $this->statusFilter($cols['fciInativaCol'] ? "fci.{$cols['fciInativaCol']}" : null, false)) {
+                $whereParts[] = $filter;
+            } elseif ($filter = $this->statusFilter($cols['fciAtivaCol'] ? "fci.{$cols['fciAtivaCol']}" : null, true)) {
+                $whereParts[] = $filter;
+            }
+            if ($filter = $this->statusFilter($cols['deValidaCol'] ? "de.{$cols['deValidaCol']}" : null, true)) {
+                $whereParts[] = $filter;
+            } elseif ($filter = $this->statusFilter($cols['deAtivaCol'] ? "de.{$cols['deAtivaCol']}" : null, true)) {
+                $whereParts[] = $filter;
+            }
+            $where  = $whereParts ? implode(' AND ', $whereParts) : '1=1';
             $params = [];
             $outerWhere  = '';
             $outerParams = [];
@@ -323,6 +368,11 @@ class CidadaoAcsController extends MonitorApsBaseController
                 $orderBy = "base.idade {$dir} NULLS LAST, base.nome ASC";
             } elseif ($sort === 'nome') {
                 $orderBy = "base.nome {$dir}";
+            }
+
+            $condicaoSql = '';
+            if ($condicao) {
+                $condicaoSql = 'AND ' . $this->truthySql("base.{$condicaoColumns[$condicao]}");
             }
 
             $sql = "
@@ -384,7 +434,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                     WHERE {$where}
                 ) base
                 WHERE base.row_num = 1
-                  " . ($condicao ? "AND base.{$condicaoColumns[$condicao]} = 1" : '') . "
+                  {$condicaoSql}
                   {$outerWhere}
                 ORDER BY {$orderBy}
                 LIMIT ? OFFSET ?
@@ -430,12 +480,31 @@ class CidadaoAcsController extends MonitorApsBaseController
             $outerWhere  = '';
             $outerParams = [];
 
+            $agentesWhereParts = [];
+            if ($filter = $this->statusFilter($cols['fciInativaCol'] ? "fci.{$cols['fciInativaCol']}" : null, false)) {
+                $agentesWhereParts[] = $filter;
+            } elseif ($filter = $this->statusFilter($cols['fciAtivaCol'] ? "fci.{$cols['fciAtivaCol']}" : null, true)) {
+                $agentesWhereParts[] = $filter;
+            }
+            if ($filter = $this->statusFilter($cols['deValidaCol'] ? "de.{$cols['deValidaCol']}" : null, true)) {
+                $agentesWhereParts[] = $filter;
+            } elseif ($filter = $this->statusFilter($cols['deAtivaCol'] ? "de.{$cols['deAtivaCol']}" : null, true)) {
+                $agentesWhereParts[] = $filter;
+            }
+            if ($filter = $this->statusFilter($cols['dpValidaCol'] ? "dp.{$cols['dpValidaCol']}" : null, true)) {
+                $agentesWhereParts[] = $filter;
+            } elseif ($filter = $this->statusFilter($cols['dpAtivaCol'] ? "dp.{$cols['dpAtivaCol']}" : null, true)) {
+                $agentesWhereParts[] = $filter;
+            }
+            $agentesWhereParts[] = 'dp.no_profissional IS NOT NULL';
+
             [$ineWhere, $ineBindings] = $this->buildIneWhere($ine, $allowedInes, 'base.nu_ine');
             if ($ineWhere) {
                 $outerWhere   .= " AND {$ineWhere}";
                 $outerParams   = array_merge($outerParams, $ineBindings);
             }
 
+            $agentesWhere = implode("\n                      AND ", $agentesWhereParts);
             $rows = $db->select("
                 SELECT
                     MIN(base.profissional_id) AS id,
@@ -454,10 +523,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                         ON de.co_seq_dim_equipe = fci.co_dim_equipe
                     JOIN tb_dim_profissional dp
                         ON dp.co_seq_dim_profissional = fci.co_dim_profissional
-                    WHERE fci.st_ficha_inativa = 0
-                      AND de.st_registro_valido = 1
-                      AND dp.st_registro_valido = 1
-                      AND dp.no_profissional IS NOT NULL
+                    WHERE {$agentesWhere}
                 ) base
                 WHERE base.row_num = 1
                   {$outerWhere}

@@ -154,6 +154,7 @@ class ConformidadeCidadaoService
             'pec_telefone'=> $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['nu_telefone_celular']) : null,
             'pec_cid_fk'  => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['co_cidadao']) : null,
             'pec_st_faleceu' => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['st_faleceu']) : null,
+            'pec_dt_obito' => $hasPec ? $this->firstCol('tb_fat_cidadao_pec', ['dt_obito', 'dt_data_obito']) : null,
             // tb_cidadao: nome da mãe em texto claro (fci.no_nome_mae é SHA-1)
             'hasCidadao'      => $hasCidadao,
             'cid_pk'          => ($hasCidadao && $hasPec) ? $this->firstCol('tb_cidadao', ['co_seq_cidadao']) : null,
@@ -329,7 +330,7 @@ class ConformidadeCidadaoService
 
                     if ($client === null) {
                         // Sem match → criar (somente se não for óbito)
-                        $isFalecido = $this->isTruthy($row['st_faleceu'] ?? null);
+                        $isFalecido = $this->isObitoRow($row);
                         if ($isFalecido) { $semAlteracao++; continue; }
                         if (!$row['nome']) { $semAlteracao++; continue; }
                         if (!$row['dt_nasc']) { $semAlteracao++; continue; }
@@ -348,10 +349,30 @@ class ConformidadeCidadaoService
                         $criados++;
                     } else {
                         // Match encontrado
-                        $isFalecido    = $this->isTruthy($row['st_faleceu'] ?? null);
+                        $isFalecido    = $this->isObitoRow($row);
                         $esusUpdated   = $row['atualizado'] ? Carbon::parse($row['atualizado']) : null;
                         $sysdocUpdated = $client->updated_at;
                         $esusMaisRecente = $esusUpdated && (!$sysdocUpdated || $esusUpdated->gt($sysdocUpdated));
+
+                        if ($isFalecido) {
+                            if ($this->shouldProcessObito($client, $row)) {
+                                $dtObito = $row['dt_obito'] ?? null;
+                                $itens[] = [
+                                    'sincronizacao_id' => $sync->id,
+                                    'acao'      => 'obito',
+                                    'cpf'       => $cpfRaw ? substr($cpfRaw, 0, 18) : null,
+                                    'cns'       => $cnsRaw ? substr($cnsRaw, 0, 15) : null,
+                                    'nome_esus' => substr($row['nome'] ?? $client->name, 0, 150),
+                                    'client_id' => $client->id,
+                                    'payload'   => json_encode(['dt_obito' => $dtObito]),
+                                    'aplicado'  => false,
+                                ];
+                                $obitos++;
+                            } else {
+                                $semAlteracao++;
+                            }
+                            continue;
+                        }
 
                         // Só processa se e-SUS for mais recente (ou não tiver timestamp)
                         $temCampoNuloRelevante = $this->hasMissingCriticalData($client);
@@ -360,34 +381,19 @@ class ConformidadeCidadaoService
                             continue;
                         }
 
-                        if ($isFalecido && $client->active && $esusMaisRecente) {
-                            $dtObito = $row['dt_obito'] ?? null;
-                            $itens[] = [
-                                'sincronizacao_id' => $sync->id,
-                                'acao'      => 'obito',
-                                'cpf'       => $cpfRaw ? substr($cpfRaw, 0, 18) : null,
-                                'cns'       => $cnsRaw ? substr($cnsRaw, 0, 15) : null,
-                                'nome_esus' => substr($row['nome'] ?? $client->name, 0, 150),
-                                'client_id' => $client->id,
-                                'payload'   => json_encode(['dt_obito' => $dtObito]),
-                                'aplicado'  => false,
-                            ];
-                            $obitos++;
-                        } else {
-                            $diff = $this->buildDiffPayload($client, $row, $cols, $esusMaisRecente);
-                            if (empty($diff)) { $semAlteracao++; continue; }
-                            $itens[] = [
-                                'sincronizacao_id' => $sync->id,
-                                'acao'      => 'atualizar',
-                                'cpf'       => $cpfRaw ? substr($cpfRaw, 0, 18) : null,
-                                'cns'       => $cnsRaw ? substr($cnsRaw, 0, 15) : null,
-                                'nome_esus' => substr($row['nome'] ?? $client->name, 0, 150),
-                                'client_id' => $client->id,
-                                'payload'   => json_encode($diff),
-                                'aplicado'  => false,
-                            ];
-                            $atualizados++;
-                        }
+                        $diff = $this->buildDiffPayload($client, $row, $cols, $esusMaisRecente);
+                        if (empty($diff)) { $semAlteracao++; continue; }
+                        $itens[] = [
+                            'sincronizacao_id' => $sync->id,
+                            'acao'      => 'atualizar',
+                            'cpf'       => $cpfRaw ? substr($cpfRaw, 0, 18) : null,
+                            'cns'       => $cnsRaw ? substr($cnsRaw, 0, 15) : null,
+                            'nome_esus' => substr($row['nome'] ?? $client->name, 0, 150),
+                            'client_id' => $client->id,
+                            'payload'   => json_encode($diff),
+                            'aplicado'  => false,
+                        ];
+                        $atualizados++;
 
                     }
 
@@ -589,11 +595,12 @@ class ConformidadeCidadaoService
         }
 
         $fciObito = $cols['dt_obito'] ? 'fci.' . $this->quoteCol($cols['dt_obito']) : null;
+        $pecObito = ($cols['pec_fk'] && $cols['pec_dt_obito']) ? 'pec.' . $this->quoteCol($cols['pec_dt_obito']) : null;
         $cidObito = ($cols['cid_pk'] && $cols['cid_dt_obito']) ? 'cid.' . $this->quoteCol($cols['cid_dt_obito']) : null;
-        $obitoExpr = $fciObito ?? $cidObito ?? 'NULL';
-        if ($fciObito && $cidObito) {
-            $obitoExpr = "COALESCE({$fciObito}, {$cidObito})";
-        }
+        $obitoParts = array_values(array_filter([$fciObito, $pecObito, $cidObito]));
+        $obitoExpr = count($obitoParts) > 0
+            ? (count($obitoParts) === 1 ? $obitoParts[0] : 'COALESCE(' . implode(', ', $obitoParts) . ')')
+            : 'NULL';
 
         // Endereço: fci não tem FK direta para domiciliar — LATERAL via tb_fat_cad_dom_familia.
         // tb_fat_cad_domiciliar pode ter campos hasheados → hash guard + fallback em tb_cidadao.
@@ -788,6 +795,26 @@ class ConformidadeCidadaoService
         if ($val === null) return false;
         if (is_bool($val)) return $val;
         return in_array(strtolower((string) $val), ['t', 'true', '1', 'yes', 's', 'sim'], true);
+    }
+
+    private function hasDateValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        return trim((string) $value) !== '';
+    }
+
+    private function isObitoRow(array $row): bool
+    {
+        return $this->isTruthy($row['st_faleceu'] ?? null)
+            || $this->hasDateValue($row['dt_obito'] ?? null);
+    }
+
+    private function shouldProcessObito(Client $client, array $row): bool
+    {
+        return $client->active && $this->isObitoRow($row);
     }
 
     private function normalizeDocument(mixed $value, int $expectedLength): ?string
