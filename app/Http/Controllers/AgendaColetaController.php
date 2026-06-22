@@ -10,14 +10,28 @@ class AgendaColetaController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'data' => 'required|date',
+            'data' => 'nullable|date',
+            'inicio' => 'nullable|date',
+            'fim' => 'nullable|date',
         ]);
 
         $data = $request->input('data');
+        $inicio = $request->input('inicio');
+        $fim = $request->input('fim');
 
-        $pedidos = PedidoExame::with(['cliente', 'exames', 'medicoSolicitante'])
-            ->whereDate('data_coleta', $data)
-            ->whereIn('status', ['solicitado', 'coletado'])
+        $query = PedidoExame::with(['cliente', 'exames', 'medicoSolicitante'])
+            ->whereIn('status', ['solicitado', 'coletado']);
+
+        if ($inicio && $fim) {
+            $query->whereBetween('data_coleta', [$inicio, $fim]);
+        } elseif ($data) {
+            $query->whereDate('data_coleta', $data);
+        } else {
+            $data = now()->toDateString();
+            $query->whereDate('data_coleta', $data);
+        }
+
+        $pedidos = $query
             ->orderBy('data_coleta')
             ->get()
             ->map(function ($pedido) {
@@ -48,6 +62,8 @@ class AgendaColetaController extends Controller
 
         return response()->json([
             'data' => $data,
+            'inicio' => $inicio,
+            'fim' => $fim,
             'total' => $pedidos->count(),
             'pedidos' => $pedidos,
         ]);

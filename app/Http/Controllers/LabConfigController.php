@@ -17,6 +17,7 @@ class LabConfigController extends Controller
     {
         $request->validate([
             'email_habilitado' => 'boolean',
+            'imprimir_rascunho_exame' => 'boolean',
             'nome_estabelecimento' => 'nullable|string|max:255',
             'razao_social' => 'nullable|string|max:255',
             'endereco_rua' => 'nullable|string|max:255',
@@ -35,6 +36,7 @@ class LabConfigController extends Controller
 
         $config->update($request->only([
             'email_habilitado',
+            'imprimir_rascunho_exame',
             'nome_estabelecimento', 'razao_social',
             'endereco_rua', 'endereco_numero', 'endereco_bairro', 'endereco_cep',
             'telefone', 'cnpj', 'email_lab',

@@ -194,9 +194,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
-    // Configurações do laboratório (somente admin)
+    // Configurações do laboratório
+    Route::get('/laboratorio/config', [LabConfigController::class, 'show']);
     Route::middleware('admin')->group(function () {
-        Route::get('/laboratorio/config', [LabConfigController::class, 'show']);
         Route::put('/laboratorio/config', [LabConfigController::class, 'update']);
         Route::get('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'index']);
         Route::post('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'store']);
