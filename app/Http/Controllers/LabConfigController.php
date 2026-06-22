@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LabConfig;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class LabConfigController extends Controller
 {
@@ -17,7 +18,6 @@ class LabConfigController extends Controller
     {
         $request->validate([
             'email_habilitado' => 'boolean',
-            'imprimir_rascunho_exame' => 'boolean',
             'nome_estabelecimento' => 'nullable|string|max:255',
             'razao_social' => 'nullable|string|max:255',
             'endereco_rua' => 'nullable|string|max:255',
@@ -34,14 +34,22 @@ class LabConfigController extends Controller
         $config = LabConfig::get();
         $old = $config->toArray();
 
-        $config->update($request->only([
+        $fields = [
             'email_habilitado',
-            'imprimir_rascunho_exame',
             'nome_estabelecimento', 'razao_social',
             'endereco_rua', 'endereco_numero', 'endereco_bairro', 'endereco_cep',
             'telefone', 'cnpj', 'email_lab',
             'rodape1', 'rodape2',
-        ]));
+        ];
+
+        if (Schema::hasColumn('lab_configs', 'imprimir_rascunho_exame')) {
+            $request->validate([
+                'imprimir_rascunho_exame' => 'boolean',
+            ]);
+            $fields[] = 'imprimir_rascunho_exame';
+        }
+
+        $config->update($request->only($fields));
 
         AuditService::record('UPDATE', $config, $old, $config->fresh()->toArray());
 

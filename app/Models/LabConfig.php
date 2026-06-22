@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class LabConfig extends Model
 {
@@ -30,9 +31,12 @@ class LabConfig extends Model
     // Retorna a única config existente (singleton)
     public static function get(): self
     {
-        return static::firstOrCreate([], [
-            'email_habilitado' => false,
-            'imprimir_rascunho_exame' => false,
-        ]);
+        $defaults = ['email_habilitado' => false];
+
+        if (Schema::hasColumn('lab_configs', 'imprimir_rascunho_exame')) {
+            $defaults['imprimir_rascunho_exame'] = false;
+        }
+
+        return static::firstOrCreate([], $defaults);
     }
 }
