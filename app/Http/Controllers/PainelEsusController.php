@@ -243,6 +243,63 @@ class PainelEsusController extends MonitorApsBaseController
     }
 
     /**
+     * GET /painel-esus/default-cnes
+     * Retorna o CNES padrão quando o usuário possui apenas uma unidade permitida.
+     */
+    public function defaultCnes(Request $request): JsonResponse
+    {
+        try {
+            $allowedInes = $this->resolveAllowedInes($request);
+            if ($allowedInes === null || empty($allowedInes)) {
+                return response()->json(['cnes' => null, 'unidades' => []]);
+            }
+
+            $db = $this->db();
+        } catch (\Throwable) {
+            return response()->json(['error' => 'Não foi possível consultar o CNES padrão.'], 503);
+        }
+
+        try {
+            $placeholders = implode(',', array_fill(0, count($allowedInes), '?'));
+            $rows = $db->select("
+                SELECT DISTINCT
+                    us.nu_cnes AS cnes,
+                    us.no_unidade_saude AS nome,
+                    de.nu_ine AS ine,
+                    de.no_equipe AS equipe
+                FROM tb_dim_equipe de
+                INNER JOIN tb_equipe eq ON eq.nu_ine = de.nu_ine
+                INNER JOIN tb_unidade_saude us ON us.co_seq_unidade_saude = eq.co_unidade_saude
+                WHERE de.st_registro_valido = 1
+                  AND de.nu_ine IN ({$placeholders})
+                  AND us.nu_cnes IS NOT NULL
+                ORDER BY us.no_unidade_saude
+            ", $allowedInes);
+
+            $unidades = collect($rows)->unique('cnes')->values();
+
+            if ($unidades->count() !== 1) {
+                return response()->json([
+                    'cnes' => null,
+                    'nome' => null,
+                    'unidades' => $unidades,
+                ]);
+            }
+
+            $unidade = $unidades->first();
+
+            return response()->json([
+                'cnes' => (string) ($unidade->cnes ?? ''),
+                'nome' => $unidade->nome ?? null,
+                'unidades' => $unidades,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('PainelEsus.defaultCnes: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao localizar o CNES padrão.'], 500);
+        }
+    }
+
+    /**
      * GET /public/painel-esus/validar-cnes?cnes=XXXXXXX
      * Público — sem autenticação.
      */

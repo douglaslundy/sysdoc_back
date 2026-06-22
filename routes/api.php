@@ -174,6 +174,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/fila',     [PainelEsusController::class, 'fila']);
         Route::get('/filtros',  [PainelEsusController::class, 'filtros']);
         Route::get('/unidades', [PainelEsusController::class, 'unidades']);
+        Route::get('/default-cnes', [PainelEsusController::class, 'defaultCnes'])->middleware('equipe.aps');
         Route::get('/statuses', [PainelEsusController::class, 'statuses']);
     });
 
