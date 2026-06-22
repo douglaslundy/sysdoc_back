@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             MonitorApsPageSeeder::class,          // Monitor APS - categorias, paginas e permissoes
             DashboardTabPageSeeder::class,        // Dashboard - abas como system_pages com permissoes por perfil
             ConformidadeCidadaoPageSeeder::class, // Conformidade de Cidadãos - pagina e permissoes
+            RtAccessFixSeeder::class,             // Backfill de permissoes da RT
         ]);
     }
 }
