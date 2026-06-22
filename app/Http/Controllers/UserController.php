@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserPresence;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
 use DateTime;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -16,9 +19,40 @@ class UserController extends Controller
      */
     public function index()
     {
-        // return User::orderBy('id', 'desc')->get();
-        // return User::with(['company'])->where('active', true)->orderBy('id', 'desc')->get();
-        return User::where('active', true)->orderBy('id', 'desc')->get();
+        $users = User::where('active', true)->orderBy('id', 'desc')->get();
+        $presences = UserPresence::query()->get()->keyBy('user_id');
+
+        return $users->map(function (User $user) use ($presences) {
+            $presence = $presences->get($user->id);
+            $lastSeenAt = $presence?->last_seen_at;
+            $isOnline = $lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subMinutes(5));
+
+            return [
+                ...$user->toArray(),
+                'is_online' => $isOnline,
+                'last_seen_at' => $lastSeenAt?->toDateTimeString(),
+                'last_path' => $presence?->last_path,
+            ];
+        });
+    }
+
+    public function presence(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Usuário não autenticado.'], 401);
+        }
+
+        UserPresence::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'last_seen_at' => now(),
+                'last_path' => $request->input('path'),
+            ]
+        );
+
+        return response()->json(['ok' => true]);
     }
 
     /**
