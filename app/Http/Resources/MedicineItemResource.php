@@ -9,6 +9,11 @@ class MedicineItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $latestStatus = $this->relationLoaded('latestDailyStatus') ? $this->getRelation('latestDailyStatus') : null;
+        $availabilityStatus = $latestStatus?->availability_status;
+        $availableQuantity = $latestStatus?->available_quantity;
+        $isAvailable = $availabilityStatus === 'available' && (float) ($availableQuantity ?? 0) > 0;
+
         return [
             'id' => $this->id,
             'internal_code' => $this->internal_code,
@@ -25,6 +30,12 @@ class MedicineItemResource extends JsonResource
             'is_high_cost' => (bool) $this->is_high_cost,
             'active' => (bool) $this->active,
             'technical_notes' => $this->technical_notes,
+            'availability_status' => $availabilityStatus,
+            'available_quantity' => $availableQuantity,
+            'is_available' => $isAvailable,
+            'restock_forecast_date' => $latestStatus?->restock_forecast_date?->toDateString(),
+            'public_note' => $latestStatus?->public_note,
+            'last_status_updated_at' => $latestStatus?->updated_at?->toDateTimeString(),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -46,5 +47,10 @@ class MedicineItem extends Model
     public function monthlyAcquisitions(): HasMany
     {
         return $this->hasMany(MedicineMonthlyAcquisition::class);
+    }
+
+    public function latestDailyStatus(): HasOne
+    {
+        return $this->hasOne(MedicineDailyStatus::class)->latestOfMany('reference_date');
     }
 }

@@ -23,6 +23,7 @@ class ListMedicineItemsRequest extends BaseApiFormRequest
             'is_controlled' => ['nullable', 'boolean'],
             'is_judicial_order' => ['nullable', 'boolean'],
             'is_high_cost' => ['nullable', 'boolean'],
+            'availability_status' => ['nullable', 'in:available,unavailable'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ];
     }
@@ -37,6 +38,7 @@ class ListMedicineItemsRequest extends BaseApiFormRequest
             'is_controlled.boolean' => 'O filtro de medicamento controlado deve ser verdadeiro ou falso.',
             'is_judicial_order.boolean' => 'O filtro de ordem judicial deve ser verdadeiro ou falso.',
             'is_high_cost.boolean' => 'O filtro de alto custo deve ser verdadeiro ou falso.',
+            'availability_status.in' => 'O filtro de disponibilidade deve ser available ou unavailable.',
             'per_page.integer' => 'A paginação deve ser um número inteiro.',
             'per_page.min' => 'A paginação mínima é 1.',
             'per_page.max' => 'A paginação máxima é 200.',

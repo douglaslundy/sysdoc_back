@@ -30,8 +30,21 @@ class MedicineItemService
 
     public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = MedicineItem::query()->orderBy('active_ingredient');
+        $query = MedicineItem::query()
+            ->with(['latestDailyStatus' => function ($statusQuery) {
+                $statusQuery->orderByDesc('reference_date')->orderByDesc('id');
+            }])
+            ->orderBy('active_ingredient');
 
+        $this->applyFilters($query, $filters);
+
+        $result = $query->paginate($perPage);
+
+        return $result;
+    }
+
+    private function applyFilters($query, array $filters): void
+    {
         if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
@@ -61,9 +74,37 @@ class MedicineItemService
             $query->where('is_high_cost', filter_var($filters['is_high_cost'], FILTER_VALIDATE_BOOLEAN));
         }
 
-        $result = $query->paginate($perPage);
+        if (! array_key_exists('availability_status', $filters) || $filters['availability_status'] === null || $filters['availability_status'] === '') {
+            return;
+        }
 
-        return $result;
+        $availabilityStatus = (string) $filters['availability_status'];
+
+        $query->where(function ($statusQuery) use ($availabilityStatus) {
+            if ($availabilityStatus === 'available') {
+                $statusQuery->whereHas('latestDailyStatus', function ($latestQuery) {
+                    $latestQuery->where('availability_status', 'available')
+                        ->where(function ($quantityQuery) {
+                            $quantityQuery->whereNull('available_quantity')
+                                ->orWhere('available_quantity', '>', 0);
+                        });
+                });
+
+                return;
+            }
+
+            $statusQuery->whereDoesntHave('latestDailyStatus')
+                ->orWhereHas('latestDailyStatus', function ($latestQuery) {
+                    $latestQuery->where(function ($availabilityQuery) {
+                        $availabilityQuery->where('availability_status', 'unavailable')
+                            ->orWhereNull('availability_status')
+                            ->orWhere(function ($quantityQuery) {
+                                $quantityQuery->whereNotNull('available_quantity')
+                                    ->where('available_quantity', '<=', 0);
+                            });
+                    });
+                });
+        });
     }
 
     public function create(array $data): MedicineItem
