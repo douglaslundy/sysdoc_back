@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PainelEsusPresence;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -186,6 +187,35 @@ class PainelEsusController extends MonitorApsBaseController
         ];
     }
 
+    public function statuses(): JsonResponse
+    {
+        $unidadesResponse = $this->unidades();
+        if ($unidadesResponse->getStatusCode() !== 200) {
+            return $unidadesResponse;
+        }
+
+        $payload = json_decode($unidadesResponse->getContent(), true) ?: [];
+        $unidades = collect($payload['unidades'] ?? []);
+        $presences = PainelEsusPresence::query()->get()->keyBy('cnes');
+
+        $items = $unidades->map(function ($row) use ($presences) {
+            $cnes = (string) ($row['cnes'] ?? '');
+            $presence = $presences->get($cnes);
+            $lastSeenAt = $presence?->last_seen_at;
+            $isOnline = $lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subMinutes(5));
+
+            return [
+                'cnes' => $cnes,
+                'nome' => $row['nome'] ?? $cnes,
+                'panel_name' => $presence?->panel_name ?? ($row['nome'] ?? $cnes),
+                'is_online' => $isOnline,
+                'last_seen_at' => $lastSeenAt?->toDateTimeString(),
+            ];
+        })->values();
+
+        return response()->json(['items' => $items]);
+    }
+
     /**
      * GET /painel-esus/unidades
      * Autenticado. Lista unidades de saúde do banco e-SUS para o seletor de CNES.
@@ -291,6 +321,14 @@ class PainelEsusController extends MonitorApsBaseController
                     [$cnes]
                 );
             } catch (\Throwable) {}
+
+            PainelEsusPresence::updateOrCreate(
+                ['cnes' => $cnes],
+                [
+                    'panel_name' => $unidadeRow?->nome ?? 'CNES ' . $cnes,
+                    'last_seen_at' => now(),
+                ]
+            );
 
             $baseSelect = "
                 SELECT

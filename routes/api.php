@@ -54,6 +54,7 @@ use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SpecialityController;
 use App\Http\Controllers\StateController;
+use App\Http\Controllers\SystemNoticeController;
 use App\Http\Controllers\SystemPageController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
@@ -173,6 +174,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/fila',     [PainelEsusController::class, 'fila']);
         Route::get('/filtros',  [PainelEsusController::class, 'filtros']);
         Route::get('/unidades', [PainelEsusController::class, 'unidades']);
+        Route::get('/statuses', [PainelEsusController::class, 'statuses']);
     });
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
@@ -188,6 +190,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Permissões do usuário logado
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
+    Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     // Configurações do laboratório (somente admin)
     Route::middleware('admin')->group(function () {
@@ -219,6 +222,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/page-categories/{id}', [PageCategoryController::class, 'destroy']);
     });
 
+    Route::get('/system-notices', [SystemNoticeController::class, 'index']);
+    Route::post('/system-notices', [SystemNoticeController::class, 'store']);
+    Route::delete('/system-notices/{id}', [SystemNoticeController::class, 'destroy']);
+    Route::get('/system-notices/active', [SystemNoticeController::class, 'active']);
+    Route::post('/system-notices/{id}/views', [SystemNoticeController::class, 'recordView']);
+
     // sector
     Route::get('/sectors', [SectorController::class, 'getAll']);
     Route::post('/sector', [SectorController::class, 'insert']);
@@ -236,6 +245,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // users
     Route::apiResource('users', UserController::class);
+    Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     // Equipes APS por usuário (admin)
     Route::middleware('admin')->group(function () {

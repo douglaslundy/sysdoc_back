@@ -37,6 +37,8 @@ class AccessProfileSeeder extends Seeder
             ['titulo' => 'Páginas do Sistema', 'path' => '/paginas-sistema', 'icone' => 'layout', 'categoria' => 'Administração'],
             ['titulo' => 'Categorias de Páginas', 'path' => '/paginas-categorias', 'icone' => 'tag', 'categoria' => 'Administração'],
             ['titulo' => 'Auditoria', 'path' => '/auditoria', 'icone' => 'eye', 'categoria' => 'Administração'],
+            ['titulo' => 'Status dos Painéis', 'path' => '/painel-esus/statuses', 'icone' => 'monitor', 'categoria' => 'Administração'],
+            ['titulo' => 'Avisos', 'path' => '/avisos', 'icone' => 'bell', 'categoria' => 'Administração'],
             ['titulo' => 'Lab - Resultados', 'path' => '/laboratorio/resultados', 'icone' => 'file-text', 'categoria' => 'Laboratório'],
             ['titulo' => 'Estabelecimentos', 'path' => '/estabelecimentos', 'icone' => 'home', 'categoria' => 'Vigilância Sanitária'],
             ['titulo' => 'Alvarás', 'path' => '/alvaras', 'icone' => 'award', 'categoria' => 'Vigilância Sanitária'],
@@ -88,6 +90,7 @@ class AccessProfileSeeder extends Seeder
                 '/letters', '/ordinance', '/models', '/errorlogs',
                 '/qrcodelogs', '/perfis', '/paginas-sistema', '/paginas-categorias', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes',
                 '/pharmacy/medicines', '/pharmacy/daily-status', '/pharmacy/monthly-acquisitions', '/pharmacy/compliance',
+                '/painel-esus/statuses', '/avisos',
             ],
             'manager' => [
                 '/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados',
