@@ -27,6 +27,7 @@ class RtAccessFixSeeder extends Seeder
         }
 
         $paths = [
+            '/painel-esus',
             '/client_report',
             '/painel-esus/statuses',
         ];
