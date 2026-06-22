@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PainelEsusPresence;
+use App\Models\SystemNotice;
+use App\Models\User;
+use App\Models\UserPresence;
 use App\Services\DashboardService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class DashboardController extends Controller
+class DashboardController extends MonitorApsBaseController
 {
     public function __construct(private DashboardService $service)
     {
@@ -509,6 +513,288 @@ class DashboardController extends Controller
             'oficios_por_mes' => $oficiosPorMes,
             'portarias_por_mes' => $portariasPorMes,
         ]);
+    }
+
+    private function resolveUnidadeColumns(): array
+    {
+        return [
+            'cnesCol' => $this->firstExistingColumn('tb_unidade_saude', ['co_cnes', 'nu_cnes', 'co_unico_saude']) ?? 'co_cnes',
+            'nomeCol' => $this->firstExistingColumn('tb_unidade_saude', ['no_unidade_saude', 'ds_nome', 'no_estabelecimento']) ?? 'no_unidade_saude',
+        ];
+    }
+
+    public function conformidades()
+    {
+        try {
+            $data = Cache::remember('dashboard.conformidades', 60, function () {
+                $empty = [
+                    'totais' => [
+                        'usuarios_total' => 0,
+                        'usuarios_online' => 0,
+                        'usuarios_offline' => 0,
+                        'usuarios_24h' => 0,
+                        'painel_total' => 0,
+                        'painel_online' => 0,
+                        'painel_offline' => 0,
+                        'painel_24h' => 0,
+                        'avisos_ativos' => 0,
+                        'avisos_expirando_7d' => 0,
+                        'avisos_para_todos' => 0,
+                        'avisos_para_usuario' => 0,
+                    ],
+                    'usuarios_status' => [],
+                    'painel_status' => [],
+                    'usuarios_faixas' => [],
+                    'painel_faixas' => [],
+                    'avisos_destino' => [],
+                    'recentes_usuarios' => [],
+                    'recentes_paineis' => [],
+                ];
+
+                try {
+                    $usuarios = User::query()
+                        ->where('active', true)
+                        ->orderBy('name')
+                        ->get(['id', 'name', 'email']);
+                    $presencasUsuarios = UserPresence::query()->get()->keyBy('user_id');
+                } catch (\Throwable $e) {
+                    Log::error('DashboardConformidades usuarios: '.$e->getMessage());
+                    $usuarios = collect();
+                    $presencasUsuarios = collect();
+                }
+
+                $usuariosOnline = 0;
+                $usuarios24h = 0;
+                $usuariosBuckets = [
+                    'online' => 0,
+                    'offline_24h' => 0,
+                    'offline_7d' => 0,
+                    'offline_7d_plus' => 0,
+                    'sem_registro' => 0,
+                ];
+                $recentesUsuarios = [];
+
+                foreach ($usuarios as $usuario) {
+                    $presence = $presencasUsuarios->get($usuario->id);
+                    $lastSeenAt = $presence?->last_seen_at;
+                    $lastSeenTimestamp = $lastSeenAt?->getTimestamp() ?? 0;
+                    $isOnline = $lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subMinutes(5));
+
+                    if ($isOnline) {
+                        $usuariosOnline++;
+                        $usuariosBuckets['online']++;
+                    } elseif ($lastSeenAt === null) {
+                        $usuariosBuckets['sem_registro']++;
+                    } elseif ($lastSeenAt->greaterThanOrEqualTo(now()->subHours(24))) {
+                        $usuariosBuckets['offline_24h']++;
+                    } elseif ($lastSeenAt->greaterThanOrEqualTo(now()->subDays(7))) {
+                        $usuariosBuckets['offline_7d']++;
+                    } else {
+                        $usuariosBuckets['offline_7d_plus']++;
+                    }
+
+                    if ($lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subHours(24))) {
+                        $usuarios24h++;
+                    }
+
+                    $recentesUsuarios[] = [
+                        'id' => $usuario->id,
+                        'name' => $usuario->name,
+                        'email' => $usuario->email,
+                        'is_online' => $isOnline,
+                        'last_seen_at' => $lastSeenAt?->toDateTimeString(),
+                        'last_path' => $presence?->last_path,
+                        'last_seen_timestamp' => $lastSeenTimestamp,
+                    ];
+                }
+
+                try {
+                    $conn = $this->db();
+                    $cols = $this->resolveUnidadeColumns();
+                    $unidades = collect($conn->table('tb_unidade_saude')
+                        ->selectRaw("{$cols['cnesCol']} as cnes, {$cols['nomeCol']} as nome")
+                        ->whereNotNull($cols['cnesCol'])
+                        ->orderBy($cols['nomeCol'])
+                        ->get())
+                        ->unique('cnes')
+                        ->values();
+                    $presencasPaineis = PainelEsusPresence::query()->get()->keyBy('cnes');
+                } catch (\Throwable $e) {
+                    Log::error('DashboardConformidades paineis: '.$e->getMessage());
+                    $unidades = collect();
+                    $presencasPaineis = collect();
+                }
+
+                $painelOnline = 0;
+                $painel24h = 0;
+                $painelBuckets = [
+                    'online' => 0,
+                    'offline_24h' => 0,
+                    'offline_7d' => 0,
+                    'offline_7d_plus' => 0,
+                    'sem_registro' => 0,
+                ];
+                $recentesPaineis = [];
+
+                foreach ($unidades as $unidade) {
+                    $cnes = (string) ($unidade->cnes ?? '');
+                    $nome = trim((string) ($unidade->nome ?? $cnes)) ?: $cnes;
+                    $presence = $presencasPaineis->get($cnes);
+                    $lastSeenAt = $presence?->last_seen_at;
+                    $lastSeenTimestamp = $lastSeenAt?->getTimestamp() ?? 0;
+                    $isOnline = $lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subMinutes(5));
+
+                    if ($isOnline) {
+                        $painelOnline++;
+                        $painelBuckets['online']++;
+                    } elseif ($lastSeenAt === null) {
+                        $painelBuckets['sem_registro']++;
+                    } elseif ($lastSeenAt->greaterThanOrEqualTo(now()->subHours(24))) {
+                        $painelBuckets['offline_24h']++;
+                    } elseif ($lastSeenAt->greaterThanOrEqualTo(now()->subDays(7))) {
+                        $painelBuckets['offline_7d']++;
+                    } else {
+                        $painelBuckets['offline_7d_plus']++;
+                    }
+
+                    if ($lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subHours(24))) {
+                        $painel24h++;
+                    }
+
+                    $recentesPaineis[] = [
+                        'cnes' => $cnes,
+                        'nome' => $nome,
+                        'panel_name' => $presence?->panel_name ?: $nome,
+                        'is_online' => $isOnline,
+                        'last_seen_at' => $lastSeenAt?->toDateTimeString(),
+                        'last_seen_timestamp' => $lastSeenTimestamp,
+                    ];
+                }
+
+                try {
+                    $avisosAtivos = SystemNotice::query()
+                        ->where('is_active', true)
+                        ->where(function ($query) {
+                            $query->whereNull('valid_until')
+                                ->orWhereDate('valid_until', '>=', now()->toDateString());
+                        })
+                        ->count();
+
+                    $avisosExpirando7d = SystemNotice::query()
+                        ->where('is_active', true)
+                        ->whereNotNull('valid_until')
+                        ->whereBetween('valid_until', [now()->toDateString(), now()->addDays(7)->toDateString()])
+                        ->count();
+
+                    $avisosParaTodos = SystemNotice::query()->whereNull('target_user_id')->count();
+                    $avisosParaUsuario = SystemNotice::query()->whereNotNull('target_user_id')->count();
+                } catch (\Throwable $e) {
+                    Log::error('DashboardConformidades avisos: '.$e->getMessage());
+                    $avisosAtivos = 0;
+                    $avisosExpirando7d = 0;
+                    $avisosParaTodos = 0;
+                    $avisosParaUsuario = 0;
+                }
+
+                $usuariosTotal = (int) $usuarios->count();
+                $painelTotal = (int) $unidades->count();
+
+                $usuariosOffline = max($usuariosTotal - $usuariosOnline, 0);
+                $painelOffline = max($painelTotal - $painelOnline, 0);
+
+                $recentesUsuarios = collect($recentesUsuarios)
+                    ->sortByDesc('last_seen_timestamp')
+                    ->take(8)
+                    ->values()
+                    ->map(function ($item) {
+                        unset($item['last_seen_timestamp']);
+
+                        return $item;
+                    });
+
+                $recentesPaineis = collect($recentesPaineis)
+                    ->sortByDesc('last_seen_timestamp')
+                    ->take(8)
+                    ->values()
+                    ->map(function ($item) {
+                        unset($item['last_seen_timestamp']);
+
+                        return $item;
+                    });
+
+                return [
+                    'totais' => [
+                        'usuarios_total' => $usuariosTotal,
+                        'usuarios_online' => $usuariosOnline,
+                        'usuarios_offline' => $usuariosOffline,
+                        'usuarios_24h' => $usuarios24h,
+                        'painel_total' => $painelTotal,
+                        'painel_online' => $painelOnline,
+                        'painel_offline' => $painelOffline,
+                        'painel_24h' => $painel24h,
+                        'avisos_ativos' => $avisosAtivos,
+                        'avisos_expirando_7d' => $avisosExpirando7d,
+                        'avisos_para_todos' => $avisosParaTodos,
+                        'avisos_para_usuario' => $avisosParaUsuario,
+                    ],
+                    'usuarios_status' => [
+                        ['label' => 'Online', 'total' => $usuariosOnline],
+                        ['label' => 'Offline', 'total' => $usuariosOffline],
+                    ],
+                    'painel_status' => [
+                        ['label' => 'Online', 'total' => $painelOnline],
+                        ['label' => 'Offline', 'total' => $painelOffline],
+                    ],
+                    'usuarios_faixas' => [
+                        ['label' => 'Online agora', 'total' => $usuariosBuckets['online']],
+                        ['label' => 'Offline até 24h', 'total' => $usuariosBuckets['offline_24h']],
+                        ['label' => 'Offline 1 a 7 dias', 'total' => $usuariosBuckets['offline_7d']],
+                        ['label' => 'Offline +7 dias', 'total' => $usuariosBuckets['offline_7d_plus']],
+                        ['label' => 'Sem registro', 'total' => $usuariosBuckets['sem_registro']],
+                    ],
+                    'painel_faixas' => [
+                        ['label' => 'Online agora', 'total' => $painelBuckets['online']],
+                        ['label' => 'Offline até 24h', 'total' => $painelBuckets['offline_24h']],
+                        ['label' => 'Offline 1 a 7 dias', 'total' => $painelBuckets['offline_7d']],
+                        ['label' => 'Offline +7 dias', 'total' => $painelBuckets['offline_7d_plus']],
+                        ['label' => 'Sem registro', 'total' => $painelBuckets['sem_registro']],
+                    ],
+                    'avisos_destino' => [
+                        ['label' => 'Para todos', 'total' => $avisosParaTodos],
+                        ['label' => 'Usuário específico', 'total' => $avisosParaUsuario],
+                    ],
+                    'recentes_usuarios' => $recentesUsuarios,
+                    'recentes_paineis' => $recentesPaineis,
+                ];
+            });
+        } catch (\Throwable $e) {
+            Log::error('DashboardConformidades cache: '.$e->getMessage());
+            $data = [
+                'totais' => [
+                    'usuarios_total' => 0,
+                    'usuarios_online' => 0,
+                    'usuarios_offline' => 0,
+                    'usuarios_24h' => 0,
+                    'painel_total' => 0,
+                    'painel_online' => 0,
+                    'painel_offline' => 0,
+                    'painel_24h' => 0,
+                    'avisos_ativos' => 0,
+                    'avisos_expirando_7d' => 0,
+                    'avisos_para_todos' => 0,
+                    'avisos_para_usuario' => 0,
+                ],
+                'usuarios_status' => [],
+                'painel_status' => [],
+                'usuarios_faixas' => [],
+                'painel_faixas' => [],
+                'avisos_destino' => [],
+                'recentes_usuarios' => [],
+                'recentes_paineis' => [],
+            ];
+        }
+
+        return response()->json($data)->header('Cache-Control', 'private, max-age=60');
     }
 
     public function vigilancia()
