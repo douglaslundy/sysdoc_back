@@ -37,6 +37,7 @@ class AccessProfileSeeder extends Seeder
             ['titulo' => 'Páginas do Sistema', 'path' => '/paginas-sistema', 'icone' => 'layout', 'categoria' => 'Administração'],
             ['titulo' => 'Categorias de Páginas', 'path' => '/paginas-categorias', 'icone' => 'tag', 'categoria' => 'Administração'],
             ['titulo' => 'Auditoria', 'path' => '/auditoria', 'icone' => 'eye', 'categoria' => 'Administração'],
+            ['titulo' => 'Avisos', 'path' => '/avisos', 'icone' => 'bell', 'categoria' => 'Administração'],
             ['titulo' => 'Status dos Painéis', 'path' => '/painel-esus/statuses', 'icone' => 'monitor', 'categoria' => 'Administração'],
             ['titulo' => 'Avisos', 'path' => '/avisos', 'icone' => 'bell', 'categoria' => 'Administração'],
             ['titulo' => 'Lab - Resultados', 'path' => '/laboratorio/resultados', 'icone' => 'file-text', 'categoria' => 'Laboratório'],
