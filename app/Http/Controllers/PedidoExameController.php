@@ -26,7 +26,7 @@ class PedidoExameController extends Controller
 
     public function index(Request $request)
     {
-        $query = PedidoExame::with(['cliente', 'exames', 'resultado', 'medicoSolicitante'])
+        $query = PedidoExame::with(['cliente', 'exames', 'resultado.campos', 'medicoSolicitante'])
             ->orderBy('data_pedido', 'desc');
 
         if ($request->filled('status')) {
