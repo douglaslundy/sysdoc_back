@@ -124,8 +124,8 @@ return new class extends Migration
         Schema::create('almoxarifado_movimentacoes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('almoxarifado_produto_id')->constrained('almoxarifado_produtos')->cascadeOnDelete();
-            $table->foreignId('almoxarifado_secretaria_origem_id')->nullable()->constrained('almoxarifado_secretarias')->nullOnDelete();
-            $table->foreignId('almoxarifado_secretaria_destino_id')->nullable()->constrained('almoxarifado_secretarias')->nullOnDelete();
+            $table->foreignId('almoxarifado_secretaria_origem_id')->nullable()->constrained('almoxarifado_secretarias', 'id', 'almox_mov_sec_origem_fk')->nullOnDelete();
+            $table->foreignId('almoxarifado_secretaria_destino_id')->nullable()->constrained('almoxarifado_secretarias', 'id', 'almox_mov_sec_dest_fk')->nullOnDelete();
             $table->string('tipo', 30);
             $table->decimal('quantidade', 14, 3);
             $table->decimal('saldo_anterior', 14, 3)->nullable();

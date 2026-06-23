@@ -14,7 +14,7 @@ class AccessProfileSeeder extends Seeder
             ->update(['titulo' => 'Dashboard', 'path' => '/dashboard', 'updated_at' => now()]);
 
         $pages = [
-            ['titulo' => 'Dashboard', 'path' => '/dashboard', 'icone' => 'pie-chart', 'categoria' => 'Geral'],
+            ['titulo' => 'Dashboard', 'path' => '/dashboard', 'icone' => 'pie-chart', 'categoria' => 'Dashboard'],
             ['titulo' => 'Usuários', 'path' => '/users', 'icone' => 'user', 'categoria' => 'Administração'],
             ['titulo' => 'Clientes', 'path' => '/clients', 'icone' => 'users', 'categoria' => 'Cadastros'],
             ['titulo' => 'Relatório Clientes', 'path' => '/client_report', 'icone' => 'bar-chart-2', 'categoria' => 'Relatórios'],
@@ -40,7 +40,6 @@ class AccessProfileSeeder extends Seeder
             ['titulo' => 'Avisos', 'path' => '/avisos', 'icone' => 'bell', 'categoria' => 'Administração'],
             ['titulo' => 'Status dos Painéis', 'path' => '/painel-esus/statuses', 'icone' => 'monitor', 'categoria' => 'Administração'],
             ['titulo' => 'Avisos', 'path' => '/avisos', 'icone' => 'bell', 'categoria' => 'Administração'],
-            ['titulo' => 'Lab - Resultados', 'path' => '/laboratorio/resultados', 'icone' => 'file-text', 'categoria' => 'Laboratório'],
             ['titulo' => 'Estabelecimentos', 'path' => '/estabelecimentos', 'icone' => 'home', 'categoria' => 'Vigilância Sanitária'],
             ['titulo' => 'Alvarás', 'path' => '/alvaras', 'icone' => 'award', 'categoria' => 'Vigilância Sanitária'],
             ['titulo' => 'Vigilância - Config', 'path' => '/vigilancia/configuracoes', 'icone' => 'settings', 'categoria' => 'Vigilância Sanitária'],
@@ -87,7 +86,7 @@ class AccessProfileSeeder extends Seeder
 
         $permissoes = [
             'admin' => [
-                '/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados',
+                '/dashboard', '/users', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos',
                 '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/specialities', '/queue', '/vehicles', '/routes', '/trips',
                 '/letters', '/ordinance', '/models', '/errorlogs',
                 '/qrcodelogs', '/perfis', '/paginas-sistema', '/paginas-categorias', '/auditoria', '/estabelecimentos', '/alvaras', '/vigilancia/configuracoes',
@@ -95,11 +94,11 @@ class AccessProfileSeeder extends Seeder
                 '/painel-esus/statuses', '/avisos',
             ],
             'manager' => [
-                '/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos', '/laboratorio/resultados',
+                '/dashboard', '/clients', '/client_report', '/laboratorio/exames', '/laboratorio/pedidos',
                 '/laboratorio/categorias', '/laboratorio/medicos', '/laboratorio/agenda', '/queue', '/trips', '/letters', '/ordinance',
                 '/estabelecimentos', '/alvaras', '/pharmacy/consulta-medicamentos', '/pharmacy/medicines', '/pharmacy/daily-status', '/pharmacy/monthly-acquisitions', '/pharmacy/compliance',
             ],
-            'user' => ['/clients', '/laboratorio/pedidos', '/laboratorio/resultados', '/laboratorio/agenda', '/queue'],
+            'user' => ['/clients', '/laboratorio/pedidos', '/laboratorio/agenda', '/queue'],
             'tfd' => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
             'driver' => ['/trips'],
             'partner' => ['/clients'],

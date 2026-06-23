@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,                    // Usuario admin padrao
             StateSeeder::class,                   // Estados brasileiros
             AccessProfileSeeder::class,           // Perfis de acesso + paginas + permissoes
+            LegacyMenuCleanupSeeder::class,       // Remove categorias e pagina legadas do menu
             CategoriaExameSeeder::class,          // Categorias de exames laboratoriais
             ExamesCompletosSeeder::class,         // Catalogo completo de exames
             CnaesOficiaisSeeder::class,           // Tabela oficial de CNAEs (IBGE/CONCLA)

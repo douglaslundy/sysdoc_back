@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('almoxarifado_requisicao_status_historicos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('almoxarifado_requisicao_id')->constrained('almoxarifado_requisicoes')->cascadeOnDelete();
+            $table->foreignId('almoxarifado_requisicao_id')->constrained('almoxarifado_requisicoes', 'id', 'almox_req_status_req_fk')->cascadeOnDelete();
             $table->string('status_anterior', 30)->nullable();
             $table->string('novo_status', 30);
             $table->text('observacao')->nullable();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users', 'id', 'almox_req_status_user_fk')->nullOnDelete();
             $table->timestamps();
         });
     }
