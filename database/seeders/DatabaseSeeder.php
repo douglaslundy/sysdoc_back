@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             DashboardTabPageSeeder::class,        // Dashboard - abas como system_pages com permissoes por perfil
             ConformidadeCidadaoPageSeeder::class, // Conformidade de Cidadãos - pagina e permissoes
             RtAccessFixSeeder::class,             // Backfill de permissoes da RT
+            AlmoxarifadoPageSeeder::class,        // Almoxarifado - categorias, paginas e permissoes
         ]);
     }
 }
