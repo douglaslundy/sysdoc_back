@@ -24,12 +24,17 @@ class AlmoxarifadoPageSeeder extends Seeder
         $pages = [
             ['titulo' => 'Almoxarifado', 'path' => '/almoxarifado', 'icone' => 'package', 'ordem' => 1],
             ['titulo' => 'Produtos', 'path' => '/almoxarifado/produtos', 'icone' => 'archive', 'ordem' => 2],
-            ['titulo' => 'Secretarias', 'path' => '/almoxarifado/secretarias', 'icone' => 'users', 'ordem' => 3],
-            ['titulo' => 'Estoque', 'path' => '/almoxarifado/estoque', 'icone' => 'layers', 'ordem' => 4],
-            ['titulo' => 'Requisições', 'path' => '/almoxarifado/requisicoes', 'icone' => 'clipboard', 'ordem' => 5],
-            ['titulo' => 'Movimentações', 'path' => '/almoxarifado/movimentacoes', 'icone' => 'refresh-cw', 'ordem' => 6],
-            ['titulo' => 'Relatórios', 'path' => '/almoxarifado/relatorios', 'icone' => 'bar-chart-2', 'ordem' => 7],
-            ['titulo' => 'Configurações', 'path' => '/almoxarifado/configuracoes', 'icone' => 'settings', 'ordem' => 8],
+            ['titulo' => 'Categorias', 'path' => '/almoxarifado/categorias', 'icone' => 'tag', 'ordem' => 3],
+            ['titulo' => 'Espécies', 'path' => '/almoxarifado/especies', 'icone' => 'grid', 'ordem' => 4],
+            ['titulo' => 'Unidades de Medida', 'path' => '/almoxarifado/unidades-medida', 'icone' => 'maximize', 'ordem' => 5],
+            ['titulo' => 'Fornecedores', 'path' => '/almoxarifado/fornecedores', 'icone' => 'truck', 'ordem' => 6],
+            ['titulo' => 'Localizações', 'path' => '/almoxarifado/localizacoes', 'icone' => 'map-pin', 'ordem' => 7],
+            ['titulo' => 'Secretarias', 'path' => '/almoxarifado/secretarias', 'icone' => 'users', 'ordem' => 8],
+            ['titulo' => 'Estoque', 'path' => '/almoxarifado/estoque', 'icone' => 'layers', 'ordem' => 9],
+            ['titulo' => 'Requisições', 'path' => '/almoxarifado/requisicoes', 'icone' => 'clipboard', 'ordem' => 10],
+            ['titulo' => 'Movimentações', 'path' => '/almoxarifado/movimentacoes', 'icone' => 'refresh-cw', 'ordem' => 11],
+            ['titulo' => 'Relatórios', 'path' => '/almoxarifado/relatorios', 'icone' => 'bar-chart-2', 'ordem' => 12],
+            ['titulo' => 'Configurações', 'path' => '/almoxarifado/configuracoes', 'icone' => 'settings', 'ordem' => 13],
         ];
 
         foreach ($pages as $page) {
@@ -52,6 +57,11 @@ class AlmoxarifadoPageSeeder extends Seeder
             'manager' => [
                 '/almoxarifado',
                 '/almoxarifado/produtos',
+                '/almoxarifado/categorias',
+                '/almoxarifado/especies',
+                '/almoxarifado/unidades-medida',
+                '/almoxarifado/fornecedores',
+                '/almoxarifado/localizacoes',
                 '/almoxarifado/secretarias',
                 '/almoxarifado/estoque',
                 '/almoxarifado/requisicoes',

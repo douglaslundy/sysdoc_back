@@ -43,4 +43,9 @@ class AlmoxarifadoRequisicao extends Model
     {
         return $this->hasMany(AlmoxarifadoRequisicaoItem::class, 'almoxarifado_requisicao_id');
     }
+
+    public function historicos(): HasMany
+    {
+        return $this->hasMany(AlmoxarifadoRequisicaoHistorico::class, 'almoxarifado_requisicao_id');
+    }
 }

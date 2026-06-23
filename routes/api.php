@@ -5,6 +5,9 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AgendaColetaController;
 use App\Http\Controllers\AlvaraController;
 use App\Http\Controllers\AlmoxarifadoCatalogController;
+use App\Http\Controllers\AlmoxarifadoEstoqueController;
+use App\Http\Controllers\AlmoxarifadoMovimentacaoController;
+use App\Http\Controllers\AlmoxarifadoRequisicaoController;
 use App\Http\Controllers\AlmoxarifadoProdutoController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
@@ -211,6 +214,16 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/produtos', [AlmoxarifadoProdutoController::class, 'store']);
         Route::put('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'update']);
         Route::delete('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'destroy']);
+
+        Route::get('/estoque', [AlmoxarifadoEstoqueController::class, 'index']);
+        Route::post('/estoque/movimentar', [AlmoxarifadoEstoqueController::class, 'movimentar']);
+
+        Route::get('/movimentacoes', [AlmoxarifadoMovimentacaoController::class, 'index']);
+
+        Route::get('/requisicoes', [AlmoxarifadoRequisicaoController::class, 'index']);
+        Route::get('/requisicoes/{id}', [AlmoxarifadoRequisicaoController::class, 'show']);
+        Route::post('/requisicoes', [AlmoxarifadoRequisicaoController::class, 'store']);
+        Route::patch('/requisicoes/{id}/status', [AlmoxarifadoRequisicaoController::class, 'updateStatus']);
     });
 
     Route::middleware('admin')->group(function () {
