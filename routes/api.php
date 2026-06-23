@@ -4,6 +4,8 @@ use App\Http\Controllers\AccessProfileController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AgendaColetaController;
 use App\Http\Controllers\AlvaraController;
+use App\Http\Controllers\AlmoxarifadoCatalogController;
+use App\Http\Controllers\AlmoxarifadoProdutoController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
@@ -196,6 +198,21 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Configurações do laboratório
     Route::get('/laboratorio/config', [LabConfigController::class, 'show']);
+
+    Route::prefix('almoxarifado')->group(function () {
+        Route::get('/catalogos/{type}', [AlmoxarifadoCatalogController::class, 'index']);
+        Route::post('/catalogos/{type}', [AlmoxarifadoCatalogController::class, 'store']);
+        Route::put('/catalogos/{type}/{id}', [AlmoxarifadoCatalogController::class, 'update']);
+        Route::delete('/catalogos/{type}/{id}', [AlmoxarifadoCatalogController::class, 'destroy']);
+
+        Route::get('/produtos/opcoes', [AlmoxarifadoProdutoController::class, 'options']);
+        Route::get('/produtos', [AlmoxarifadoProdutoController::class, 'index']);
+        Route::get('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'show']);
+        Route::post('/produtos', [AlmoxarifadoProdutoController::class, 'store']);
+        Route::put('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'update']);
+        Route::delete('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'destroy']);
+    });
+
     Route::middleware('admin')->group(function () {
         Route::put('/laboratorio/config', [LabConfigController::class, 'update']);
         Route::get('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'index']);
