@@ -10,6 +10,10 @@ use App\Http\Controllers\AlmoxarifadoEstoqueController;
 use App\Http\Controllers\AlmoxarifadoMovimentacaoController;
 use App\Http\Controllers\AlmoxarifadoRequisicaoController;
 use App\Http\Controllers\AlmoxarifadoProdutoController;
+use App\Http\Controllers\ProtocolAlertController;
+use App\Http\Controllers\ProtocolConfigController;
+use App\Http\Controllers\ProtocolController;
+use App\Http\Controllers\ProtocolOrganizationalUnitController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
@@ -236,6 +240,34 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'store']);
         Route::put('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'update']);
         Route::delete('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'destroy']);
+    });
+
+    Route::prefix('protocolos')->group(function () {
+        Route::get('/', [ProtocolController::class, 'index']);
+        Route::get('/caixa-entrada', [ProtocolController::class, 'inbox']);
+        Route::get('/contadores', [ProtocolController::class, 'counts']);
+        Route::get('/configuracoes', [ProtocolConfigController::class, 'show']);
+        Route::put('/configuracoes', [ProtocolConfigController::class, 'update']);
+
+        Route::get('/unidades-organizacionais', [ProtocolOrganizationalUnitController::class, 'index']);
+        Route::post('/unidades-organizacionais', [ProtocolOrganizationalUnitController::class, 'store']);
+        Route::put('/unidades-organizacionais/{id}', [ProtocolOrganizationalUnitController::class, 'update']);
+        Route::delete('/unidades-organizacionais/{id}', [ProtocolOrganizationalUnitController::class, 'destroy']);
+
+        Route::get('/alertas', [ProtocolAlertController::class, 'index']);
+        Route::post('/alertas', [ProtocolAlertController::class, 'store']);
+        Route::put('/alertas/{id}', [ProtocolAlertController::class, 'update']);
+        Route::delete('/alertas/{id}', [ProtocolAlertController::class, 'destroy']);
+
+        Route::post('/', [ProtocolController::class, 'store']);
+        Route::get('/{id}', [ProtocolController::class, 'show'])->whereNumber('id');
+        Route::put('/{id}', [ProtocolController::class, 'update'])->whereNumber('id');
+        Route::post('/{id}/receber', [ProtocolController::class, 'receive'])->whereNumber('id');
+        Route::post('/{id}/encaminhar', [ProtocolController::class, 'forward'])->whereNumber('id');
+        Route::post('/{id}/comentarios', [ProtocolController::class, 'comment'])->whereNumber('id');
+        Route::post('/{id}/encerrar', [ProtocolController::class, 'close'])->whereNumber('id');
+        Route::post('/{id}/reabrir', [ProtocolController::class, 'reopen'])->whereNumber('id');
+        Route::post('/{id}/anexos', [ProtocolController::class, 'attach'])->whereNumber('id');
     });
 
     // Backup do banco de dados (somente admin)
