@@ -38,7 +38,7 @@ class PasswordResetController extends Controller
             ['token' => Hash::make($token), 'created_at' => now()]
         );
 
-        $resetUrl = config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000'))
+        $resetUrl = rtrim(config('app.frontend_url', 'https://sysdoc.vercel.app'), '/')
             .'/redefinir-senha?token='.$token.'&email='.urlencode($user->email);
 
         try {
