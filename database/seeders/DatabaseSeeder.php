@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             ReconciliarCnaesEstabvisaSeeder::class, // Reconcilia CNAEs a partir do dump antigo + planilhas EstabVisa
             PharmacyCatalogSeeder::class,         // Catalogos auxiliares da Farmacia
             SusMgMedicinesSeeder::class,          // Medicamentos SUS-MG (REMEMG/CEAF + controlados)
+            AlmoxarifadoCatalogSeeder::class,     // Catalogos base do almoxarifado
+            AlmoxarifadoConfigSeeder::class,      // Configuracoes base do almoxarifado
             MonitorApsPageSeeder::class,          // Monitor APS - categorias, paginas e permissoes
             DashboardTabPageSeeder::class,        // Dashboard - abas como system_pages com permissoes por perfil
             ConformidadeCidadaoPageSeeder::class, // Conformidade de Cidadãos - pagina e permissoes

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AlmoxarifadoCategoria;
 use App\Models\AlmoxarifadoEspecie;
 use App\Models\AlmoxarifadoFornecedor;
+use App\Models\AlmoxarifadoConfig;
 use App\Models\AlmoxarifadoLocalizacao;
 use App\Models\AlmoxarifadoProduto;
 use App\Models\AlmoxarifadoUnidadeMedida;
@@ -106,6 +107,11 @@ class AlmoxarifadoProdutoController extends Controller
             'ativo' => ['sometimes', 'boolean'],
         ]);
 
+        $config = AlmoxarifadoConfig::current();
+        if ($config->exigir_localizacao_produto && empty($validated['almoxarifado_localizacao_id'])) {
+            abort(422, 'A localização do produto é obrigatória nas configurações do almoxarifado.');
+        }
+
         $validated['codigo_interno'] = $validated['codigo_interno'] ?: strtoupper('ALM-' . Str::random(10));
         $validated['ativo'] = $validated['ativo'] ?? true;
 
@@ -161,6 +167,11 @@ class AlmoxarifadoProdutoController extends Controller
             'observacoes' => ['nullable', 'string'],
             'ativo' => ['sometimes', 'boolean'],
         ]);
+
+        $config = AlmoxarifadoConfig::current();
+        if ($config->exigir_localizacao_produto && empty($validated['almoxarifado_localizacao_id'] ?? $produto->almoxarifado_localizacao_id)) {
+            abort(422, 'A localização do produto é obrigatória nas configurações do almoxarifado.');
+        }
 
         $produto->update($validated);
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AgendaColetaController;
 use App\Http\Controllers\AlvaraController;
 use App\Http\Controllers\AlmoxarifadoCatalogController;
+use App\Http\Controllers\AlmoxarifadoConfigController;
 use App\Http\Controllers\AlmoxarifadoEstoqueController;
 use App\Http\Controllers\AlmoxarifadoMovimentacaoController;
 use App\Http\Controllers\AlmoxarifadoRequisicaoController;
@@ -224,6 +225,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/requisicoes/{id}', [AlmoxarifadoRequisicaoController::class, 'show']);
         Route::post('/requisicoes', [AlmoxarifadoRequisicaoController::class, 'store']);
         Route::patch('/requisicoes/{id}/status', [AlmoxarifadoRequisicaoController::class, 'updateStatus']);
+
+        Route::get('/configuracoes', [AlmoxarifadoConfigController::class, 'show']);
+        Route::put('/configuracoes', [AlmoxarifadoConfigController::class, 'update']);
     });
 
     Route::middleware('admin')->group(function () {

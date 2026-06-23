@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AlmoxarifadoConfig;
 use App\Models\AlmoxarifadoEstoque;
 use App\Models\AlmoxarifadoMovimentacao;
 use App\Models\AlmoxarifadoProduto;
@@ -65,6 +66,7 @@ class AlmoxarifadoEstoqueController extends Controller
 
         $resultado = DB::transaction(function () use ($validated, $request) {
             $produto = AlmoxarifadoProduto::findOrFail($validated['almoxarifado_produto_id']);
+            $config = AlmoxarifadoConfig::current();
             $origemId = $validated['almoxarifado_secretaria_id'] ?? null;
             $destinoId = $validated['secretaria_destino_id'] ?? null;
             $quantidade = (float) $validated['quantidade'];
@@ -89,7 +91,7 @@ class AlmoxarifadoEstoqueController extends Controller
                 $saldoPosterior = $saldoAnterior + $quantidade;
                 $estoqueOrigem->increment('quantidade_disponivel', $quantidade);
             } elseif ($validated['tipo'] === 'saida') {
-                if ($saldoAnterior < $quantidade) {
+                if ($saldoAnterior < $quantidade && ! $config->permitir_saida_sem_saldo) {
                     abort(422, 'Saldo insuficiente para a saída solicitada.');
                 }
                 $saldoPosterior = $saldoAnterior - $quantidade;
@@ -98,10 +100,13 @@ class AlmoxarifadoEstoqueController extends Controller
                 $saldoPosterior = $quantidade;
                 $estoqueOrigem->update(['quantidade_disponivel' => $quantidade]);
             } elseif ($validated['tipo'] === 'transferencia') {
+                if (! $config->permitir_transferencia_entre_secretarias) {
+                    abort(422, 'Transferências entre secretarias estão desativadas nas configurações.');
+                }
                 if (! $destinoId) {
                     abort(422, 'Informe a secretaria de destino para transferência.');
                 }
-                if ($saldoAnterior < $quantidade) {
+                if ($saldoAnterior < $quantidade && ! $config->permitir_saida_sem_saldo) {
                     abort(422, 'Saldo insuficiente para a transferência solicitada.');
                 }
 
