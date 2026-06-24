@@ -16,10 +16,15 @@ class UserPresence extends Model
         'user_id',
         'last_seen_at',
         'last_path',
+        'status',
+        'connection_count',
+        'connected_at',
     ];
 
     protected $casts = [
         'last_seen_at' => 'datetime',
+        'connected_at' => 'datetime',
+        'connection_count' => 'integer',
     ];
 
     public function user(): BelongsTo

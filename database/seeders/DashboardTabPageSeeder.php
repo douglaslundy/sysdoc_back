@@ -32,6 +32,7 @@ class DashboardTabPageSeeder extends Seeder
             ['titulo' => 'Dashboard - Farmácia',             'path' => '/dashboard/farmacia',    'icone' => 'package',     'ordem' => 6],
             ['titulo' => 'Dashboard - Logs/QR',              'path' => '/dashboard/logs',        'icone' => 'eye',         'ordem' => 7],
             ['titulo' => 'Dashboard - Conformidades',        'path' => '/dashboard/conformidades','icone' => 'shield',      'ordem' => 8],
+            ['titulo' => 'Dashboard - Chat',                  'path' => '/dashboard/chat',         'icone' => 'message-circle','ordem' => 9],
         ];
 
         foreach ($pages as $page) {
@@ -52,12 +53,15 @@ class DashboardTabPageSeeder extends Seeder
         // 3. Permissões iniciais por perfil
         // admin recebe todas; user/manager recebem tudo exceto Logs/QR
         $todasPaths  = array_column($pages, 'path');
-        $semLogs     = array_filter($todasPaths, fn ($p) => $p !== '/dashboard/logs');
+        $semAdministracao = array_filter(
+            $todasPaths,
+            fn ($p) => ! in_array($p, ['/dashboard/logs', '/dashboard/chat'], true)
+        );
 
         $permissoes = [
             'admin'   => $todasPaths,
-            'user'    => array_values($semLogs),
-            'manager' => array_values($semLogs),
+            'user'    => array_values($semAdministracao),
+            'manager' => array_values($semAdministracao),
         ];
 
         foreach ($permissoes as $slug => $paths) {

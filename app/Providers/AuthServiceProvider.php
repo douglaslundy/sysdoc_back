@@ -36,5 +36,6 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('dashboard-fila',        $perm('/dashboard/fila'));
         Gate::define('dashboard-tfd',         $perm('/dashboard/tfd'));
         Gate::define('dashboard-logs',        $perm('/dashboard/logs'));
+        Gate::define('dashboard-chat',        $perm('/dashboard/chat'));
     }
 }

@@ -21,6 +21,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CallController;
 use App\Http\Controllers\CallServiceController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CampoReferenciaController;
 use App\Http\Controllers\CategoriaExameController;
 use App\Http\Controllers\CidadaoAcsController;
@@ -204,12 +205,31 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/dashboard/tfd', [DashboardController::class, 'tfd'])->middleware('can:dashboard-tfd');
         Route::get('/dashboard/farmacia', [DashboardController::class, 'farmacia']);
         Route::get('/dashboard/logs', [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
+        Route::get('/dashboard/chat', [ChatController::class, 'dashboard'])->middleware('can:dashboard-chat');
         Route::get('/dashboard/vigilancia', [DashboardController::class, 'vigilancia']);
     });
 
     // Permissões do usuário logado
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
+
+    Route::prefix('chat')->middleware('throttle:120,1')->group(function () {
+        Route::get('/users', [ChatController::class, 'users']);
+        Route::get('/conversations', [ChatController::class, 'conversations']);
+        Route::post('/conversations', [ChatController::class, 'startConversation']);
+        Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
+        Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage'])
+            ->middleware('throttle:30,1');
+        Route::post('/conversations/{conversation}/read', [ChatController::class, 'markRead']);
+        Route::delete('/conversations/{conversation}', [ChatController::class, 'deleteConversation']);
+        Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing'])
+            ->middleware('throttle:60,1');
+        Route::delete('/messages/{message}', [ChatController::class, 'deleteMessage']);
+        Route::post('/messages/{message}/delivered', [ChatController::class, 'markDelivered']);
+        Route::get('/attachments/{attachment}', [ChatController::class, 'attachment']);
+        Route::get('/unread', [ChatController::class, 'unread']);
+        Route::post('/presence', [ChatController::class, 'presence'])->middleware('throttle:60,1');
+    });
 
     // Configurações do laboratório
     Route::get('/laboratorio/config', [LabConfigController::class, 'show']);
