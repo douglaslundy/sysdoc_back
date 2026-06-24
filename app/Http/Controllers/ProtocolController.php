@@ -320,6 +320,10 @@ class ProtocolController extends Controller
             'novos' => $query->count(),
             'vence_em_breve' => (clone $query)->whereDate('prazo_atendimento', '<=', now()->addDays(3))->count(),
             'vencidos' => (clone $query)->whereDate('prazo_atendimento', '<', now())->count(),
+            'recentes' => (clone $query)
+                ->with(['origemUnit:id,nome,tipo', 'destinoUnit:id,nome,tipo', 'responsavelAtual:id,name'])
+                ->limit(8)
+                ->get(['id', 'numero', 'assunto', 'status', 'prioridade', 'prazo_atendimento', 'origem_unit_id', 'destino_unit_id', 'responsavel_atual_id', 'updated_at']),
         ]);
     }
 
