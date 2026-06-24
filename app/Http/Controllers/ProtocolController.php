@@ -10,6 +10,7 @@ use App\Models\ProtocolConfig;
 use App\Models\ProtocolMovement;
 use App\Models\ProtocolNotification;
 use App\Models\ProtocolOrganizationalUnit;
+use App\Models\ProtocolView;
 use App\Models\ProtocolUserUnit;
 use App\Models\User;
 use App\Services\AuditService;
@@ -105,6 +106,7 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
             'notifications.user:id,name',
+            'visualizations.user.equipeAps',
         ])->find($id);
 
         if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
@@ -115,7 +117,42 @@ class ProtocolController extends Controller
             $protocol->update(['novo' => false]);
         }
 
+        $this->recordVisualization($protocol, request()->user());
+
         return response()->json($protocol);
+    }
+
+    public function visualizations(int $id): JsonResponse
+    {
+        $protocol = Protocol::find($id);
+        if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
+            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
+        }
+
+        $views = ProtocolView::query()
+            ->with(['user.equipeAps'])
+            ->where('protocol_id', $protocol->id)
+            ->orderByDesc('visualized_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (ProtocolView $view) {
+                $user = $view->user;
+                $equipe = optional($user?->equipeAps->first())->no_equipe;
+
+                return [
+                    'id' => $view->id,
+                    'protocol_id' => $view->protocol_id,
+                    'user' => [
+                        'id' => $user?->id,
+                        'name' => $user?->name,
+                    ],
+                    'departamento' => $view->departamento ?: ($equipe ?: 'Sem equipe informada'),
+                    'equipe' => $view->equipe ?: $equipe,
+                    'visualized_at' => $view->visualized_at ?? $view->created_at,
+                ];
+            });
+
+        return response()->json($views);
     }
 
     public function store(Request $request): JsonResponse
@@ -444,5 +481,29 @@ class ProtocolController extends Controller
                 'dados' => $dados,
             ]);
         }
+    }
+
+    private function recordVisualization(Protocol $protocol, ?User $user): void
+    {
+        ProtocolView::create([
+            'protocol_id' => $protocol->id,
+            'user_id' => $user?->id,
+            'departamento' => $this->userDepartmentLabel($user),
+            'equipe' => $this->userTeamLabel($user),
+            'visualized_at' => now(),
+        ]);
+    }
+
+    private function userDepartmentLabel(?User $user): ?string
+    {
+        $user?->loadMissing('equipeAps');
+        return optional($user?->equipeAps->first())->no_equipe;
+    }
+
+    private function userTeamLabel(?User $user): ?string
+    {
+        $user?->loadMissing('equipeAps');
+        $equipe = $user?->equipeAps->first();
+        return $equipe ? trim((string) ($equipe->no_equipe ?? $equipe->nu_ine ?? '')) : null;
     }
 }

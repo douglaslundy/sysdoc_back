@@ -99,4 +99,9 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolNotification::class, 'protocol_id');
     }
+
+    public function visualizations(): HasMany
+    {
+        return $this->hasMany(ProtocolView::class, 'protocol_id');
+    }
 }

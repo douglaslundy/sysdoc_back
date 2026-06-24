@@ -268,6 +268,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/{id}/encerrar', [ProtocolController::class, 'close'])->whereNumber('id');
         Route::post('/{id}/reabrir', [ProtocolController::class, 'reopen'])->whereNumber('id');
         Route::post('/{id}/anexos', [ProtocolController::class, 'attach'])->whereNumber('id');
+        Route::get('/{id}/visualizacoes', [ProtocolController::class, 'visualizations'])->whereNumber('id');
         Route::get('/anexos/{attachment}/download', [ProtocolController::class, 'downloadAttachment'])->whereNumber('attachment');
     });
 
