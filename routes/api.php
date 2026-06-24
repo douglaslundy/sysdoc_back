@@ -28,6 +28,9 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ConformidadeCidadaoController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentApprovalController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\EmailConfigController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\ErrorLogController;
@@ -294,6 +297,24 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/{id}/historico', [ProtocolController::class, 'historico'])->whereNumber('id');
         Route::get('/{id}/visualizacoes', [ProtocolController::class, 'visualizations'])->whereNumber('id');
         Route::get('/anexos/{attachment}/download', [ProtocolController::class, 'downloadAttachment'])->whereNumber('attachment');
+    });
+
+    Route::prefix('documentos')->group(function () {
+        Route::get('/', [DocumentController::class, 'index']);
+        Route::post('/', [DocumentController::class, 'store']);
+        Route::get('/tipos', [DocumentTypeController::class, 'index']);
+        Route::post('/tipos', [DocumentTypeController::class, 'store']);
+        Route::put('/tipos/{id}', [DocumentTypeController::class, 'update'])->whereNumber('id');
+        Route::delete('/tipos/{id}', [DocumentTypeController::class, 'destroy'])->whereNumber('id');
+        Route::get('/aprovacoes', [DocumentApprovalController::class, 'index']);
+        Route::get('/{id}', [DocumentController::class, 'show'])->whereNumber('id');
+        Route::put('/{id}', [DocumentController::class, 'update'])->whereNumber('id');
+        Route::delete('/{id}', [DocumentController::class, 'destroy'])->whereNumber('id');
+        Route::get('/{id}/versoes', [DocumentController::class, 'versions'])->whereNumber('id');
+        Route::post('/{id}/versoes', [DocumentController::class, 'uploadVersion'])->whereNumber('id');
+        Route::get('/{documentId}/versoes/{versionId}/download', [DocumentController::class, 'downloadVersion'])
+            ->whereNumber('documentId')
+            ->whereNumber('versionId');
     });
 
     // Backup do banco de dados (somente admin)
