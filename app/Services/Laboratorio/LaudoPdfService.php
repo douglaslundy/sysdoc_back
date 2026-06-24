@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 class LaudoPdfService
 {
-    public function gerar(ResultadoExame $resultado): string
+    public function gerar(ResultadoExame $resultado, bool $rascunho = false): string
     {
         $resultado->load([
             'pedido.cliente',
@@ -40,6 +40,7 @@ class LaudoPdfService
             'config' => $config,
             'brasaoB64' => $brasaoB64,
             'logoSusB64' => $logoSusB64,
+            'rascunho' => $rascunho,
         ])->setPaper('a4', 'portrait');
 
         $path = 'lab/resultados/'.$resultado->protocolo.'.pdf';

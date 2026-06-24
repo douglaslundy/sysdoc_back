@@ -81,6 +81,19 @@
     font-size: 9px; color: #666;
   }
   .liberacao .protocolo { font-size: 11px; font-weight: bold; color: #333; margin-top: 2px; }
+  .rascunho-badge {
+    display: inline-block;
+    margin-bottom: 4px;
+    padding: 2px 6px;
+    border: 1px solid #f9a825;
+    border-radius: 999px;
+    background: #fff8e1;
+    color: #8d6e00;
+    font-size: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
 
   /* ── RODAPÉ ── */
   .footer {
@@ -260,6 +273,9 @@
 
   {{-- ══ DADOS DE LIBERAÇÃO ══ --}}
   <div class="liberacao">
+    @if(! $resultado->data_liberacao)
+      <div class="rascunho-badge">Rascunho</div>
+    @endif
     <div>
       Liberado em: {{ $resultado->data_liberacao ? \Carbon\Carbon::parse($resultado->data_liberacao)->format('d/m/Y H:i') : '—' }}
       &nbsp;|&nbsp;

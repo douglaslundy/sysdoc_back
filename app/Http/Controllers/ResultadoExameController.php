@@ -78,6 +78,9 @@ class ResultadoExameController extends Controller
 
         try {
             $this->service->salvarCampos($resultado, $request->input('campos'));
+            if (! $resultado->data_liberacao) {
+                $resultado->update(['pdf_path' => null]);
+            }
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
@@ -111,16 +114,27 @@ class ResultadoExameController extends Controller
         ]);
     }
 
-    public function downloadPdf($id): StreamedResponse|array
+    public function downloadPdf(\Illuminate\Http\Request $request, $id): StreamedResponse|array
     {
         $resultado = ResultadoExame::find($id);
         if (! $resultado) {
             return response()->json(['error' => 'PDF não disponível'], 404);
         }
 
+        $isDraft = ! $resultado->data_liberacao;
+        if ($isDraft) {
+            if (! $request->boolean('rascunho')) {
+                return response()->json(['error' => 'Resultado ainda não liberado.'], 422);
+            }
+
+            if (! \App\Models\LabConfig::get()->imprimir_rascunho_exame) {
+                return response()->json(['error' => 'Impressão de rascunho desativada nas configurações.'], 403);
+            }
+        }
+
         if (! $resultado->pdf_path || ! Storage::exists($resultado->pdf_path)) {
             try {
-                $pdfPath = app(LaudoPdfService::class)->gerar($resultado);
+                $pdfPath = app(LaudoPdfService::class)->gerar($resultado, $isDraft);
                 $resultado->pdf_path = $pdfPath;
                 $resultado->save();
             } catch (\Throwable $e) {
