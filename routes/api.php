@@ -57,6 +57,7 @@ use App\Http\Controllers\OrdinanceController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\PageViewAuditController;
 use App\Http\Controllers\PainelEsusController;
+use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PedidoExameController;
 use App\Http\Controllers\PharmacyCatalogAdminController;
@@ -297,6 +298,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/{id}/historico', [ProtocolController::class, 'historico'])->whereNumber('id');
         Route::get('/{id}/visualizacoes', [ProtocolController::class, 'visualizations'])->whereNumber('id');
         Route::get('/anexos/{attachment}/download', [ProtocolController::class, 'downloadAttachment'])->whereNumber('attachment');
+    });
+
+    Route::prefix('kanban')->group(function () {
+        Route::get('/', [KanbanController::class, 'index']);
+        Route::post('/', [KanbanController::class, 'store']);
+        Route::put('/{id}', [KanbanController::class, 'update'])->whereNumber('id');
+        Route::delete('/{id}', [KanbanController::class, 'destroy'])->whereNumber('id');
     });
 
     Route::prefix('documentos')->group(function () {

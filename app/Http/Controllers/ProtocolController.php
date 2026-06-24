@@ -14,6 +14,7 @@ use App\Models\ProtocolView;
 use App\Models\ProtocolUserUnit;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\Kanban\ProtocolKanbanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,10 @@ use Illuminate\Support\Str;
 
 class ProtocolController extends Controller
 {
+    public function __construct(private readonly ProtocolKanbanService $kanbanService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $query = $this->baseQuery($request->user());
@@ -207,6 +212,16 @@ class ProtocolController extends Controller
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'prazo_atendimento' => 'nullable|date',
+            'kanban' => 'nullable|array',
+            'kanban.ativar' => 'nullable|boolean',
+            'kanban.id' => 'nullable|integer|exists:kanban_tasks,id',
+            'kanban.titulo' => 'nullable|string|max:200',
+            'kanban.descricao' => 'nullable|string',
+            'kanban.status' => 'nullable|string|max:40',
+            'kanban.prioridade' => 'nullable|string|max:20',
+            'kanban.vencimento' => 'nullable|date',
+            'kanban.responsavel_id' => 'nullable|integer|exists:users,id',
+            'kanban.ordem' => 'nullable|integer|min:0',
         ]);
 
         $config = ProtocolConfig::current();
@@ -237,7 +252,11 @@ class ProtocolController extends Controller
 
             AuditService::record('CREATE', $protocol, null, $protocol->toArray());
 
-            return $protocol->load(['origemUnit', 'destinoUnit', 'responsavelAtual', 'criadoPor']);
+            if (! empty($validated['kanban'])) {
+                $this->kanbanService->sync($protocol, $validated['kanban'], $request->user());
+            }
+
+            return $protocol->load(['origemUnit', 'destinoUnit', 'responsavelAtual', 'criadoPor', 'kanbanTask.createdBy', 'kanbanTask.updatedBy', 'kanbanTask.responsavel']);
         });
 
         return response()->json($protocol, 201);
@@ -261,13 +280,26 @@ class ProtocolController extends Controller
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'prazo_atendimento' => 'nullable|date',
+            'kanban' => 'nullable|array',
+            'kanban.ativar' => 'nullable|boolean',
+            'kanban.id' => 'nullable|integer|exists:kanban_tasks,id',
+            'kanban.titulo' => 'nullable|string|max:200',
+            'kanban.descricao' => 'nullable|string',
+            'kanban.status' => 'nullable|string|max:40',
+            'kanban.prioridade' => 'nullable|string|max:20',
+            'kanban.vencimento' => 'nullable|date',
+            'kanban.responsavel_id' => 'nullable|integer|exists:users,id',
+            'kanban.ordem' => 'nullable|integer|min:0',
         ]);
 
         $old = $protocol->toArray();
         $protocol->update($validated);
+        if (! empty($validated['kanban'])) {
+            $this->kanbanService->sync($protocol, $validated['kanban'], $request->user());
+        }
         AuditService::record('UPDATE', $protocol, $old, $protocol->fresh()->toArray());
 
-        return response()->json($protocol->fresh());
+        return response()->json($protocol->fresh()->load(['kanbanTask.createdBy', 'kanbanTask.updatedBy', 'kanbanTask.responsavel']));
     }
 
     public function receive(Request $request, int $id): JsonResponse
@@ -486,6 +518,9 @@ class ProtocolController extends Controller
             'destinoUnit:id,nome,tipo',
             'responsavelAtual:id,name',
             'criadoPor:id,name',
+            'kanbanTask.createdBy:id,name',
+            'kanbanTask.updatedBy:id,name',
+            'kanbanTask.responsavel:id,name',
             'movements.user:id,name',
             'comments.user:id,name',
             'attachments.user:id,name',

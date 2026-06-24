@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             ProtocolPageSeeder::class,            // Protocolo - categorias, paginas e permissoes
             ProtocolCatalogSeeder::class,         // Protocolo - configuracoes e unidades base
             NotificationChannelConfigSeeder::class, // Configuracoes de canais de notificacao
+            KanbanPageSeeder::class,              // Kanban - pagina e permissoes
             DocumentTypeSeeder::class,            // Tipos de documentos pre-cadastrados
             DocumentPageSeeder::class,            // Documentos - pagina e permissoes
             SistemaPageSeeder::class,             // Sistema - configuracoes gerais e alertas

@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\KanbanTask;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class KanbanController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $query = KanbanTask::query()
+            ->with(['protocol:id,numero,assunto,status', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name'])
+            ->orderByDesc('ordem')
+            ->orderByDesc('updated_at');
+
+        foreach (['status', 'prioridade'] as $field) {
+            if ($request->filled($field)) {
+                $query->where($field, $request->input($field));
+            }
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($sub) use ($search) {
+                $sub->where('titulo', 'like', "%{$search}%")
+                    ->orWhere('descricao', 'like', "%{$search}%")
+                    ->orWhereHas('protocol', function ($protocolQuery) use ($search) {
+                        $protocolQuery->where('numero', 'like', "%{$search}%")
+                            ->orWhere('assunto', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return response()->json($query->get());
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'titulo' => 'required|string|max:200',
+            'descricao' => 'nullable|string',
+            'status' => 'nullable|string|max:40',
+            'prioridade' => 'nullable|string|max:20',
+            'vencimento' => 'nullable|date',
+            'responsavel_id' => 'nullable|integer|exists:users,id',
+            'ordem' => 'nullable|integer|min:0',
+        ]);
+
+        $task = KanbanTask::create([
+            'titulo' => $validated['titulo'],
+            'descricao' => $validated['descricao'] ?? null,
+            'status' => $validated['status'] ?? 'novo',
+            'prioridade' => $validated['prioridade'] ?? 'normal',
+            'vencimento' => $validated['vencimento'] ?? null,
+            'responsavel_id' => $validated['responsavel_id'] ?? null,
+            'ordem' => $validated['ordem'] ?? 0,
+            'created_by_id' => $request->user()?->id,
+            'updated_by_id' => $request->user()?->id,
+        ]);
+
+        return response()->json($task->load(['protocol', 'createdBy', 'updatedBy', 'responsavel']), 201);
+    }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $task = KanbanTask::with(['protocol', 'createdBy', 'updatedBy', 'responsavel'])->find($id);
+        if (! $task) {
+            return response()->json(['message' => 'Item do kanban nao encontrado.'], 404);
+        }
+
+        $validated = $request->validate([
+            'titulo' => 'sometimes|required|string|max:200',
+            'descricao' => 'nullable|string',
+            'status' => 'sometimes|required|string|max:40',
+            'prioridade' => 'sometimes|required|string|max:20',
+            'vencimento' => 'nullable|date',
+            'responsavel_id' => 'nullable|integer|exists:users,id',
+            'ordem' => 'nullable|integer|min:0',
+        ]);
+
+        $task->update([
+            ...$validated,
+            'updated_by_id' => $request->user()?->id,
+        ]);
+
+        return response()->json($task->fresh(['protocol', 'createdBy', 'updatedBy', 'responsavel']));
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $task = KanbanTask::find($id);
+        if (! $task) {
+            return response()->json(['message' => 'Item do kanban nao encontrado.'], 404);
+        }
+
+        $task->delete();
+
+        return response()->json(['message' => 'Item do kanban removido com sucesso.']);
+    }
+}

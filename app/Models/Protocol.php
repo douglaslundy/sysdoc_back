@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class Protocol extends Model
@@ -103,5 +104,10 @@ class Protocol extends Model
     public function visualizations(): HasMany
     {
         return $this->hasMany(ProtocolView::class, 'protocol_id');
+    }
+
+    public function kanbanTask(): HasOne
+    {
+        return $this->hasOne(KanbanTask::class, 'protocol_id');
     }
 }
