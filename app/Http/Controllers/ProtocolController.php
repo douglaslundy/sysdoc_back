@@ -199,7 +199,7 @@ class ProtocolController extends Controller
         $validated = $request->validate([
             'assunto' => 'required|string|max:200',
             'descricao' => 'nullable|string',
-            'tipo' => 'required|string|max:40',
+            'tipo' => 'required|string|max:40|exists:protocol_types,codigo',
             'prioridade' => 'nullable|string|max:20',
             'solicitante_tipo' => 'required|string|max:20',
             'solicitante_nome' => 'nullable|string|max:150',
@@ -253,7 +253,7 @@ class ProtocolController extends Controller
         $validated = $request->validate([
             'assunto' => 'sometimes|required|string|max:200',
             'descricao' => 'nullable|string',
-            'tipo' => 'sometimes|required|string|max:40',
+            'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo',
             'prioridade' => 'nullable|string|max:20',
             'solicitante_tipo' => 'sometimes|required|string|max:20',
             'solicitante_nome' => 'nullable|string|max:150',

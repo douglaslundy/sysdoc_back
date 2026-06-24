@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProtocolConfig;
+use App\Models\NotificationChannelConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -11,7 +11,7 @@ class WhatsappConfigController extends Controller
 {
     public function show(): JsonResponse
     {
-        return response()->json($this->payload(ProtocolConfig::current()));
+        return response()->json($this->payload($this->currentConfig()));
     }
 
     public function update(Request $request): JsonResponse
@@ -24,23 +24,25 @@ class WhatsappConfigController extends Controller
             'whatsapp_ativo' => 'boolean',
         ]);
 
-        $config = ProtocolConfig::current();
-        $config->update($request->only([
-            'whatsapp_base_url',
-            'whatsapp_api_key',
-            'whatsapp_instance_name',
-            'whatsapp_instance_token',
-            'whatsapp_ativo',
-        ]));
+        $config = $this->currentConfig();
+        $config->update([
+            'ativo' => (bool) $request->boolean('whatsapp_ativo'),
+            'configuracao' => [
+                'whatsapp_base_url' => $request->input('whatsapp_base_url'),
+                'whatsapp_api_key' => $request->input('whatsapp_api_key'),
+                'whatsapp_instance_name' => $request->input('whatsapp_instance_name'),
+                'whatsapp_instance_token' => $request->input('whatsapp_instance_token'),
+            ],
+        ]);
 
         return response()->json($this->payload($config->fresh()));
     }
 
     public function status(): JsonResponse
     {
-        $config = ProtocolConfig::current();
+        $config = $this->currentConfig();
         $instance = $this->resolveInstance($config);
-        if (! $instance || ! $config->whatsapp_base_url) {
+        if (! $instance || ! $this->baseUrl($config)) {
             return response()->json(['status' => 'unknown', 'number' => null]);
         }
 
@@ -75,9 +77,9 @@ class WhatsappConfigController extends Controller
 
     public function qrcode(): JsonResponse
     {
-        $config = ProtocolConfig::current();
+        $config = $this->currentConfig();
         $instance = $this->resolveInstance($config);
-        if (! $instance || ! $config->whatsapp_base_url) {
+        if (! $instance || ! $this->baseUrl($config)) {
             return response()->json(['message' => 'Configuração do WhatsApp indisponível.'], 422);
         }
 
@@ -113,9 +115,9 @@ class WhatsappConfigController extends Controller
 
     public function disconnect(): JsonResponse
     {
-        $config = ProtocolConfig::current();
+        $config = $this->currentConfig();
         $instance = $this->resolveInstance($config);
-        if (! $instance || ! $config->whatsapp_base_url) {
+        if (! $instance || ! $this->baseUrl($config)) {
             return response()->json(['message' => 'Configuração do WhatsApp indisponível.'], 422);
         }
 
@@ -136,9 +138,9 @@ class WhatsappConfigController extends Controller
 
     public function test(Request $request): JsonResponse
     {
-        $config = ProtocolConfig::current();
+        $config = $this->currentConfig();
         $instance = $this->resolveInstance($config);
-        if (! $instance || ! $config->whatsapp_base_url) {
+        if (! $instance || ! $this->baseUrl($config)) {
             return response()->json(['ok' => false, 'error' => 'Configuração indisponível.'], 422);
         }
 
@@ -166,9 +168,9 @@ class WhatsappConfigController extends Controller
             'telefone' => 'required|string',
         ]);
 
-        $config = ProtocolConfig::current();
+        $config = $this->currentConfig();
         $instance = $this->resolveInstance($config);
-        if (! $instance || ! $config->whatsapp_base_url) {
+        if (! $instance || ! $this->baseUrl($config)) {
             return response()->json(['message' => 'Configuração do WhatsApp indisponível.'], 422);
         }
 
@@ -193,32 +195,49 @@ class WhatsappConfigController extends Controller
         ], 422);
     }
 
-    private function payload(ProtocolConfig $config): array
+    private function currentConfig(): NotificationChannelConfig
     {
+        return NotificationChannelConfig::current('whatsapp');
+    }
+
+    private function payload(NotificationChannelConfig $config): array
+    {
+        $settings = $config->configuracao ?? [];
+
         return [
-            'whatsapp_base_url' => $config->whatsapp_base_url ?? '',
-            'whatsapp_api_key' => $config->whatsapp_api_key ?? '',
-            'whatsapp_instance_name' => $config->whatsapp_instance_name ?? '',
-            'whatsapp_instance_token' => $config->whatsapp_instance_token ?? '',
-            'whatsapp_ativo' => (bool) $config->whatsapp_ativo,
+            'whatsapp_base_url' => $settings['whatsapp_base_url'] ?? '',
+            'whatsapp_api_key' => $settings['whatsapp_api_key'] ?? '',
+            'whatsapp_instance_name' => $settings['whatsapp_instance_name'] ?? '',
+            'whatsapp_instance_token' => $settings['whatsapp_instance_token'] ?? '',
+            'whatsapp_ativo' => (bool) $config->ativo,
         ];
     }
 
-    private function resolveInstance(ProtocolConfig $config): ?string
+    private function resolveInstance(NotificationChannelConfig $config): ?string
     {
-        $instance = trim((string) ($config->whatsapp_instance_name ?? ''));
+        $instance = trim((string) data_get($config->configuracao, 'whatsapp_instance_name', ''));
         return $instance !== '' ? $instance : null;
     }
 
-    private function evolutionRequest(ProtocolConfig $config)
+    private function baseUrl(NotificationChannelConfig $config): string
     {
-        $request = Http::baseUrl(rtrim((string) $config->whatsapp_base_url, '/'))
+        return trim((string) data_get($config->configuracao, 'whatsapp_base_url', ''));
+    }
+
+    private function apiKey(NotificationChannelConfig $config): string
+    {
+        return trim((string) data_get($config->configuracao, 'whatsapp_api_key', ''));
+    }
+
+    private function evolutionRequest(NotificationChannelConfig $config)
+    {
+        $request = Http::baseUrl(rtrim($this->baseUrl($config), '/'))
             ->acceptJson()
             ->timeout(25);
 
-        if (! empty($config->whatsapp_api_key)) {
+        if (! empty($this->apiKey($config))) {
             $request = $request->withHeaders([
-                'apikey' => $config->whatsapp_api_key,
+                'apikey' => $this->apiKey($config),
             ]);
         }
 

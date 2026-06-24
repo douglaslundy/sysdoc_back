@@ -14,6 +14,7 @@ use App\Http\Controllers\ProtocolAlertController;
 use App\Http\Controllers\ProtocolConfigController;
 use App\Http\Controllers\ProtocolController;
 use App\Http\Controllers\ProtocolOrganizationalUnitController;
+use App\Http\Controllers\ProtocolTypeController;
 use App\Http\Controllers\WhatsappConfigController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ConformidadeCidadaoController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailConfigController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\ErrorLogController;
 use App\Http\Controllers\EstabelecimentoController;
@@ -253,10 +255,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/enviar-teste', [WhatsappConfigController::class, 'sendTest']);
     });
 
+    Route::prefix('email')->group(function () {
+        Route::get('/config', [EmailConfigController::class, 'show']);
+        Route::post('/config', [EmailConfigController::class, 'update']);
+        Route::post('/testar', [EmailConfigController::class, 'test']);
+    });
+
     Route::prefix('protocolos')->group(function () {
         Route::get('/', [ProtocolController::class, 'index']);
         Route::get('/caixa-entrada', [ProtocolController::class, 'inbox']);
         Route::get('/contadores', [ProtocolController::class, 'counts']);
+        Route::get('/tipos', [ProtocolTypeController::class, 'index']);
+        Route::post('/tipos', [ProtocolTypeController::class, 'store']);
+        Route::put('/tipos/{id}', [ProtocolTypeController::class, 'update'])->whereNumber('id');
+        Route::delete('/tipos/{id}', [ProtocolTypeController::class, 'destroy'])->whereNumber('id');
         Route::get('/configuracoes', [ProtocolConfigController::class, 'show']);
         Route::put('/configuracoes', [ProtocolConfigController::class, 'update']);
 

@@ -22,11 +22,25 @@ class ProtocolPageSeeder extends Seeder
 
         $categoria = DB::table('page_categories')->where('nome', 'Protocolo')->first();
 
+        DB::table('profile_page_permissions')
+            ->whereIn('system_page_id', function ($query) {
+                $query->select('id')
+                    ->from('system_pages')
+                    ->whereIn('path', ['/protocolo', '/protocolo/configuracoes', '/protocolo/alertas']);
+            })
+            ->delete();
+
+        DB::table('system_pages')
+            ->whereIn('path', ['/protocolo', '/protocolo/configuracoes', '/protocolo/alertas'])
+            ->delete();
+
         $pages = [
             ['titulo' => 'Protocolo', 'path' => '/protocolo', 'icone' => 'inbox', 'ordem' => 1],
             ['titulo' => 'Caixa de Entrada', 'path' => '/protocolo/caixa-entrada', 'icone' => 'mail', 'ordem' => 2],
             ['titulo' => 'Novo Protocolo', 'path' => '/protocolo/novo', 'icone' => 'plus-circle', 'ordem' => 3],
             ['titulo' => 'Estrutura Organizacional', 'path' => '/protocolo/estrutura', 'icone' => 'layers', 'ordem' => 4],
+            ['titulo' => 'Configurações', 'path' => '/protocolo/configuracoes', 'icone' => 'settings', 'ordem' => 5],
+            ['titulo' => 'Tipos de Protocolo', 'path' => '/protocolo/tipos', 'icone' => 'list', 'ordem' => 6],
         ];
 
         foreach ($pages as $page) {
