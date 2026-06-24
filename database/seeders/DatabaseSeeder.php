@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             AlmoxarifadoConfigSeeder::class,      // Configuracoes base do almoxarifado
             ProtocolPageSeeder::class,            // Protocolo - categorias, paginas e permissoes
             ProtocolCatalogSeeder::class,         // Protocolo - configuracoes e unidades base
+            SistemaPageSeeder::class,             // Sistema - configuracoes gerais e alertas
             MonitorApsPageSeeder::class,          // Monitor APS - categorias, paginas e permissoes
             DashboardTabPageSeeder::class,        // Dashboard - abas como system_pages com permissoes por perfil
             ConformidadeCidadaoPageSeeder::class, // Conformidade de Cidadãos - pagina e permissoes

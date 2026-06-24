@@ -5,28 +5,38 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class ProtocolPageSeeder extends Seeder
+class SistemaPageSeeder extends Seeder
 {
     public function run(): void
     {
         DB::table('page_categories')->updateOrInsert(
-            ['nome' => 'Protocolo'],
+            ['nome' => 'Sistema'],
             [
-                'icone' => 'inbox',
-                'ordem' => 13,
+                'icone' => 'settings',
+                'ordem' => 14,
                 'ativo' => true,
                 'updated_at' => now(),
                 'created_at' => now(),
             ]
         );
 
-        $categoria = DB::table('page_categories')->where('nome', 'Protocolo')->first();
+        $categoria = DB::table('page_categories')->where('nome', 'Sistema')->first();
+
+        DB::table('profile_page_permissions')
+            ->whereIn('system_page_id', function ($query) {
+                $query->select('id')
+                    ->from('system_pages')
+                    ->whereIn('path', ['/protocolo/configuracoes', '/configuracoes/whatsapp']);
+            })
+            ->delete();
+
+        DB::table('system_pages')
+            ->where('path', '/protocolo/configuracoes')
+            ->delete();
 
         $pages = [
-            ['titulo' => 'Protocolo', 'path' => '/protocolo', 'icone' => 'inbox', 'ordem' => 1],
-            ['titulo' => 'Caixa de Entrada', 'path' => '/protocolo/caixa-entrada', 'icone' => 'mail', 'ordem' => 2],
-            ['titulo' => 'Novo Protocolo', 'path' => '/protocolo/novo', 'icone' => 'plus-circle', 'ordem' => 3],
-            ['titulo' => 'Estrutura Organizacional', 'path' => '/protocolo/estrutura', 'icone' => 'layers', 'ordem' => 4],
+            ['titulo' => 'Configurações WhatsApp', 'path' => '/configuracoes/whatsapp', 'icone' => 'message-circle', 'ordem' => 1],
+            ['titulo' => 'Alertas', 'path' => '/protocolo/alertas', 'icone' => 'bell', 'ordem' => 2],
         ];
 
         foreach ($pages as $page) {
@@ -35,7 +45,7 @@ class ProtocolPageSeeder extends Seeder
                 [
                     'titulo' => $page['titulo'],
                     'icone' => $page['icone'],
-                    'categoria' => 'Protocolo',
+                    'categoria' => 'Sistema',
                     'category_id' => $categoria?->id,
                     'ordem' => $page['ordem'],
                     'ativo' => true,
@@ -44,19 +54,18 @@ class ProtocolPageSeeder extends Seeder
             );
         }
 
-        $paths = array_column($pages, 'path');
         $permissoes = [
-            'admin' => $paths,
-            'manager' => ['/protocolo', '/protocolo/caixa-entrada', '/protocolo/novo', '/protocolo/estrutura'],
+            'admin' => array_column($pages, 'path'),
+            'manager' => ['/protocolo/alertas'],
         ];
 
-        foreach ($permissoes as $slug => $pathsPerfil) {
+        foreach ($permissoes as $slug => $paths) {
             $profile = DB::table('access_profiles')->where('slug', $slug)->first();
             if (! $profile) {
                 continue;
             }
 
-            foreach ($pathsPerfil as $path) {
+            foreach ($paths as $path) {
                 $page = DB::table('system_pages')->where('path', $path)->first();
                 if (! $page) {
                     continue;
