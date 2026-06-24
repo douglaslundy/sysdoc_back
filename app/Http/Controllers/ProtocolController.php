@@ -110,7 +110,7 @@ class ProtocolController extends Controller
         ])->find($id);
 
         if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
-            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
         }
 
         if ($protocol->novo) {
@@ -119,14 +119,24 @@ class ProtocolController extends Controller
 
         $this->recordVisualization($protocol, request()->user());
 
-        return response()->json($protocol);
+        return response()->json($protocol->fresh([
+            'origemUnit:id,nome,tipo',
+            'destinoUnit:id,nome,tipo',
+            'responsavelAtual:id,name',
+            'criadoPor:id,name',
+            'movements.user:id,name',
+            'comments.user:id,name',
+            'attachments.user:id,name',
+            'notifications.user:id,name',
+            'visualizations.user.equipeAps',
+        ]));
     }
 
     public function visualizations(int $id): JsonResponse
     {
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
-            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
         $views = ProtocolView::query()
@@ -208,7 +218,7 @@ class ProtocolController extends Controller
     {
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
-            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
         }
 
         $validated = $request->validate([
@@ -305,7 +315,7 @@ class ProtocolController extends Controller
     {
         $config = ProtocolConfig::current();
         if (! $config->allow_reopen) {
-            return response()->json(['message' => 'Reabertura desativada nas configurações.'], 422);
+            return response()->json(['message' => 'Reabertura desativada nas configuraÃ§Ãµes.'], 422);
         }
 
         return $this->applyAction($request, $id, 'reaberto', function (Protocol $protocol) use ($request) {
@@ -327,7 +337,7 @@ class ProtocolController extends Controller
 
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
-            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
         }
 
         $file = $validated['arquivo'];
@@ -354,11 +364,11 @@ class ProtocolController extends Controller
     {
         $attachmentModel = ProtocolAttachment::with('protocol')->find($attachment);
         if (! $attachmentModel || ! $attachmentModel->protocol || ! $this->canAccess($attachmentModel->protocol, $request->user())) {
-            return response()->json(['message' => 'Anexo não encontrado.'], 404);
+            return response()->json(['message' => 'Anexo nÃ£o encontrado.'], 404);
         }
 
         if (! Storage::disk('public')->exists($attachmentModel->caminho)) {
-            return response()->json(['message' => 'Arquivo do anexo não encontrado.'], 404);
+            return response()->json(['message' => 'Arquivo do anexo nÃ£o encontrado.'], 404);
         }
 
         return Storage::disk('public')->download($attachmentModel->caminho, $attachmentModel->nome_original);
@@ -432,7 +442,7 @@ class ProtocolController extends Controller
     {
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
-            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
         }
 
         DB::transaction(function () use ($request, $protocol, $acao, $callback) {
