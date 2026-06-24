@@ -165,6 +165,35 @@ class ProtocolController extends Controller
         return response()->json($views);
     }
 
+    public function historico(int $id): JsonResponse
+    {
+        $protocol = Protocol::with(['movements.user:id,name'])->find($id);
+        if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+
+        $historico = $protocol->movements
+            ->sortByDesc(fn (ProtocolMovement $movement) => $movement->created_at?->getTimestamp() ?? 0)
+            ->values()
+            ->map(function (ProtocolMovement $movement) {
+                return [
+                    'id' => $movement->id,
+                    'acao' => $movement->acao,
+                    'status_anterior' => $movement->status_anterior,
+                    'status_novo' => $movement->status_novo,
+                    'observacao' => $movement->observacao,
+                    'dados' => $movement->dados,
+                    'user' => [
+                        'id' => $movement->user?->id,
+                        'name' => $movement->user?->name,
+                    ],
+                    'created_at' => $movement->created_at,
+                ];
+            });
+
+        return response()->json($historico);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
