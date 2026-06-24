@@ -211,6 +211,7 @@ class ProtocolController extends Controller
             'solicitante_documento' => 'nullable|string|max:40',
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
+            'destino_user_id' => 'required|integer|exists:users,id',
             'prazo_atendimento' => 'nullable|date',
             'kanban' => 'nullable|array',
             'kanban.ativar' => 'nullable|boolean',
@@ -239,6 +240,7 @@ class ProtocolController extends Controller
                 'solicitante_documento' => $validated['solicitante_documento'] ?? null,
                 'origem_unit_id' => $validated['origem_unit_id'] ?? null,
                 'destino_unit_id' => $validated['destino_unit_id'] ?? null,
+                'responsavel_atual_id' => $validated['destino_user_id'],
                 'criado_por_id' => $request->user()?->id,
                 'prazo_atendimento' => $validated['prazo_atendimento'] ?? now()->addDays((int) $config->default_due_days)->toDateString(),
                 'novo' => true,
@@ -252,9 +254,12 @@ class ProtocolController extends Controller
 
             AuditService::record('CREATE', $protocol, null, $protocol->toArray());
 
-            if (! empty($validated['kanban'])) {
-                $this->kanbanService->sync($protocol, $validated['kanban'], $request->user());
-            }
+            $this->kanbanService->sync($protocol, [
+                ...($validated['kanban'] ?? []),
+                'ativar' => true,
+                'status' => $validated['kanban']['status'] ?? 'novo',
+                'responsavel_id' => $validated['kanban']['responsavel_id'] ?? $validated['destino_user_id'],
+            ], $request->user());
 
             return $protocol->load(['origemUnit', 'destinoUnit', 'responsavelAtual', 'criadoPor', 'kanbanTask.createdBy', 'kanbanTask.updatedBy', 'kanbanTask.responsavel']);
         });

@@ -33,6 +33,8 @@ class DashboardTabPageSeeder extends Seeder
             ['titulo' => 'Dashboard - Logs/QR',              'path' => '/dashboard/logs',        'icone' => 'eye',         'ordem' => 7],
             ['titulo' => 'Dashboard - Conformidades',        'path' => '/dashboard/conformidades','icone' => 'shield',      'ordem' => 8],
             ['titulo' => 'Dashboard - Chat',                  'path' => '/dashboard/chat',         'icone' => 'message-circle','ordem' => 9],
+            ['titulo' => 'Dashboard - Almoxarifado',          'path' => '/dashboard/almoxarifado', 'icone' => 'package',      'ordem' => 10],
+            ['titulo' => 'Dashboard - Arquivo',               'path' => '/dashboard/arquivo',      'icone' => 'archive',      'ordem' => 11],
         ];
 
         foreach ($pages as $page) {

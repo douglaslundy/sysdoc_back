@@ -208,6 +208,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/dashboard/logs', [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
         Route::get('/dashboard/chat', [ChatController::class, 'dashboard'])->middleware('can:dashboard-chat');
         Route::get('/dashboard/vigilancia', [DashboardController::class, 'vigilancia']);
+        Route::get('/dashboard/almoxarifado', [DashboardController::class, 'almoxarifado'])->middleware('can:dashboard-almoxarifado');
+        Route::get('/dashboard/arquivo', [DashboardController::class, 'arquivo'])->middleware('can:dashboard-arquivo');
     });
 
     // Permissões do usuário logado

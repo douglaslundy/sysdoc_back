@@ -41,7 +41,7 @@ class KanbanProtocolIntegrationTest extends TestCase
         $this->assertDatabaseCount('protocols', 0);
     }
 
-    public function test_protocolo_pode_criar_item_kanban_quando_houver_regra_explicita(): void
+    public function test_criar_protocolo_cria_item_novo_no_kanban(): void
     {
         $this->seedProtocolType();
 
@@ -51,13 +51,7 @@ class KanbanProtocolIntegrationTest extends TestCase
                 'descricao' => 'O protocolo precisa virar acompanhamento no quadro.',
                 'tipo' => 'administrativo',
                 'solicitante_tipo' => 'interno',
-                'kanban' => [
-                    'ativar' => true,
-                    'titulo' => 'Acompanhamento do protocolo',
-                    'descricao' => 'Criado a partir do protocolo',
-                    'status' => 'em_andamento',
-                    'prioridade' => 'urgente',
-                ],
+                'destino_user_id' => $this->user->id,
             ]);
 
         $response->assertStatus(201);
@@ -68,12 +62,14 @@ class KanbanProtocolIntegrationTest extends TestCase
         $this->assertDatabaseHas('protocols', [
             'id' => $protocolId,
             'assunto' => 'Solicitar acompanhamento operacional',
+            'criado_por_id' => $this->user->id,
+            'responsavel_atual_id' => $this->user->id,
         ]);
 
         $this->assertDatabaseHas('kanban_tasks', [
             'protocol_id' => $protocolId,
-            'titulo' => 'Acompanhamento do protocolo',
-            'status' => 'em_andamento',
+            'titulo' => 'Solicitar acompanhamento operacional',
+            'status' => 'novo',
         ]);
     }
 
@@ -96,6 +92,7 @@ class KanbanProtocolIntegrationTest extends TestCase
                 'descricao' => 'Deve apenas vincular o item do kanban.',
                 'tipo' => 'administrativo',
                 'solicitante_tipo' => 'interno',
+                'destino_user_id' => $this->user->id,
                 'kanban' => [
                     'ativar' => true,
                     'id' => $task->id,

@@ -859,4 +859,78 @@ class DashboardController extends MonitorApsBaseController
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=300');
     }
+
+    public function almoxarifado()
+    {
+        $data = [
+            'totais' => [
+                'produtos' => DB::table('almoxarifado_produtos')->where('ativo', true)->count(),
+                'quantidade_disponivel' => (float) DB::table('almoxarifado_estoques')->sum('quantidade_disponivel'),
+                'estoque_baixo' => DB::table('almoxarifado_estoques as e')
+                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
+                    ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
+                    ->count(),
+                'requisicoes_pendentes' => DB::table('almoxarifado_requisicoes')
+                    ->whereNotIn('status', ['entregue', 'cancelada'])
+                    ->count(),
+                'movimentacoes_mes' => DB::table('almoxarifado_movimentacoes')
+                    ->whereBetween('created_at', [now()->startOfMonth(), now()])
+                    ->count(),
+            ],
+            'requisicoes_status' => DB::table('almoxarifado_requisicoes')
+                ->select('status', DB::raw('COUNT(*) as total'))
+                ->groupBy('status')
+                ->orderByDesc('total')
+                ->get(),
+            'estoque_baixo' => DB::table('almoxarifado_estoques as e')
+                ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
+                ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
+                ->orderBy('e.quantidade_disponivel')
+                ->limit(8)
+                ->get(['p.nome', 'p.codigo_interno', 'e.quantidade_disponivel', 'p.estoque_minimo']),
+            'movimentacoes_recentes' => DB::table('almoxarifado_movimentacoes as m')
+                ->join('almoxarifado_produtos as p', 'p.id', '=', 'm.almoxarifado_produto_id')
+                ->orderByDesc('m.created_at')
+                ->limit(8)
+                ->get(['m.id', 'p.nome as produto', 'm.tipo', 'm.quantidade', 'm.created_at']),
+        ];
+
+        return response()->json($data)->header('Cache-Control', 'private, max-age=120');
+    }
+
+    public function arquivo()
+    {
+        $data = [
+            'totais' => [
+                'documentos' => DB::table('documents')->whereNull('deleted_at')->count(),
+                'versoes' => DB::table('document_versions')->whereNull('deleted_at')->count(),
+                'tamanho_bytes' => (int) DB::table('document_versions')->whereNull('deleted_at')->sum('size_bytes'),
+                'aprovacoes_registradas' => DB::table('document_approvals')->count(),
+                'documentos_mes' => DB::table('documents')
+                    ->whereNull('deleted_at')
+                    ->whereBetween('created_at', [now()->startOfMonth(), now()])
+                    ->count(),
+            ],
+            'por_status' => DB::table('documents')
+                ->whereNull('deleted_at')
+                ->select('status', DB::raw('COUNT(*) as total'))
+                ->groupBy('status')
+                ->orderByDesc('total')
+                ->get(),
+            'por_sigilo' => DB::table('documents')
+                ->whereNull('deleted_at')
+                ->select('sigilo', DB::raw('COUNT(*) as total'))
+                ->groupBy('sigilo')
+                ->orderByDesc('total')
+                ->get(),
+            'recentes' => DB::table('documents as d')
+                ->leftJoin('document_types as t', 't.id', '=', 'd.document_type_id')
+                ->whereNull('d.deleted_at')
+                ->orderByDesc('d.updated_at')
+                ->limit(8)
+                ->get(['d.id', 'd.titulo', 'd.status', 'd.sigilo', 'd.current_version_number', 'd.updated_at', 't.nome as tipo']),
+        ];
+
+        return response()->json($data)->header('Cache-Control', 'private, max-age=120');
+    }
 }
