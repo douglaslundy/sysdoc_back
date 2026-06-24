@@ -22,6 +22,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CallController;
 use App\Http\Controllers\CallServiceController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ChatRealtimeConfigController;
 use App\Http\Controllers\CampoReferenciaController;
 use App\Http\Controllers\CategoriaExameController;
 use App\Http\Controllers\CidadaoAcsController;
@@ -214,6 +215,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     Route::prefix('chat')->middleware('throttle:120,1')->group(function () {
+        Route::get('/realtime-config', [ChatRealtimeConfigController::class, 'publicConfig']);
         Route::get('/users', [ChatController::class, 'users']);
         Route::get('/conversations', [ChatController::class, 'conversations']);
         Route::post('/conversations', [ChatController::class, 'startConversation']);
@@ -347,6 +349,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Backup do banco de dados (somente admin)
     Route::middleware('admin')->group(function () {
+        Route::get('/chat/config', [ChatRealtimeConfigController::class, 'show']);
+        Route::put('/chat/config', [ChatRealtimeConfigController::class, 'update']);
+        Route::post('/chat/config/test', [ChatRealtimeConfigController::class, 'test'])
+            ->middleware('throttle:5,1');
         Route::get('/admin/backup/download', [BackupController::class, 'download']);
     });
 

@@ -56,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        app(\App\Services\ChatBroadcastConfigService::class)->apply();
         User::observe(UserObserver::class);
         Client::observe(ClientObserver::class);
         PedidoExame::observe(PedidoExameObserver::class);

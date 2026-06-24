@@ -8,9 +8,17 @@ use Illuminate\Support\Facades\Log;
 
 class ChatRealtimeService
 {
+    public function __construct(private readonly ChatBroadcastConfigService $broadcastConfig)
+    {
+    }
+
     public function publish(int $recipientId, string $eventName, array $payload): void
     {
         try {
+            $settings = $this->broadcastConfig->apply();
+            if (! $settings?->active) {
+                return;
+            }
             broadcast(new ChatRealtimeEvent($recipientId, $eventName, $payload));
             $this->increment('events_published');
         } catch (\Throwable $e) {
@@ -26,6 +34,10 @@ class ChatRealtimeService
     public function publishPresence(array $payload): void
     {
         try {
+            $settings = $this->broadcastConfig->apply();
+            if (! $settings?->active) {
+                return;
+            }
             broadcast(new ChatRealtimeEvent(null, 'presence.updated', $payload));
             $this->increment('events_published');
         } catch (\Throwable $e) {

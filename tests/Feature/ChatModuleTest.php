@@ -7,6 +7,8 @@ use App\Models\ChatMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -120,6 +122,49 @@ class ChatModuleTest extends TestCase
             ->assertJsonPath('limits.concurrent_connections', 100)
             ->assertJsonPath('totals.conversations', 1)
             ->assertJsonPath('totals.messages', 1);
+    }
+
+    public function test_admin_configura_soketi_com_segredos_criptografados(): void
+    {
+        $this->sender->update(['password' => Hash::make('SenhaSegura#2026')]);
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->putJson('/api/chat/config', [
+                'engine' => 'soketi',
+                'active' => true,
+                'app_id' => 'sysdoc-chat',
+                'app_key' => 'public-key-test',
+                'app_secret' => 'secret-key-test',
+                'host' => 'wss://socket.exemplo.test',
+                'port' => 443,
+                'scheme' => 'https',
+                'use_tls' => true,
+                'current_password' => 'SenhaSegura#2026',
+            ])
+            ->assertOk()
+            ->assertJsonMissing(['app_secret' => 'secret-key-test'])
+            ->assertJsonPath('engine', 'soketi')
+            ->assertJsonPath('host', 'socket.exemplo.test');
+
+        $raw = DB::table('chat_realtime_configs')->first();
+        $this->assertNotSame('sysdoc-chat', $raw->app_id);
+        $this->assertNotSame('public-key-test', $raw->app_key);
+        $this->assertNotSame('secret-key-test', $raw->app_secret);
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->getJson('/api/chat/realtime-config')
+            ->assertOk()
+            ->assertJsonPath('engine', 'soketi')
+            ->assertJsonPath('key', 'public-key-test')
+            ->assertJsonPath('host', 'socket.exemplo.test')
+            ->assertJsonMissing(['app_secret' => 'secret-key-test']);
+    }
+
+    public function test_usuario_comum_nao_acessa_configuracao_administrativa_do_chat(): void
+    {
+        $this->actingAs($this->recipient, 'sanctum')
+            ->getJson('/api/chat/config')
+            ->assertForbidden();
     }
 
     private function startConversation(): ChatConversation

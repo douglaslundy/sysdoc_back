@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserPresence;
 use App\Services\AuditService;
 use App\Services\ChatRealtimeService;
+use App\Services\ChatBroadcastConfigService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,8 +23,10 @@ class ChatController extends Controller
 {
     private const DISK = 'private';
 
-    public function __construct(private readonly ChatRealtimeService $realtime)
-    {
+    public function __construct(
+        private readonly ChatRealtimeService $realtime,
+        private readonly ChatBroadcastConfigService $broadcastConfig
+    ) {
     }
 
     public function users(Request $request): JsonResponse
@@ -433,6 +436,8 @@ class ChatController extends Controller
     public function dashboard(): JsonResponse
     {
         $this->removeStaleConnections();
+        $realtimeConfig = $this->broadcastConfig->publicPayload();
+        $isSoketi = ($realtimeConfig['engine'] ?? null) === 'soketi';
         $today = now()->toDateString();
         $monthStart = now()->startOfMonth()->toDateString();
         $daily = ChatUsageDaily::whereDate('usage_date', '>=', now()->subDays(29))
@@ -445,9 +450,10 @@ class ChatController extends Controller
 
         return response()->json([
             'limits' => [
-                'daily_messages' => config('chat.pusher_daily_message_limit'),
-                'concurrent_connections' => config('chat.pusher_connection_limit'),
-                'plan' => 'Pusher Sandbox',
+                'daily_messages' => $isSoketi ? null : config('chat.pusher_daily_message_limit'),
+                'concurrent_connections' => $isSoketi ? null : config('chat.pusher_connection_limit'),
+                'plan' => $isSoketi ? 'Soketi próprio' : 'Pusher Sandbox',
+                'engine' => $realtimeConfig['engine'] ?? null,
             ],
             'today' => $todayUsage,
             'month' => $month,
