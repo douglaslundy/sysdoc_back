@@ -26,7 +26,7 @@ class SistemaPageSeeder extends Seeder
             ->whereIn('system_page_id', function ($query) {
                 $query->select('id')
                     ->from('system_pages')
-                    ->whereIn('path', ['/protocolo/configuracoes', '/configuracoes/whatsapp']);
+                    ->whereIn('path', ['/protocolo/configuracoes', '/configuracoes/whatsapp', '/protocolo/alertas', '/sistema/alertas']);
             })
             ->delete();
 
@@ -34,9 +34,13 @@ class SistemaPageSeeder extends Seeder
             ->where('path', '/protocolo/configuracoes')
             ->delete();
 
+        DB::table('system_pages')
+            ->where('path', '/protocolo/alertas')
+            ->delete();
+
         $pages = [
             ['titulo' => 'Configurações WhatsApp', 'path' => '/configuracoes/whatsapp', 'icone' => 'message-circle', 'ordem' => 1],
-            ['titulo' => 'Alertas', 'path' => '/protocolo/alertas', 'icone' => 'bell', 'ordem' => 2],
+            ['titulo' => 'Alertas', 'path' => '/sistema/alertas', 'icone' => 'bell', 'ordem' => 2],
         ];
 
         foreach ($pages as $page) {
@@ -56,7 +60,7 @@ class SistemaPageSeeder extends Seeder
 
         $permissoes = [
             'admin' => array_column($pages, 'path'),
-            'manager' => ['/protocolo/alertas'],
+            'manager' => ['/sistema/alertas'],
         ];
 
         foreach ($permissoes as $slug => $paths) {
