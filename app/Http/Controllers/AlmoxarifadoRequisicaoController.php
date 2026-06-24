@@ -118,7 +118,7 @@ class AlmoxarifadoRequisicaoController extends Controller
             'observacao' => ['nullable', 'string'],
         ]);
 
-        $requisicao = AlmoxarifadoRequisicao::with('itens')->find($id);
+        $requisicao = AlmoxarifadoRequisicao::with('itens.produto:id,nome')->find($id);
         if (! $requisicao) {
             return response()->json(['message' => 'Requisição não encontrada.'], 404);
         }
@@ -215,7 +215,10 @@ class AlmoxarifadoRequisicaoController extends Controller
         foreach ($requisicao->itens as $item) {
             $estoque = $this->estoqueDaRequisicao($requisicao, $item->almoxarifado_produto_id);
             if ((float) $estoque->quantidade_disponivel < (float) $item->quantidade_solicitada) {
-                abort(422, "Saldo insuficiente para o produto {$item->produto?->nome}.");
+                $produto = $item->produto?->nome ?: "ID {$item->almoxarifado_produto_id}";
+                $disponivel = number_format((float) $estoque->quantidade_disponivel, 3, ',', '.');
+                $solicitado = number_format((float) $item->quantidade_solicitada, 3, ',', '.');
+                abort(422, "Saldo insuficiente para {$produto}. Disponível: {$disponivel}; solicitado: {$solicitado}.");
             }
 
             $estoque->decrement('quantidade_disponivel', (float) $item->quantidade_solicitada);
