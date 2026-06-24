@@ -313,6 +313,20 @@ class ProtocolController extends Controller
         return response()->json($attachment, 201);
     }
 
+    public function downloadAttachment(Request $request, int $attachment): \Symfony\Component\HttpFoundation\BinaryFileResponse|JsonResponse
+    {
+        $attachmentModel = ProtocolAttachment::with('protocol')->find($attachment);
+        if (! $attachmentModel || ! $attachmentModel->protocol || ! $this->canAccess($attachmentModel->protocol, $request->user())) {
+            return response()->json(['message' => 'Anexo não encontrado.'], 404);
+        }
+
+        if (! Storage::disk('public')->exists($attachmentModel->caminho)) {
+            return response()->json(['message' => 'Arquivo do anexo não encontrado.'], 404);
+        }
+
+        return Storage::disk('public')->download($attachmentModel->caminho, $attachmentModel->nome_original);
+    }
+
     public function counts(Request $request): JsonResponse
     {
         $query = $this->baseQuery($request->user())->where('novo', true);

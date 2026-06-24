@@ -32,4 +32,9 @@ class ProtocolAttachment extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function protocol(): BelongsTo
+    {
+        return $this->belongsTo(Protocol::class, 'protocol_id');
+    }
 }
