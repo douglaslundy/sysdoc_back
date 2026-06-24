@@ -14,6 +14,7 @@ use App\Http\Controllers\ProtocolAlertController;
 use App\Http\Controllers\ProtocolConfigController;
 use App\Http\Controllers\ProtocolController;
 use App\Http\Controllers\ProtocolOrganizationalUnitController;
+use App\Http\Controllers\WhatsappConfigController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
@@ -240,6 +241,16 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'store']);
         Route::put('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'update']);
         Route::delete('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'destroy']);
+    });
+
+    Route::prefix('whatsapp')->group(function () {
+        Route::get('/config', [WhatsappConfigController::class, 'show']);
+        Route::post('/config', [WhatsappConfigController::class, 'update']);
+        Route::get('/status', [WhatsappConfigController::class, 'status']);
+        Route::get('/qrcode', [WhatsappConfigController::class, 'qrcode']);
+        Route::post('/desconectar', [WhatsappConfigController::class, 'disconnect']);
+        Route::post('/testar', [WhatsappConfigController::class, 'test']);
+        Route::post('/enviar-teste', [WhatsappConfigController::class, 'sendTest']);
     });
 
     Route::prefix('protocolos')->group(function () {

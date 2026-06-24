@@ -21,6 +21,11 @@ class ProtocolConfig extends Model
         'evolution_default_session',
         'evolution_enabled',
         'observacoes',
+        'whatsapp_base_url',
+        'whatsapp_api_key',
+        'whatsapp_instance_name',
+        'whatsapp_instance_token',
+        'whatsapp_ativo',
     ];
 
     protected $casts = [
@@ -31,6 +36,7 @@ class ProtocolConfig extends Model
         'notify_whatsapp' => 'boolean',
         'default_due_days' => 'integer',
         'evolution_enabled' => 'boolean',
+        'whatsapp_ativo' => 'boolean',
     ];
 
     public static function current(): self
@@ -44,6 +50,7 @@ class ProtocolConfig extends Model
             'default_priority' => 'normal',
             'default_due_days' => 5,
             'evolution_enabled' => false,
+            'whatsapp_ativo' => false,
         ]);
     }
 }
