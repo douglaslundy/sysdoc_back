@@ -395,6 +395,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // letters
     Route::apiResource('letters', LetterController::class);
     Route::post('/letters/newLetter', [LetterController::class, 'createLetterAi'])->name('newLetter');
+    Route::post('/letters/{letter}/protocol', [LetterController::class, 'createProtocol']);
     Route::get('/letters/{letter}/attachments', [LetterAttachmentController::class, 'index']);
     Route::post('/letters/{letter}/attachments', [LetterAttachmentController::class, 'store']);
     Route::get('/letters/{letter}/attachments/{attachment}/download', [LetterAttachmentController::class, 'download']);
