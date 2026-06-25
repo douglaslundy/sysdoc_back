@@ -7,7 +7,6 @@ use App\Services\AuditService;
 use App\Services\ChatBroadcastConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Pusher\Pusher;
 
@@ -31,10 +30,6 @@ class ChatRealtimeConfigController extends Controller
     {
         $data = $request->validate($this->rules(true));
         $user = $request->user();
-
-        if (! Hash::check((string) $data['current_password'], (string) $user->password)) {
-            return response()->json(['message' => 'A senha atual está incorreta.'], 422);
-        }
 
         $config = ChatRealtimeConfig::current();
         $old = $this->auditPayload($config);
@@ -74,14 +69,70 @@ class ChatRealtimeConfigController extends Controller
         return response()->json($this->adminPayload($config));
     }
 
+    public function setActive(Request $request): JsonResponse
+    {
+        $data = $request->validate(['active' => ['required', 'boolean']]);
+        $config = ChatRealtimeConfig::current();
+
+        if ($data['active'] && (! $config->app_id || ! $config->app_key || ! $config->app_secret)) {
+            return response()->json([
+                'message' => 'Configure App ID, App Key e App Secret antes de ativar o motor.',
+            ], 422);
+        }
+
+        $old = $this->auditPayload($config);
+        $config->update([
+            'active' => (bool) $data['active'],
+            'updated_by' => $request->user()->id,
+        ]);
+        $config->refresh();
+        $this->broadcastConfig->apply();
+
+        AuditService::record(
+            'CHAT_REALTIME_CONFIG_STATUS_UPDATED',
+            $config,
+            $old,
+            $this->auditPayload($config),
+            $request->user()
+        );
+
+        return response()->json($this->adminPayload($config));
+    }
+
+    public function destroy(Request $request): JsonResponse
+    {
+        $config = ChatRealtimeConfig::current();
+        $old = $this->auditPayload($config);
+
+        $config->update([
+            'active' => false,
+            'app_id' => null,
+            'app_key' => null,
+            'app_secret' => null,
+            'cluster' => 'mt1',
+            'host' => null,
+            'port' => null,
+            'scheme' => 'https',
+            'use_tls' => true,
+            'updated_by' => $request->user()->id,
+        ]);
+        $config->refresh();
+
+        AuditService::record(
+            'CHAT_REALTIME_CONFIG_DELETED',
+            $config,
+            $old,
+            $this->auditPayload($config),
+            $request->user()
+        );
+
+        return response()->json($this->adminPayload($config));
+    }
+
     public function test(Request $request): JsonResponse
     {
         $data = $request->validate($this->rules(false));
         $user = $request->user();
-
-        if (! Hash::check((string) $data['current_password'], (string) $user->password)) {
-            return response()->json(['message' => 'A senha atual está incorreta.'], 422);
-        }
 
         $stored = ChatRealtimeConfig::current();
         $candidate = new ChatRealtimeConfig([
@@ -122,17 +173,22 @@ class ChatRealtimeConfigController extends Controller
                     ? 'Conexão com o servidor Soketi validada.'
                     : 'Conexão com o Pusher Cloud validada.',
             ]);
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
             AuditService::record('CHAT_REALTIME_CONFIG_TESTED', $stored, null, [
                 'engine' => $candidate->engine,
                 'host' => $candidate->host,
                 'success' => false,
             ], $user);
 
+            $rateLimited = (int) $exception->getCode() === 429
+                || str_contains(strtolower($exception->getMessage()), 'too many');
+
             return response()->json([
                 'ok' => false,
-                'message' => 'Não foi possível validar o motor selecionado.',
-            ], 422);
+                'message' => $rateLimited
+                    ? 'Too Many Attempts. Aguarde alguns instantes antes de testar novamente.'
+                    : 'Não foi possível validar o motor selecionado.',
+            ], $rateLimited ? 429 : 422);
         }
     }
 
@@ -149,7 +205,6 @@ class ChatRealtimeConfigController extends Controller
             'port' => ['nullable', 'integer', 'min:1', 'max:65535', 'required_if:engine,soketi'],
             'scheme' => ['nullable', Rule::in(['http', 'https']), 'required_if:engine,soketi'],
             'use_tls' => ['nullable', 'boolean'],
-            'current_password' => ['required', 'string'],
         ];
     }
 
@@ -166,6 +221,7 @@ class ChatRealtimeConfigController extends Controller
             'has_app_id' => filled($config->app_id),
             'has_app_key' => filled($config->app_key),
             'has_app_secret' => filled($config->app_secret),
+            'configured' => filled($config->app_id) && filled($config->app_key) && filled($config->app_secret),
             'updated_at' => $config->updated_at?->toISOString(),
         ];
     }

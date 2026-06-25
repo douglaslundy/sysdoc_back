@@ -358,8 +358,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('admin')->group(function () {
         Route::get('/chat/config', [ChatRealtimeConfigController::class, 'show']);
         Route::put('/chat/config', [ChatRealtimeConfigController::class, 'update']);
-        Route::post('/chat/config/test', [ChatRealtimeConfigController::class, 'test'])
-            ->middleware('throttle:5,1');
+        Route::patch('/chat/config/status', [ChatRealtimeConfigController::class, 'setActive']);
+        Route::delete('/chat/config', [ChatRealtimeConfigController::class, 'destroy']);
+        Route::post('/chat/config/test', [ChatRealtimeConfigController::class, 'test']);
         Route::get('/admin/backup/download', [BackupController::class, 'download']);
     });
 
