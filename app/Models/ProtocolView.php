@@ -17,6 +17,7 @@ class ProtocolView extends Model
         'user_id',
         'departamento',
         'equipe',
+        'session_key',
         'visualized_at',
     ];
 

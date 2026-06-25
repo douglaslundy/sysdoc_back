@@ -23,6 +23,8 @@ use Illuminate\Support\Str;
 
 class ProtocolController extends Controller
 {
+    private const VISUALIZATION_DEDUPLICATION_MINUTES = 30;
+
     public function __construct(private readonly ProtocolKanbanService $kanbanService)
     {
     }
@@ -100,7 +102,7 @@ class ProtocolController extends Controller
         return response()->json($query->orderByDesc('novo')->orderByDesc('updated_at')->paginate(max(1, min(100, (int) $request->input('per_page', 15)))));
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $protocol = Protocol::with([
             'origemUnit:id,nome,tipo',
@@ -111,10 +113,9 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
             'notifications.user:id,name',
-            'visualizations.user.equipeAps',
         ])->find($id);
 
-        if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
+        if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
         }
 
@@ -122,7 +123,11 @@ class ProtocolController extends Controller
             $protocol->update(['novo' => false]);
         }
 
-        $this->recordVisualization($protocol, request()->user());
+        $this->recordVisualization(
+            $protocol,
+            $request->user(),
+            $request->filled('view_session') ? Str::limit((string) $request->input('view_session'), 64, '') : null
+        );
 
         return response()->json($protocol->fresh([
             'origemUnit:id,nome,tipo',
@@ -133,7 +138,6 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
             'notifications.user:id,name',
-            'visualizations.user.equipeAps',
         ]));
     }
 
@@ -429,15 +433,20 @@ class ProtocolController extends Controller
     public function downloadAttachment(Request $request, int $attachment): \Symfony\Component\HttpFoundation\BinaryFileResponse|JsonResponse
     {
         $attachmentModel = ProtocolAttachment::with('protocol')->find($attachment);
-        if (! $attachmentModel || ! $attachmentModel->protocol || ! $this->canAccess($attachmentModel->protocol, $request->user())) {
+        if (! $attachmentModel || ! $attachmentModel->ativo || ! $attachmentModel->protocol || ! $this->canAccess($attachmentModel->protocol, $request->user())) {
             return response()->json(['message' => 'Anexo nÃ£o encontrado.'], 404);
         }
 
-        if (! Storage::disk('public')->exists($attachmentModel->caminho)) {
+        $disk = Storage::disk('public');
+        if (! $disk->exists($attachmentModel->caminho)) {
             return response()->json(['message' => 'Arquivo do anexo nÃ£o encontrado.'], 404);
         }
 
-        return Storage::disk('public')->download($attachmentModel->caminho, $attachmentModel->nome_original);
+        return response()->download(
+            $disk->path($attachmentModel->caminho),
+            basename($attachmentModel->nome_original),
+            ['Content-Type' => $attachmentModel->mime_type ?: 'application/octet-stream']
+        );
     }
 
     public function counts(Request $request): JsonResponse
@@ -562,13 +571,28 @@ class ProtocolController extends Controller
         }
     }
 
-    private function recordVisualization(Protocol $protocol, ?User $user): void
+    private function recordVisualization(Protocol $protocol, ?User $user, ?string $sessionKey = null): void
     {
+        $visualizationQuery = ProtocolView::query()
+            ->where('protocol_id', $protocol->id)
+            ->where('user_id', $user?->id);
+
+        if ($sessionKey) {
+            $visualizationQuery->where('session_key', $sessionKey);
+        } else {
+            $visualizationQuery->where('visualized_at', '>=', now()->subMinutes(self::VISUALIZATION_DEDUPLICATION_MINUTES));
+        }
+
+        if ($visualizationQuery->exists()) {
+            return;
+        }
+
         ProtocolView::create([
             'protocol_id' => $protocol->id,
             'user_id' => $user?->id,
             'departamento' => $this->userDepartmentLabel($user),
             'equipe' => $this->userTeamLabel($user),
+            'session_key' => $sessionKey,
             'visualized_at' => now(),
         ]);
     }
