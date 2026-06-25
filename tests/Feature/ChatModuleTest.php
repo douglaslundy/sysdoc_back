@@ -173,6 +173,8 @@ class ChatModuleTest extends TestCase
             ->assertJsonPath('engine', 'soketi')
             ->assertJsonPath('key', 'public-key-updated')
             ->assertJsonPath('host', 'socket.exemplo.test')
+            ->assertJsonMissingPath('app_id')
+            ->assertJsonMissingPath('app_secret')
             ->assertJsonMissing(['app_secret' => 'secret-key-test']);
     }
 

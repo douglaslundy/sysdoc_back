@@ -13,4 +13,6 @@ return [
     ],
     'pusher_daily_message_limit' => (int) env('PUSHER_DAILY_MESSAGE_LIMIT', 200000),
     'pusher_connection_limit' => (int) env('PUSHER_CONNECTION_LIMIT', 100),
+    'ca_bundle' => env('CHAT_CA_BUNDLE'),
+    'http_proxy' => env('CHAT_HTTP_PROXY', ''),
 ];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChatRealtimeConfig;
 use App\Services\AuditService;
 use App\Services\ChatBroadcastConfigService;
+use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -157,7 +158,8 @@ class ChatRealtimeConfigController extends Controller
                 $candidate->app_key,
                 $candidate->app_secret,
                 $candidate->app_id,
-                $this->broadcastConfig->options($candidate)
+                $this->broadcastConfig->options($candidate),
+                new Client($this->broadcastConfig->clientOptions())
             );
             $client->getChannels();
 
@@ -182,12 +184,27 @@ class ChatRealtimeConfigController extends Controller
 
             $rateLimited = (int) $exception->getCode() === 429
                 || str_contains(strtolower($exception->getMessage()), 'too many');
+            $message = strtolower($exception->getMessage());
+            $certificateError = str_contains($message, 'certificate')
+                || str_contains($message, 'curl error 60');
+            $connectionError = str_contains($message, 'curl error 7')
+                || str_contains($message, 'couldn\'t connect')
+                || str_contains($message, 'timed out');
+            $authenticationError = in_array((int) $exception->getCode(), [401, 403], true)
+                || str_contains($message, 'authentication')
+                || str_contains($message, 'unauthorized');
 
             return response()->json([
                 'ok' => false,
                 'message' => $rateLimited
                     ? 'Too Many Attempts. Aguarde alguns instantes antes de testar novamente.'
-                    : 'Não foi possível validar o motor selecionado.',
+                    : ($certificateError
+                        ? 'Falha ao validar o certificado HTTPS do motor. Verifique a configuração CHAT_CA_BUNDLE no servidor.'
+                        : ($connectionError
+                            ? 'Não foi possível conectar ao servidor do motor. Verifique host, porta, proxy e firewall.'
+                            : ($authenticationError
+                                ? 'O motor recusou as credenciais. Verifique App ID, App Key, App Secret e cluster.'
+                                : 'Não foi possível validar o motor selecionado.'))),
             ], $rateLimited ? 429 : 422);
         }
     }

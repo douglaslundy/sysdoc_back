@@ -23,6 +23,7 @@ class ChatBroadcastConfigService
             'secret' => $settings->app_secret,
             'app_id' => $settings->app_id,
             'options' => $this->options($settings),
+            'client_options' => $this->clientOptions(),
         ]);
 
         return $settings;
@@ -67,6 +68,17 @@ class ChatBroadcastConfigService
             'scheme' => 'https',
             'encrypted' => true,
             'useTLS' => true,
+        ];
+    }
+
+    public function clientOptions(): array
+    {
+        $caBundle = config('chat.ca_bundle');
+
+        return [
+            'verify' => $caBundle && is_file($caBundle) ? $caBundle : true,
+            'proxy' => config('chat.http_proxy', ''),
+            'timeout' => 15,
         ];
     }
 
