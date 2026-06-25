@@ -20,6 +20,10 @@ class AccessProfileController extends Controller
             'nome' => 'required|string|max:60|unique:access_profiles,nome',
             'slug' => 'required|string|max:60|unique:access_profiles,slug|alpha_dash',
             'descricao' => 'nullable|string|max:200',
+            'chat_enabled' => 'nullable|boolean',
+            'almoxarifado_create_enabled' => 'nullable|boolean',
+            'almoxarifado_approve_enabled' => 'nullable|boolean',
+            'almoxarifado_deliver_enabled' => 'nullable|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
@@ -29,6 +33,10 @@ class AccessProfileController extends Controller
             'slug' => $request->slug,
             'descricao' => $request->descricao,
             'ativo' => true,
+            'chat_enabled' => $request->boolean('chat_enabled'),
+            'almoxarifado_create_enabled' => $request->boolean('almoxarifado_create_enabled', true),
+            'almoxarifado_approve_enabled' => $request->boolean('almoxarifado_approve_enabled'),
+            'almoxarifado_deliver_enabled' => $request->boolean('almoxarifado_deliver_enabled'),
         ]);
 
         if ($request->has('page_ids')) {
@@ -60,11 +68,24 @@ class AccessProfileController extends Controller
             'slug' => 'sometimes|string|max:60|unique:access_profiles,slug,'.$id.'|alpha_dash',
             'descricao' => 'nullable|string|max:200',
             'ativo' => 'sometimes|boolean',
+            'chat_enabled' => 'sometimes|boolean',
+            'almoxarifado_create_enabled' => 'sometimes|boolean',
+            'almoxarifado_approve_enabled' => 'sometimes|boolean',
+            'almoxarifado_deliver_enabled' => 'sometimes|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
 
-        $profile->update($request->only(['nome', 'slug', 'descricao', 'ativo']));
+        $profile->update($request->only([
+            'nome',
+            'slug',
+            'descricao',
+            'ativo',
+            'chat_enabled',
+            'almoxarifado_create_enabled',
+            'almoxarifado_approve_enabled',
+            'almoxarifado_deliver_enabled',
+        ]));
 
         if ($request->has('page_ids')) {
             $profile->pages()->sync($request->page_ids);
@@ -104,7 +125,16 @@ class AccessProfileController extends Controller
             ->first();
 
         if (! $profile) {
-            return response()->json(['paths' => [], 'pages' => []]);
+            return response()->json([
+                'paths' => [],
+                'pages' => [],
+                'capabilities' => [
+                    'chat' => $user->canUseChat(),
+                    'almoxarifado_create' => $user->canUseAlmoxarifadoAction('create'),
+                    'almoxarifado_approve' => $user->canUseAlmoxarifadoAction('approve'),
+                    'almoxarifado_deliver' => $user->canUseAlmoxarifadoAction('deliver'),
+                ],
+            ]);
         }
 
         $pages = $profile->pages->values()->map(function ($page) {
@@ -130,6 +160,12 @@ class AccessProfileController extends Controller
         return response()->json([
             'paths' => $profile->pages->pluck('path')->values(),
             'pages' => $pages,
+            'capabilities' => [
+                'chat' => $user->canUseChat(),
+                'almoxarifado_create' => $user->canUseAlmoxarifadoAction('create'),
+                'almoxarifado_approve' => $user->canUseAlmoxarifadoAction('approve'),
+                'almoxarifado_deliver' => $user->canUseAlmoxarifadoAction('deliver'),
+            ],
         ]);
     }
 }

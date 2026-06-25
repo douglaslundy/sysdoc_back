@@ -11,6 +11,7 @@ use App\Models\AlmoxarifadoRequisicaoItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\Almoxarifado\RequisicaoPdfService;
 
 class AlmoxarifadoRequisicaoController extends Controller
 {
@@ -20,6 +21,7 @@ class AlmoxarifadoRequisicaoController extends Controller
             ->with([
                 'secretaria:id,nome,sigla',
                 'responsavel:id,name',
+                'requisitante:id,name,email',
                 'itens.produto:id,nome,codigo_interno',
                 'historicos.user:id,name',
             ])
@@ -49,6 +51,7 @@ class AlmoxarifadoRequisicaoController extends Controller
         $requisicao = AlmoxarifadoRequisicao::with([
             'secretaria:id,nome,sigla',
             'responsavel:id,name',
+            'requisitante:id,name,email',
             'itens.produto:id,nome,codigo_interno',
             'historicos.user:id,name',
         ])->find($id);
@@ -64,8 +67,6 @@ class AlmoxarifadoRequisicaoController extends Controller
     {
         $validated = $request->validate([
             'almoxarifado_secretaria_id' => ['required', 'integer', 'exists:almoxarifado_secretarias,id'],
-            'solicitante' => ['required', 'string', 'max:150'],
-            'data_solicitacao' => ['required', 'date'],
             'justificativa' => ['nullable', 'string'],
             'observacoes' => ['nullable', 'string'],
             'itens' => ['required', 'array', 'min:1'],
@@ -75,12 +76,14 @@ class AlmoxarifadoRequisicaoController extends Controller
         ]);
 
         $requisicao = DB::transaction(function () use ($validated, $request) {
+            $user = $request->user();
             $numero = $this->nextNumero();
             $requisicao = AlmoxarifadoRequisicao::create([
                 'numero' => $numero,
                 'almoxarifado_secretaria_id' => $validated['almoxarifado_secretaria_id'],
-                'solicitante' => $validated['solicitante'],
-                'data_solicitacao' => $validated['data_solicitacao'],
+                'solicitante' => $user?->name ?? 'Usuário não identificado',
+                'requisitante_user_id' => $user?->id,
+                'data_solicitacao' => now()->toDateString(),
                 'status' => 'recebida',
                 'justificativa' => $validated['justificativa'] ?? null,
                 'observacoes' => $validated['observacoes'] ?? null,
@@ -103,6 +106,7 @@ class AlmoxarifadoRequisicaoController extends Controller
             return $requisicao->load([
                 'secretaria:id,nome,sigla',
                 'responsavel:id,name',
+                'requisitante:id,name,email',
                 'itens.produto:id,nome,codigo_interno',
                 'historicos.user:id,name',
             ]);
@@ -122,6 +126,8 @@ class AlmoxarifadoRequisicaoController extends Controller
         if (! $requisicao) {
             return response()->json(['message' => 'Requisição não encontrada.'], 404);
         }
+
+        $this->authorizeStatusChange($request, $requisicao, $validated['status']);
 
         $resultado = DB::transaction(function () use ($validated, $request, $requisicao) {
             $statusAnterior = $requisicao->status;
@@ -159,12 +165,55 @@ class AlmoxarifadoRequisicaoController extends Controller
             return $requisicao->fresh()->load([
                 'secretaria:id,nome,sigla',
                 'responsavel:id,name',
+                'requisitante:id,name,email',
                 'itens.produto:id,nome,codigo_interno',
                 'historicos.user:id,name',
             ]);
         });
 
         return response()->json($resultado);
+    }
+
+    public function downloadPdf(Request $request, int $id, RequisicaoPdfService $service)
+    {
+        $requisicao = AlmoxarifadoRequisicao::find($id);
+        if (! $requisicao) {
+            return response()->json(['message' => 'Requisição não encontrada.'], 404);
+        }
+
+        $user = $request->user();
+        $canView = $user?->profile === 'admin'
+            || $requisicao->requisitante_user_id === $user?->id
+            || $user?->canUseAlmoxarifadoAction('approve')
+            || $user?->canUseAlmoxarifadoAction('deliver');
+
+        if (! $canView) {
+            return response()->json(['message' => 'Usuário sem permissão para imprimir esta requisição.'], 403);
+        }
+
+        return $service->download($requisicao);
+    }
+
+    private function authorizeStatusChange(Request $request, AlmoxarifadoRequisicao $requisicao, string $status): void
+    {
+        $user = $request->user();
+        $approvalStatuses = ['em_analise', 'aprovada', 'recusada'];
+        $deliveryStatuses = ['em_separacao', 'em_processo_de_entrega', 'entregue'];
+
+        if (in_array($status, $approvalStatuses, true) && ! $user?->canUseAlmoxarifadoAction('approve')) {
+            abort(403, 'Usuário sem permissão para aprovar ou recusar requisições.');
+        }
+
+        if (in_array($status, $deliveryStatuses, true) && ! $user?->canUseAlmoxarifadoAction('deliver')) {
+            abort(403, 'Usuário sem permissão para separar ou entregar requisições.');
+        }
+
+        if ($status === 'cancelada') {
+            $canCancel = $requisicao->requisitante_user_id === $user?->id
+                || $user?->canUseAlmoxarifadoAction('approve')
+                || $user?->canUseAlmoxarifadoAction('deliver');
+            abort_unless($canCancel, 403, 'Usuário sem permissão para cancelar esta requisição.');
+        }
     }
 
     private function nextNumero(): string
@@ -281,6 +330,7 @@ class AlmoxarifadoRequisicaoController extends Controller
             }
 
             $estoque->increment('quantidade_entregue', $quantidade);
+            $item->update(['quantidade_entregue' => $quantidade]);
 
             AlmoxarifadoMovimentacao::create([
                 'almoxarifado_produto_id' => $item->almoxarifado_produto_id,

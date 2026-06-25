@@ -69,5 +69,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'equipe.aps' => \App\Http\Middleware\EnsureEquipeAps::class,
+        'chat.access' => \App\Http\Middleware\EnsureChatAccess::class,
+        'almoxarifado.permission' => \App\Http\Middleware\EnsureAlmoxarifadoPermission::class,
     ];
 }

@@ -210,9 +210,6 @@ class ProtocolController extends Controller
             'descricao' => 'nullable|string',
             'tipo' => 'required|string|max:40|exists:protocol_types,codigo',
             'prioridade' => 'nullable|string|max:20',
-            'solicitante_tipo' => 'required|string|max:20',
-            'solicitante_nome' => 'nullable|string|max:150',
-            'solicitante_documento' => 'nullable|string|max:40',
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_user_id' => 'required|integer|exists:users,id',
@@ -230,8 +227,14 @@ class ProtocolController extends Controller
         ]);
 
         $config = ProtocolConfig::current();
+        $user = $request->user();
+        $linkedOrigin = $this->linkedOriginUnit($user);
 
-        $protocol = DB::transaction(function () use ($request, $validated, $config) {
+        if (! $linkedOrigin && empty($validated['origem_unit_id'])) {
+            return response()->json(['message' => 'Selecione a origem do protocolo.'], 422);
+        }
+
+        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin) {
             $protocol = Protocol::create([
                 'numero' => Protocol::gerarNumero(),
                 'assunto' => $validated['assunto'],
@@ -239,10 +242,10 @@ class ProtocolController extends Controller
                 'tipo' => $validated['tipo'],
                 'status' => 'novo',
                 'prioridade' => $validated['prioridade'] ?? $config->default_priority ?? 'normal',
-                'solicitante_tipo' => $validated['solicitante_tipo'],
-                'solicitante_nome' => $validated['solicitante_nome'] ?? null,
-                'solicitante_documento' => $validated['solicitante_documento'] ?? null,
-                'origem_unit_id' => $validated['origem_unit_id'] ?? null,
+                'solicitante_tipo' => 'interno',
+                'solicitante_nome' => $user?->name,
+                'solicitante_documento' => $user?->cpf,
+                'origem_unit_id' => $linkedOrigin?->id ?? $validated['origem_unit_id'],
                 'destino_unit_id' => $validated['destino_unit_id'] ?? null,
                 'responsavel_atual_id' => $validated['destino_user_id'],
                 'criado_por_id' => $request->user()?->id,
@@ -283,11 +286,8 @@ class ProtocolController extends Controller
             'descricao' => 'nullable|string',
             'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo',
             'prioridade' => 'nullable|string|max:20',
-            'solicitante_tipo' => 'sometimes|required|string|max:20',
-            'solicitante_nome' => 'nullable|string|max:150',
-            'solicitante_documento' => 'nullable|string|max:40',
-            'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
+            'destino_user_id' => 'nullable|integer|exists:users,id',
             'prazo_atendimento' => 'nullable|date',
             'kanban' => 'nullable|array',
             'kanban.ativar' => 'nullable|boolean',
@@ -302,7 +302,11 @@ class ProtocolController extends Controller
         ]);
 
         $old = $protocol->toArray();
-        $protocol->update($validated);
+        $protocolData = collect($validated)->except(['destino_user_id', 'kanban'])->all();
+        if (array_key_exists('destino_user_id', $validated)) {
+            $protocolData['responsavel_atual_id'] = $validated['destino_user_id'];
+        }
+        $protocol->update($protocolData);
         if (! empty($validated['kanban'])) {
             $this->kanbanService->sync($protocol, $validated['kanban'], $request->user());
         }
@@ -463,6 +467,73 @@ class ProtocolController extends Controller
         ]);
     }
 
+    public function creationContext(Request $request): JsonResponse
+    {
+        $origin = $this->linkedOriginUnit($request->user());
+
+        return response()->json([
+            'requester' => [
+                'id' => $request->user()?->id,
+                'name' => $request->user()?->name,
+                'document' => $request->user()?->cpf,
+            ],
+            'origin' => $origin,
+            'origin_locked' => $origin !== null,
+        ]);
+    }
+
+    public function moveFromKanban(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'kanban_status' => 'required|in:novo,em_andamento,aguardando_resposta,bloqueado,concluido',
+            'observacao' => 'nullable|string|max:1000',
+        ]);
+
+        $protocol = Protocol::with('kanbanTask')->find($id);
+        if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+
+        DB::transaction(function () use ($protocol, $validated, $request) {
+            $old = $protocol->toArray();
+            $previousStatus = $protocol->status;
+            $protocolStatus = $validated['kanban_status'];
+
+            $protocol->update([
+                'status' => $protocolStatus,
+                'encerrado_em' => $protocolStatus === 'concluido' ? now() : null,
+                'novo' => $protocolStatus === 'novo',
+            ]);
+
+            $this->movimentar($protocol, 'movido_no_kanban', $protocol->origem_unit_id, $protocolStatus, $request->user()?->id, [
+                'observacao' => $validated['observacao'] ?? null,
+                'status_anterior' => $previousStatus,
+                'origem' => 'kanban',
+            ]);
+
+            $this->kanbanService->sync($protocol, [
+                'ativar' => true,
+                'id' => $protocol->kanbanTask?->id,
+                'status' => $validated['kanban_status'],
+            ], $request->user());
+
+            AuditService::record('MOVE_KANBAN', $protocol, $old, $protocol->fresh()->toArray());
+        });
+
+        return response()->json($protocol->fresh()->load([
+            'origemUnit:id,nome,tipo',
+            'destinoUnit:id,nome,tipo',
+            'responsavelAtual:id,name',
+            'criadoPor:id,name',
+            'kanbanTask.createdBy:id,name',
+            'kanbanTask.updatedBy:id,name',
+            'kanbanTask.responsavel:id,name',
+            'movements.user:id,name',
+            'comments.user:id,name',
+            'attachments.user:id,name',
+        ]));
+    }
+
     private function baseQuery(?User $user)
     {
         return Protocol::query()
@@ -493,6 +564,38 @@ class ProtocolController extends Controller
             ->where('ativo', true)
             ->pluck('protocol_organizational_unit_id')
             ->all();
+    }
+
+    private function linkedOriginUnit(?User $user): ?ProtocolOrganizationalUnit
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $links = ProtocolUserUnit::query()
+            ->with('unit.parent')
+            ->where('user_id', $user->id)
+            ->where('ativo', true)
+            ->orderBy('id')
+            ->get();
+
+        $directSecretaria = $links->first(fn (ProtocolUserUnit $link) => $link->unit?->tipo === 'secretaria');
+        if ($directSecretaria?->unit) {
+            return $directSecretaria->unit;
+        }
+
+        foreach ($links as $link) {
+            $unit = $link->unit;
+            while ($unit?->parent_id) {
+                $unit->loadMissing('parent');
+                $unit = $unit->parent;
+                if ($unit?->tipo === 'secretaria') {
+                    return $unit;
+                }
+            }
+        }
+
+        return $links->first()?->unit;
     }
 
     private function isAdmin(?User $user): bool
@@ -551,7 +654,7 @@ class ProtocolController extends Controller
             'from_user_id' => $protocol->responsavel_atual_id,
             'to_user_id' => $protocol->responsavel_atual_id,
             'acao' => $acao,
-            'status_anterior' => $protocol->getOriginal('status'),
+            'status_anterior' => $dados['status_anterior'] ?? $protocol->getOriginal('status'),
             'status_novo' => $statusNovo,
             'observacao' => $dados['observacao'] ?? null,
             'dados' => $dados,

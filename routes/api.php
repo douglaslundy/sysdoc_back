@@ -206,7 +206,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/dashboard/tfd', [DashboardController::class, 'tfd'])->middleware('can:dashboard-tfd');
         Route::get('/dashboard/farmacia', [DashboardController::class, 'farmacia']);
         Route::get('/dashboard/logs', [DashboardController::class, 'logs'])->middleware('can:dashboard-logs');
-        Route::get('/dashboard/chat', [ChatController::class, 'dashboard'])->middleware('can:dashboard-chat');
+        Route::get('/dashboard/chat', [ChatController::class, 'dashboard'])
+            ->middleware(['can:dashboard-chat', 'chat.access']);
         Route::get('/dashboard/vigilancia', [DashboardController::class, 'vigilancia']);
         Route::get('/dashboard/almoxarifado', [DashboardController::class, 'almoxarifado'])->middleware('can:dashboard-almoxarifado');
         Route::get('/dashboard/arquivo', [DashboardController::class, 'arquivo'])->middleware('can:dashboard-arquivo');
@@ -216,7 +217,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
-    Route::prefix('chat')->middleware('throttle:120,1')->group(function () {
+    Route::prefix('chat')->middleware(['throttle:120,1', 'chat.access'])->group(function () {
         Route::get('/realtime-config', [ChatRealtimeConfigController::class, 'publicConfig']);
         Route::get('/users', [ChatController::class, 'users']);
         Route::get('/conversations', [ChatController::class, 'conversations']);
@@ -258,8 +259,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
         Route::get('/requisicoes', [AlmoxarifadoRequisicaoController::class, 'index']);
         Route::get('/requisicoes/{id}', [AlmoxarifadoRequisicaoController::class, 'show']);
-        Route::post('/requisicoes', [AlmoxarifadoRequisicaoController::class, 'store']);
+        Route::post('/requisicoes', [AlmoxarifadoRequisicaoController::class, 'store'])
+            ->middleware('almoxarifado.permission:create');
         Route::patch('/requisicoes/{id}/status', [AlmoxarifadoRequisicaoController::class, 'updateStatus']);
+        Route::get('/requisicoes/{id}/pdf', [AlmoxarifadoRequisicaoController::class, 'downloadPdf']);
 
         Route::get('/configuracoes', [AlmoxarifadoConfigController::class, 'show']);
         Route::put('/configuracoes', [AlmoxarifadoConfigController::class, 'update']);
@@ -293,6 +296,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/', [ProtocolController::class, 'index']);
         Route::get('/caixa-entrada', [ProtocolController::class, 'inbox']);
         Route::get('/contadores', [ProtocolController::class, 'counts']);
+        Route::get('/contexto-novo', [ProtocolController::class, 'creationContext']);
         Route::get('/tipos', [ProtocolTypeController::class, 'index']);
         Route::post('/tipos', [ProtocolTypeController::class, 'store']);
         Route::put('/tipos/{id}', [ProtocolTypeController::class, 'update'])->whereNumber('id');
@@ -318,6 +322,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/{id}/comentarios', [ProtocolController::class, 'comment'])->whereNumber('id');
         Route::post('/{id}/encerrar', [ProtocolController::class, 'close'])->whereNumber('id');
         Route::post('/{id}/reabrir', [ProtocolController::class, 'reopen'])->whereNumber('id');
+        Route::post('/{id}/kanban-status', [ProtocolController::class, 'moveFromKanban'])->whereNumber('id');
         Route::post('/{id}/anexos', [ProtocolController::class, 'attach'])->whereNumber('id');
         Route::get('/{id}/historico', [ProtocolController::class, 'historico'])->whereNumber('id');
         Route::get('/{id}/visualizacoes', [ProtocolController::class, 'visualizations'])->whereNumber('id');

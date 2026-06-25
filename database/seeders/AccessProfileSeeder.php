@@ -70,6 +70,7 @@ class AccessProfileSeeder extends Seeder
             ['nome' => 'TFD', 'slug' => 'tfd', 'descricao' => 'Acesso a TFD, viagens e documentos'],
             ['nome' => 'Motorista', 'slug' => 'driver', 'descricao' => 'Acesso ao painel e viagens'],
             ['nome' => 'Parceiro', 'slug' => 'partner', 'descricao' => 'Acesso apenas a clientes'],
+            ['nome' => 'Almoxarife', 'slug' => 'almoxarife', 'descricao' => 'Gestão de requisições e entregas do almoxarifado'],
         ];
 
         foreach ($profiles as $profile) {
@@ -79,6 +80,9 @@ class AccessProfileSeeder extends Seeder
                     'nome' => $profile['nome'],
                     'descricao' => $profile['descricao'],
                     'ativo' => true,
+                    'almoxarifado_create_enabled' => true,
+                    'almoxarifado_approve_enabled' => in_array($profile['slug'], ['admin', 'manager', 'almoxarife'], true),
+                    'almoxarifado_deliver_enabled' => in_array($profile['slug'], ['admin', 'manager', 'almoxarife'], true),
                     'updated_at' => now(),
                 ]
             );
@@ -102,6 +106,7 @@ class AccessProfileSeeder extends Seeder
             'tfd' => ['/clients', '/client_report', '/vehicles', '/routes', '/trips', '/letters', '/ordinance', '/queue'],
             'driver' => ['/trips'],
             'partner' => ['/clients'],
+            'almoxarife' => [],
         ];
 
         foreach ($permissoes as $slug => $paths) {

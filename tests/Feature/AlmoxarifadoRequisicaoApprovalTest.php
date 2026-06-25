@@ -13,7 +13,7 @@ class AlmoxarifadoRequisicaoApprovalTest extends TestCase
 
     public function test_aprovacao_sem_saldo_retorna_mensagem_e_mantem_requisicao_recebida(): void
     {
-        $user = User::factory()->create(['active' => true]);
+        $user = User::factory()->create(['active' => true, 'profile' => 'admin']);
         $secretariaId = DB::table('almoxarifado_secretarias')->insertGetId([
             'nome' => 'Secretaria de Teste',
             'ativo' => true,
@@ -108,7 +108,7 @@ class AlmoxarifadoRequisicaoApprovalTest extends TestCase
 
     private function createRequisicaoComSaldo(float $quantidade): array
     {
-        $user = User::factory()->create(['active' => true]);
+        $user = User::factory()->create(['active' => true, 'profile' => 'admin']);
         $suffix = str_replace('.', '', uniqid('', true));
         $secretariaId = DB::table('almoxarifado_secretarias')->insertGetId([
             'nome' => "Secretaria {$suffix}",
@@ -153,6 +153,71 @@ class AlmoxarifadoRequisicaoApprovalTest extends TestCase
         ]);
 
         return [$user, $requisicaoId, $produtoId, $secretariaId];
+    }
+
+    public function test_criacao_ignora_solicitante_e_data_do_cliente(): void
+    {
+        $user = User::factory()->create(['active' => true, 'profile' => 'admin', 'name' => 'Requisitante Real']);
+        $secretariaId = DB::table('almoxarifado_secretarias')->insertGetId([
+            'nome' => 'Secretaria Automática',
+            'ativo' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $produtoId = DB::table('almoxarifado_produtos')->insertGetId([
+            'nome' => 'Produto Automático',
+            'codigo_interno' => 'AUTO-001',
+            'ativo' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/almoxarifado/requisicoes', [
+            'almoxarifado_secretaria_id' => $secretariaId,
+            'solicitante' => 'Nome forjado',
+            'data_solicitacao' => '2000-01-01',
+            'itens' => [[
+                'almoxarifado_produto_id' => $produtoId,
+                'quantidade_solicitada' => 1,
+            ]],
+        ])->assertCreated();
+
+        $response->assertJsonPath('solicitante', 'Requisitante Real')
+            ->assertJsonPath('requisitante_user_id', $user->id);
+        $this->assertDatabaseHas('almoxarifado_requisicoes', [
+            'id' => $response->json('id'),
+            'requisitante_user_id' => $user->id,
+            'data_solicitacao' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->get("/api/almoxarifado/requisicoes/{$response->json('id')}/pdf")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_usuario_sem_permissao_nao_aprova_requisicao(): void
+    {
+        $user = User::factory()->create(['active' => true, 'profile' => 'user']);
+        $requisicaoId = DB::table('almoxarifado_requisicoes')->insertGetId([
+            'numero' => 'REQ-SEM-PERMISSAO',
+            'almoxarifado_secretaria_id' => DB::table('almoxarifado_secretarias')->insertGetId([
+                'nome' => 'Secretaria Restrita',
+                'ativo' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]),
+            'solicitante' => $user->name,
+            'requisitante_user_id' => $user->id,
+            'data_solicitacao' => now()->toDateString(),
+            'status' => 'recebida',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->patchJson("/api/almoxarifado/requisicoes/{$requisicaoId}/status", ['status' => 'aprovada'])
+            ->assertForbidden();
     }
 
     private function assertEstoque(

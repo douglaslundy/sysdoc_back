@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -14,9 +16,13 @@ class User extends Authenticatable implements JWTSubject
 
     public $timestamps = false;
 
-    protected $fillable = ['profile', 'name', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date'];
+    protected $fillable = ['profile', 'chat_access_override', 'name', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date'];
 
     protected $hidden = ['password'];
+
+    protected $casts = [
+        'chat_access_override' => 'boolean',
+    ];
 
     public function getJWTIdentifier()
     {
@@ -46,5 +52,44 @@ class User extends Authenticatable implements JWTSubject
     public function equipeAps()
     {
         return $this->hasMany(UserEquipeAps::class, 'user_id');
+    }
+
+    public function accessProfile(): HasOne
+    {
+        return $this->hasOne(AccessProfile::class, 'slug', 'profile');
+    }
+
+    public function protocolUnits(): HasMany
+    {
+        return $this->hasMany(ProtocolUserUnit::class, 'user_id');
+    }
+
+    public function canUseChat(): bool
+    {
+        if ($this->profile === 'admin') {
+            return true;
+        }
+
+        if ($this->chat_access_override !== null) {
+            return (bool) $this->chat_access_override;
+        }
+
+        return (bool) $this->accessProfile()->value('chat_enabled');
+    }
+
+    public function canUseAlmoxarifadoAction(string $action): bool
+    {
+        if ($this->profile === 'admin') {
+            return true;
+        }
+
+        $column = match ($action) {
+            'create' => 'almoxarifado_create_enabled',
+            'approve' => 'almoxarifado_approve_enabled',
+            'deliver' => 'almoxarifado_deliver_enabled',
+            default => null,
+        };
+
+        return $column ? (bool) $this->accessProfile()->value($column) : false;
     }
 }

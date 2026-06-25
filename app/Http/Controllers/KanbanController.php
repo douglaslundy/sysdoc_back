@@ -80,6 +80,12 @@ class KanbanController extends Controller
             'ordem' => 'nullable|integer|min:0',
         ]);
 
+        if ($task->protocol_id && array_key_exists('status', $validated) && $validated['status'] !== $task->status) {
+            return response()->json([
+                'message' => 'Movimente protocolos pelo fluxo de protocolo do Kanban.',
+            ], 422);
+        }
+
         $task->update([
             ...$validated,
             'updated_by_id' => $request->user()?->id,

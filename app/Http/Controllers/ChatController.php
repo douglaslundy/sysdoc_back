@@ -40,6 +40,7 @@ class ChatController extends Controller
             ->whereKeyNot($currentUserId)
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'profile'])
+            ->filter(fn (User $user) => $user->canUseChat())
             ->map(function (User $user) use ($presences) {
                 $presence = $presences->get($user->id);
                 $recent = $presence?->last_seen_at?->greaterThanOrEqualTo(now()->subMinutes(2)) ?? false;
@@ -51,7 +52,8 @@ class ChatController extends Controller
                     'is_online' => $online,
                     'last_seen_at' => $presence?->last_seen_at?->toISOString(),
                 ];
-            });
+            })
+            ->values();
 
         return response()->json($users);
     }
@@ -85,6 +87,11 @@ class ChatController extends Controller
 
         if ($userId === $otherId) {
             return response()->json(['message' => 'Selecione outro usuário para iniciar a conversa.'], 422);
+        }
+
+        $otherUser = User::find($otherId);
+        if (! $otherUser?->canUseChat()) {
+            return response()->json(['message' => 'O usuário selecionado não possui acesso ao chat.'], 422);
         }
 
         $conversation = ChatConversation::query()

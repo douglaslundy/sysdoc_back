@@ -68,6 +68,14 @@ class AlmoxarifadoPageSeeder extends Seeder
                 '/almoxarifado/movimentacoes',
                 '/almoxarifado/relatorios',
             ],
+            'almoxarife' => [
+                '/almoxarifado',
+                '/almoxarifado/produtos',
+                '/almoxarifado/estoque',
+                '/almoxarifado/requisicoes',
+                '/almoxarifado/movimentacoes',
+                '/almoxarifado/relatorios',
+            ],
         ];
 
         foreach ($permissoes as $slug => $paths) {

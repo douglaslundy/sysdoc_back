@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\KanbanTask;
 use App\Models\User;
+use App\Models\ProtocolOrganizationalUnit;
+use App\Models\ProtocolUserUnit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -13,6 +15,7 @@ class KanbanProtocolIntegrationTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+    private ProtocolOrganizationalUnit $origin;
 
     protected function setUp(): void
     {
@@ -21,6 +24,17 @@ class KanbanProtocolIntegrationTest extends TestCase
         $this->user = User::factory()->create([
             'profile' => 'admin',
             'active' => true,
+        ]);
+        $this->origin = ProtocolOrganizationalUnit::create([
+            'tipo' => 'secretaria',
+            'nome' => 'Secretaria de Teste',
+            'ativo' => true,
+        ]);
+        ProtocolUserUnit::create([
+            'user_id' => $this->user->id,
+            'protocol_organizational_unit_id' => $this->origin->id,
+            'papel' => 'lotacao',
+            'ativo' => true,
         ]);
     }
 
@@ -64,12 +78,41 @@ class KanbanProtocolIntegrationTest extends TestCase
             'assunto' => 'Solicitar acompanhamento operacional',
             'criado_por_id' => $this->user->id,
             'responsavel_atual_id' => $this->user->id,
+            'origem_unit_id' => $this->origin->id,
+            'solicitante_nome' => $this->user->name,
         ]);
 
         $this->assertDatabaseHas('kanban_tasks', [
             'protocol_id' => $protocolId,
             'titulo' => 'Solicitar acompanhamento operacional',
             'status' => 'novo',
+        ]);
+    }
+
+    public function test_movimentar_protocolo_no_kanban_atualiza_protocolo_e_historico(): void
+    {
+        $this->seedProtocolType();
+        $protocolId = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/protocolos', [
+                'assunto' => 'Fluxo pelo Kanban',
+                'tipo' => 'administrativo',
+                'destino_user_id' => $this->user->id,
+            ])
+            ->assertCreated()
+            ->json('id');
+
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/protocolos/{$protocolId}/kanban-status", [
+                'kanban_status' => 'em_andamento',
+            ])
+            ->assertOk()
+            ->assertJsonPath('status', 'em_andamento')
+            ->assertJsonPath('kanban_task.status', 'em_andamento');
+
+        $this->assertDatabaseHas('protocol_movements', [
+            'protocol_id' => $protocolId,
+            'acao' => 'movido_no_kanban',
+            'status_novo' => 'em_andamento',
         ]);
     }
 

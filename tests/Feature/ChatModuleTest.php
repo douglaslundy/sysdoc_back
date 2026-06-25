@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Models\AccessProfile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class ChatModuleTest extends TestCase
         Storage::fake('private');
 
         $this->sender = User::factory()->create(['profile' => 'admin', 'active' => true]);
-        $this->recipient = User::factory()->create(['active' => true]);
+        $this->recipient = User::factory()->create(['active' => true, 'chat_access_override' => true]);
     }
 
     public function test_usuario_pode_iniciar_conversa_e_enviar_mensagem(): void
@@ -165,6 +166,25 @@ class ChatModuleTest extends TestCase
         $this->actingAs($this->recipient, 'sanctum')
             ->getJson('/api/chat/config')
             ->assertForbidden();
+    }
+
+    public function test_perfil_e_excecao_individual_controlam_acesso_ao_chat(): void
+    {
+        $profile = AccessProfile::create([
+            'nome' => 'Chat permitido',
+            'slug' => 'chatok',
+            'ativo' => true,
+            'chat_enabled' => true,
+        ]);
+        $allowed = User::factory()->create(['profile' => $profile->slug, 'active' => true]);
+        $blocked = User::factory()->create([
+            'profile' => $profile->slug,
+            'active' => true,
+            'chat_access_override' => false,
+        ]);
+
+        $this->actingAs($allowed, 'sanctum')->getJson('/api/chat/users')->assertOk();
+        $this->actingAs($blocked, 'sanctum')->getJson('/api/chat/users')->assertForbidden();
     }
 
     private function startConversation(): ChatConversation

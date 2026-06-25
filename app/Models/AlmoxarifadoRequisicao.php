@@ -14,6 +14,7 @@ class AlmoxarifadoRequisicao extends Model
         'numero',
         'almoxarifado_secretaria_id',
         'solicitante',
+        'requisitante_user_id',
         'data_solicitacao',
         'status',
         'justificativa',
@@ -37,6 +38,11 @@ class AlmoxarifadoRequisicao extends Model
     public function responsavel(): BelongsTo
     {
         return $this->belongsTo(User::class, 'usuario_responsavel_id');
+    }
+
+    public function requisitante(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requisitante_user_id');
     }
 
     public function itens(): HasMany
