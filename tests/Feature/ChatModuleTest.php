@@ -163,6 +163,7 @@ class ChatModuleTest extends TestCase
             ->getJson('/api/dashboard/chat')
             ->assertOk()
             ->assertJsonPath('limits.concurrent_connections', 100)
+            ->assertJsonPath('limits.rate_limits.rate_limit_global', 300)
             ->assertJsonPath('totals.conversations', 1)
             ->assertJsonPath('totals.messages', 1);
     }
@@ -185,7 +186,9 @@ class ChatModuleTest extends TestCase
             ->assertJsonMissing(['app_secret' => 'secret-key-test'])
             ->assertJsonPath('configured', true)
             ->assertJsonPath('engine', 'soketi')
-            ->assertJsonPath('host', 'socket.exemplo.test');
+            ->assertJsonPath('host', 'socket.exemplo.test')
+            ->assertJsonPath('rate_limit_global', 300)
+            ->assertJsonPath('rate_limit_messages', 30);
 
         $raw = DB::table('chat_realtime_configs')->first();
         $this->assertNotSame('sysdoc-chat', $raw->app_id);
@@ -264,6 +267,60 @@ class ChatModuleTest extends TestCase
                 ->assertStatus(422)
                 ->assertJsonPath('message', 'Informe App ID, App Key e App Secret.');
         }
+    }
+
+    public function test_admin_pode_gerenciar_limites_do_chat(): void
+    {
+        $this->actingAs($this->sender, 'sanctum')
+            ->putJson('/api/chat/config', [
+                'engine' => 'pusher',
+                'active' => false,
+                'cluster' => 'mt1',
+                'rate_limit_decay_minutes' => 3,
+                'rate_limit_global' => 450,
+                'rate_limit_sync' => 180,
+                'rate_limit_messages' => 40,
+                'rate_limit_typing' => 90,
+                'rate_limit_presence' => 75,
+            ])
+            ->assertOk()
+            ->assertJsonPath('rate_limit_decay_minutes', 3)
+            ->assertJsonPath('rate_limit_global', 450)
+            ->assertJsonPath('rate_limit_sync', 180)
+            ->assertJsonPath('rate_limit_messages', 40)
+            ->assertJsonPath('rate_limit_typing', 90)
+            ->assertJsonPath('rate_limit_presence', 75);
+
+        $config = ChatRealtimeConfig::current();
+        $this->assertSame(3, $config->rate_limit_decay_minutes);
+        $this->assertSame(450, $config->rate_limit_global);
+        $this->assertSame(180, $config->rate_limit_sync);
+        $this->assertSame(40, $config->rate_limit_messages);
+        $this->assertSame(90, $config->rate_limit_typing);
+        $this->assertSame(75, $config->rate_limit_presence);
+    }
+
+    public function test_limite_de_mensagens_respeita_configuracao_dinamica(): void
+    {
+        ChatRealtimeConfig::current()->update([
+            'rate_limit_global' => 500,
+            'rate_limit_messages' => 2,
+            'rate_limit_decay_minutes' => 1,
+        ]);
+
+        $conversation = $this->startConversation();
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->postJson("/api/chat/conversations/{$conversation->id}/messages", ['body' => 'primeira'])
+            ->assertCreated();
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->postJson("/api/chat/conversations/{$conversation->id}/messages", ['body' => 'segunda'])
+            ->assertCreated();
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->postJson("/api/chat/conversations/{$conversation->id}/messages", ['body' => 'terceira'])
+            ->assertStatus(429);
     }
 
     public function test_usuario_comum_nao_acessa_configuracao_administrativa_do_chat(): void

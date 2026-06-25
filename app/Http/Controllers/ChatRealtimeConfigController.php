@@ -43,6 +43,12 @@ class ChatRealtimeConfigController extends Controller
             'port' => $engine === 'soketi' ? (int) ($data['port'] ?? 6001) : null,
             'scheme' => $engine === 'soketi' && ! ($data['use_tls'] ?? false) ? 'http' : 'https',
             'use_tls' => $engine === 'soketi' ? (bool) ($data['use_tls'] ?? false) : true,
+            'rate_limit_decay_minutes' => (int) ($data['rate_limit_decay_minutes'] ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_decay_minutes']),
+            'rate_limit_global' => (int) ($data['rate_limit_global'] ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_global']),
+            'rate_limit_sync' => (int) ($data['rate_limit_sync'] ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_sync']),
+            'rate_limit_messages' => (int) ($data['rate_limit_messages'] ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_messages']),
+            'rate_limit_typing' => (int) ($data['rate_limit_typing'] ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_typing']),
+            'rate_limit_presence' => (int) ($data['rate_limit_presence'] ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence']),
             'updated_by' => $user->id,
         ];
 
@@ -115,6 +121,12 @@ class ChatRealtimeConfigController extends Controller
             'port' => null,
             'scheme' => 'https',
             'use_tls' => true,
+            'rate_limit_decay_minutes' => $config->rate_limit_decay_minutes ?: ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_decay_minutes'],
+            'rate_limit_global' => $config->rate_limit_global ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_global'],
+            'rate_limit_sync' => $config->rate_limit_sync ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_sync'],
+            'rate_limit_messages' => $config->rate_limit_messages ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_messages'],
+            'rate_limit_typing' => $config->rate_limit_typing ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_typing'],
+            'rate_limit_presence' => $config->rate_limit_presence ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence'],
             'updated_by' => $request->user()->id,
         ]);
         $config->refresh();
@@ -222,6 +234,12 @@ class ChatRealtimeConfigController extends Controller
             'port' => ['nullable', 'integer', 'min:1', 'max:65535', 'required_if:engine,soketi'],
             'scheme' => ['nullable', Rule::in(['http', 'https']), 'required_if:engine,soketi'],
             'use_tls' => ['nullable', 'boolean'],
+            'rate_limit_decay_minutes' => ['nullable', 'integer', 'min:1', 'max:60'],
+            'rate_limit_global' => ['nullable', 'integer', 'min:0', 'max:5000'],
+            'rate_limit_sync' => ['nullable', 'integer', 'min:0', 'max:5000'],
+            'rate_limit_messages' => ['nullable', 'integer', 'min:0', 'max:5000'],
+            'rate_limit_typing' => ['nullable', 'integer', 'min:0', 'max:5000'],
+            'rate_limit_presence' => ['nullable', 'integer', 'min:0', 'max:5000'],
         ];
     }
 
@@ -239,6 +257,12 @@ class ChatRealtimeConfigController extends Controller
             'has_app_key' => filled($config->app_key),
             'has_app_secret' => filled($config->app_secret),
             'configured' => filled($config->app_id) && filled($config->app_key) && filled($config->app_secret),
+            'rate_limit_decay_minutes' => $config->rate_limit_decay_minutes ?: ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_decay_minutes'],
+            'rate_limit_global' => $config->rate_limit_global ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_global'],
+            'rate_limit_sync' => $config->rate_limit_sync ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_sync'],
+            'rate_limit_messages' => $config->rate_limit_messages ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_messages'],
+            'rate_limit_typing' => $config->rate_limit_typing ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_typing'],
+            'rate_limit_presence' => $config->rate_limit_presence ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence'],
             'updated_at' => $config->updated_at?->toISOString(),
         ];
     }
@@ -253,6 +277,12 @@ class ChatRealtimeConfigController extends Controller
             'port' => $config->port,
             'scheme' => $config->scheme,
             'use_tls' => (bool) $config->use_tls,
+            'rate_limit_decay_minutes' => $config->rate_limit_decay_minutes ?: ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_decay_minutes'],
+            'rate_limit_global' => $config->rate_limit_global ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_global'],
+            'rate_limit_sync' => $config->rate_limit_sync ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_sync'],
+            'rate_limit_messages' => $config->rate_limit_messages ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_messages'],
+            'rate_limit_typing' => $config->rate_limit_typing ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_typing'],
+            'rate_limit_presence' => $config->rate_limit_presence ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence'],
             'has_app_id' => filled($config->app_id),
             'has_app_key' => filled($config->app_key),
             'has_app_secret' => filled($config->app_secret),

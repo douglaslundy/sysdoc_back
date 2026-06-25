@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChatAttachment;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\ChatRealtimeConfig;
 use App\Models\ChatUsageDaily;
 use App\Models\User;
 use App\Models\UserPresence;
@@ -504,6 +505,7 @@ class ChatController extends Controller
                 'concurrent_connections' => $isSoketi ? null : config('chat.pusher_connection_limit'),
                 'plan' => $isSoketi ? 'Soketi próprio' : 'Pusher Sandbox',
                 'engine' => $realtimeConfig['engine'] ?? null,
+                'rate_limits' => ChatRealtimeConfig::rateLimits(),
             ],
             'today' => $todayUsage,
             'month' => $month,

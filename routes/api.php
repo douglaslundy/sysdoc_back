@@ -217,24 +217,24 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
-    Route::prefix('chat')->middleware(['throttle:300,1', 'chat.access'])->group(function () {
+    Route::prefix('chat')->middleware(['chat.access'])->group(function () {
         Route::get('/realtime-config', [ChatRealtimeConfigController::class, 'publicConfig']);
-        Route::get('/users', [ChatController::class, 'users']);
-        Route::get('/conversations', [ChatController::class, 'conversations']);
+        Route::get('/users', [ChatController::class, 'users'])->middleware('throttle:chat-sync');
+        Route::get('/conversations', [ChatController::class, 'conversations'])->middleware('throttle:chat-sync');
         Route::post('/conversations', [ChatController::class, 'startConversation']);
-        Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
+        Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages'])->middleware('throttle:chat-sync');
         Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage'])
-            ->middleware('throttle:30,1');
-        Route::post('/conversations/{conversation}/read', [ChatController::class, 'markRead']);
+            ->middleware('throttle:chat-message');
+        Route::post('/conversations/{conversation}/read', [ChatController::class, 'markRead'])->middleware('throttle:chat-sync');
         Route::delete('/conversations/{conversation}', [ChatController::class, 'deleteConversation']);
         Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing'])
-            ->middleware('throttle:60,1');
+            ->middleware('throttle:chat-typing');
         Route::delete('/messages', [ChatController::class, 'deleteMessages']);
         Route::delete('/messages/{message}', [ChatController::class, 'deleteMessage']);
-        Route::post('/messages/{message}/delivered', [ChatController::class, 'markDelivered']);
+        Route::post('/messages/{message}/delivered', [ChatController::class, 'markDelivered'])->middleware('throttle:chat-sync');
         Route::get('/attachments/{attachment}', [ChatController::class, 'attachment']);
-        Route::get('/unread', [ChatController::class, 'unread']);
-        Route::post('/presence', [ChatController::class, 'presence'])->middleware('throttle:60,1');
+        Route::get('/unread', [ChatController::class, 'unread'])->middleware('throttle:chat-sync');
+        Route::post('/presence', [ChatController::class, 'presence'])->middleware('throttle:chat-presence');
     });
 
     // Configurações do laboratório
