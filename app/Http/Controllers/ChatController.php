@@ -310,6 +310,49 @@ class ChatController extends Controller
         return response()->json(['message' => 'Mensagem apagada.']);
     }
 
+    public function deleteMessages(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'message_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'message_ids.*' => ['required', 'integer', 'distinct', 'exists:chat_messages,id'],
+        ]);
+        $userId = (int) $request->user()->id;
+        $isAdmin = $request->user()->profile === 'admin';
+        $messages = ChatMessage::query()
+            ->with('conversation')
+            ->whereIn('id', $data['message_ids'])
+            ->get();
+
+        foreach ($messages as $message) {
+            $this->authorizeParticipant($message->conversation, $userId);
+            if ((int) $message->sender_id !== $userId && ! $isAdmin) {
+                abort(403, 'Você não pode apagar uma ou mais mensagens selecionadas.');
+            }
+        }
+
+        DB::transaction(function () use ($messages, $userId) {
+            foreach ($messages as $message) {
+                if (! $message->deleted_at) {
+                    $message->update(['deleted_at' => now(), 'deleted_by' => $userId]);
+                }
+
+                foreach ($this->recipientIds($message->conversation, null) as $recipientId) {
+                    $this->realtime->publish($recipientId, 'message.deleted', [
+                        'conversation_id' => $message->conversation_id,
+                        'message_id' => $message->id,
+                    ]);
+                }
+
+                AuditService::record('CHAT_MESSAGE_DELETED', $message);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Mensagens apagadas.',
+            'message_ids' => $messages->pluck('id')->values(),
+        ]);
+    }
+
     public function deleteConversation(Request $request, ChatConversation $conversation): JsonResponse
     {
         $userId = (int) $request->user()->id;

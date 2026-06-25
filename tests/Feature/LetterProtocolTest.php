@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Letter;
+use App\Models\LetterAttachment;
 use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolType;
 use App\Models\ProtocolUserUnit;
@@ -18,6 +19,7 @@ class LetterProtocolTest extends TestCase
     public function test_usuario_cria_protocolo_com_pdf_do_oficio_anexado(): void
     {
         Storage::fake('public');
+        Storage::fake('private');
 
         $sender = User::factory()->create(['profile' => 'admin', 'active' => true]);
         $destination = User::factory()->create(['active' => true]);
@@ -59,6 +61,17 @@ class LetterProtocolTest extends TestCase
             'obs' => 'Conteúdo completo do ofício.',
         ]);
 
+        Storage::disk('private')->put('letter-attachments/15/oficio.pdf', 'pdf-original-do-oficio');
+        LetterAttachment::create([
+            'letter_id' => $letter->id,
+            'uploaded_by' => $sender->id,
+            'disk' => 'private',
+            'path' => 'letter-attachments/15/oficio.pdf',
+            'original_name' => 'oficio-original.pdf',
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 22,
+        ]);
+
         $response = $this->actingAs($sender, 'sanctum')
             ->postJson("/api/letters/{$letter->id}/protocol", [
                 'destino_user_id' => $destination->id,
@@ -90,6 +103,7 @@ class LetterProtocolTest extends TestCase
             'ativo' => true,
         ]);
         Storage::disk('public')->assertExists($attachmentPath);
+        $this->assertSame('pdf-original-do-oficio', Storage::disk('public')->get($attachmentPath));
 
         $this->actingAs($destination, 'sanctum')
             ->getJson("/api/protocolos/{$protocolId}")
@@ -103,6 +117,7 @@ class LetterProtocolTest extends TestCase
 
     public function test_usuario_sem_unidade_vinculada_nao_cria_protocolo_pelo_oficio(): void
     {
+        Storage::fake('private');
         $sender = User::factory()->create(['profile' => 'admin', 'active' => true]);
         $destination = User::factory()->create(['active' => true]);
         $letter = Letter::create([
@@ -111,6 +126,17 @@ class LetterProtocolTest extends TestCase
             'subject_matter' => 'Teste',
             'sender' => 'Origem',
             'recipient' => 'Destino',
+        ]);
+
+        Storage::disk('private')->put('letter-attachments/16/oficio.pdf', 'pdf');
+        LetterAttachment::create([
+            'letter_id' => $letter->id,
+            'uploaded_by' => $sender->id,
+            'disk' => 'private',
+            'path' => 'letter-attachments/16/oficio.pdf',
+            'original_name' => 'oficio.pdf',
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 3,
         ]);
 
         $this->actingAs($sender, 'sanctum')
@@ -122,5 +148,52 @@ class LetterProtocolTest extends TestCase
                 'message',
                 'Seu usuário não possui secretaria ou unidade vinculada para criar o protocolo.'
             );
+    }
+
+    public function test_nao_cria_outro_protocolo_enquanto_houver_vinculo_aberto(): void
+    {
+        Storage::fake('public');
+        Storage::fake('private');
+        $sender = User::factory()->create(['profile' => 'admin', 'active' => true]);
+        $destination = User::factory()->create(['active' => true]);
+        $unit = ProtocolOrganizationalUnit::create([
+            'tipo' => 'secretaria',
+            'nome' => 'Secretaria',
+            'ativo' => true,
+        ]);
+        foreach ([$sender, $destination] as $user) {
+            ProtocolUserUnit::create([
+                'user_id' => $user->id,
+                'protocol_organizational_unit_id' => $unit->id,
+                'papel' => 'lotacao',
+                'ativo' => true,
+            ]);
+        }
+        $letter = Letter::create([
+            'id_user' => $sender->id,
+            'number' => 17,
+            'subject_matter' => 'Teste de duplicidade',
+            'sender' => 'Origem',
+            'recipient' => 'Destino',
+        ]);
+        Storage::disk('private')->put('letter-attachments/17/oficio.pdf', 'pdf');
+        LetterAttachment::create([
+            'letter_id' => $letter->id,
+            'uploaded_by' => $sender->id,
+            'disk' => 'private',
+            'path' => 'letter-attachments/17/oficio.pdf',
+            'original_name' => 'oficio.pdf',
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 3,
+        ]);
+
+        $this->actingAs($sender, 'sanctum')
+            ->postJson("/api/letters/{$letter->id}/protocol", ['destino_user_id' => $destination->id])
+            ->assertCreated();
+
+        $this->actingAs($sender, 'sanctum')
+            ->postJson("/api/letters/{$letter->id}/protocol", ['destino_user_id' => $destination->id])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Este ofício já possui um protocolo aberto vinculado.');
     }
 }

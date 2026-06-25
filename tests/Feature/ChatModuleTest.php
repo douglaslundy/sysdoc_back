@@ -106,6 +106,48 @@ class ChatModuleTest extends TestCase
         $this->assertDatabaseCount('chat_attachments', 0);
     }
 
+    public function test_usuario_exclui_multiplas_mensagens_proprias(): void
+    {
+        $conversation = $this->startConversation();
+        $messages = collect(['Primeira', 'Segunda'])->map(fn ($body) => ChatMessage::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $this->sender->id,
+            'body' => $body,
+            'message_type' => 'text',
+            'status' => 'sent',
+        ]));
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->deleteJson('/api/chat/messages', [
+                'message_ids' => $messages->pluck('id')->all(),
+            ])
+            ->assertOk()
+            ->assertJsonCount(2, 'message_ids');
+
+        foreach ($messages as $message) {
+            $this->assertNotNull($message->fresh()->deleted_at);
+            $this->assertSame($this->sender->id, $message->fresh()->deleted_by);
+        }
+    }
+
+    public function test_usuario_nao_exclui_em_lote_mensagem_de_outro_remetente(): void
+    {
+        $conversation = $this->startConversation();
+        $message = ChatMessage::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $this->sender->id,
+            'body' => 'Mensagem recebida',
+            'message_type' => 'text',
+            'status' => 'sent',
+        ]);
+
+        $this->actingAs($this->recipient, 'sanctum')
+            ->deleteJson('/api/chat/messages', ['message_ids' => [$message->id]])
+            ->assertForbidden();
+
+        $this->assertNull($message->fresh()->deleted_at);
+    }
+
     public function test_dashboard_do_chat_exibe_consumo_e_totais(): void
     {
         $conversation = $this->startConversation();

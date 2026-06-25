@@ -217,7 +217,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
-    Route::prefix('chat')->middleware(['throttle:120,1', 'chat.access'])->group(function () {
+    Route::prefix('chat')->middleware(['throttle:300,1', 'chat.access'])->group(function () {
         Route::get('/realtime-config', [ChatRealtimeConfigController::class, 'publicConfig']);
         Route::get('/users', [ChatController::class, 'users']);
         Route::get('/conversations', [ChatController::class, 'conversations']);
@@ -229,6 +229,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/conversations/{conversation}', [ChatController::class, 'deleteConversation']);
         Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing'])
             ->middleware('throttle:60,1');
+        Route::delete('/messages', [ChatController::class, 'deleteMessages']);
         Route::delete('/messages/{message}', [ChatController::class, 'deleteMessage']);
         Route::post('/messages/{message}/delivered', [ChatController::class, 'markDelivered']);
         Route::get('/attachments/{attachment}', [ChatController::class, 'attachment']);

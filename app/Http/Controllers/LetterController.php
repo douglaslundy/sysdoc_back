@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Letter;
+use App\Models\LetterAttachment;
 use App\Models\Models;
 use App\Models\Protocol;
 use App\Models\ProtocolAttachment;
@@ -11,7 +12,6 @@ use App\Models\ProtocolMovement;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,7 +28,9 @@ class LetterController extends Controller
 
     public function index()
     {
-        return Letter::with(['user'])->withCount('attachments')->orderBy('id', 'desc')->get();
+        $letters = Letter::with(['user'])->withCount('attachments')->orderBy('id', 'desc')->get();
+
+        return $this->withProtocolState($letters);
     }
 
     public function store(Request $request)
@@ -65,7 +67,9 @@ class LetterController extends Controller
             $letter->summary = $request->input('summary');
             $letter->fileurl = $request->input('fileurl');
             $letter->save();
-            $array['letter'] = $letter->load('user')->loadCount('attachments');
+            $array['letter'] = $this->withProtocolState(collect([
+                $letter->load('user')->loadCount('attachments'),
+            ]))->first();
         } else {
             $array['errors'] = $validator->errors()->first();
 
@@ -99,7 +103,9 @@ class LetterController extends Controller
             $letter->summary = $request->input('summary');
             $letter->fileurl = $request->input('fileurl') ? $request->input('fileurl') : $letter->fileurl;
             $letter->save();
-            $array['letter'] = $letter->load('user')->loadCount('attachments');
+            $array['letter'] = $this->withProtocolState(collect([
+                $letter->load('user')->loadCount('attachments'),
+            ]))->first();
         } else {
             $array['errors'] = $validator->errors()->first();
 
@@ -219,6 +225,24 @@ class LetterController extends Controller
             return response()->json(['message' => 'Selecione um destinatário ativo.'], 422);
         }
 
+        if ($this->hasOpenProtocol($letter->id)) {
+            return response()->json([
+                'message' => 'Este ofício já possui um protocolo aberto vinculado.',
+            ], 422);
+        }
+
+        $pdfAttachment = $letter->attachments()
+            ->where('mime_type', 'application/pdf')
+            ->latest('id')
+            ->get()
+            ->first(fn (LetterAttachment $attachment) => Storage::disk($attachment->disk)->exists($attachment->path));
+
+        if (! $pdfAttachment) {
+            return response()->json([
+                'message' => 'Anexe um PDF válido ao ofício antes de criar o protocolo.',
+            ], 422);
+        }
+
         $originUnit = $user?->protocolUnits()
             ->where('ativo', true)
             ->with('unit')
@@ -247,6 +271,7 @@ class LetterController extends Controller
                 $originUnit,
                 $destinationUnit,
                 $config,
+                $pdfAttachment,
                 &$storedPath
             ) {
                 $protocol = Protocol::create([
@@ -279,12 +304,12 @@ class LetterController extends Controller
                     'user_id' => $user?->id,
                 ]);
 
-                $pdf = Pdf::loadView('pdf.oficio-protocolo', [
-                    'letter' => $letter->loadMissing('user'),
-                ])->setPaper('a4');
-                $filename = 'oficio-'.$letter->number.'-'.$letter->created_at?->format('Y').'.pdf';
+                $filename = basename(str_replace('\\', '/', $pdfAttachment->original_name));
                 $storedPath = 'protocolos/'.$protocol->id.'/'.$filename;
-                Storage::disk('public')->put($storedPath, $pdf->output());
+                Storage::disk('public')->put(
+                    $storedPath,
+                    Storage::disk($pdfAttachment->disk)->get($pdfAttachment->path)
+                );
 
                 $attachment = ProtocolAttachment::create([
                     'protocol_id' => $protocol->id,
@@ -316,6 +341,7 @@ class LetterController extends Controller
                     'letter_id' => $letter->id,
                     'destination_user_id' => $destinationUser->id,
                     'attachment_id' => $attachment->id,
+                    'letter_attachment_id' => $pdfAttachment->id,
                 ], $user);
 
                 return $protocol->load([
@@ -341,6 +367,48 @@ class LetterController extends Controller
         return response()->json([
             'message' => 'Protocolo criado com sucesso.',
             'protocol' => $protocol,
+            'letter' => [
+                'id' => $letter->id,
+                'has_open_protocol' => true,
+                'open_protocol_id' => $protocol->id,
+                'open_protocol_number' => $protocol->numero,
+            ],
         ], 201);
+    }
+
+    private function hasOpenProtocol(int $letterId): bool
+    {
+        return ProtocolMovement::query()
+            ->where('acao', 'criado_por_oficio')
+            ->where('dados->letter_id', $letterId)
+            ->whereHas('protocol', fn ($query) => $query
+                ->whereNotIn('status', ['encerrado', 'concluido', 'cancelado']))
+            ->exists();
+    }
+
+    private function withProtocolState($letters)
+    {
+        $states = ProtocolMovement::query()
+            ->where('acao', 'criado_por_oficio')
+            ->whereHas('protocol', fn ($query) => $query
+                ->whereNotIn('status', ['encerrado', 'concluido', 'cancelado']))
+            ->with('protocol:id,numero,status')
+            ->get()
+            ->map(fn (ProtocolMovement $movement) => [
+                'letter_id' => (int) ($movement->dados['letter_id'] ?? 0),
+                'protocol_id' => $movement->protocol?->id,
+                'protocol_number' => $movement->protocol?->numero,
+            ])
+            ->filter(fn ($state) => $state['letter_id'] > 0)
+            ->keyBy('letter_id');
+
+        return $letters->map(function (Letter $letter) use ($states) {
+            $state = $states->get($letter->id);
+            $letter->setAttribute('has_open_protocol', $state !== null);
+            $letter->setAttribute('open_protocol_id', $state['protocol_id'] ?? null);
+            $letter->setAttribute('open_protocol_number', $state['protocol_number'] ?? null);
+
+            return $letter;
+        });
     }
 }
