@@ -50,9 +50,9 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
 
-        if ($agentName) {
-            $where .= ' AND p.no_profissional = ?';
-            $params[] = $agentName;
+        if ($agentName && trim($agentName) !== '') {
+            $where .= ' AND ' . $this->agentFilterClause('p.no_profissional');
+            $params[] = $this->agentFilterValue($agentName);
         }
 
         if ($desfecho !== null && $desfecho !== '') {
@@ -96,9 +96,9 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
 
-        if ($agentName) {
-            $where .= ' AND p.no_profissional = ?';
-            $params[] = $agentName;
+        if ($agentName && trim($agentName) !== '') {
+            $where .= ' AND ' . $this->agentFilterClause('p.no_profissional');
+            $params[] = $this->agentFilterValue($agentName);
         }
 
         if ($desfecho !== null && $desfecho !== '') {
@@ -113,6 +113,16 @@ class VisitaAcsController extends MonitorApsBaseController
         }
 
         return [$where, $params];
+    }
+
+    private function agentFilterClause(string $column): string
+    {
+        return "LOWER(BTRIM(COALESCE({$column}, ''))) LIKE ?";
+    }
+
+    private function agentFilterValue(?string $agentName): string
+    {
+        return '%' . mb_strtolower(trim((string) $agentName), 'UTF-8') . '%';
     }
 
     private function baseJoins(): string
@@ -383,9 +393,9 @@ class VisitaAcsController extends MonitorApsBaseController
                 $params = array_merge($params, $allowedInes);
             }
         }
-        if ($agentName) {
-            $where[] = 'dp.no_profissional = ?';
-            $params[] = $agentName;
+        if ($agentName && trim($agentName) !== '') {
+            $where[] = $this->agentFilterClause('dp.no_profissional');
+            $params[] = $this->agentFilterValue($agentName);
         }
 
         $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
@@ -449,9 +459,9 @@ class VisitaAcsController extends MonitorApsBaseController
                 $params = array_merge($params, $allowedInes);
             }
         }
-        if ($agentName) {
-            $where[] = 'dp.no_profissional = ?';
-            $params[] = $agentName;
+        if ($agentName && trim($agentName) !== '') {
+            $where[] = $this->agentFilterClause('dp.no_profissional');
+            $params[] = $this->agentFilterValue($agentName);
         }
 
         $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
@@ -958,9 +968,9 @@ class VisitaAcsController extends MonitorApsBaseController
                     $totFamWhere  .= ' AND de.nu_ine = ?';
                     $totFamParams[] = $request->ine;
                 }
-                if ($request->agente) {
-                    $totFamWhere  .= ' AND dp.no_profissional = ?';
-                    $totFamParams[] = $request->agente;
+                if ($request->agente && trim($request->agente) !== '') {
+                    $totFamWhere  .= ' AND ' . $this->agentFilterClause('dp.no_profissional');
+                    $totFamParams[] = $this->agentFilterValue($request->agente);
                 }
 
                 $totFamRow = $this->db()->selectOne("
@@ -1027,12 +1037,7 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, null, null, null, $allowedInes);
-
-        if ($request->agente) {
-            $where .= ' AND p.no_profissional ILIKE ?';
-            $params[] = '%'.$request->agente.'%';
-        }
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
 
         if ($request->desfecho) {
             $where .= ' AND d.co_seq_dim_desfecho_visita = ?';
@@ -1381,7 +1386,7 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, null, null, null, $allowedInes);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
 
         // Resolve column names for CPF/CNS/nome based on database schema.
         $visitCpfCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_cpf_cidadao', 'nu_cpf']);
@@ -1397,11 +1402,6 @@ class VisitaAcsController extends MonitorApsBaseController
         $cidNomeCol  = $this->firstExistingColumn('tb_cidadao', ['no_cidadao', 'no_cidadao_filtro']);
         $pecCidCol   = $this->firstExistingColumn('tb_fat_cidadao_pec', ['co_cidadao']);
         $cidPkCol    = $this->firstExistingColumn('tb_cidadao', ['co_seq_cidadao']);
-
-        if ($request->agente) {
-            $where .= ' AND p.no_profissional = ?';
-            $params[] = $request->agente;
-        }
 
         if ($request->busca) {
             $busca  = trim($request->busca);
@@ -1722,9 +1722,9 @@ class VisitaAcsController extends MonitorApsBaseController
                         $totFamParams = array_merge($totFamParams, $allowedInes);
                     }
                 }
-                if ($request->agente) {
-                    $totFamWhere  .= ' AND dp.no_profissional = ?';
-                    $totFamParams[] = $request->agente;
+                if ($request->agente && trim($request->agente) !== '') {
+                    $totFamWhere  .= ' AND ' . $this->agentFilterClause('dp.no_profissional');
+                    $totFamParams[] = $this->agentFilterValue($request->agente);
                 }
 
                 $totFamRows = $this->db()->select("
