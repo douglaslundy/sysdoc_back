@@ -77,7 +77,7 @@ class CidadaoAcsController extends MonitorApsBaseController
     }
 
     /**
-     * GET /monitor-aps/cidadaos?ine=&profissional_id=&busca=&page=&per_page=
+     * GET /monitor-aps/cidadaos?ine=&profissional_id=&agente_cns=&busca=&page=&per_page=
      */
     public function index(Request $request): JsonResponse
     {
@@ -85,6 +85,7 @@ class CidadaoAcsController extends MonitorApsBaseController
             'ine'              => 'nullable|string',
             'profissional_id'  => 'nullable|integer',
             'agente'           => 'nullable|string|max:255',
+            'agente_cns'       => 'nullable|string|max:255',
             'condicao'         => 'nullable|string|in:gestante,has,dm,idoso,obito',
             'busca'            => 'nullable|string|min:3|max:100',
             'multi_domicilio'  => 'nullable|boolean',
@@ -99,6 +100,7 @@ class CidadaoAcsController extends MonitorApsBaseController
         $allowedInes    = $this->resolveAllowedInes($request);
         $profissionalId = $request->query('profissional_id');
         $agente         = $request->query('agente');
+        $agenteCns      = trim((string) $request->query('agente_cns', ''));
         $condicao       = $request->query('condicao');
         $busca          = $request->query('busca');
         $multiDomicilio = filter_var($request->query('multi_domicilio', false), FILTER_VALIDATE_BOOLEAN);
@@ -336,7 +338,10 @@ class CidadaoAcsController extends MonitorApsBaseController
                 $outerWhere   .= ' AND base.profissional_id = ?';
                 $outerParams[] = (int) $profissionalId;
             }
-            if ($agente) {
+            if ($agenteCns !== '') {
+                $outerWhere   .= ' AND TRIM(COALESCE(base.cns_agente::text, \'\')) = ?';
+                $outerParams[] = $agenteCns;
+            } elseif ($agente) {
                 $outerWhere   .= ' AND base.agente = ?';
                 $outerParams[] = $agente;
             }
@@ -509,11 +514,13 @@ class CidadaoAcsController extends MonitorApsBaseController
             $rows = $db->select("
                 SELECT
                     MIN(base.profissional_id) AS id,
+                    MIN(base.cns)             AS agente_cns,
                     base.nome                 AS nome
                 FROM (
                     SELECT
                         dp.co_seq_dim_profissional AS profissional_id,
                         dp.no_profissional         AS nome,
+                        dp.nu_cns                  AS cns,
                         de.nu_ine,
                         ROW_NUMBER() OVER (
                             PARTITION BY fci.co_fat_cidadao_pec

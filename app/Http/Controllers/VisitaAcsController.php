@@ -875,7 +875,7 @@ class VisitaAcsController extends MonitorApsBaseController
     // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Endpoints Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     /**
-     * GET /visitas?ano=X&mes=Y[&ine=Z&agente=W&page=N&per_page=N]
+     * GET /visitas?ano=X&mes=Y[&ine=Z&agente_cns=W&page=N&per_page=N]
      */
     public function index(Request $request): JsonResponse
     {
@@ -1082,7 +1082,7 @@ class VisitaAcsController extends MonitorApsBaseController
     }
 
     /**
-     * GET /visitas/lista?ano=X&mes=Y[&ine=Z&agente=W&desfecho=N&page=N&per_page=N]
+     * GET /visitas/lista?ano=X&mes=Y[&ine=Z&agente_cns=W&desfecho=N&page=N&per_page=N]
      * Lista paginada Ã¢â‚¬â€ aba Tabela do VisitasAcs.js.
      * Inclui instrumento e has_geo para exibir na tabela e habilitar o botÃƒÂ£o Ver.
      */
@@ -1439,7 +1439,7 @@ class VisitaAcsController extends MonitorApsBaseController
     }
 
     /**
-     * GET /visitas/mapa?ano=X&mes=Y[&ine=Z&agente=W]
+     * GET /visitas/mapa?ano=X&mes=Y[&ine=Z&agente_cns=W]
      * Pins georreferenciados Ã¢â‚¬â€ aba Mapa do VisitasAcs.js.
      * Inclui equipe_ine para coloraÃƒÂ§ÃƒÂ£o por equipe no modo "Todos".
      */
@@ -1915,7 +1915,7 @@ class VisitaAcsController extends MonitorApsBaseController
     }
 
     /**
-     * GET /visitas/evolucao?[ine=Z&agente=W&desfecho=N&has_geo=X&ano=YYYY]
+     * GET /visitas/evolucao?[ine=Z&agente_cns=W&desfecho=N&has_geo=X&ano=YYYY]
      * Sem ?ano: retorna 3 séries (ano atual e 2 anteriores).
      * Com ?ano=YYYY: retorna 1 série para o ano informado.
      */
