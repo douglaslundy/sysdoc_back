@@ -14,7 +14,7 @@ class KanbanPageSeeder extends Seeder
         $page = [
             'titulo' => 'Kanban Geral',
             'path' => '/kanban',
-            'icone' => 'columns',
+            'icone' => 'trello',
             'categoria' => 'Administração',
             'category_id' => $categoria?->id,
             'ordem' => 13,
