@@ -13,7 +13,7 @@ class DocumentTypeController extends Controller
     public function index(): JsonResponse
     {
         if (! $this->canViewTypes(request()->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         return response()->json(
@@ -27,7 +27,7 @@ class DocumentTypeController extends Controller
     public function store(Request $request): JsonResponse
     {
         if (! $this->canManageTypes($request->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $validated = $request->validate([
@@ -53,11 +53,11 @@ class DocumentTypeController extends Controller
     {
         $type = DocumentType::find($id);
         if (! $type) {
-            return response()->json(['message' => 'Tipo nao encontrado.'], 404);
+            return response()->json(['message' => 'Tipo não encontrado.'], 404);
         }
 
         if (! $this->canManageTypes($request->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $validated = $request->validate([
@@ -83,11 +83,11 @@ class DocumentTypeController extends Controller
     {
         $type = DocumentType::find($id);
         if (! $type) {
-            return response()->json(['message' => 'Tipo nao encontrado.'], 404);
+            return response()->json(['message' => 'Tipo não encontrado.'], 404);
         }
 
         if (! $this->canManageTypes(request()->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $type->delete();

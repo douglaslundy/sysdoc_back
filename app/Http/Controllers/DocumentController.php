@@ -29,7 +29,7 @@ class DocumentController extends Controller
     public function index(Request $request): JsonResponse
     {
         if (! $this->canViewModule($request->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $query = Document::query()
@@ -74,7 +74,7 @@ class DocumentController extends Controller
         ])->find($id);
 
         if (! $document || ! $this->canAccess($document, $request->user())) {
-            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+            return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
         return response()->json($document);
@@ -83,7 +83,7 @@ class DocumentController extends Controller
     public function store(Request $request): JsonResponse
     {
         if (! $this->canManageDocuments($request->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $validated = $request->validate([
@@ -121,7 +121,7 @@ class DocumentController extends Controller
     {
         $document = Document::find($id);
         if (! $document || ! $this->canAccess($document, $request->user())) {
-            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+            return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
         $validated = $request->validate([
@@ -159,7 +159,7 @@ class DocumentController extends Controller
     {
         $document = Document::find($id);
         if (! $document || ! $this->canAccess($document, $request->user())) {
-            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+            return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
         $validated = $request->validate([
@@ -183,7 +183,7 @@ class DocumentController extends Controller
     {
         $document = Document::with('versions')->find($id);
         if (! $document || ! $this->canAccess($document, $request->user())) {
-            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+            return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
         $signers = [];
@@ -226,7 +226,7 @@ class DocumentController extends Controller
     public function approvals(Request $request): JsonResponse
     {
         if (! $this->canViewApprovals($request->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $query = DocumentApproval::query()
@@ -245,7 +245,7 @@ class DocumentController extends Controller
     {
         $document = Document::find($id);
         if (! $document || ! $this->canAccess($document, $request->user())) {
-            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+            return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
         return response()->json(
@@ -264,7 +264,7 @@ class DocumentController extends Controller
 
         $contents = $this->decryptVersion($version);
         if ($contents === null) {
-            return response()->json(['message' => 'Arquivo nao encontrado no armazenamento.'], 404);
+            return response()->json(['message' => 'Arquivo não encontrado no armazenamento.'], 404);
         }
 
         AuditService::record('DOWNLOAD', $document, null, [

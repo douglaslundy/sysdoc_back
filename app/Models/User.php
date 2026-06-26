@@ -16,7 +16,7 @@ class User extends Authenticatable implements JWTSubject
 
     public $timestamps = false;
 
-    protected $fillable = ['profile', 'chat_access_override', 'name', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date'];
+    protected $fillable = ['profile', 'chat_access_override', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date'];
 
     protected $hidden = ['password'];
 
@@ -91,5 +91,19 @@ class User extends Authenticatable implements JWTSubject
         };
 
         return $column ? (bool) $this->accessProfile()->value($column) : false;
+    }
+
+    public function chatDisplayName(): string
+    {
+        $preferred = trim((string) ($this->preferred_name ?? ''));
+
+        return $preferred !== '' ? $preferred : (string) $this->name;
+    }
+
+    public function whatsappPhoneNumber(): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) ($this->phone ?? ''));
+
+        return strlen((string) $digits) >= 10 ? $digits : null;
     }
 }

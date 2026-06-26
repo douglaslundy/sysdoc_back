@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\NotificationChannelConfig;
+use App\Services\WhatsappEvolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class WhatsappConfigController extends Controller
 {
+    public function __construct(private readonly WhatsappEvolutionService $whatsapp)
+    {
+    }
+
     public function show(): JsonResponse
     {
         return response()->json($this->payload($this->currentConfig()));
@@ -179,19 +184,14 @@ class WhatsappConfigController extends Controller
             return response()->json(['message' => 'Informe um número válido com DDD.'], 422);
         }
 
-        $message = 'Mensagem de teste do Sysdoc.';
-        $response = $this->evolutionRequest($config)->post("/message/sendText/{$instance}", [
-            'number' => $number,
-            'text' => $message,
-            'textMessage' => ['text' => $message],
-        ]);
+        $result = $this->whatsapp->sendTextToNumber($number, 'Mensagem de teste do Sysdoc.');
 
-        if ($response->successful()) {
+        if ($result['ok']) {
             return response()->json(['ok' => true]);
         }
 
         return response()->json([
-            'message' => data_get($response->json(), 'message') ?? 'Erro ao enviar a mensagem de teste.',
+            'message' => $result['error'] ?? 'Erro ao enviar a mensagem de teste.',
         ], 422);
     }
 

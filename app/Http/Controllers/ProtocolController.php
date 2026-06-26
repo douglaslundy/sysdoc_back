@@ -15,6 +15,7 @@ use App\Models\ProtocolUserUnit;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
+use App\Services\WhatsappEvolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,10 @@ class ProtocolController extends Controller
 {
     private const VISUALIZATION_DEDUPLICATION_MINUTES = 30;
 
-    public function __construct(private readonly ProtocolKanbanService $kanbanService)
+    public function __construct(
+        private readonly ProtocolKanbanService $kanbanService,
+        private readonly WhatsappEvolutionService $whatsapp
+    )
     {
     }
 
@@ -116,7 +120,7 @@ class ProtocolController extends Controller
         ])->find($id);
 
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
-            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
         if ($protocol->novo) {
@@ -212,7 +216,7 @@ class ProtocolController extends Controller
             'prioridade' => 'nullable|string|max:20',
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-            'destino_user_id' => 'required|integer|exists:users,id',
+            'destino_user_id' => 'nullable|integer|exists:users,id',
             'prazo_atendimento' => 'nullable|date',
             'kanban' => 'nullable|array',
             'kanban.ativar' => 'nullable|boolean',
@@ -229,12 +233,36 @@ class ProtocolController extends Controller
         $config = ProtocolConfig::current();
         $user = $request->user();
         $linkedOrigin = $this->linkedOriginUnit($user);
+        $destinationUser = ! empty($validated['destino_user_id'])
+            ? User::query()->where('active', true)->find($validated['destino_user_id'])
+            : null;
+        $destinationUnit = $this->resolveDestinationUnit($validated, $destinationUser);
 
         if (! $linkedOrigin && empty($validated['origem_unit_id'])) {
             return response()->json(['message' => 'Selecione a origem do protocolo.'], 422);
         }
 
-        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin) {
+        if (! $destinationUnit) {
+            return response()->json(['message' => 'Selecione a secretaria de destino do protocolo.'], 422);
+        }
+
+        if ($destinationUnit->tipo !== 'secretaria') {
+            return response()->json(['message' => 'O destino do protocolo deve ser uma secretaria.'], 422);
+        }
+
+        if (! $destinationUnit->ativo) {
+            return response()->json(['message' => 'Selecione uma secretaria de destino ativa.'], 422);
+        }
+
+        if (! empty($validated['destino_user_id']) && ! $destinationUser) {
+            return response()->json(['message' => 'Selecione um usuário de destino ativo.'], 422);
+        }
+
+        if ($destinationUser && $this->linkedOriginUnit($destinationUser)?->id !== $destinationUnit->id) {
+            return response()->json(['message' => 'O usuário de destino deve pertencer à secretaria selecionada.'], 422);
+        }
+
+        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser) {
             $protocol = Protocol::create([
                 'numero' => Protocol::gerarNumero(),
                 'assunto' => $validated['assunto'],
@@ -246,8 +274,8 @@ class ProtocolController extends Controller
                 'solicitante_nome' => $user?->name,
                 'solicitante_documento' => $user?->cpf,
                 'origem_unit_id' => $linkedOrigin?->id ?? $validated['origem_unit_id'],
-                'destino_unit_id' => $validated['destino_unit_id'] ?? null,
-                'responsavel_atual_id' => $validated['destino_user_id'],
+                'destino_unit_id' => $destinationUnit->id,
+                'responsavel_atual_id' => $destinationUser?->id,
                 'criado_por_id' => $request->user()?->id,
                 'prazo_atendimento' => $validated['prazo_atendimento'] ?? now()->addDays((int) $config->default_due_days)->toDateString(),
                 'novo' => true,
@@ -265,7 +293,7 @@ class ProtocolController extends Controller
                 ...($validated['kanban'] ?? []),
                 'ativar' => true,
                 'status' => $validated['kanban']['status'] ?? 'novo',
-                'responsavel_id' => $validated['kanban']['responsavel_id'] ?? $validated['destino_user_id'],
+                'responsavel_id' => $validated['kanban']['responsavel_id'] ?? $destinationUser?->id,
             ], $request->user());
 
             return $protocol->load(['origemUnit', 'destinoUnit', 'responsavelAtual', 'criadoPor', 'kanbanTask.createdBy', 'kanbanTask.updatedBy', 'kanbanTask.responsavel']);
@@ -278,7 +306,7 @@ class ProtocolController extends Controller
     {
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
-            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
         $validated = $request->validate([
@@ -389,7 +417,7 @@ class ProtocolController extends Controller
     {
         $config = ProtocolConfig::current();
         if (! $config->allow_reopen) {
-            return response()->json(['message' => 'Reabertura desativada nas configuraÃ§Ãµes.'], 422);
+            return response()->json(['message' => 'Reabertura desativada nas configurações.'], 422);
         }
 
         return $this->applyAction($request, $id, 'reaberto', function (Protocol $protocol) use ($request) {
@@ -411,7 +439,7 @@ class ProtocolController extends Controller
 
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
-            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
         $file = $validated['arquivo'];
@@ -438,12 +466,12 @@ class ProtocolController extends Controller
     {
         $attachmentModel = ProtocolAttachment::with('protocol')->find($attachment);
         if (! $attachmentModel || ! $attachmentModel->ativo || ! $attachmentModel->protocol || ! $this->canAccess($attachmentModel->protocol, $request->user())) {
-            return response()->json(['message' => 'Anexo nÃ£o encontrado.'], 404);
+            return response()->json(['message' => 'Anexo não encontrado.'], 404);
         }
 
         $disk = Storage::disk('public');
         if (! $disk->exists($attachmentModel->caminho)) {
-            return response()->json(['message' => 'Arquivo do anexo nÃ£o encontrado.'], 404);
+            return response()->json(['message' => 'Arquivo do anexo não encontrado.'], 404);
         }
 
         return response()->download(
@@ -598,6 +626,19 @@ class ProtocolController extends Controller
         return $links->first()?->unit;
     }
 
+    private function resolveDestinationUnit(array $validated, ?User $destinationUser): ?ProtocolOrganizationalUnit
+    {
+        if (! empty($validated['destino_unit_id'])) {
+            return ProtocolOrganizationalUnit::query()->find($validated['destino_unit_id']);
+        }
+
+        if ($destinationUser) {
+            return $this->linkedOriginUnit($destinationUser);
+        }
+
+        return null;
+    }
+
     private function isAdmin(?User $user): bool
     {
         return (string) ($user?->profile ?? '') === 'admin';
@@ -620,7 +661,7 @@ class ProtocolController extends Controller
     {
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
-            return response()->json(['message' => 'Protocolo nÃ£o encontrado.'], 404);
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
         DB::transaction(function () use ($request, $protocol, $acao, $callback) {
@@ -670,6 +711,26 @@ class ProtocolController extends Controller
                 'mensagem' => "Protocolo {$protocol->numero} foi {$acao}.",
                 'status_envio' => 'pendente',
                 'dados' => $dados,
+            ]);
+        }
+
+        if (ProtocolConfig::current()->notify_whatsapp && $protocol->responsavelAtual) {
+            $notification = ProtocolNotification::create([
+                'protocol_id' => $protocol->id,
+                'user_id' => $protocol->responsavel_atual_id,
+                'canal' => 'whatsapp',
+                'titulo' => 'Protocolo atualizado',
+                'mensagem' => "Protocolo {$protocol->numero} foi {$acao}.",
+                'status_envio' => 'pendente',
+                'dados' => $dados,
+            ]);
+
+            $result = $this->whatsapp->sendTextToUser($protocol->responsavelAtual, $notification->mensagem);
+
+            $notification->update([
+                'status_envio' => $result['ok'] ? 'enviado' : 'erro',
+                'enviada_em' => $result['ok'] ? now() : null,
+                'erro' => $result['ok'] ? null : ($result['error'] ?? 'Erro ao enviar mensagem pelo WhatsApp.'),
             ]);
         }
     }

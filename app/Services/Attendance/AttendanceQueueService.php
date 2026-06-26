@@ -65,7 +65,7 @@ class AttendanceQueueService
             $ticket = AttendanceTicket::query()->lockForUpdate()->findOrFail($ticketId);
             $this->statusService->assertCanCall($ticket->status);
             if ((int) $ticket->room_id !== $room->id) {
-                throw new DomainException('Senha nao pertence a sala selecionada.');
+                throw new DomainException('Senha não pertence à sala selecionada.');
             }
 
             return $this->callLockedTicket($ticket, $user->id, $room->id);

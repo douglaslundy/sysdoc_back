@@ -25,7 +25,7 @@ class PhoneValidation implements Rule
      */
     public function passes($attribute, $value)
     {
-        return strlen($value) <= 20;
+        return strlen((string) $value) <= 20;
     }
 
     /**
@@ -35,6 +35,6 @@ class PhoneValidation implements Rule
      */
     public function message()
     {
-        return 'this field don´t must have at least 20 words.';
+        return 'O campo telefone não pode ter mais de 20 caracteres.';
     }
 }

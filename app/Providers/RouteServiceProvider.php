@@ -58,19 +58,6 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            if ($request->is('api/chat/*')) {
-                $limits = ChatRealtimeConfig::rateLimits();
-                $globalLimit = $limits['rate_limit_global'];
-
-                if ($globalLimit === 0) {
-                    return Limit::perMinutes($limits['rate_limit_decay_minutes'], 5000)
-                        ->by(optional($request->user())->id ?: $request->ip());
-                }
-
-                return Limit::perMinutes($limits['rate_limit_decay_minutes'], $globalLimit)
-                    ->by(optional($request->user())->id ?: $request->ip());
-            }
-
             return Limit::perMinute(120)->by(optional($request->user())->id ?: $request->ip());
         });
 
@@ -79,7 +66,12 @@ class RouteServiceProvider extends ServiceProvider
             $limit = $limits['rate_limit_sync'] === 0 ? 5000 : $limits['rate_limit_sync'];
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip());
+                ->by(optional($request->user())->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Muitas sincronizações do chat em sequência. Aguarde um instante e tente novamente.',
+                    ], 429);
+                });
         });
 
         RateLimiter::for('chat-message', function (Request $request) {
@@ -87,7 +79,12 @@ class RouteServiceProvider extends ServiceProvider
             $limit = $limits['rate_limit_messages'] === 0 ? 5000 : $limits['rate_limit_messages'];
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip());
+                ->by(optional($request->user())->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Limite de envio de mensagens atingido. Aguarde um instante para enviar novamente.',
+                    ], 429);
+                });
         });
 
         RateLimiter::for('chat-typing', function (Request $request) {
@@ -95,7 +92,12 @@ class RouteServiceProvider extends ServiceProvider
             $limit = $limits['rate_limit_typing'] === 0 ? 5000 : $limits['rate_limit_typing'];
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip());
+                ->by(optional($request->user())->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Muitos eventos de digitação em sequência. Aguarde um instante e tente novamente.',
+                    ], 429);
+                });
         });
 
         RateLimiter::for('chat-presence', function (Request $request) {
@@ -103,7 +105,12 @@ class RouteServiceProvider extends ServiceProvider
             $limit = $limits['rate_limit_presence'] === 0 ? 5000 : $limits['rate_limit_presence'];
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip());
+                ->by(optional($request->user())->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Muitas atualizações de presença em sequência. Aguarde um instante e tente novamente.',
+                    ], 429);
+                });
         });
 
         RateLimiter::for('forgot-password', function (Request $request) {

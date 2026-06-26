@@ -9,6 +9,7 @@ use App\Models\Protocol;
 use App\Models\ProtocolAttachment;
 use App\Models\ProtocolConfig;
 use App\Models\ProtocolMovement;
+use App\Models\ProtocolOrganizationalUnit;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
@@ -212,7 +213,8 @@ class LetterController extends Controller
     public function createProtocol(Request $request, Letter $letter): JsonResponse
     {
         $validated = $request->validate([
-            'destino_user_id' => ['required', 'integer', 'exists:users,id'],
+            'destino_unit_id' => ['required', 'integer', 'exists:protocol_organizational_units,id'],
+            'destino_user_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
         $user = $request->user();
@@ -232,10 +234,9 @@ class LetterController extends Controller
         }
 
         $pdfAttachment = $letter->attachments()
-            ->where('mime_type', 'application/pdf')
             ->latest('id')
             ->get()
-            ->first(fn (LetterAttachment $attachment) => Storage::disk($attachment->disk)->exists($attachment->path));
+            ->first(fn (LetterAttachment $attachment) => $this->isPdfAttachment($attachment));
 
         if (! $pdfAttachment) {
             return response()->json([
@@ -374,6 +375,221 @@ class LetterController extends Controller
                 'open_protocol_number' => $protocol->numero,
             ],
         ], 201);
+    }
+
+    public function createProtocolV2(Request $request, Letter $letter): JsonResponse
+    {
+        $validated = $request->validate([
+            'destino_unit_id' => ['required', 'integer', 'exists:protocol_organizational_units,id'],
+            'destino_user_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        $user = $request->user();
+        $destinationUnit = ProtocolOrganizationalUnit::query()->find($validated['destino_unit_id']);
+        $destinationUser = ! empty($validated['destino_user_id'])
+            ? User::query()->whereKey($validated['destino_user_id'])->where('active', true)->first()
+            : null;
+
+        if (! $destinationUnit || $destinationUnit->tipo !== 'secretaria' || ! $destinationUnit->ativo) {
+            return response()->json(['message' => 'Selecione uma secretaria de destino ativa.'], 422);
+        }
+
+        if (! empty($validated['destino_user_id']) && ! $destinationUser) {
+            return response()->json(['message' => 'Selecione um usuário de destino ativo.'], 422);
+        }
+
+        if ($destinationUser && $this->linkedSecretariatUnit($destinationUser)?->id !== $destinationUnit->id) {
+            return response()->json(['message' => 'O usuário de destino deve pertencer à secretaria selecionada.'], 422);
+        }
+
+        if ($this->hasOpenProtocol($letter->id)) {
+            return response()->json([
+                'message' => 'Este ofício já possui um protocolo aberto vinculado.',
+            ], 422);
+        }
+
+        $pdfAttachment = $letter->attachments()
+            ->where('mime_type', 'application/pdf')
+            ->latest('id')
+            ->get()
+            ->first(fn (LetterAttachment $attachment) => Storage::disk($attachment->disk)->exists($attachment->path));
+
+        if (! $pdfAttachment) {
+            return response()->json([
+                'message' => 'Anexe um PDF válido ao ofício antes de criar o protocolo.',
+            ], 422);
+        }
+
+        $originUnit = $this->linkedSecretariatUnit($user);
+        if (! $originUnit) {
+            return response()->json([
+                'message' => 'Seu usuário não possui secretaria ou unidade vinculada para criar o protocolo.',
+            ], 422);
+        }
+
+        $config = ProtocolConfig::current();
+        $storedPath = null;
+
+        try {
+            $protocol = DB::transaction(function () use (
+                $letter,
+                $user,
+                $destinationUser,
+                $originUnit,
+                $destinationUnit,
+                $config,
+                $pdfAttachment,
+                &$storedPath
+            ) {
+                $protocol = Protocol::create([
+                    'numero' => Protocol::gerarNumero(),
+                    'assunto' => 'Ofício '.$letter->number.' - '.$letter->subject_matter,
+                    'descricao' => $letter->summary ?: $letter->subject_matter,
+                    'tipo' => 'oficio',
+                    'status' => 'novo',
+                    'prioridade' => $config->default_priority ?? 'normal',
+                    'solicitante_tipo' => 'interno',
+                    'solicitante_nome' => $user?->name,
+                    'solicitante_documento' => $user?->cpf,
+                    'origem_unit_id' => $originUnit->id,
+                    'destino_unit_id' => $destinationUnit->id,
+                    'responsavel_atual_id' => $destinationUser?->id,
+                    'criado_por_id' => $user?->id,
+                    'prazo_atendimento' => now()->addDays((int) $config->default_due_days)->toDateString(),
+                    'novo' => true,
+                    'vencido' => false,
+                ]);
+
+                ProtocolMovement::create([
+                    'protocol_id' => $protocol->id,
+                    'to_unit_id' => $destinationUnit->id,
+                    'to_user_id' => $destinationUser?->id,
+                    'acao' => 'criado_por_oficio',
+                    'status_novo' => 'novo',
+                    'observacao' => 'Protocolo criado a partir do Ofício '.$letter->number.'.',
+                    'dados' => [
+                        'letter_id' => $letter->id,
+                        'letter_number' => $letter->number,
+                        'destino_unit_id' => $destinationUnit->id,
+                        'destino_user_id' => $destinationUser?->id,
+                    ],
+                    'user_id' => $user?->id,
+                ]);
+
+                $filename = basename(str_replace('\\', '/', $pdfAttachment->original_name));
+                $storedPath = 'protocolos/'.$protocol->id.'/'.$filename;
+                Storage::disk('public')->put(
+                    $storedPath,
+                    Storage::disk($pdfAttachment->disk)->get($pdfAttachment->path)
+                );
+
+                $attachment = ProtocolAttachment::create([
+                    'protocol_id' => $protocol->id,
+                    'user_id' => $user?->id,
+                    'nome_original' => $filename,
+                    'caminho' => $storedPath,
+                    'mime_type' => 'application/pdf',
+                    'tamanho_bytes' => Storage::disk('public')->size($storedPath),
+                    'descricao' => 'Ofício que originou o protocolo.',
+                    'ativo' => true,
+                ]);
+
+                ProtocolMovement::create([
+                    'protocol_id' => $protocol->id,
+                    'acao' => 'anexo',
+                    'status_novo' => 'novo',
+                    'observacao' => 'PDF do ofício anexado automaticamente.',
+                    'dados' => ['attachment_id' => $attachment->id, 'letter_id' => $letter->id],
+                    'user_id' => $user?->id,
+                ]);
+
+                $this->kanbanService->sync($protocol, [
+                    'ativar' => true,
+                    'status' => 'novo',
+                    'responsavel_id' => $destinationUser?->id,
+                ], $user);
+
+                AuditService::record('CREATE_PROTOCOL_FROM_LETTER', $protocol, null, [
+                    'letter_id' => $letter->id,
+                    'destination_unit_id' => $destinationUnit->id,
+                    'destination_user_id' => $destinationUser?->id,
+                    'attachment_id' => $attachment->id,
+                    'letter_attachment_id' => $pdfAttachment->id,
+                ], $user);
+
+                return $protocol->load([
+                    'origemUnit:id,nome',
+                    'destinoUnit:id,nome',
+                    'responsavelAtual:id,name',
+                    'attachments',
+                    'kanbanTask',
+                ]);
+            });
+        } catch (\Throwable $exception) {
+            if ($storedPath && Storage::disk('public')->exists($storedPath)) {
+                Storage::disk('public')->delete($storedPath);
+            }
+
+            report($exception);
+
+            return response()->json([
+                'message' => 'Não foi possível criar o protocolo a partir do ofício.',
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Protocolo criado com sucesso.',
+            'protocol' => $protocol,
+            'letter' => [
+                'id' => $letter->id,
+                'has_open_protocol' => true,
+                'open_protocol_id' => $protocol->id,
+                'open_protocol_number' => $protocol->numero,
+            ],
+        ], 201);
+    }
+
+    private function linkedSecretariatUnit(?User $user): ?ProtocolOrganizationalUnit
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $links = $user->protocolUnits()
+            ->where('ativo', true)
+            ->with('unit.parent')
+            ->orderBy('id')
+            ->get();
+
+        $directSecretaria = $links->first(fn ($link) => $link->unit?->tipo === 'secretaria');
+        if ($directSecretaria?->unit) {
+            return $directSecretaria->unit;
+        }
+
+        foreach ($links as $link) {
+            $unit = $link->unit;
+            while ($unit?->parent_id) {
+                $unit->loadMissing('parent');
+                $unit = $unit->parent;
+                if ($unit?->tipo === 'secretaria') {
+                    return $unit;
+                }
+            }
+        }
+
+        return $links->first()?->unit;
+    }
+
+    private function isPdfAttachment(LetterAttachment $attachment): bool
+    {
+        $mimeType = strtolower((string) ($attachment->mime_type ?? ''));
+        $originalName = strtolower((string) ($attachment->original_name ?? ''));
+
+        if (! Storage::disk($attachment->disk)->exists($attachment->path)) {
+            return false;
+        }
+
+        return str_contains($mimeType, 'pdf') || str_ends_with($originalName, '.pdf');
     }
 
     private function hasOpenProtocol(int $letterId): bool

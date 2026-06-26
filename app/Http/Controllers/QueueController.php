@@ -33,13 +33,13 @@ class QueueController extends Controller
     public function show(Request $request, $id)
     {
         if (! $this->canAccessQueue($request)) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $queue = Queue::with(['client', 'user', 'speciality'])->withCount('attachments')->find($id);
 
         if (! $queue) {
-            return response()->json(['error' => 'Registro nao encontrado'], 404);
+            return response()->json(['error' => 'Registro não encontrado'], 404);
         }
 
         AuditService::record('VIEW', $queue, null, [
@@ -104,7 +104,7 @@ class QueueController extends Controller
         $queue = Queue::find($id);
 
         if (! $queue) {
-            return response()->json(['message' => 'Registro nao encontrado'], 404);
+            return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
         $old = $queue->toArray();
@@ -127,13 +127,13 @@ class QueueController extends Controller
     public function destroy(Request $request, $id)
     {
         if (! $this->canAccessQueue($request)) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $queue = Queue::find($id);
 
         if (! $queue) {
-            return response()->json(['message' => 'Registro nao encontrado'], 404);
+            return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
         AuditService::record('DELETE', $queue, $queue->toArray(), null);
@@ -149,7 +149,7 @@ class QueueController extends Controller
             ->first();
 
         if (! $queue) {
-            return response()->json(['message' => 'Registro nao encontrado'], 404);
+            return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
         $queue->position = $this->calculateQueuePosition($queue);
@@ -202,7 +202,7 @@ class QueueController extends Controller
                 ]),
             ]);
 
-        return response()->json(['message' => 'Localizacao salva com sucesso']);
+        return response()->json(['message' => 'Localização salva com sucesso']);
     }
 
     private function listQuery(array $filters): Builder

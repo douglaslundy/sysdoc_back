@@ -45,11 +45,11 @@ class SelectMedicineItemsRequest extends BaseApiFormRequest
     {
         return [
             'search.string' => 'O termo de busca deve ser um texto.',
-            'search.max' => 'O termo de busca deve ter no mÃ¡ximo 120 caracteres.',
+            'search.max' => 'O termo de busca deve ter no máximo 120 caracteres.',
             'active.boolean' => 'O filtro de ativo deve ser verdadeiro ou falso.',
-            'limit.integer' => 'O limite deve ser um nÃºmero inteiro.',
-            'limit.min' => 'O limite mÃ­nimo Ã© 1.',
-            'limit.max' => 'O limite mÃ¡ximo Ã© 500.',
+            'limit.integer' => 'O limite deve ser um número inteiro.',
+            'limit.min' => 'O limite mínimo é 1.',
+            'limit.max' => 'O limite máximo é 500.',
         ];
     }
 }

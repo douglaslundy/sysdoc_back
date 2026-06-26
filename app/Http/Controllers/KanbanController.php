@@ -67,7 +67,7 @@ class KanbanController extends Controller
     {
         $task = KanbanTask::with(['protocol', 'createdBy', 'updatedBy', 'responsavel'])->find($id);
         if (! $task) {
-            return response()->json(['message' => 'Item do kanban nao encontrado.'], 404);
+            return response()->json(['message' => 'Item do kanban não encontrado.'], 404);
         }
 
         $validated = $request->validate([
@@ -98,7 +98,7 @@ class KanbanController extends Controller
     {
         $task = KanbanTask::find($id);
         if (! $task) {
-            return response()->json(['message' => 'Item do kanban nao encontrado.'], 404);
+            return response()->json(['message' => 'Item do kanban não encontrado.'], 404);
         }
 
         $task->delete();

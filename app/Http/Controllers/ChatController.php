@@ -40,7 +40,7 @@ class ChatController extends Controller
             ->where('active', true)
             ->whereKeyNot($currentUserId)
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'profile'])
+            ->get(['id', 'name', 'preferred_name', 'email', 'profile'])
             ->filter(fn (User $user) => $user->canUseChat())
             ->map(function (User $user) use ($presences) {
                 $presence = $presences->get($user->id);
@@ -49,6 +49,7 @@ class ChatController extends Controller
 
                 return [
                     ...$user->toArray(),
+                    'name' => $user->chatDisplayName(),
                     'presence' => $online ? ($presence->status ?: 'online') : 'offline',
                     'is_online' => $online,
                     'last_seen_at' => $presence?->last_seen_at?->toISOString(),
@@ -67,8 +68,8 @@ class ChatController extends Controller
                 ->where('users.id', $userId)
                 ->whereNull('chat_conversation_participants.deleted_at'))
             ->with([
-                'participants:id,name,email',
-                'messages' => fn ($query) => $query->with('attachments')->latest()->limit(1),
+                'participants:id,name,preferred_name,email',
+                'messages' => fn ($query) => $query->with(['attachments', 'sender:id,name,preferred_name,email'])->latest()->limit(1),
             ])
             ->orderByDesc('last_message_at')
             ->get()
@@ -122,7 +123,7 @@ class ChatController extends Controller
                 ->update(['deleted_at' => null, 'updated_at' => now()]);
         }
 
-        $conversation->load('participants:id,name,email');
+        $conversation->load('participants:id,name,preferred_name,email');
         return response()->json($this->conversationPayload($conversation, $userId), 201);
     }
 
@@ -132,7 +133,7 @@ class ChatController extends Controller
 
         $perPage = max(10, min(100, (int) $request->input('per_page', 30)));
         $query = $conversation->messages()
-            ->with(['sender:id,name', 'attachments'])
+            ->with(['sender:id,name,preferred_name,email', 'attachments'])
             ->latest('id');
 
         if ($request->filled('search')) {
@@ -150,7 +151,7 @@ class ChatController extends Controller
         $userId = (int) $request->user()->id;
         $this->authorizeParticipant($conversation, $userId);
 
-        $maxKb = (int) config('chat.max_attachment_kb');
+        $maxKb = $this->effectiveMaxAttachmentKb();
         $data = $request->validate([
             'body' => ['nullable', 'string', 'max:'.config('chat.max_message_length')],
             'file' => [
@@ -160,6 +161,11 @@ class ChatController extends Controller
                 'mimes:'.implode(',', config('chat.allowed_extensions')),
                 'mimetypes:'.implode(',', config('chat.allowed_mimes')),
             ],
+        ], [
+            'file.uploaded' => 'O arquivo excede o limite permitido pelo servidor ('.$this->formatAttachmentLimitLabel($maxKb).').',
+            'file.max' => 'O arquivo excede o limite permitido de '.$this->formatAttachmentLimitLabel($maxKb).'.',
+            'file.mimes' => 'Envie apenas arquivos JPG, JPEG, PNG, WEBP, TXT ou PDF.',
+            'file.mimetypes' => 'Envie apenas arquivos JPG, JPEG, PNG, WEBP, TXT ou PDF.',
         ]);
 
         $body = trim(strip_tags((string) ($data['body'] ?? '')));
@@ -205,7 +211,7 @@ class ChatController extends Controller
             return $message;
         });
 
-        $message->load(['sender:id,name', 'attachments']);
+        $message->load(['sender:id,name,preferred_name,email', 'attachments']);
         $payload = $this->messagePayload($message);
         $recipientIds = $this->recipientIds($conversation, $userId);
 
@@ -378,7 +384,7 @@ class ChatController extends Controller
             $this->realtime->publish($recipientId, $data['typing'] ? 'typing.started' : 'typing.stopped', [
                 'conversation_id' => $conversation->id,
                 'user_id' => $userId,
-                'name' => $request->user()->name,
+                'name' => $request->user()->chatDisplayName(),
             ]);
         }
 
@@ -558,7 +564,7 @@ class ChatController extends Controller
             'type' => $conversation->type,
             'created_at' => $conversation->created_at?->toISOString(),
             'last_message_at' => $conversation->last_message_at?->toISOString(),
-            'other_user' => $other ? ['id' => $other->id, 'name' => $other->name, 'email' => $other->email] : null,
+            'other_user' => $other ? ['id' => $other->id, 'name' => $other->chatDisplayName(), 'email' => $other->email] : null,
             'last_message' => $lastMessage ? $this->messagePayload($lastMessage) : null,
             'unread_count' => $unread,
         ];
@@ -572,7 +578,13 @@ class ChatController extends Controller
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
             'sender_id' => $message->sender_id,
-            'sender' => $message->relationLoaded('sender') ? $message->sender : null,
+            'sender' => $message->relationLoaded('sender') && $message->sender
+                ? [
+                    'id' => $message->sender->id,
+                    'name' => $message->sender->chatDisplayName(),
+                    'email' => $message->sender->email,
+                ]
+                : null,
             'body' => $deleted ? null : $message->body,
             'display_body' => $deleted ? 'Mensagem apagada' : $message->body,
             'message_type' => $message->message_type,
@@ -606,6 +618,41 @@ class ChatController extends Controller
             return 'image';
         }
         return $extension === 'pdf' ? 'pdf' : 'txt';
+    }
+
+    private function effectiveMaxAttachmentKb(): int
+    {
+        $configuredKb = max(1, (int) config('chat.max_attachment_kb', 10240));
+        $uploadKb = $this->iniSizeToKb(ini_get('upload_max_filesize'));
+        $postKb = $this->iniSizeToKb(ini_get('post_max_size'));
+        $limits = array_filter([$configuredKb, $uploadKb, $postKb], fn ($value) => (int) $value > 0);
+
+        return (int) (empty($limits) ? $configuredKb : min($limits));
+    }
+
+    private function iniSizeToKb(string|false|null $value): int
+    {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($raw, -1));
+        $number = (float) $raw;
+
+        return match ($unit) {
+            'g' => (int) round($number * 1024 * 1024),
+            'm' => (int) round($number * 1024),
+            'k' => (int) round($number),
+            default => (int) round($number / 1024),
+        };
+    }
+
+    private function formatAttachmentLimitLabel(int $maxKb): string
+    {
+        return $maxKb >= 1024
+            ? number_format($maxKb / 1024, 0, ',', '.').' MB'
+            : number_format($maxKb, 0, ',', '.').' KB';
     }
 
     private function safeFilename(string $filename): string

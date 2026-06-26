@@ -27,7 +27,7 @@ class PasswordResetController extends Controller
         // Resposta generica para nao revelar se email existe
         if (! $user) {
             return response()->json([
-                'message' => 'Se o e-mail estiver cadastrado, voce recebera o link de redefinicao.',
+                'message' => 'Se o e-mail estiver cadastrado, você receberá o link de redefinição.',
             ]);
         }
 
@@ -50,18 +50,18 @@ class PasswordResetController extends Controller
                     ->subject('Redefinicao de Senha - SysDoc');
             });
         } catch (Throwable $e) {
-            Log::error('Falha ao enviar e-mail de redefinicao de senha', [
+            Log::error('Falha ao enviar e-mail de redefinição de senha', [
                 'email' => $user->email,
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Nao foi possivel enviar o e-mail de redefinicao neste momento. Tente novamente em instantes.',
+                'message' => 'Não foi possível enviar o e-mail de redefinição neste momento. Tente novamente em instantes.',
             ], 503);
         }
 
         return response()->json([
-            'message' => 'Se o e-mail estiver cadastrado, voce recebera o link de redefinicao.',
+            'message' => 'Se o e-mail estiver cadastrado, você receberá o link de redefinição.',
         ]);
     }
 
@@ -74,7 +74,7 @@ class PasswordResetController extends Controller
         ], [
             'email.required' => 'O e-mail e obrigatorio.',
             'email.email' => 'Informe um e-mail valido.',
-            'token.required' => 'O token de redefinicao e obrigatorio.',
+            'token.required' => 'O token de redefinição é obrigatório.',
             'password.required' => 'A nova senha e obrigatoria.',
             'password.min' => 'A nova senha deve ter no minimo 8 caracteres.',
             'password.confirmed' => 'A confirmacao da nova senha nao confere.',
@@ -101,7 +101,7 @@ class PasswordResetController extends Controller
 
         $user = User::where('email', $request->email)->where('active', true)->first();
         if (! $user) {
-            return response()->json(['message' => 'Usuario nao encontrado.'], 404);
+            return response()->json(['message' => 'Usuário não encontrado.'], 404);
         }
 
         $user->update(['password' => Hash::make($request->password)]);

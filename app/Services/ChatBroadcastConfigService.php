@@ -32,9 +32,24 @@ class ChatBroadcastConfigService
     public function publicPayload(?ChatRealtimeConfig $settings = null): array
     {
         $settings ??= $this->currentOrFallback();
+        $maxAttachmentKb = $this->effectiveMaxAttachmentKb();
+        $maxAttachmentBytes = $maxAttachmentKb * 1024;
+        $allowedExtensions = array_values((array) config('chat.allowed_extensions', []));
 
         if (! $settings || ! $settings->active || ! $settings->app_key) {
-            return ['active' => false, 'engine' => null];
+            return [
+                'active' => false,
+                'engine' => $settings?->engine,
+                'auto_open_on_message' => ChatRealtimeConfig::supportsBehaviorFlags()
+                    ? (bool) ($settings?->auto_open_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'])
+                    : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'],
+                'play_sound_on_message' => ChatRealtimeConfig::supportsBehaviorFlags()
+                    ? (bool) ($settings?->play_sound_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'])
+                    : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'],
+                'max_attachment_kb' => $maxAttachmentKb,
+                'max_attachment_bytes' => $maxAttachmentBytes,
+                'allowed_extensions' => $allowedExtensions,
+            ];
         }
 
         return [
@@ -46,6 +61,15 @@ class ChatBroadcastConfigService
             'port' => $settings->engine === 'soketi' ? $settings->port : null,
             'scheme' => $settings->scheme ?: 'https',
             'use_tls' => (bool) $settings->use_tls,
+            'auto_open_on_message' => ChatRealtimeConfig::supportsBehaviorFlags()
+                ? (bool) ($settings->auto_open_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'])
+                : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'],
+            'play_sound_on_message' => ChatRealtimeConfig::supportsBehaviorFlags()
+                ? (bool) ($settings->play_sound_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'])
+                : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'],
+            'max_attachment_kb' => $maxAttachmentKb,
+            'max_attachment_bytes' => $maxAttachmentBytes,
+            'allowed_extensions' => $allowedExtensions,
         ];
     }
 
@@ -110,6 +134,8 @@ class ChatBroadcastConfigService
             'port' => env('PUSHER_PORT', 443),
             'scheme' => env('PUSHER_SCHEME', 'https'),
             'use_tls' => env('PUSHER_SCHEME', 'https') === 'https',
+            'auto_open_on_message' => ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'],
+            'play_sound_on_message' => ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'],
         ]);
     }
 
@@ -119,5 +145,33 @@ class ChatBroadcastConfigService
             && filled($settings->app_key)
             && filled($settings->app_secret)
             && ($settings->engine !== 'soketi' || filled($settings->host));
+    }
+
+    private function effectiveMaxAttachmentKb(): int
+    {
+        $configuredKb = max(1, (int) config('chat.max_attachment_kb', 10240));
+        $uploadKb = $this->iniSizeToKb(ini_get('upload_max_filesize'));
+        $postKb = $this->iniSizeToKb(ini_get('post_max_size'));
+        $limits = array_filter([$configuredKb, $uploadKb, $postKb], fn ($value) => (int) $value > 0);
+
+        return (int) (empty($limits) ? $configuredKb : min($limits));
+    }
+
+    private function iniSizeToKb(string|false|null $value): int
+    {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($raw, -1));
+        $number = (float) $raw;
+
+        return match ($unit) {
+            'g' => (int) round($number * 1024 * 1024),
+            'm' => (int) round($number * 1024),
+            'k' => (int) round($number),
+            default => (int) round($number / 1024),
+        };
     }
 }

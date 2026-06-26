@@ -69,13 +69,13 @@ class OrdinanceAttachmentController extends Controller
     public function download(Ordinance $ordinance, OrdinanceAttachment $attachment)
     {
         if (! $this->belongsToOrdinance($ordinance, $attachment)) {
-            return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
+            return response()->json(['message' => 'Anexo não pertence a este registro.'], 422);
         }
 
         [$disk, $path] = $this->resolveReadableLocation($attachment);
 
         if (! $disk || ! $path) {
-            return response()->json(['message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'], 404);
+            return response()->json(['message' => 'Arquivo não encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'], 404);
         }
 
         AuditService::record('DOWNLOAD_ATTACHMENT', $ordinance, null, [
@@ -89,7 +89,7 @@ class OrdinanceAttachmentController extends Controller
     public function destroy(Ordinance $ordinance, OrdinanceAttachment $attachment): JsonResponse
     {
         if (! $this->belongsToOrdinance($ordinance, $attachment)) {
-            return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
+            return response()->json(['message' => 'Anexo não pertence a este registro.'], 422);
         }
 
         $old = $attachment->toArray();

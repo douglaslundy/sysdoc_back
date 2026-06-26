@@ -202,7 +202,7 @@ class ConformidadeCidadaoController extends Controller
     public function itens(Request $request, string $jobId): JsonResponse
     {
         if (!$this->autorizado($request)) {
-            return response()->json(['message' => 'Sem permissao.'], 403);
+            return response()->json(['message' => 'Sem permissão.'], 403);
         }
 
         $sync = SincronizacaoCidadao::where('job_id', $jobId)

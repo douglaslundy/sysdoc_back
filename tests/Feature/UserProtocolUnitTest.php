@@ -46,4 +46,35 @@ class UserProtocolUnitTest extends TestCase
             'ativo' => true,
         ]);
     }
+
+    public function test_cadastro_de_usuario_persiste_telefone_normalizado(): void
+    {
+        AccessProfile::create([
+            'nome' => 'Usuário',
+            'slug' => 'user',
+            'ativo' => true,
+        ]);
+        $admin = User::factory()->create(['profile' => 'admin', 'active' => true]);
+        $user = User::factory()->create(['profile' => 'user', 'active' => true, 'cpf' => '52998224725']);
+
+        $this->actingAs($admin, 'sanctum')
+            ->putJson("/api/users/{$user->id}", [
+                'profile' => 'user',
+                'name' => $user->name,
+                'preferred_name' => 'apelido',
+                'phone' => '(62) 99999-1111',
+                'email' => $user->email,
+                'cpf' => $user->cpf,
+                'active' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.preferred_name', 'APELIDO')
+            ->assertJsonPath('user.phone', '62999991111');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'preferred_name' => 'APELIDO',
+            'phone' => '62999991111',
+        ]);
+    }
 }

@@ -20,7 +20,7 @@ class QueueAttachmentController extends Controller
     public function index(Request $request, Queue $queue): JsonResponse
     {
         if (! $this->canAccessQueue($request)) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $attachments = $queue->attachments()
@@ -78,18 +78,18 @@ class QueueAttachmentController extends Controller
     public function download(Request $request, Queue $queue, QueueAttachment $attachment)
     {
         if (! $this->canAccessQueue($request)) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         if (! $this->belongsToQueue($queue, $attachment)) {
-            return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
+            return response()->json(['message' => 'Anexo não pertence a este registro.'], 422);
         }
 
         [$disk, $path] = $this->resolveReadableLocation($attachment);
 
         if (! $disk || ! $path) {
             return response()->json([
-                'message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.',
+                'message' => 'Arquivo não encontrado no armazenamento. Verifique se o anexo existe no disco configurado.',
             ], 404);
         }
 
@@ -107,11 +107,11 @@ class QueueAttachmentController extends Controller
     public function destroy(Request $request, Queue $queue, QueueAttachment $attachment): JsonResponse
     {
         if (! $this->canAccessQueue($request)) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         if (! $this->belongsToQueue($queue, $attachment)) {
-            return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
+            return response()->json(['message' => 'Anexo não pertence a este registro.'], 422);
         }
 
         $old = $attachment->toArray();

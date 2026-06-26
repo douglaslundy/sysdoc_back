@@ -12,7 +12,7 @@ class DocumentApprovalController extends Controller
     public function index(Request $request): JsonResponse
     {
         if (! $this->canViewApprovals($request->user())) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $query = DocumentApproval::query()

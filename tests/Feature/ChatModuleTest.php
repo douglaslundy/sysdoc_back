@@ -52,6 +52,30 @@ class ChatModuleTest extends TestCase
         $this->assertDatabaseHas('chat_usage_daily', ['messages_sent' => 1]);
     }
 
+    public function test_chat_exibe_nome_preferido_quando_preenchido_e_nome_padrao_como_fallback(): void
+    {
+        $this->recipient->update([
+            'name' => 'Maria da Silva',
+            'preferred_name' => 'Maria',
+        ]);
+
+        $conversation = $this->startConversation();
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->getJson('/api/chat/conversations')
+            ->assertOk()
+            ->assertJsonPath('0.other_user.name', 'Maria');
+
+        $this->recipient->update([
+            'preferred_name' => null,
+        ]);
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->getJson('/api/chat/conversations')
+            ->assertOk()
+            ->assertJsonPath('0.other_user.name', 'Maria da Silva');
+    }
+
     public function test_usuario_nao_pode_acessar_conversa_de_terceiros(): void
     {
         $conversation = $this->startConversation();
@@ -181,6 +205,8 @@ class ChatModuleTest extends TestCase
                 'port' => 443,
                 'scheme' => 'https',
                 'use_tls' => true,
+                'auto_open_on_message' => true,
+                'play_sound_on_message' => false,
             ])
             ->assertOk()
             ->assertJsonMissing(['app_secret' => 'secret-key-test'])
@@ -188,7 +214,9 @@ class ChatModuleTest extends TestCase
             ->assertJsonPath('engine', 'soketi')
             ->assertJsonPath('host', 'socket.exemplo.test')
             ->assertJsonPath('rate_limit_global', 300)
-            ->assertJsonPath('rate_limit_messages', 30);
+            ->assertJsonPath('rate_limit_messages', 30)
+            ->assertJsonPath('auto_open_on_message', true)
+            ->assertJsonPath('play_sound_on_message', false);
 
         $raw = DB::table('chat_realtime_configs')->first();
         $this->assertNotSame('sysdoc-chat', $raw->app_id);
@@ -218,6 +246,8 @@ class ChatModuleTest extends TestCase
             ->assertJsonPath('engine', 'soketi')
             ->assertJsonPath('key', 'public-key-updated')
             ->assertJsonPath('host', 'socket.exemplo.test')
+            ->assertJsonPath('auto_open_on_message', true)
+            ->assertJsonPath('play_sound_on_message', false)
             ->assertJsonMissingPath('app_id')
             ->assertJsonMissingPath('app_secret')
             ->assertJsonMissing(['app_secret' => 'secret-key-test']);
@@ -298,6 +328,31 @@ class ChatModuleTest extends TestCase
         $this->assertSame(40, $config->rate_limit_messages);
         $this->assertSame(90, $config->rate_limit_typing);
         $this->assertSame(75, $config->rate_limit_presence);
+    }
+
+    public function test_admin_pode_gerenciar_comportamento_de_abertura_e_som(): void
+    {
+        $this->actingAs($this->sender, 'sanctum')
+            ->putJson('/api/chat/config', [
+                'engine' => 'pusher',
+                'active' => false,
+                'cluster' => 'mt1',
+                'auto_open_on_message' => true,
+                'play_sound_on_message' => false,
+            ])
+            ->assertOk()
+            ->assertJsonPath('auto_open_on_message', true)
+            ->assertJsonPath('play_sound_on_message', false);
+
+        $config = ChatRealtimeConfig::current();
+        $this->assertTrue((bool) $config->auto_open_on_message);
+        $this->assertFalse((bool) $config->play_sound_on_message);
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->getJson('/api/chat/realtime-config')
+            ->assertOk()
+            ->assertJsonPath('auto_open_on_message', true)
+            ->assertJsonPath('play_sound_on_message', false);
     }
 
     public function test_limite_de_mensagens_respeita_configuracao_dinamica(): void

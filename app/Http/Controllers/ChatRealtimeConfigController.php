@@ -35,6 +35,7 @@ class ChatRealtimeConfigController extends Controller
         $config = ChatRealtimeConfig::current();
         $old = $this->auditPayload($config);
         $engine = $data['engine'];
+        $supportsBehaviorFlags = ChatRealtimeConfig::supportsBehaviorFlags();
         $values = [
             'engine' => $engine,
             'active' => (bool) $data['active'],
@@ -51,6 +52,15 @@ class ChatRealtimeConfigController extends Controller
             'rate_limit_presence' => (int) ($data['rate_limit_presence'] ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence']),
             'updated_by' => $user->id,
         ];
+
+        if ($supportsBehaviorFlags) {
+            $values['auto_open_on_message'] = array_key_exists('auto_open_on_message', $data)
+                ? (bool) $data['auto_open_on_message']
+                : (bool) ($config->auto_open_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message']);
+            $values['play_sound_on_message'] = array_key_exists('play_sound_on_message', $data)
+                ? (bool) $data['play_sound_on_message']
+                : (bool) ($config->play_sound_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message']);
+        }
 
         foreach (['app_id', 'app_key', 'app_secret'] as $secretField) {
             if (filled($data[$secretField] ?? null)) {
@@ -109,9 +119,10 @@ class ChatRealtimeConfigController extends Controller
     public function destroy(Request $request): JsonResponse
     {
         $config = ChatRealtimeConfig::current();
+        $supportsBehaviorFlags = ChatRealtimeConfig::supportsBehaviorFlags();
         $old = $this->auditPayload($config);
 
-        $config->update([
+        $values = [
             'active' => false,
             'app_id' => null,
             'app_key' => null,
@@ -128,7 +139,14 @@ class ChatRealtimeConfigController extends Controller
             'rate_limit_typing' => $config->rate_limit_typing ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_typing'],
             'rate_limit_presence' => $config->rate_limit_presence ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence'],
             'updated_by' => $request->user()->id,
-        ]);
+        ];
+
+        if ($supportsBehaviorFlags) {
+            $values['auto_open_on_message'] = $config->auto_open_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'];
+            $values['play_sound_on_message'] = $config->play_sound_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'];
+        }
+
+        $config->update($values);
         $config->refresh();
 
         AuditService::record(
@@ -240,11 +258,15 @@ class ChatRealtimeConfigController extends Controller
             'rate_limit_messages' => ['nullable', 'integer', 'min:0', 'max:5000'],
             'rate_limit_typing' => ['nullable', 'integer', 'min:0', 'max:5000'],
             'rate_limit_presence' => ['nullable', 'integer', 'min:0', 'max:5000'],
+            'auto_open_on_message' => ['nullable', 'boolean'],
+            'play_sound_on_message' => ['nullable', 'boolean'],
         ];
     }
 
     private function adminPayload(ChatRealtimeConfig $config): array
     {
+        $supportsBehaviorFlags = ChatRealtimeConfig::supportsBehaviorFlags();
+
         return [
             'engine' => $config->engine,
             'active' => (bool) $config->active,
@@ -263,12 +285,20 @@ class ChatRealtimeConfigController extends Controller
             'rate_limit_messages' => $config->rate_limit_messages ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_messages'],
             'rate_limit_typing' => $config->rate_limit_typing ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_typing'],
             'rate_limit_presence' => $config->rate_limit_presence ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence'],
+            'auto_open_on_message' => $supportsBehaviorFlags
+                ? (bool) ($config->auto_open_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'])
+                : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'],
+            'play_sound_on_message' => $supportsBehaviorFlags
+                ? (bool) ($config->play_sound_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'])
+                : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'],
             'updated_at' => $config->updated_at?->toISOString(),
         ];
     }
 
     private function auditPayload(ChatRealtimeConfig $config): array
     {
+        $supportsBehaviorFlags = ChatRealtimeConfig::supportsBehaviorFlags();
+
         return [
             'engine' => $config->engine,
             'active' => (bool) $config->active,
@@ -283,6 +313,12 @@ class ChatRealtimeConfigController extends Controller
             'rate_limit_messages' => $config->rate_limit_messages ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_messages'],
             'rate_limit_typing' => $config->rate_limit_typing ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_typing'],
             'rate_limit_presence' => $config->rate_limit_presence ?? ChatRealtimeConfig::RATE_LIMIT_DEFAULTS['rate_limit_presence'],
+            'auto_open_on_message' => $supportsBehaviorFlags
+                ? (bool) ($config->auto_open_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'])
+                : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'],
+            'play_sound_on_message' => $supportsBehaviorFlags
+                ? (bool) ($config->play_sound_on_message ?? ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'])
+                : ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'],
             'has_app_id' => filled($config->app_id),
             'has_app_key' => filled($config->app_key),
             'has_app_secret' => filled($config->app_secret),

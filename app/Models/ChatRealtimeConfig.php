@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 class ChatRealtimeConfig extends Model
 {
+    private static ?bool $behaviorFlagsSupported = null;
+
     public const RATE_LIMIT_DEFAULTS = [
         'rate_limit_decay_minutes' => 1,
         'rate_limit_global' => 300,
@@ -16,11 +18,17 @@ class ChatRealtimeConfig extends Model
         'rate_limit_presence' => 60,
     ];
 
+    public const BEHAVIOR_DEFAULTS = [
+        'auto_open_on_message' => false,
+        'play_sound_on_message' => true,
+    ];
+
     protected $fillable = [
         'engine', 'active', 'app_id', 'app_key', 'app_secret', 'cluster',
         'host', 'port', 'scheme', 'use_tls', 'updated_by',
         'rate_limit_decay_minutes', 'rate_limit_global', 'rate_limit_sync',
         'rate_limit_messages', 'rate_limit_typing', 'rate_limit_presence',
+        'auto_open_on_message', 'play_sound_on_message',
     ];
 
     protected $casts = [
@@ -36,6 +44,8 @@ class ChatRealtimeConfig extends Model
         'rate_limit_messages' => 'integer',
         'rate_limit_typing' => 'integer',
         'rate_limit_presence' => 'integer',
+        'auto_open_on_message' => 'boolean',
+        'play_sound_on_message' => 'boolean',
     ];
 
     protected $hidden = ['app_id', 'app_key', 'app_secret'];
@@ -65,6 +75,22 @@ class ChatRealtimeConfig extends Model
         ];
     }
 
+    public static function supportsBehaviorFlags(): bool
+    {
+        if (static::$behaviorFlagsSupported !== null) {
+            return static::$behaviorFlagsSupported;
+        }
+
+        if (! Schema::hasTable('chat_realtime_configs')) {
+            return static::$behaviorFlagsSupported = false;
+        }
+
+        return static::$behaviorFlagsSupported = Schema::hasColumns('chat_realtime_configs', [
+            'auto_open_on_message',
+            'play_sound_on_message',
+        ]);
+    }
+
     private static function fallbackAttributes(): array
     {
         return [
@@ -79,6 +105,7 @@ class ChatRealtimeConfig extends Model
             'scheme' => env('PUSHER_SCHEME', 'https'),
             'use_tls' => env('PUSHER_SCHEME', 'https') === 'https',
             ...static::RATE_LIMIT_DEFAULTS,
+            ...static::BEHAVIOR_DEFAULTS,
         ];
     }
 

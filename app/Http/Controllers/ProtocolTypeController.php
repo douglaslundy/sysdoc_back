@@ -42,7 +42,7 @@ class ProtocolTypeController extends Controller
     {
         $type = ProtocolType::find($id);
         if (! $type) {
-            return response()->json(['message' => 'Tipo de protocolo nao encontrado.'], 404);
+            return response()->json(['message' => 'Tipo de protocolo não encontrado.'], 404);
         }
 
         $validated = $request->validate([
@@ -68,7 +68,7 @@ class ProtocolTypeController extends Controller
     {
         $type = ProtocolType::find($id);
         if (! $type) {
-            return response()->json(['message' => 'Tipo de protocolo nao encontrado.'], 404);
+            return response()->json(['message' => 'Tipo de protocolo não encontrado.'], 404);
         }
 
         $type->update(['ativo' => false]);

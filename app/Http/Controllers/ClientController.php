@@ -131,7 +131,7 @@ class ClientController extends Controller
     public function show($id)
     {
         if (! app(PagePermissionService::class)->canAccess(request()->user(), '/clients')) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $client = Client::with(['addresses'])->find($id);
@@ -221,7 +221,7 @@ class ClientController extends Controller
     public function destroy($id)
     {
         if (! app(PagePermissionService::class)->canAccess(request()->user(), '/clients')) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $client = Client::find($id);
@@ -269,7 +269,7 @@ class ClientController extends Controller
     public function buscarPorCpfCns(Request $request)
     {
         if (! app(PagePermissionService::class)->canAccessAny($request->user(), ['/clients', '/laboratorio/pedidos'])) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $termo = preg_replace('/\D/', '', trim($request->query('q', '')));
@@ -293,7 +293,7 @@ class ClientController extends Controller
     public function detailedClientReport(Request $request)
     {
         if (! app(PagePermissionService::class)->canAccess($request->user(), '/client_report')) {
-            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         $value = trim($request->query('value', ''));

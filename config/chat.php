@@ -2,7 +2,7 @@
 
 return [
     'max_message_length' => (int) env('CHAT_MAX_MESSAGE_LENGTH', 4000),
-    'max_attachment_kb' => (int) env('CHAT_MAX_ATTACHMENT_KB', 10240),
+    'max_attachment_kb' => (int) env('CHAT_MAX_ATTACHMENT_KB', 5120),
     'allowed_extensions' => ['jpg', 'jpeg', 'png', 'webp', 'txt', 'pdf'],
     'allowed_mimes' => [
         'image/jpeg',

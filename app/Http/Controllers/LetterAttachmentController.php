@@ -69,13 +69,13 @@ class LetterAttachmentController extends Controller
     public function download(Letter $letter, LetterAttachment $attachment)
     {
         if (! $this->belongsToLetter($letter, $attachment)) {
-            return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
+            return response()->json(['message' => 'Anexo não pertence a este registro.'], 422);
         }
 
         [$disk, $path] = $this->resolveReadableLocation($attachment);
 
         if (! $disk || ! $path) {
-            return response()->json(['message' => 'Arquivo nao encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'], 404);
+            return response()->json(['message' => 'Arquivo não encontrado no armazenamento. Verifique se o anexo existe no disco configurado.'], 404);
         }
 
         AuditService::record('DOWNLOAD_ATTACHMENT', $letter, null, [
@@ -89,7 +89,7 @@ class LetterAttachmentController extends Controller
     public function destroy(Letter $letter, LetterAttachment $attachment): JsonResponse
     {
         if (! $this->belongsToLetter($letter, $attachment)) {
-            return response()->json(['message' => 'Anexo nao pertence a este registro.'], 422);
+            return response()->json(['message' => 'Anexo não pertence a este registro.'], 422);
         }
 
         $old = $attachment->toArray();
