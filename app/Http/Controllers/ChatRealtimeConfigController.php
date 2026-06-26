@@ -8,6 +8,7 @@ use App\Services\ChatBroadcastConfigService;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Pusher\Pusher;
 
@@ -35,11 +36,12 @@ class ChatRealtimeConfigController extends Controller
         $config = ChatRealtimeConfig::current();
         $old = $this->auditPayload($config);
         $engine = $data['engine'];
+        $cluster = $engine === 'pusher' ? $this->normalizeCluster($data['cluster'] ?? 'mt1') : null;
         $supportsBehaviorFlags = ChatRealtimeConfig::supportsBehaviorFlags();
         $values = [
             'engine' => $engine,
             'active' => (bool) $data['active'],
-            'cluster' => $engine === 'pusher' ? ($data['cluster'] ?: 'mt1') : null,
+            'cluster' => $cluster,
             'host' => $engine === 'soketi' ? $this->normalizeHost($data['host'] ?? '') : null,
             'port' => $engine === 'soketi' ? (int) ($data['port'] ?? 6001) : null,
             'scheme' => $engine === 'soketi' && ! ($data['use_tls'] ?? false) ? 'http' : 'https',
@@ -64,7 +66,7 @@ class ChatRealtimeConfigController extends Controller
 
         foreach (['app_id', 'app_key', 'app_secret'] as $secretField) {
             if (filled($data[$secretField] ?? null)) {
-                $values[$secretField] = trim((string) $data[$secretField]);
+                $values[$secretField] = $this->normalizeSecretField($data[$secretField]);
             }
         }
 
@@ -169,10 +171,10 @@ class ChatRealtimeConfigController extends Controller
         $candidate = new ChatRealtimeConfig([
             'engine' => $data['engine'],
             'active' => true,
-            'app_id' => filled($data['app_id'] ?? null) ? $data['app_id'] : $stored->app_id,
-            'app_key' => filled($data['app_key'] ?? null) ? $data['app_key'] : $stored->app_key,
-            'app_secret' => filled($data['app_secret'] ?? null) ? $data['app_secret'] : $stored->app_secret,
-            'cluster' => $data['engine'] === 'pusher' ? ($data['cluster'] ?: 'mt1') : null,
+            'app_id' => filled($data['app_id'] ?? null) ? $this->normalizeSecretField($data['app_id']) : $this->normalizeSecretField($stored->app_id),
+            'app_key' => filled($data['app_key'] ?? null) ? $this->normalizeSecretField($data['app_key']) : $this->normalizeSecretField($stored->app_key),
+            'app_secret' => filled($data['app_secret'] ?? null) ? $this->normalizeSecretField($data['app_secret']) : $this->normalizeSecretField($stored->app_secret),
+            'cluster' => $data['engine'] === 'pusher' ? $this->normalizeCluster($data['cluster'] ?? ($stored->cluster ?: 'mt1')) : null,
             'host' => $data['engine'] === 'soketi' ? $this->normalizeHost($data['host'] ?? '') : null,
             'port' => $data['engine'] === 'soketi' ? (int) ($data['port'] ?? 6001) : null,
             'scheme' => $data['engine'] === 'soketi' && ! ($data['use_tls'] ?? false) ? 'http' : 'https',
@@ -206,6 +208,15 @@ class ChatRealtimeConfigController extends Controller
                     : 'Conexão com o Pusher Cloud validada.',
             ]);
         } catch (\Throwable $exception) {
+            Log::warning('ChatRealtimeConfigController@test failed', [
+                'engine' => $candidate->engine,
+                'cluster' => $candidate->cluster,
+                'host' => $candidate->host,
+                'port' => $candidate->port,
+                'code' => $exception->getCode(),
+                'message' => $exception->getMessage(),
+            ]);
+
             AuditService::record('CHAT_REALTIME_CONFIG_TESTED', $stored, null, [
                 'engine' => $candidate->engine,
                 'host' => $candidate->host,
@@ -223,6 +234,7 @@ class ChatRealtimeConfigController extends Controller
             $authenticationError = in_array((int) $exception->getCode(), [401, 403], true)
                 || str_contains($message, 'authentication')
                 || str_contains($message, 'unauthorized');
+            $sanitizedDetails = $this->sanitizeDriverError($exception->getMessage());
 
             return response()->json([
                 'ok' => false,
@@ -234,7 +246,9 @@ class ChatRealtimeConfigController extends Controller
                             ? 'Não foi possível conectar ao servidor do motor. Verifique host, porta, proxy e firewall.'
                             : ($authenticationError
                                 ? 'O motor recusou as credenciais. Verifique App ID, App Key, App Secret e cluster.'
-                                : 'Não foi possível validar o motor selecionado.'))),
+                                : ($sanitizedDetails
+                                    ? "Falha ao validar o motor selecionado: {$sanitizedDetails}"
+                                    : 'Não foi possível validar o motor selecionado.')))),
             ], $rateLimited ? 429 : 422);
         }
     }
@@ -331,5 +345,28 @@ class ChatRealtimeConfigController extends Controller
         $parsed = parse_url(str_contains($host, '://') ? $host : 'https://'.$host, PHP_URL_HOST);
 
         return $parsed ?: $host;
+    }
+
+    private function normalizeCluster(?string $cluster): string
+    {
+        $value = strtolower(trim((string) $cluster));
+
+        return $value !== '' ? $value : 'mt1';
+    }
+
+    private function normalizeSecretField(mixed $value): string
+    {
+        return trim((string) $value);
+    }
+
+    private function sanitizeDriverError(string $message): ?string
+    {
+        $normalized = trim(preg_replace('/\s+/', ' ', $message));
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return mb_substr($normalized, 0, 220);
     }
 }
