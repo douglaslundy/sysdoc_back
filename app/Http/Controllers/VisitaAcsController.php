@@ -29,6 +29,7 @@ class VisitaAcsController extends MonitorApsBaseController
     private function buildWhere(
         int $ano, int $mes, ?string $ine,
         ?string $agentName = null,
+        ?string $agentCns = null,
         ?string $desfecho = null,
         ?string $hasGeo = null,
         ?array $allowedInes = null
@@ -50,10 +51,7 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
 
-        if ($agentName && trim($agentName) !== '') {
-            $where .= ' AND ' . $this->agentFilterClause('p.no_profissional');
-            $params[] = $this->agentFilterValue($agentName);
-        }
+        $this->appendAgentFilter($where, $params, 'p.no_profissional', 'p.nu_cns', $agentName, $agentCns);
 
         if ($desfecho !== null && $desfecho !== '') {
             $where .= ' AND d.co_seq_dim_desfecho_visita = ?';
@@ -75,6 +73,7 @@ class VisitaAcsController extends MonitorApsBaseController
     private function buildWhereFilters(
         ?string $ine,
         ?string $agentName = null,
+        ?string $agentCns = null,
         ?string $desfecho = null,
         ?string $hasGeo = null,
         ?array $allowedInes = null
@@ -96,10 +95,7 @@ class VisitaAcsController extends MonitorApsBaseController
             }
         }
 
-        if ($agentName && trim($agentName) !== '') {
-            $where .= ' AND ' . $this->agentFilterClause('p.no_profissional');
-            $params[] = $this->agentFilterValue($agentName);
-        }
+        $this->appendAgentFilter($where, $params, 'p.no_profissional', 'p.nu_cns', $agentName, $agentCns);
 
         if ($desfecho !== null && $desfecho !== '') {
             $where .= ' AND d.co_seq_dim_desfecho_visita = ?';
@@ -123,6 +119,82 @@ class VisitaAcsController extends MonitorApsBaseController
     private function agentFilterValue(?string $agentName): string
     {
         return '%' . mb_strtolower(trim((string) $agentName), 'UTF-8') . '%';
+    }
+
+    private function agentCnsFilterClause(string $column): string
+    {
+        return "BTRIM(COALESCE({$column}::text, '')) = ?";
+    }
+
+    private function agentCnsFilterValue(?string $agentCns): string
+    {
+        return trim((string) $agentCns);
+    }
+
+    private function appendAgentFilter(
+        string &$where,
+        array &$params,
+        string $nameColumn,
+        string $cnsColumn,
+        ?string $agentName,
+        ?string $agentCns
+    ): void {
+        $normalizedCns = $this->normalizeAgentCns($agentCns);
+        if ($normalizedCns !== null) {
+            $where .= ' AND ' . $this->agentCnsFilterClause($cnsColumn);
+            $params[] = $this->agentCnsFilterValue($normalizedCns);
+            return;
+        }
+
+        if ($agentName && trim($agentName) !== '') {
+            $where .= ' AND ' . $this->agentFilterClause($nameColumn);
+            $params[] = $this->agentFilterValue($agentName);
+        }
+    }
+
+    private function appendAgentFilterArray(
+        array &$where,
+        array &$params,
+        string $nameColumn,
+        string $cnsColumn,
+        ?string $agentName,
+        ?string $agentCns
+    ): void {
+        $normalizedCns = $this->normalizeAgentCns($agentCns);
+        if ($normalizedCns !== null) {
+            $where[] = $this->agentCnsFilterClause($cnsColumn);
+            $params[] = $this->agentCnsFilterValue($normalizedCns);
+            return;
+        }
+
+        if ($agentName && trim($agentName) !== '') {
+            $where[] = $this->agentFilterClause($nameColumn);
+            $params[] = $this->agentFilterValue($agentName);
+        }
+    }
+
+    private function normalizeAgentCns(?string $agentCns): ?string
+    {
+        $value = trim((string) $agentCns);
+        return $value !== '' ? $value : null;
+    }
+
+    private function resolveAgentRequestFilters(Request $request): array
+    {
+        return [
+            $request->query('agente') ?: null,
+            $this->normalizeAgentCns($request->query('agente_cns')),
+        ];
+    }
+
+    private function agentMapKey(?string $agentCns, ?string $agentName): string
+    {
+        $normalizedCns = $this->normalizeAgentCns($agentCns);
+        if ($normalizedCns !== null) {
+            return 'cns:' . $normalizedCns;
+        }
+
+        return 'nome:' . trim((string) $agentName);
     }
 
     private function baseJoins(): string
@@ -359,7 +431,7 @@ class VisitaAcsController extends MonitorApsBaseController
         return $conds ? implode(' AND ', $conds) : 'TRUE';
     }
 
-    private function domicilioCadastroStats(?string $ine, ?string $agentName, ?array $allowedInes = null): array
+    private function domicilioCadastroStats(?string $ine, ?string $agentName, ?string $agentCns, ?array $allowedInes = null): array
     {
         $empty = [
             'domicilios_total' => null,
@@ -393,10 +465,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 $params = array_merge($params, $allowedInes);
             }
         }
-        if ($agentName && trim($agentName) !== '') {
-            $where[] = $this->agentFilterClause('dp.no_profissional');
-            $params[] = $this->agentFilterValue($agentName);
-        }
+        $this->appendAgentFilterArray($where, $params, 'dp.no_profissional', 'dp.nu_cns', $agentName, $agentCns);
 
         $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
         $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
@@ -432,7 +501,7 @@ class VisitaAcsController extends MonitorApsBaseController
         ];
     }
 
-    private function domicilioCadastroStatsPorAgente(?string $ine, ?string $agentName, ?array $allowedInes = null): array
+    private function domicilioCadastroStatsPorAgente(?string $ine, ?string $agentName, ?string $agentCns, ?array $allowedInes = null): array
     {
         if (!$this->hasDomicilioCadastro()) {
             return [];
@@ -459,10 +528,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 $params = array_merge($params, $allowedInes);
             }
         }
-        if ($agentName && trim($agentName) !== '') {
-            $where[] = $this->agentFilterClause('dp.no_profissional');
-            $params[] = $this->agentFilterValue($agentName);
-        }
+        $this->appendAgentFilterArray($where, $params, 'dp.no_profissional', 'dp.nu_cns', $agentName, $agentCns);
 
         $hasMoradores = "EXISTS (SELECT 1 FROM tb_fat_cad_dom_familia f WHERE {$this->domicilioFamiliaWhere('f')})";
         $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
@@ -476,6 +542,7 @@ class VisitaAcsController extends MonitorApsBaseController
             $rows = $this->db()->select("
                 SELECT
                     dp.no_profissional AS agente,
+                    dp.nu_cns AS agente_cns,
                     COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio}) AS domicilios_total,
                     COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio} AND {$hasMoradores}) AS domicilios_com_moradores,
                     COUNT(DISTINCT d.co_seq_fat_cad_domiciliar) FILTER (WHERE {$regularDomicilio} AND NOT {$hasMoradores}) AS domicilios_casa_vazia,
@@ -486,7 +553,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 LEFT JOIN tb_dim_profissional dp
                     ON dp.co_seq_dim_profissional = d.co_dim_profissional
                 WHERE " . implode(' AND ', $where) . "
-                GROUP BY dp.no_profissional
+                GROUP BY dp.no_profissional, dp.nu_cns
             ", $params);
         } catch (\Throwable) {
             return [];
@@ -494,7 +561,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
         $map = [];
         foreach ($rows as $row) {
-            $map[$row->agente ?? ''] = [
+            $map[$this->agentMapKey($row->agente_cns ?? null, $row->agente ?? null)] = [
                 'domicilios_total' => (int) ($row->domicilios_total ?? 0),
                 'domicilios_com_moradores' => (int) ($row->domicilios_com_moradores ?? 0),
                 'domicilios_casa_vazia' => (int) ($row->domicilios_casa_vazia ?? 0),
@@ -505,7 +572,7 @@ class VisitaAcsController extends MonitorApsBaseController
         return $map;
     }
 
-    private function domicilioVisitaStats(int $ano, int $mes, ?string $ine, ?string $agentName, ?array $allowedInes = null): array
+    private function domicilioVisitaStats(int $ano, int $mes, ?string $ine, ?string $agentName, ?string $agentCns, ?array $allowedInes = null): array
     {
         $empty = [
             'domicilios_visitados' => null,
@@ -518,7 +585,7 @@ class VisitaAcsController extends MonitorApsBaseController
             return $empty;
         }
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, null, null, $allowedInes);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, $agentCns, null, null, $allowedInes);
         $familiaFilters = $this->domicilioFamiliaFilters('f');
         $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
             ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
@@ -577,13 +644,13 @@ class VisitaAcsController extends MonitorApsBaseController
         ];
     }
 
-    private function domicilioVisitaStatsPorAgente(int $ano, int $mes, ?string $ine, ?string $agentName, ?array $allowedInes = null): array
+    private function domicilioVisitaStatsPorAgente(int $ano, int $mes, ?string $ine, ?string $agentName, ?string $agentCns, ?array $allowedInes = null): array
     {
         if (!$this->hasDomicilioCadastro() || !$this->hasColumn('tb_fat_cad_dom_familia', 'co_fat_cidadao_pec')) {
             return [];
         }
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, null, null, $allowedInes);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, $agentCns, null, null, $allowedInes);
         $familiaFilters = $this->domicilioFamiliaFilters('f');
         $regularDomicilio = $this->hasColumn('tb_fat_cad_domiciliar', 'nu_micro_area')
             ? "COALESCE(UPPER(TRIM(dom.nu_micro_area)), '') <> 'FA'"
@@ -602,6 +669,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 visitas_domicilio AS (
                     SELECT DISTINCT
                         p.no_profissional                 AS agente,
+                        p.nu_cns                          AS agente_cns,
                         dom.co_seq_fat_cad_domiciliar     AS domicilio_id,
                         d.co_seq_dim_desfecho_visita      AS desfecho
                     FROM tb_fat_visita_domiciliar v
@@ -617,21 +685,23 @@ class VisitaAcsController extends MonitorApsBaseController
                 domicilio_status AS (
                     SELECT
                         agente,
+                        agente_cns,
                         domicilio_id,
                         BOOL_OR(desfecho = 1) AS tem_realizada,
                         BOOL_OR(desfecho = 2) AS tem_recusada,
                         BOOL_OR(desfecho = 3) AS tem_ausente
                     FROM visitas_domicilio
-                    GROUP BY agente, domicilio_id
+                    GROUP BY agente, agente_cns, domicilio_id
                 )
                 SELECT
                     agente,
+                    agente_cns,
                     COUNT(*) AS domicilios_visitados,
                     COUNT(*) FILTER (WHERE tem_realizada AND NOT tem_ausente) AS domicilios_acompanhados,
                     COUNT(*) FILTER (WHERE tem_recusada) AS domicilios_recusados,
                     COUNT(*) FILTER (WHERE tem_ausente) AS domicilios_ausentes
                 FROM domicilio_status
-                GROUP BY agente
+                GROUP BY agente, agente_cns
             ", $params);
         } catch (\Throwable) {
             return [];
@@ -639,7 +709,7 @@ class VisitaAcsController extends MonitorApsBaseController
 
         $map = [];
         foreach ($rows as $row) {
-            $map[$row->agente ?? ''] = [
+            $map[$this->agentMapKey($row->agente_cns ?? null, $row->agente ?? null)] = [
                 'domicilios_visitados'    => (int) ($row->domicilios_visitados ?? 0),
                 'domicilios_acompanhados' => (int) ($row->domicilios_acompanhados ?? 0),
                 'domicilios_recusados'    => (int) ($row->domicilios_recusados ?? 0),
@@ -814,6 +884,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'mes' => 'required|integer|min:1|max:12',
             'ine' => 'nullable|string',
             'agente' => 'nullable|string',
+            'agente_cns' => 'nullable|string|max:255',
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
@@ -828,7 +899,8 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
+        [$agentName, $agentCns] = $this->resolveAgentRequestFilters($request);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, $agentCns, null, null, $allowedInes);
 
         try {
             $rows = $this->db()->select("
@@ -889,6 +961,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'mes' => 'required|integer|min:1|max:12',
             'ine' => 'nullable|string',
             'agente' => 'nullable|string',
+            'agente_cns' => 'nullable|string|max:255',
             'desfecho' => 'nullable|integer|in:1,2,3',
             'has_geo' => 'nullable|string|in:sim,nao',
         ]);
@@ -900,9 +973,11 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
+        [$agentName, $agentCns] = $this->resolveAgentRequestFilters($request);
         [$where, $params] = $this->buildWhere(
             $ano, $mes, $ine,
-            $request->agente,
+            $agentName,
+            $agentCns,
             $request->desfecho,
             $request->has_geo,
             $allowedInes,
@@ -925,12 +1000,12 @@ class VisitaAcsController extends MonitorApsBaseController
             return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
         }
 
-        $domicilioCadastro = $this->domicilioCadastroStats($ine, $request->agente, $allowedInes);
-        $domicilioVisitas  = $this->domicilioVisitaStats($ano, $mes, $ine, $request->agente, $allowedInes);
+        $domicilioCadastro = $this->domicilioCadastroStats($ine, $agentName, $agentCns, $allowedInes);
+        $domicilioVisitas  = $this->domicilioVisitaStats($ano, $mes, $ine, $agentName, $agentCns, $allowedInes);
 
         if (false) {
             // Breakdown de famílias visitadas no mês (sem filtro de desfecho/geo)
-            [$familyWhere, $familyParams] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
+            [$familyWhere, $familyParams] = $this->buildWhere($ano, $mes, $ine, $agentName, $agentCns, null, null, $allowedInes);
 
             try {
                 $famRow = $this->db()->selectOne("
@@ -968,10 +1043,7 @@ class VisitaAcsController extends MonitorApsBaseController
                     $totFamWhere  .= ' AND de.nu_ine = ?';
                     $totFamParams[] = $request->ine;
                 }
-                if ($request->agente && trim($request->agente) !== '') {
-                    $totFamWhere  .= ' AND ' . $this->agentFilterClause('dp.no_profissional');
-                    $totFamParams[] = $this->agentFilterValue($request->agente);
-                }
+                $this->appendAgentFilter($totFamWhere, $totFamParams, 'dp.no_profissional', 'dp.nu_cns', $agentName, $agentCns);
 
                 $totFamRow = $this->db()->selectOne("
                     SELECT COUNT(DISTINCT {$familyExpr}) AS familias_total
@@ -1021,6 +1093,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'mes' => 'required|integer|min:1|max:12',
             'ine' => 'nullable|string',
             'agente' => 'nullable|string',
+            'agente_cns' => 'nullable|string|max:255',
             'desfecho' => 'nullable|integer',
             'has_geo' => 'nullable|in:sim,nao',
             'page' => 'nullable|integer|min:1',
@@ -1037,7 +1110,8 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
+        [$agentName, $agentCns] = $this->resolveAgentRequestFilters($request);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, $agentCns, null, null, $allowedInes);
 
         if ($request->desfecho) {
             $where .= ' AND d.co_seq_dim_desfecho_visita = ?';
@@ -1376,6 +1450,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'mes' => 'required|integer|min:1|max:12',
             'ine' => 'nullable|string',
             'agente' => 'nullable|string',
+            'agente_cns' => 'nullable|string|max:255',
             'busca' => 'nullable|string|max:200',
         ]);
 
@@ -1386,7 +1461,8 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
-        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $request->agente, null, null, $allowedInes);
+        [$agentName, $agentCns] = $this->resolveAgentRequestFilters($request);
+        [$where, $params] = $this->buildWhere($ano, $mes, $ine, $agentName, $agentCns, null, null, $allowedInes);
 
         // Resolve column names for CPF/CNS/nome based on database schema.
         $visitCpfCol = $this->firstExistingColumn('tb_fat_visita_domiciliar', ['nu_cpf_cidadao', 'nu_cpf']);
@@ -1649,6 +1725,7 @@ class VisitaAcsController extends MonitorApsBaseController
             'mes' => 'required|integer|min:1|max:12',
             'ine' => 'nullable|string',
             'agente' => 'nullable|string',
+            'agente_cns' => 'nullable|string|max:255',
             'desfecho' => 'nullable|integer|in:1,2,3',
             'has_geo' => 'nullable|string|in:sim,nao',
         ]);
@@ -1660,9 +1737,11 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
+        [$agentName, $agentCns] = $this->resolveAgentRequestFilters($request);
         [$where, $params] = $this->buildWhere(
             $ano, $mes, $ine,
-            $request->agente,
+            $agentName,
+            $agentCns,
             $request->desfecho,
             $request->has_geo,
             $allowedInes,
@@ -1683,6 +1762,8 @@ class VisitaAcsController extends MonitorApsBaseController
             $rows = $this->db()->select("
                 SELECT
                     p.no_profissional                                                     AS agente,
+                    p.nu_cns                                                              AS agente_cns,
+                    p.co_seq_dim_profissional                                             AS agente_id,
                     c.nu_cbo                                                              AS cbo,
                     e.no_equipe                                                           AS equipe_nome,
                     COUNT(DISTINCT v.co_seq_fat_visita_domiciliar) AS total,
@@ -1695,7 +1776,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 {$this->baseJoins()}
                 {$familyJoin}
                 WHERE {$where}
-                GROUP BY p.no_profissional, c.nu_cbo, e.no_equipe
+                GROUP BY p.no_profissional, p.nu_cns, p.co_seq_dim_profissional, c.nu_cbo, e.no_equipe
                 ORDER BY total DESC
             ", $params);
         } catch (\Throwable $e) {
@@ -1722,14 +1803,12 @@ class VisitaAcsController extends MonitorApsBaseController
                         $totFamParams = array_merge($totFamParams, $allowedInes);
                     }
                 }
-                if ($request->agente && trim($request->agente) !== '') {
-                    $totFamWhere  .= ' AND ' . $this->agentFilterClause('dp.no_profissional');
-                    $totFamParams[] = $this->agentFilterValue($request->agente);
-                }
+                $this->appendAgentFilter($totFamWhere, $totFamParams, 'dp.no_profissional', 'dp.nu_cns', $agentName, $agentCns);
 
                 $totFamRows = $this->db()->select("
                     SELECT
                         dp.no_profissional AS agente,
+                        dp.nu_cns AS agente_cns,
                         COUNT(DISTINCT {$familyExpr}) AS familias_total
                     FROM tb_fat_cad_individual ci
                     JOIN tb_dim_equipe de
@@ -1737,30 +1816,31 @@ class VisitaAcsController extends MonitorApsBaseController
                     LEFT JOIN tb_dim_profissional dp
                         ON dp.co_seq_dim_profissional = ci.co_dim_profissional
                     WHERE {$totFamWhere}
-                    GROUP BY dp.no_profissional
+                    GROUP BY dp.no_profissional, dp.nu_cns
                 ", $totFamParams);
 
                 foreach ($totFamRows as $tfRow) {
-                    $famTotalMap[$tfRow->agente ?? ''] = (int) ($tfRow->familias_total ?? 0);
+                    $famTotalMap[$this->agentMapKey($tfRow->agente_cns ?? null, $tfRow->agente ?? null)] = (int) ($tfRow->familias_total ?? 0);
                 }
             } catch (\Throwable) {}
         }
 
-        $domicilioMap      = $this->domicilioCadastroStatsPorAgente($ine, $request->agente, $allowedInes);
-        $domicilioVisitMap = $this->domicilioVisitaStatsPorAgente($ano, $mes, $ine, $request->agente, $allowedInes);
+        $domicilioMap      = $this->domicilioCadastroStatsPorAgente($ine, $agentName, $agentCns, $allowedInes);
+        $domicilioVisitMap = $this->domicilioVisitaStatsPorAgente($ano, $mes, $ine, $agentName, $agentCns, $allowedInes);
 
         $agentes = array_map(function ($r) use ($hasFamilies, $famTotalMap, $domicilioMap, $domicilioVisitMap) {
+            $agentKey = $this->agentMapKey($r->agente_cns ?? null, $r->agente ?? null);
             $famAcomp    = $hasFamilies ? (int) ($r->familias_acompanhadas ?? 0) : null;
-            $famTotal    = $hasFamilies ? ($famTotalMap[$r->agente ?? ''] ?? 0) : null;
+            $famTotal    = $hasFamilies ? ($famTotalMap[$agentKey] ?? 0) : null;
             $pctFamilias = ($hasFamilies && $famTotal > 0)
                 ? (int) round($famAcomp / $famTotal * 100)
                 : null;
-            $domicilios = $domicilioMap[$r->agente ?? ''] ?? [
+            $domicilios = $domicilioMap[$agentKey] ?? [
                 'domicilios_total' => null,
                 'domicilios_com_moradores' => null,
                 'domicilios_casa_vazia' => null,
             ];
-            $domVisita = $domicilioVisitMap[$r->agente ?? ''] ?? [
+            $domVisita = $domicilioVisitMap[$agentKey] ?? [
                 'domicilios_visitados'    => null,
                 'domicilios_acompanhados' => null,
                 'domicilios_recusados'    => null,
@@ -1774,6 +1854,8 @@ class VisitaAcsController extends MonitorApsBaseController
 
             return [
                 'agente'                => $r->agente,
+                'agente_cns'            => $r->agente_cns,
+                'agente_id'             => (int) $r->agente_id,
                 'cbo'                   => $r->cbo,
                 'cbo_nome'              => self::CBO_LABELS[$r->cbo] ?? $r->cbo,
                 'equipe'                => ['nome' => $r->equipe_nome],
@@ -1810,7 +1892,7 @@ class VisitaAcsController extends MonitorApsBaseController
     public function anosDisponiveis(Request $request): JsonResponse
     {
         $allowedInes = $this->resolveAllowedInes($request);
-        [$where, $params] = $this->buildWhereFilters(null, null, null, null, $allowedInes);
+        [$where, $params] = $this->buildWhereFilters(null, null, null, null, null, $allowedInes);
 
         $sql = "
             SELECT DISTINCT t.nu_ano AS ano
@@ -1842,6 +1924,7 @@ class VisitaAcsController extends MonitorApsBaseController
         $request->validate([
             'ine' => 'nullable|string',
             'agente' => 'nullable|string',
+            'agente_cns' => 'nullable|string|max:255',
             'desfecho' => 'nullable|integer|in:1,2,3',
             'has_geo' => 'nullable|string|in:sim,nao',
             'ano' => 'nullable|integer|min:2000|max:2099',
@@ -1856,9 +1939,11 @@ class VisitaAcsController extends MonitorApsBaseController
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);
 
+        [$agentName, $agentCns] = $this->resolveAgentRequestFilters($request);
         [$where, $params] = $this->buildWhereFilters(
             $ine,
-            $request->agente,
+            $agentName,
+            $agentCns,
             $request->desfecho,
             $request->has_geo,
             $allowedInes,
