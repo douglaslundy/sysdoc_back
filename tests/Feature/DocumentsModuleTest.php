@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\DocumentApproval;
+use App\Models\DocumentConfig;
 use App\Models\DocumentType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,6 +22,8 @@ class DocumentsModuleTest extends TestCase
 
     private User $regularUser;
 
+    private User $otherManager;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -30,6 +33,7 @@ class DocumentsModuleTest extends TestCase
         $this->admin = User::factory()->create(['profile' => 'admin', 'active' => true]);
         $this->manager = User::factory()->create(['profile' => 'manager', 'active' => true]);
         $this->regularUser = User::factory()->create(['profile' => 'user', 'active' => true]);
+        $this->otherManager = User::factory()->create(['profile' => 'manager', 'active' => true]);
     }
 
     public function test_usuario_sem_permissao_nao_acessa_o_modulo(): void
@@ -96,6 +100,14 @@ class DocumentsModuleTest extends TestCase
     {
         Storage::fake('private');
 
+        DocumentConfig::current()->update([
+            'triple_signature_enabled' => true,
+            'triple_signature_sigilos' => ['restrito'],
+            'signer_user_1_id' => $this->admin->id,
+            'signer_user_2_id' => $this->manager->id,
+            'signer_user_3_id' => $this->otherManager->id,
+        ]);
+
         $type = DocumentType::create([
             'codigo' => 'relatorio',
             'nome' => 'Relatório',
@@ -117,9 +129,7 @@ class DocumentsModuleTest extends TestCase
         $documentId = $create->json('id');
 
         $delete = $this->actingAs($this->manager, 'sanctum')
-            ->deleteJson("/api/documentos/{$documentId}", [
-                'assinaturas' => [$this->manager->id, $this->admin->id, $this->regularUser->id],
-            ]);
+            ->deleteJson("/api/documentos/{$documentId}");
 
         $delete->assertStatus(200)
             ->assertJsonPath('message', 'Documento removido com sucesso.');
@@ -131,14 +141,56 @@ class DocumentsModuleTest extends TestCase
         $this->assertSame('delete', $approval->action);
         $this->assertSame('approved', $approval->status);
         $this->assertSame(3, $approval->signer_count);
-        $this->assertContains($this->manager->id, $approval->signer_user_ids);
         $this->assertContains($this->admin->id, $approval->signer_user_ids);
-        $this->assertContains($this->regularUser->id, $approval->signer_user_ids);
+        $this->assertContains($this->manager->id, $approval->signer_user_ids);
+        $this->assertContains($this->otherManager->id, $approval->signer_user_ids);
 
         $this->actingAs($this->admin, 'sanctum')
             ->getJson('/api/documentos/aprovacoes')
             ->assertStatus(200)
             ->assertJsonFragment(['document_id' => $documentId]);
+    }
+
+    public function test_documento_publico_em_rascunho_fica_oculto_ate_publicacao(): void
+    {
+        Storage::fake('private');
+
+        $type = DocumentType::create([
+            'codigo' => 'memorando',
+            'nome' => 'Memorando',
+            'descricao' => 'Teste',
+            'ordem' => 1,
+            'ativo' => true,
+        ]);
+
+        $documentId = $this->actingAs($this->manager, 'sanctum')
+            ->postJson('/api/documentos', [
+                'document_type_id' => $type->id,
+                'titulo' => 'Documento em rascunho',
+                'resumo' => 'Resumo',
+                'sigilo' => 'publico',
+                'status' => 'rascunho',
+                'arquivo' => UploadedFile::fake()->create('rascunho.pdf', 50, 'application/pdf'),
+            ])
+            ->assertStatus(201)
+            ->json('id');
+
+        $this->actingAs($this->otherManager, 'sanctum')
+            ->getJson('/api/documentos')
+            ->assertStatus(200)
+            ->assertJsonMissing(['id' => $documentId]);
+
+        $this->actingAs($this->manager, 'sanctum')
+            ->putJson("/api/documentos/{$documentId}", [
+                'status' => 'publicado',
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('status', 'publicado');
+
+        $this->actingAs($this->otherManager, 'sanctum')
+            ->getJson('/api/documentos')
+            ->assertStatus(200)
+            ->assertJsonFragment(['id' => $documentId]);
     }
 
     private function seedAccessPages(): void
@@ -153,6 +205,7 @@ class DocumentsModuleTest extends TestCase
             ['titulo' => 'Documentos', 'path' => '/documentos', 'icone' => 'file-text', 'categoria' => 'Documentos', 'ativo' => true, 'created_at' => now(), 'updated_at' => now()],
             ['titulo' => 'Tipos de Documentos', 'path' => '/documentos/tipos', 'icone' => 'list', 'categoria' => 'Documentos', 'ativo' => true, 'created_at' => now(), 'updated_at' => now()],
             ['titulo' => 'Aprovações', 'path' => '/documentos/aprovacoes', 'icone' => 'check-circle', 'categoria' => 'Documentos', 'ativo' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['titulo' => 'Configurações', 'path' => '/documentos/configuracoes', 'icone' => 'settings', 'categoria' => 'Documentos', 'ativo' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $pages = DB::table('system_pages')->pluck('id', 'path');
@@ -162,6 +215,7 @@ class DocumentsModuleTest extends TestCase
             ['access_profile_id' => $profiles['admin'], 'system_page_id' => $pages['/documentos'], 'created_at' => now(), 'updated_at' => now()],
             ['access_profile_id' => $profiles['admin'], 'system_page_id' => $pages['/documentos/tipos'], 'created_at' => now(), 'updated_at' => now()],
             ['access_profile_id' => $profiles['admin'], 'system_page_id' => $pages['/documentos/aprovacoes'], 'created_at' => now(), 'updated_at' => now()],
+            ['access_profile_id' => $profiles['admin'], 'system_page_id' => $pages['/documentos/configuracoes'], 'created_at' => now(), 'updated_at' => now()],
             ['access_profile_id' => $profiles['manager'], 'system_page_id' => $pages['/documentos'], 'created_at' => now(), 'updated_at' => now()],
             ['access_profile_id' => $profiles['manager'], 'system_page_id' => $pages['/documentos/tipos'], 'created_at' => now(), 'updated_at' => now()],
         ]);

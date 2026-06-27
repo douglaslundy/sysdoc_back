@@ -31,6 +31,7 @@ use App\Http\Controllers\ConformidadeCidadaoController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentApprovalController;
+use App\Http\Controllers\DocumentConfigController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\EmailConfigController;
@@ -340,6 +341,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::prefix('documentos')->group(function () {
         Route::get('/', [DocumentController::class, 'index']);
         Route::post('/', [DocumentController::class, 'store']);
+        Route::get('/configuracoes', [DocumentConfigController::class, 'show']);
+        Route::put('/configuracoes', [DocumentConfigController::class, 'update']);
         Route::get('/tipos', [DocumentTypeController::class, 'index']);
         Route::post('/tipos', [DocumentTypeController::class, 'store']);
         Route::put('/tipos/{id}', [DocumentTypeController::class, 'update'])->whereNumber('id');

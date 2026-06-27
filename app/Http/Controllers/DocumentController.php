@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Document;
 use App\Models\DocumentApproval;
+use App\Models\DocumentConfig;
 use App\Models\DocumentType;
 use App\Models\DocumentVersion;
 use App\Models\User;
@@ -36,8 +37,11 @@ class DocumentController extends Controller
             ->with(['type:id,codigo,nome', 'creator:id,name', 'latestVersion.uploader:id,name'])
             ->when(! $this->isAdmin($request->user()), function ($builder) use ($request) {
                 $builder->where(function ($q) use ($request) {
-                    $q->where('sigilo', 'publico')
-                        ->orWhere('created_by', $request->user()?->id);
+                    $q->where(function ($publicQuery) {
+                        $publicQuery
+                            ->where('sigilo', 'publico')
+                            ->where('status', '<>', 'rascunho');
+                    })->orWhere('created_by', $request->user()?->id);
                 });
             })
             ->orderByDesc('updated_at')
@@ -73,7 +77,7 @@ class DocumentController extends Controller
             'latestVersion.uploader:id,name',
         ])->find($id);
 
-        if (! $document || ! $this->canAccess($document, $request->user())) {
+        if (! $document || ! $this->canReadDocument($document, $request->user())) {
             return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
@@ -120,7 +124,7 @@ class DocumentController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $document = Document::find($id);
-        if (! $document || ! $this->canAccess($document, $request->user())) {
+        if (! $document || ! $this->canManageDocumentRecord($document, $request->user())) {
             return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
@@ -158,7 +162,7 @@ class DocumentController extends Controller
     public function uploadVersion(Request $request, int $id): JsonResponse
     {
         $document = Document::find($id);
-        if (! $document || ! $this->canAccess($document, $request->user())) {
+        if (! $document || ! $this->canManageDocumentRecord($document, $request->user())) {
             return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
@@ -182,13 +186,13 @@ class DocumentController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $document = Document::with('versions')->find($id);
-        if (! $document || ! $this->canAccess($document, $request->user())) {
+        if (! $document || ! $this->canManageDocumentRecord($document, $request->user())) {
             return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
         $signers = [];
-        if (in_array($document->sigilo, ['interno', 'restrito'], true)) {
-            $signers = $this->validateTripleSignature($request);
+        if ($this->currentConfig()->requiresTripleSignatureFor((string) $document->sigilo)) {
+            $signers = $this->resolveTripleSignatureSigners();
         }
 
         DB::transaction(function () use ($request, $document, $signers) {
@@ -244,7 +248,7 @@ class DocumentController extends Controller
     public function versions(Request $request, int $id): JsonResponse
     {
         $document = Document::find($id);
-        if (! $document || ! $this->canAccess($document, $request->user())) {
+        if (! $document || ! $this->canReadDocument($document, $request->user())) {
             return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
@@ -258,7 +262,7 @@ class DocumentController extends Controller
         $document = Document::find($documentId);
         $version = DocumentVersion::find($versionId);
 
-        if (! $document || ! $version || (int) $version->document_id !== (int) $document->id || ! $this->canAccess($document, $request->user())) {
+        if (! $document || ! $version || (int) $version->document_id !== (int) $document->id || ! $this->canReadDocument($document, $request->user())) {
             return response()->json(['message' => 'Versao nao encontrada.'], 404);
         }
 
@@ -322,7 +326,7 @@ class DocumentController extends Controller
         }
     }
 
-    private function canAccess(Document $document, ?User $user): bool
+    private function canReadDocument(Document $document, ?User $user): bool
     {
         if (! $user) {
             return false;
@@ -336,7 +340,25 @@ class DocumentController extends Controller
             return false;
         }
 
-        return $document->sigilo === 'publico' || (int) $document->created_by === (int) $user->id;
+        return (int) $document->created_by === (int) $user->id
+            || ($document->sigilo === 'publico' && $document->status !== 'rascunho');
+    }
+
+    private function canManageDocumentRecord(Document $document, ?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if ($this->isAdmin($user)) {
+            return true;
+        }
+
+        if (! $this->canManageDocuments($user)) {
+            return false;
+        }
+
+        return (int) $document->created_by === (int) $user->id;
     }
 
     private function isAdmin(?User $user): bool
@@ -374,27 +396,28 @@ class DocumentController extends Controller
             || app(PagePermissionService::class)->canAccess($user, '/documentos/aprovacoes');
     }
 
-    private function validateTripleSignature(Request $request): array
+    private function resolveTripleSignatureSigners(): array
     {
-        $validated = $request->validate([
-            'assinaturas' => ['required', 'array', 'size:3'],
-            'assinaturas.*' => ['integer', 'distinct', 'exists:users,id'],
-        ]);
-
-        $signers = array_values(array_unique(array_map('intval', $validated['assinaturas'] ?? [])));
+        $signers = $this->currentConfig()->signerUserIds();
         if (count($signers) !== 3) {
             throw ValidationException::withMessages([
-                'assinaturas' => 'A exclusao exige tripla assinatura distinta.',
+                'triple_signature' => 'A tripla assinatura está ativa, mas a configuração dos 3 usuários responsáveis está incompleta.',
             ]);
         }
 
-        if (! in_array((int) $request->user()?->id, $signers, true)) {
+        $existing = User::query()->whereIn('id', $signers)->pluck('id')->all();
+        if (count($existing) !== 3) {
             throw ValidationException::withMessages([
-                'assinaturas' => 'O usuario logado deve compor a tripla assinatura.',
+                'triple_signature' => 'A configuração da tripla assinatura possui usuários inválidos.',
             ]);
         }
 
-        return $signers;
+        return array_map('intval', $signers);
+    }
+
+    private function currentConfig(): DocumentConfig
+    {
+        return DocumentConfig::current();
     }
 
     private function sanitizeFilename(string $filename): string

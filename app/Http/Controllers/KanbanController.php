@@ -12,6 +12,17 @@ class KanbanController extends Controller
     {
         $query = KanbanTask::query()
             ->with(['protocol:id,numero,assunto,status', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name'])
+            ->where(function ($builder) use ($request) {
+                $builder->where('visibility', 'public');
+
+                if ($request->user()?->id) {
+                    $builder->orWhere(function ($privateQuery) use ($request) {
+                        $privateQuery
+                            ->where('visibility', 'private')
+                            ->where('created_by_id', $request->user()->id);
+                    });
+                }
+            })
             ->orderByDesc('ordem')
             ->orderByDesc('updated_at');
 
@@ -45,6 +56,7 @@ class KanbanController extends Controller
             'prioridade' => 'nullable|string|max:20',
             'vencimento' => 'nullable|date',
             'responsavel_id' => 'nullable|integer|exists:users,id',
+            'visibility' => 'nullable|string|in:public,private',
             'ordem' => 'nullable|integer|min:0',
         ]);
 
@@ -55,6 +67,7 @@ class KanbanController extends Controller
             'prioridade' => $validated['prioridade'] ?? 'normal',
             'vencimento' => $validated['vencimento'] ?? null,
             'responsavel_id' => $validated['responsavel_id'] ?? null,
+            'visibility' => $validated['visibility'] ?? 'public',
             'ordem' => $validated['ordem'] ?? 0,
             'created_by_id' => $request->user()?->id,
             'updated_by_id' => $request->user()?->id,
@@ -70,6 +83,10 @@ class KanbanController extends Controller
             return response()->json(['message' => 'Item do kanban não encontrado.'], 404);
         }
 
+        if ($this->isPrivateTaskFromAnotherUser($task, $request)) {
+            return response()->json(['message' => 'Você não possui permissão para acessar este item.'], 403);
+        }
+
         $validated = $request->validate([
             'titulo' => 'sometimes|required|string|max:200',
             'descricao' => 'nullable|string',
@@ -77,6 +94,7 @@ class KanbanController extends Controller
             'prioridade' => 'sometimes|required|string|max:20',
             'vencimento' => 'nullable|date',
             'responsavel_id' => 'nullable|integer|exists:users,id',
+            'visibility' => 'nullable|string|in:public,private',
             'ordem' => 'nullable|integer|min:0',
         ]);
 
@@ -94,15 +112,25 @@ class KanbanController extends Controller
         return response()->json($task->fresh(['protocol', 'createdBy', 'updatedBy', 'responsavel']));
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $task = KanbanTask::find($id);
         if (! $task) {
             return response()->json(['message' => 'Item do kanban não encontrado.'], 404);
         }
 
+        if ($this->isPrivateTaskFromAnotherUser($task, $request)) {
+            return response()->json(['message' => 'Você não possui permissão para acessar este item.'], 403);
+        }
+
         $task->delete();
 
         return response()->json(['message' => 'Item do kanban removido com sucesso.']);
+    }
+
+    private function isPrivateTaskFromAnotherUser(KanbanTask $task, Request $request): bool
+    {
+        return $task->visibility === 'private'
+            && (int) $task->created_by_id !== (int) $request->user()?->id;
     }
 }

@@ -17,6 +17,7 @@ class KanbanTask extends Model
         'created_by_id',
         'updated_by_id',
         'responsavel_id',
+        'visibility',
         'titulo',
         'descricao',
         'status',

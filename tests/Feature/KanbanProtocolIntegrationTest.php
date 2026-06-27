@@ -15,6 +15,7 @@ class KanbanProtocolIntegrationTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+    private User $otherUser;
     private ProtocolOrganizationalUnit $origin;
 
     protected function setUp(): void
@@ -22,6 +23,10 @@ class KanbanProtocolIntegrationTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create([
+            'profile' => 'admin',
+            'active' => true,
+        ]);
+        $this->otherUser = User::factory()->create([
             'profile' => 'admin',
             'active' => true,
         ]);
@@ -46,10 +51,12 @@ class KanbanProtocolIntegrationTest extends TestCase
                 'descricao' => 'Item independente do kanban',
                 'status' => 'novo',
                 'prioridade' => 'alta',
+                'visibility' => 'private',
             ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('titulo', 'Acompanhar obra');
+            ->assertJsonPath('titulo', 'Acompanhar obra')
+            ->assertJsonPath('visibility', 'private');
 
         $this->assertDatabaseCount('kanban_tasks', 1);
         $this->assertDatabaseCount('protocols', 0);
@@ -86,6 +93,7 @@ class KanbanProtocolIntegrationTest extends TestCase
             'protocol_id' => $protocolId,
             'titulo' => 'Solicitar acompanhamento operacional',
             'status' => 'novo',
+            'visibility' => 'public',
         ]);
     }
 
@@ -151,6 +159,29 @@ class KanbanProtocolIntegrationTest extends TestCase
             'id' => $task->id,
             'protocol_id' => $protocolId,
         ]);
+    }
+
+    public function test_item_privado_do_kanban_aparece_apenas_para_o_criador(): void
+    {
+        KanbanTask::create([
+            'titulo' => 'Privado',
+            'descricao' => 'Visível apenas para o autor',
+            'status' => 'novo',
+            'prioridade' => 'normal',
+            'visibility' => 'private',
+            'created_by_id' => $this->user->id,
+            'updated_by_id' => $this->user->id,
+        ]);
+
+        $this->actingAs($this->user, 'sanctum')
+            ->getJson('/api/kanban')
+            ->assertStatus(200)
+            ->assertJsonFragment(['titulo' => 'Privado']);
+
+        $this->actingAs($this->otherUser, 'sanctum')
+            ->getJson('/api/kanban')
+            ->assertStatus(200)
+            ->assertJsonMissing(['titulo' => 'Privado']);
     }
 
     private function seedProtocolType(): void

@@ -26,6 +26,7 @@ class DocumentPageSeeder extends Seeder
             ['titulo' => 'Documentos', 'path' => '/documentos', 'icone' => 'file-text', 'ordem' => 1],
             ['titulo' => 'Tipos de Documentos', 'path' => '/documentos/tipos', 'icone' => 'list', 'ordem' => 2],
             ['titulo' => 'Aprovações', 'path' => '/documentos/aprovacoes', 'icone' => 'check-circle', 'ordem' => 3],
+            ['titulo' => 'Configurações', 'path' => '/documentos/configuracoes', 'icone' => 'settings', 'ordem' => 4],
         ];
 
         foreach ($pages as $page) {
@@ -44,7 +45,7 @@ class DocumentPageSeeder extends Seeder
         }
 
         $permissoes = [
-            'admin' => ['/documentos', '/documentos/tipos', '/documentos/aprovacoes'],
+            'admin' => ['/documentos', '/documentos/tipos', '/documentos/aprovacoes', '/documentos/configuracoes'],
             'manager' => ['/documentos'],
             'tfd' => ['/documentos'],
         ];

@@ -39,6 +39,7 @@ class ProtocolKanbanService
             'prioridade' => $kanbanData['prioridade'] ?? $protocol->prioridade ?? 'normal',
             'vencimento' => $kanbanData['vencimento'] ?? $protocol->prazo_atendimento,
             'responsavel_id' => $kanbanData['responsavel_id'] ?? $protocol->responsavel_atual_id,
+            'visibility' => 'public',
             'updated_by_id' => $user?->id,
             'created_by_id' => $task->exists ? $task->created_by_id : $user?->id,
         ]);
