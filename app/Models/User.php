@@ -104,6 +104,10 @@ class User extends Authenticatable implements JWTSubject
     {
         $digits = preg_replace('/\D+/', '', (string) ($this->phone ?? ''));
 
-        return strlen((string) $digits) >= 10 ? $digits : null;
+        if (strlen((string) $digits) === 10 || strlen((string) $digits) === 11) {
+            return '55' . $digits;
+        }
+
+        return strlen((string) $digits) >= 12 ? $digits : null;
     }
 }

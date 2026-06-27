@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Authorization\PagePermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class DocumentConfigController extends Controller
@@ -19,6 +20,10 @@ class DocumentConfigController extends Controller
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
+        if (! Schema::hasTable('document_configs')) {
+            return response()->json($this->defaultPayload(true));
+        }
+
         return response()->json($this->payload(DocumentConfig::current()));
     }
 
@@ -26,6 +31,12 @@ class DocumentConfigController extends Controller
     {
         if (! $this->canManageConfig($request->user())) {
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
+        if (! Schema::hasTable('document_configs')) {
+            return response()->json([
+                'message' => 'A configuração de documentos ainda não está disponível. Execute a migration document_configs antes de salvar.',
+            ], 409);
         }
 
         $validated = $request->validate([
@@ -90,6 +101,20 @@ class DocumentConfigController extends Controller
             'signer_user_2_id' => $config->signer_user_2_id,
             'signer_user_3_id' => $config->signer_user_3_id,
             'signers' => $signers->sortBy(fn ($user) => array_search($user->id, $signerIds, true))->values()->all(),
+            'migration_pending' => false,
+        ];
+    }
+
+    private function defaultPayload(bool $migrationPending = false): array
+    {
+        return [
+            'triple_signature_enabled' => false,
+            'triple_signature_sigilos' => ['interno', 'restrito'],
+            'signer_user_1_id' => null,
+            'signer_user_2_id' => null,
+            'signer_user_3_id' => null,
+            'signers' => [],
+            'migration_pending' => $migrationPending,
         ];
     }
 

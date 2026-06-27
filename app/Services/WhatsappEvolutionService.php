@@ -40,7 +40,7 @@ class WhatsappEvolutionService
             ];
         }
 
-        $normalized = preg_replace('/\D+/', '', trim((string) $number));
+        $normalized = $this->normalizeBrazilianNumber($number);
         if (strlen((string) $normalized) < 10) {
             return [
                 'ok' => false,
@@ -83,6 +83,17 @@ class WhatsappEvolutionService
         }
 
         return $request;
+    }
+
+    private function normalizeBrazilianNumber(string $number): string
+    {
+        $normalized = preg_replace('/\D+/', '', trim((string) $number));
+
+        if (strlen((string) $normalized) === 10 || strlen((string) $normalized) === 11) {
+            return '55' . $normalized;
+        }
+
+        return (string) $normalized;
     }
 
     private function resolveInstance(NotificationChannelConfig $config): ?string

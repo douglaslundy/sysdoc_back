@@ -30,11 +30,13 @@ class WhatsappConfigController extends Controller
         ]);
 
         $config = $this->currentConfig();
+        $currentSettings = $config->configuracao ?? [];
+        $incomingApiKey = trim((string) $request->input('whatsapp_api_key', ''));
         $config->update([
             'ativo' => (bool) $request->boolean('whatsapp_ativo'),
             'configuracao' => [
                 'whatsapp_base_url' => $request->input('whatsapp_base_url'),
-                'whatsapp_api_key' => $request->input('whatsapp_api_key'),
+                'whatsapp_api_key' => $incomingApiKey !== '' ? $incomingApiKey : ($currentSettings['whatsapp_api_key'] ?? ''),
                 'whatsapp_instance_name' => $request->input('whatsapp_instance_name'),
                 'whatsapp_instance_token' => $request->input('whatsapp_instance_token'),
             ],
@@ -206,11 +208,24 @@ class WhatsappConfigController extends Controller
 
         return [
             'whatsapp_base_url' => $settings['whatsapp_base_url'] ?? '',
-            'whatsapp_api_key' => $settings['whatsapp_api_key'] ?? '',
+            'whatsapp_api_key' => '',
+            'whatsapp_api_key_masked' => $this->maskSecret((string) ($settings['whatsapp_api_key'] ?? '')),
             'whatsapp_instance_name' => $settings['whatsapp_instance_name'] ?? '',
             'whatsapp_instance_token' => $settings['whatsapp_instance_token'] ?? '',
             'whatsapp_ativo' => (bool) $config->ativo,
         ];
+    }
+
+    private function maskSecret(string $value): string
+    {
+        $clean = trim($value);
+        if ($clean === '') {
+            return '';
+        }
+
+        $suffix = substr($clean, -4);
+
+        return '********' . $suffix;
     }
 
     private function resolveInstance(NotificationChannelConfig $config): ?string

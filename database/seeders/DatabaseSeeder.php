@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             KanbanPageSeeder::class,              // Kanban - pagina e permissoes
             DocumentTypeSeeder::class,            // Tipos de documentos pre-cadastrados
             DocumentPageSeeder::class,            // Documentos - pagina e permissoes
+            DocumentConfigPageSeeder::class,      // Documentos - pagina de configuracoes e permissao admin
             SistemaPageSeeder::class,             // Sistema - configuracoes gerais e alertas
             MonitorApsPageSeeder::class,          // Monitor APS - categorias, paginas e permissoes
             DashboardTabPageSeeder::class,        // Dashboard - abas como system_pages com permissoes por perfil
