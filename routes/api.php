@@ -348,6 +348,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('/tipos/{id}', [DocumentTypeController::class, 'update'])->whereNumber('id');
         Route::delete('/tipos/{id}', [DocumentTypeController::class, 'destroy'])->whereNumber('id');
         Route::get('/aprovacoes', [DocumentApprovalController::class, 'index']);
+        Route::post('/aprovacoes/{id}/aprovar', [DocumentApprovalController::class, 'approve'])->whereNumber('id');
+        Route::post('/aprovacoes/{id}/rejeitar', [DocumentApprovalController::class, 'reject'])->whereNumber('id');
+        Route::get('/{id}/historico', [DocumentController::class, 'history'])->whereNumber('id');
         Route::get('/{id}', [DocumentController::class, 'show'])->whereNumber('id');
         Route::put('/{id}', [DocumentController::class, 'update'])->whereNumber('id');
         Route::delete('/{id}', [DocumentController::class, 'destroy'])->whereNumber('id');

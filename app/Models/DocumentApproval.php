@@ -16,17 +16,22 @@ class DocumentApproval extends Model
         'status',
         'requested_by',
         'approved_by',
+        'rejected_by',
         'signer_user_ids',
+        'signed_user_ids',
         'signer_count',
         'snapshot',
         'notes',
         'approved_at',
+        'rejected_at',
     ];
 
     protected $casts = [
         'signer_user_ids' => 'array',
+        'signed_user_ids' => 'array',
         'snapshot' => 'array',
         'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
         'signer_count' => 'integer',
     ];
 
@@ -43,5 +48,10 @@ class DocumentApproval extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejector(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

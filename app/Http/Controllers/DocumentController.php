@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Document;
 use App\Models\DocumentApproval;
 use App\Models\DocumentConfig;
@@ -10,6 +11,7 @@ use App\Models\DocumentVersion;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Authorization\PagePermissionService;
+use App\Services\DocumentDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -81,7 +83,40 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
+        AuditService::record('VIEW', $document, null, [
+            'document_version_id' => $document->latest_version_id,
+            'current_version_number' => $document->current_version_number,
+        ]);
+
         return response()->json($document);
+    }
+
+    public function history(Request $request, int $id): JsonResponse
+    {
+        $document = Document::find($id);
+        if (! $document || ! $this->canReadDocument($document, $request->user())) {
+            return response()->json(['message' => 'Documento nao encontrado.'], 404);
+        }
+
+        $history = AuditLog::query()
+            ->where('model_type', 'Document')
+            ->where('model_id', $document->id)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get([
+                'id',
+                'action',
+                'user_id',
+                'user_name',
+                'old_values',
+                'new_values',
+                'created_at',
+                'endpoint',
+                'method',
+                'ip_address',
+            ]);
+
+        return response()->json($history);
     }
 
     public function store(Request $request): JsonResponse
@@ -190,38 +225,47 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Documento não encontrado.'], 404);
         }
 
-        $signers = [];
-        if ($this->currentConfig()->requiresTripleSignatureFor((string) $document->sigilo)) {
-            $signers = $this->resolveTripleSignatureSigners();
+        try {
+            $signers = [];
+            if ($this->currentConfig()->requiresTripleSignatureFor((string) $document->sigilo)) {
+                $signers = $this->resolveTripleSignatureSigners($request->user()?->id);
+            }
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => collect($e->errors())->flatten()->first() ?: 'Nao foi possivel iniciar a exclusao.',
+                'errors' => $e->errors(),
+            ], 422);
         }
 
-        DB::transaction(function () use ($request, $document, $signers) {
-            $old = $document->toArray();
-
-            if ($signers !== []) {
-                DocumentApproval::create([
-                    'document_id' => $document->id,
-                    'action' => 'delete',
-                    'status' => 'approved',
-                    'requested_by' => $request->user()?->id,
-                    'approved_by' => $request->user()?->id,
-                    'signer_user_ids' => $signers,
-                    'signer_count' => count($signers),
-                    'snapshot' => $old,
-                    'approved_at' => now(),
-                ]);
+        if ($signers !== []) {
+            if (DocumentApproval::query()
+                ->where('document_id', $document->id)
+                ->where('action', 'delete')
+                ->where('status', 'pending')
+                ->exists()) {
+                return response()->json([
+                    'message' => 'Ja existe uma solicitacao de exclusao pendente para este documento.',
+                ], 422);
             }
 
-            foreach ($document->versions as $version) {
-                if ($version->disk && $version->path && Storage::disk($version->disk)->exists($version->path)) {
-                    Storage::disk($version->disk)->delete($version->path);
-                }
-                $version->delete();
-            }
+            DocumentApproval::create([
+                'document_id' => $document->id,
+                'action' => 'delete',
+                'status' => 'pending',
+                'requested_by' => $request->user()?->id,
+                'signer_user_ids' => $signers,
+                'signed_user_ids' => [],
+                'signer_count' => count($signers),
+                'snapshot' => $document->toArray(),
+            ]);
 
-            $document->update(['deleted_by' => $request->user()?->id]);
-            $document->delete();
-            AuditService::record('DELETE', $document, $old, null);
+            return response()->json([
+                'message' => 'Solicitacao de exclusao enviada para os responsaveis pela tripla assinatura.',
+            ], 202);
+        }
+
+        DB::transaction(function () use ($request, $document) {
+            app(DocumentDeletionService::class)->delete($document, $request->user()?->id);
         });
 
         return response()->json(['message' => 'Documento removido com sucesso.']);
@@ -235,14 +279,61 @@ class DocumentController extends Controller
 
         $query = DocumentApproval::query()
             ->with(['document:id,titulo,sigilo,status', 'requester:id,name', 'approver:id,name'])
-            ->orderByDesc('approved_at')
+            ->orderByRaw("case when status = 'pending' then 0 else 1 end")
+            ->orderByDesc('updated_at')
             ->orderByDesc('id');
 
         if ($request->filled('document_id')) {
             $query->where('document_id', $request->integer('document_id'));
         }
 
-        return response()->json($query->paginate(max(1, min(100, (int) $request->input('per_page', 15)))));
+        $paginator = $query->paginate(max(1, min(100, (int) $request->input('per_page', 15))));
+        $currentUserId = (int) ($request->user()?->id ?? 0);
+
+        $paginator->getCollection()->transform(function (DocumentApproval $approval) use ($currentUserId) {
+            $signerIds = array_map('intval', (array) $approval->signer_user_ids);
+            $signedIds = array_map('intval', (array) $approval->signed_user_ids);
+            $signers = User::query()
+                ->whereIn('id', $signerIds)
+                ->get(['id', 'name'])
+                ->sortBy(fn (User $user) => array_search((int) $user->id, $signerIds, true))
+                ->values()
+                ->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'signed' => in_array((int) $user->id, $signedIds, true),
+                ])
+                ->all();
+
+            $canApprove = $approval->status === 'pending'
+                && in_array($currentUserId, $signerIds, true)
+                && ! in_array($currentUserId, $signedIds, true)
+                && $currentUserId !== (int) $approval->requested_by;
+
+            return [
+                'id' => $approval->id,
+                'document_id' => $approval->document_id,
+                'document' => $approval->document,
+                'action' => $approval->action,
+                'status' => $approval->status,
+                'requester' => $approval->requester,
+                'approver' => $approval->approver,
+                'requested_by' => $approval->requested_by,
+                'approved_by' => $approval->approved_by,
+                'signer_user_ids' => $signerIds,
+                'signed_user_ids' => $signedIds,
+                'signer_count' => (int) $approval->signer_count,
+                'signers' => $signers,
+                'can_current_user_approve' => $canApprove,
+                'can_current_user_reject' => $canApprove,
+                'approved_at' => optional($approval->approved_at)?->toIso8601String(),
+                'rejected_at' => optional($approval->rejected_at)?->toIso8601String(),
+                'created_at' => optional($approval->created_at)?->toIso8601String(),
+                'updated_at' => optional($approval->updated_at)?->toIso8601String(),
+            ];
+        });
+
+        return response()->json($paginator);
     }
 
     public function versions(Request $request, int $id): JsonResponse
@@ -396,7 +487,7 @@ class DocumentController extends Controller
             || app(PagePermissionService::class)->canAccess($user, '/documentos/aprovacoes');
     }
 
-    private function resolveTripleSignatureSigners(): array
+    private function resolveTripleSignatureSigners(?int $requesterId = null): array
     {
         $signers = $this->currentConfig()->signerUserIds();
         if (count($signers) !== 3) {
@@ -409,6 +500,12 @@ class DocumentController extends Controller
         if (count($existing) !== 3) {
             throw ValidationException::withMessages([
                 'triple_signature' => 'A configuração da tripla assinatura possui usuários inválidos.',
+            ]);
+        }
+
+        if ($requesterId && in_array((int) $requesterId, array_map('intval', $signers), true)) {
+            throw ValidationException::withMessages([
+                'triple_signature' => 'O solicitante da exclusao nao pode ser um dos usuarios responsaveis pela tripla assinatura.',
             ]);
         }
 

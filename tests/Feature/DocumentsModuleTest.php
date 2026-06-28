@@ -24,6 +24,8 @@ class DocumentsModuleTest extends TestCase
 
     private User $otherManager;
 
+    private User $thirdManager;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -34,6 +36,7 @@ class DocumentsModuleTest extends TestCase
         $this->manager = User::factory()->create(['profile' => 'manager', 'active' => true]);
         $this->regularUser = User::factory()->create(['profile' => 'user', 'active' => true]);
         $this->otherManager = User::factory()->create(['profile' => 'manager', 'active' => true]);
+        $this->thirdManager = User::factory()->create(['profile' => 'manager', 'active' => true]);
     }
 
     public function test_usuario_sem_permissao_nao_acessa_o_modulo(): void
@@ -96,7 +99,7 @@ class DocumentsModuleTest extends TestCase
         ]);
     }
 
-    public function test_exclusao_restrita_cria_aprovacao_formal(): void
+    public function test_exclusao_restrita_exige_tripla_assinatura_antes_de_excluir(): void
     {
         Storage::fake('private');
 
@@ -104,8 +107,8 @@ class DocumentsModuleTest extends TestCase
             'triple_signature_enabled' => true,
             'triple_signature_sigilos' => ['restrito'],
             'signer_user_1_id' => $this->admin->id,
-            'signer_user_2_id' => $this->manager->id,
-            'signer_user_3_id' => $this->otherManager->id,
+            'signer_user_2_id' => $this->otherManager->id,
+            'signer_user_3_id' => $this->thirdManager->id,
         ]);
 
         $type = DocumentType::create([
@@ -131,24 +134,85 @@ class DocumentsModuleTest extends TestCase
         $delete = $this->actingAs($this->manager, 'sanctum')
             ->deleteJson("/api/documentos/{$documentId}");
 
-        $delete->assertStatus(200)
-            ->assertJsonPath('message', 'Documento removido com sucesso.');
+        $delete->assertStatus(202)
+            ->assertJsonPath('message', 'Solicitacao de exclusao enviada para os responsaveis pela tripla assinatura.');
 
-        $this->assertSoftDeleted('documents', ['id' => $documentId]);
+        $this->assertDatabaseHas('documents', ['id' => $documentId]);
 
         $approval = DocumentApproval::query()->where('document_id', $documentId)->first();
         $this->assertNotNull($approval);
         $this->assertSame('delete', $approval->action);
-        $this->assertSame('approved', $approval->status);
+        $this->assertSame('pending', $approval->status);
         $this->assertSame(3, $approval->signer_count);
         $this->assertContains($this->admin->id, $approval->signer_user_ids);
-        $this->assertContains($this->manager->id, $approval->signer_user_ids);
         $this->assertContains($this->otherManager->id, $approval->signer_user_ids);
+        $this->assertContains($this->thirdManager->id, $approval->signer_user_ids);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/documentos/aprovacoes/{$approval->id}/aprovar")
+            ->assertStatus(200)
+            ->assertJsonPath('message', 'Assinatura registrada. Faltam 2 aprovacao(oes).');
+
+        $this->actingAs($this->otherManager, 'sanctum')
+            ->postJson("/api/documentos/aprovacoes/{$approval->id}/aprovar")
+            ->assertStatus(200)
+            ->assertJsonPath('message', 'Assinatura registrada. Faltam 1 aprovacao(oes).');
+
+        $this->assertDatabaseHas('documents', ['id' => $documentId]);
+
+        $this->actingAs($this->thirdManager, 'sanctum')
+            ->postJson("/api/documentos/aprovacoes/{$approval->id}/aprovar")
+            ->assertStatus(200)
+            ->assertJsonPath('message', 'Exclusao aprovada e documento removido com sucesso.');
+
+        $this->assertSoftDeleted('documents', ['id' => $documentId]);
+
+        $approval->refresh();
+        $this->assertSame('approved', $approval->status);
+        $this->assertCount(3, $approval->signed_user_ids ?? []);
+        $this->assertSame($this->thirdManager->id, $approval->approved_by);
 
         $this->actingAs($this->admin, 'sanctum')
             ->getJson('/api/documentos/aprovacoes')
             ->assertStatus(200)
             ->assertJsonFragment(['document_id' => $documentId]);
+    }
+
+    public function test_exclusao_restrita_sem_tres_responsaveis_retorna_erro_claro(): void
+    {
+        Storage::fake('private');
+
+        DocumentConfig::current()->update([
+            'triple_signature_enabled' => true,
+            'triple_signature_sigilos' => ['restrito'],
+            'signer_user_1_id' => $this->admin->id,
+            'signer_user_2_id' => $this->otherManager->id,
+            'signer_user_3_id' => null,
+        ]);
+
+        $type = DocumentType::create([
+            'codigo' => 'parecer',
+            'nome' => 'Parecer',
+            'descricao' => 'Teste',
+            'ordem' => 1,
+            'ativo' => true,
+        ]);
+
+        $documentId = $this->actingAs($this->manager, 'sanctum')
+            ->postJson('/api/documentos', [
+                'document_type_id' => $type->id,
+                'titulo' => 'Documento com assinatura incompleta',
+                'resumo' => 'Resumo',
+                'sigilo' => 'restrito',
+                'arquivo' => UploadedFile::fake()->create('parecer.pdf', 50, 'application/pdf'),
+            ])
+            ->assertStatus(201)
+            ->json('id');
+
+        $this->actingAs($this->manager, 'sanctum')
+            ->deleteJson("/api/documentos/{$documentId}")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['triple_signature']);
     }
 
     public function test_documento_publico_em_rascunho_fica_oculto_ate_publicacao(): void

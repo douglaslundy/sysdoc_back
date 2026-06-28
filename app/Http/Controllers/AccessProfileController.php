@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccessProfile;
+use App\Models\DocumentApproval;
+use App\Models\SystemPage;
 use Illuminate\Http\Request;
 
 class AccessProfileController extends Controller
@@ -157,9 +159,44 @@ class AccessProfileController extends Controller
             ];
         });
 
+        $paths = $profile->pages->pluck('path')->values();
+
+        if (DocumentApproval::query()
+            ->where('status', 'pending')
+            ->whereJsonContains('signer_user_ids', (int) $user->id)
+            ->exists()) {
+            $approvalPage = SystemPage::query()
+                ->select('id', 'titulo', 'path', 'icone', 'categoria', 'category_id', 'ordem', 'ativo')
+                ->with('category:id,nome,icone,ordem,ativo')
+                ->where('path', '/documentos/aprovacoes')
+                ->where('ativo', true)
+                ->first();
+
+            if ($approvalPage && ! $paths->contains('/documentos/aprovacoes')) {
+                $paths->push('/documentos/aprovacoes');
+                $pages->push([
+                    'id' => $approvalPage->id,
+                    'titulo' => $approvalPage->titulo,
+                    'path' => $approvalPage->path,
+                    'icone' => $approvalPage->icone,
+                    'categoria' => $approvalPage->categoria,
+                    'category_id' => $approvalPage->category_id,
+                    'ordem' => $approvalPage->ordem,
+                    'ativo' => $approvalPage->ativo,
+                    'category' => $approvalPage->category ? [
+                        'id' => $approvalPage->category->id,
+                        'nome' => $approvalPage->category->nome,
+                        'icone' => $approvalPage->category->icone,
+                        'ordem' => $approvalPage->category->ordem,
+                        'ativo' => $approvalPage->category->ativo,
+                    ] : null,
+                ]);
+            }
+        }
+
         return response()->json([
-            'paths' => $profile->pages->pluck('path')->values(),
-            'pages' => $pages,
+            'paths' => $paths->values(),
+            'pages' => $pages->values(),
             'capabilities' => [
                 'chat' => $user->canUseChat(),
                 'almoxarifado_create' => $user->canUseAlmoxarifadoAction('create'),
