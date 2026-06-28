@@ -356,6 +356,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/{id}', [DocumentController::class, 'destroy'])->whereNumber('id');
         Route::get('/{id}/versoes', [DocumentController::class, 'versions'])->whereNumber('id');
         Route::post('/{id}/versoes', [DocumentController::class, 'uploadVersion'])->whereNumber('id');
+        Route::delete('/{documentId}/versoes/{versionId}', [DocumentController::class, 'destroyVersion'])
+            ->whereNumber('documentId')
+            ->whereNumber('versionId');
         Route::get('/{documentId}/versoes/{versionId}/download', [DocumentController::class, 'downloadVersion'])
             ->whereNumber('documentId')
             ->whereNumber('versionId');

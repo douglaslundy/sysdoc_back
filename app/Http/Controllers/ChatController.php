@@ -12,6 +12,7 @@ use App\Models\UserPresence;
 use App\Services\AuditService;
 use App\Services\ChatRealtimeService;
 use App\Services\ChatBroadcastConfigService;
+use App\Services\SystemAlertService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -124,6 +125,15 @@ class ChatController extends Controller
         }
 
         $conversation->load('participants:id,name,preferred_name,email');
+
+        app(SystemAlertService::class)->dispatch('chat', 'chat_conversa_iniciada', [
+            'conversation' => $conversation,
+            'sender' => $request->user(),
+            'recipient' => $otherUser,
+            'participants' => $conversation->participants->all(),
+            'requester' => $request->user(),
+        ]);
+
         return response()->json($this->conversationPayload($conversation, $userId), 201);
     }
 
@@ -236,6 +246,20 @@ class ChatController extends Controller
                 ])->values()->all(),
             ]);
         }
+
+        $otherParticipant = User::query()
+            ->whereIn('id', $recipientIds)
+            ->orderBy('id')
+            ->first();
+
+        app(SystemAlertService::class)->dispatch('chat', 'chat_mensagem_enviada', [
+            'conversation' => $conversation->loadMissing('participants:id,name,preferred_name,email'),
+            'message' => $message,
+            'sender' => $request->user(),
+            'recipient' => $otherParticipant,
+            'participants' => $conversation->participants ?? [],
+            'requester' => $request->user(),
+        ]);
 
         return response()->json($payload, 201);
     }

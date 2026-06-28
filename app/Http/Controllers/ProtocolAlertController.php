@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 class ProtocolAlertController extends Controller
 {
     private const CHANNELS = ['whatsapp', 'email'];
-    private const RECIPIENTS = ['administrador', 'gestor', 'usuario', 'tfd', 'motorista', 'todos'];
+    private const RECIPIENTS = ['administrador', 'gestor', 'usuario', 'tfd', 'motorista', 'todos', 'assinantes_exclusao_documento', 'solicitante_documento', 'criador_documento', 'solicitante_almoxarifado', 'responsavel_almoxarifado', 'aprovadores_almoxarifado', 'entregadores_almoxarifado', 'criador_kanban', 'responsavel_kanban', 'criador_oficio', 'destinatario_protocolo_oficio', 'remetente_chat', 'destinatario_chat', 'participantes_chat'];
     private const CONDITIONS = ['novo', 'em_andamento', 'aguardando_resposta', 'vencendo', 'vencido', 'concluido'];
 
     public function index(): JsonResponse

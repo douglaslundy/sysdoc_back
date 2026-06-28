@@ -13,6 +13,7 @@ use App\Models\ProtocolOrganizationalUnit;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
+use App\Services\SystemAlertService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -68,6 +69,10 @@ class LetterController extends Controller
             $letter->summary = $request->input('summary');
             $letter->fileurl = $request->input('fileurl');
             $letter->save();
+            app(SystemAlertService::class)->dispatch('oficios', 'oficio_cadastrado', [
+                'letter' => $letter->load('user'),
+                'requester' => $request->user(),
+            ]);
             $array['letter'] = $this->withProtocolState(collect([
                 $letter->load('user')->loadCount('attachments'),
             ]))->first();
@@ -104,6 +109,10 @@ class LetterController extends Controller
             $letter->summary = $request->input('summary');
             $letter->fileurl = $request->input('fileurl') ? $request->input('fileurl') : $letter->fileurl;
             $letter->save();
+            app(SystemAlertService::class)->dispatch('oficios', 'oficio_atualizado', [
+                'letter' => $letter->load('user'),
+                'requester' => $request->user(),
+            ]);
             $array['letter'] = $this->withProtocolState(collect([
                 $letter->load('user')->loadCount('attachments'),
             ]))->first();
@@ -365,6 +374,13 @@ class LetterController extends Controller
             ], 500);
         }
 
+        app(SystemAlertService::class)->dispatch('oficios', 'oficio_protocolo_criado', [
+            'letter' => $letter->loadMissing('user'),
+            'protocol' => $protocol,
+            'destination_user' => $destinationUser,
+            'requester' => $user,
+        ]);
+
         return response()->json([
             'message' => 'Protocolo criado com sucesso.',
             'protocol' => $protocol,
@@ -536,6 +552,13 @@ class LetterController extends Controller
                 'message' => 'Não foi possível criar o protocolo a partir do ofício.',
             ], 500);
         }
+
+        app(SystemAlertService::class)->dispatch('oficios', 'oficio_protocolo_criado', [
+            'letter' => $letter->loadMissing('user'),
+            'protocol' => $protocol,
+            'destination_user' => $destinationUser,
+            'requester' => $user,
+        ]);
 
         return response()->json([
             'message' => 'Protocolo criado com sucesso.',

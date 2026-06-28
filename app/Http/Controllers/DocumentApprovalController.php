@@ -7,6 +7,7 @@ use App\Models\DocumentApproval;
 use App\Models\User;
 use App\Services\Authorization\PagePermissionService;
 use App\Services\DocumentDeletionService;
+use App\Services\SystemAlertService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,12 @@ class DocumentApprovalController extends Controller
                 ]);
             });
 
+            app(SystemAlertService::class)->dispatch('documentos', 'solicitacao_exclusao_aprovada', [
+                'approval' => $approval->fresh(['document.creator:id,name,email,phone', 'requester:id,name,email,phone']),
+                'document' => $approval->document?->loadMissing('creator:id,name,email,phone'),
+                'requester' => $approval->requester,
+            ]);
+
             return response()->json([
                 'message' => 'Exclusao aprovada e documento removido com sucesso.',
             ]);
@@ -109,6 +116,12 @@ class DocumentApprovalController extends Controller
             'status' => 'rejected',
             'rejected_by' => $request->user()?->id,
             'rejected_at' => now(),
+        ]);
+
+        app(SystemAlertService::class)->dispatch('documentos', 'solicitacao_exclusao_rejeitada', [
+            'approval' => $approval->fresh(['document.creator:id,name,email,phone', 'requester:id,name,email,phone']),
+            'document' => $approval->document?->loadMissing('creator:id,name,email,phone'),
+            'requester' => $approval->requester,
         ]);
 
         return response()->json([

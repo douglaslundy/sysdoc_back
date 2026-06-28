@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\KanbanTask;
+use App\Services\SystemAlertService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -73,7 +74,13 @@ class KanbanController extends Controller
             'updated_by_id' => $request->user()?->id,
         ]);
 
-        return response()->json($task->load(['protocol', 'createdBy', 'updatedBy', 'responsavel']), 201);
+        $freshTask = $task->load(['protocol', 'createdBy', 'updatedBy', 'responsavel']);
+        app(SystemAlertService::class)->dispatch('kanban', 'kanban_item_criado', [
+            'kanban_task' => $freshTask,
+            'requester' => $request->user(),
+        ]);
+
+        return response()->json($freshTask, 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -104,12 +111,27 @@ class KanbanController extends Controller
             ], 422);
         }
 
+        $previousStatus = (string) $task->status;
+
         $task->update([
             ...$validated,
             'updated_by_id' => $request->user()?->id,
         ]);
 
-        return response()->json($task->fresh(['protocol', 'createdBy', 'updatedBy', 'responsavel']));
+        $freshTask = $task->fresh(['protocol', 'createdBy', 'updatedBy', 'responsavel']);
+        app(SystemAlertService::class)->dispatch('kanban', 'kanban_item_atualizado', [
+            'kanban_task' => $freshTask,
+            'requester' => $request->user(),
+        ]);
+
+        if (array_key_exists('status', $validated) && (string) $validated['status'] !== $previousStatus) {
+            app(SystemAlertService::class)->dispatch('kanban', 'kanban_status_alterado', [
+                'kanban_task' => $freshTask,
+                'requester' => $request->user(),
+            ]);
+        }
+
+        return response()->json($freshTask);
     }
 
     public function destroy(Request $request, int $id): JsonResponse

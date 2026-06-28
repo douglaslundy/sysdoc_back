@@ -8,6 +8,7 @@ use App\Models\AlmoxarifadoProduto;
 use App\Models\AlmoxarifadoRequisicao;
 use App\Models\AlmoxarifadoRequisicaoHistorico;
 use App\Models\AlmoxarifadoRequisicaoItem;
+use App\Services\SystemAlertService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -112,6 +113,11 @@ class AlmoxarifadoRequisicaoController extends Controller
             ]);
         });
 
+        app(SystemAlertService::class)->dispatch('almoxarifado', 'requisicao_criada', [
+            'almoxarifado_requisicao' => $requisicao->loadMissing('secretaria:id,nome,sigla', 'responsavel:id,name,email,phone', 'requisitante:id,name,email,phone'),
+            'requester' => $request->user(),
+        ]);
+
         return response()->json($requisicao, 201);
     }
 
@@ -128,6 +134,8 @@ class AlmoxarifadoRequisicaoController extends Controller
         }
 
         $this->authorizeStatusChange($request, $requisicao, $validated['status']);
+
+        $statusForAlert = $validated['status'];
 
         $resultado = DB::transaction(function () use ($validated, $request, $requisicao) {
             $statusAnterior = $requisicao->status;
@@ -170,6 +178,24 @@ class AlmoxarifadoRequisicaoController extends Controller
                 'historicos.user:id,name',
             ]);
         });
+
+        $trigger = match ($statusForAlert) {
+            'em_analise' => 'requisicao_em_analise',
+            'aprovada' => 'requisicao_aprovada',
+            'recusada' => 'requisicao_recusada',
+            'em_separacao' => 'requisicao_em_separacao',
+            'em_processo_de_entrega' => 'requisicao_em_processo_de_entrega',
+            'entregue' => 'requisicao_entregue',
+            'cancelada' => 'requisicao_cancelada',
+            default => null,
+        };
+
+        if ($trigger) {
+            app(SystemAlertService::class)->dispatch('almoxarifado', $trigger, [
+                'almoxarifado_requisicao' => $resultado->loadMissing('secretaria:id,nome,sigla', 'responsavel:id,name,email,phone', 'requisitante:id,name,email,phone'),
+                'requester' => $resultado->requisitante,
+            ]);
+        }
 
         return response()->json($resultado);
     }
