@@ -35,13 +35,25 @@ class AuditLogController extends Controller
         );
     }
 
-    public function users()
+    public function users(Request $request)
     {
-        $users = AuditLog::select('user_id', 'user_name')
-            ->whereNotNull('user_id')
-            ->distinct()
-            ->orderBy('user_name')
-            ->get();
+        $query = AuditLog::select('user_id', 'user_name')
+            ->whereNotNull('user_id');
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+        if ($request->filled('model_type')) {
+            $query->where('model_type', $request->model_type);
+        }
+
+        $users = $query->distinct()->orderBy('user_name')->get();
 
         return response()->json($users);
     }
