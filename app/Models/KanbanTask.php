@@ -24,10 +24,14 @@ class KanbanTask extends Model
         'prioridade',
         'vencimento',
         'ordem',
+        'concluido_at',
+        'arquivado_at',
     ];
 
     protected $casts = [
         'vencimento' => 'date',
+        'concluido_at' => 'datetime',
+        'arquivado_at' => 'datetime',
     ];
 
     public function protocol(): BelongsTo

@@ -13,6 +13,7 @@ class KanbanController extends Controller
     {
         $query = KanbanTask::query()
             ->with(['protocol:id,numero,assunto,status', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name'])
+            ->whereNull('arquivado_at')
             ->where(function ($builder) use ($request) {
                 $builder->where('visibility', 'public');
 
@@ -31,6 +32,10 @@ class KanbanController extends Controller
             if ($request->filled($field)) {
                 $query->where($field, $request->input($field));
             }
+        }
+
+        if ($request->boolean('pending_only')) {
+            $query->where('status', '!=', 'concluido');
         }
 
         if ($request->filled('search')) {
@@ -61,10 +66,12 @@ class KanbanController extends Controller
             'ordem' => 'nullable|integer|min:0',
         ]);
 
+        $statusInicial = $validated['status'] ?? 'novo';
+
         $task = KanbanTask::create([
             'titulo' => $validated['titulo'],
             'descricao' => $validated['descricao'] ?? null,
-            'status' => $validated['status'] ?? 'novo',
+            'status' => $statusInicial,
             'prioridade' => $validated['prioridade'] ?? 'normal',
             'vencimento' => $validated['vencimento'] ?? null,
             'responsavel_id' => $validated['responsavel_id'] ?? null,
@@ -72,6 +79,7 @@ class KanbanController extends Controller
             'ordem' => $validated['ordem'] ?? 0,
             'created_by_id' => $request->user()?->id,
             'updated_by_id' => $request->user()?->id,
+            'concluido_at' => $statusInicial === 'concluido' ? now() : null,
         ]);
 
         $freshTask = $task->load(['protocol', 'createdBy', 'updatedBy', 'responsavel']);
@@ -112,6 +120,15 @@ class KanbanController extends Controller
         }
 
         $previousStatus = (string) $task->status;
+
+        if (array_key_exists('status', $validated)) {
+            $newStatus = (string) $validated['status'];
+            if ($newStatus === 'concluido' && $previousStatus !== 'concluido') {
+                $validated['concluido_at'] = now();
+            } elseif ($newStatus !== 'concluido' && $previousStatus === 'concluido') {
+                $validated['concluido_at'] = null;
+            }
+        }
 
         $task->update([
             ...$validated,

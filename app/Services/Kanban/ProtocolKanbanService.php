@@ -31,17 +31,28 @@ class ProtocolKanbanService
             $task = KanbanTask::query()->firstOrNew(['protocol_id' => $protocol->id]);
         }
 
+        $novoStatus = $kanbanData['status'] ?? 'novo';
+        $statusAnterior = $task->exists ? (string) $task->status : null;
+
+        $concluido_at = $task->concluido_at;
+        if ($novoStatus === 'concluido' && $statusAnterior !== 'concluido') {
+            $concluido_at = now();
+        } elseif ($novoStatus !== 'concluido') {
+            $concluido_at = null;
+        }
+
         $task->fill([
             'protocol_id' => $protocol->id,
             'titulo' => $kanbanData['titulo'] ?? $protocol->assunto,
             'descricao' => $kanbanData['descricao'] ?? $protocol->descricao,
-            'status' => $kanbanData['status'] ?? 'novo',
+            'status' => $novoStatus,
             'prioridade' => $kanbanData['prioridade'] ?? $protocol->prioridade ?? 'normal',
             'vencimento' => $kanbanData['vencimento'] ?? $protocol->prazo_atendimento,
             'responsavel_id' => $kanbanData['responsavel_id'] ?? $protocol->responsavel_atual_id,
             'visibility' => 'public',
             'updated_by_id' => $user?->id,
             'created_by_id' => $task->exists ? $task->created_by_id : $user?->id,
+            'concluido_at' => $concluido_at,
         ]);
 
         $task->save();
