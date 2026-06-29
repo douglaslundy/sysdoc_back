@@ -3,11 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Sysdoc é o sistema de gestão municipal de saúde que integra laboratório, farmácia, vigilância sanitária, TFD, atendimento e documentos com IA em uma única plataforma auditada.">
-    <meta name="keywords" content="sistema gestão municipal saúde, software prefeitura saúde, laboratório municipal, farmácia transparência pública, vigilância sanitária, TFD transporte fretado, Monitor APS, fila atendimento">
+    <meta name="description" content="Sysdoc é o sistema de gestão municipal de saúde que integra laboratório, farmácia, vigilância sanitária, TFD, atendimento, protocolo, almoxarifado e documentos com IA em uma única plataforma auditada.">
+    <meta name="keywords" content="sistema gestão municipal saúde, software prefeitura saúde, laboratório municipal, farmácia transparência pública, vigilância sanitária, TFD transporte fretado, Monitor APS, fila atendimento, protocolo, almoxarifado">
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="Sysdoc — Sistema de Gestão Municipal de Saúde">
-    <meta property="og:description" content="Integre laboratório, farmácia, vigilância sanitária, TFD, atendimento e documentos com IA em uma única plataforma auditada.">
+    <meta property="og:description" content="Integre laboratório, farmácia, vigilância sanitária, TFD, atendimento, protocolo e documentos com IA em uma única plataforma auditada.">
     <meta property="og:type" content="website">
     <title>Sysdoc — Sistema de Gestão Municipal de Saúde</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,7 +236,7 @@
         details[open] summary::after { content: '−'; }
         details p { font-size: .9rem; color: var(--gray-500); margin-top: .75rem; line-height: 1.6; }
 
-        /* ── CTA FINAL ── */
+        /* ── CTA FINAL / CONTATO ── */
         .cta-final {
             background: var(--white);
             text-align: center; padding: 5rem 2rem;
@@ -250,10 +250,10 @@
         }
         .cta-box h2 { color: var(--gray-900); margin-bottom: 1rem; }
         .cta-box p { color: var(--gray-500); margin-bottom: 2rem; }
-        .cta-email {
-            font-size: 1.1rem; font-weight: 700; color: var(--blue);
-            text-decoration: none;
-        }
+        .contact-list { list-style: none; display: flex; flex-direction: column; gap: .75rem; margin-bottom: 2rem; }
+        .contact-list li { font-size: 1rem; color: var(--gray-700); }
+        .contact-list a { font-weight: 700; color: var(--blue); text-decoration: none; }
+        .contact-list a:hover { text-decoration: underline; }
 
         /* ── FOOTER ── */
         footer {
@@ -271,6 +271,8 @@
         .footer-col h4 { font-size: .85rem; font-weight: 700; color: var(--white); margin-bottom: .75rem; }
         .footer-col ul { list-style: none; }
         .footer-col ul li { font-size: .82rem; color: #94a3b8; margin-bottom: .4rem; }
+        .footer-col ul li a { color: #94a3b8; text-decoration: none; }
+        .footer-col ul li a:hover { color: #7ee8b8; }
         .footer-bottom {
             max-width: 1100px; margin: 2rem auto 0;
             padding-top: 1.5rem; border-top: 1px solid #1e293b;
@@ -305,7 +307,7 @@
 <header class="hero" role="banner">
     <div class="hero-badge">Gestão Pública de Saúde</div>
     <h1>Gestão Municipal de Saúde <span>Integrada e Auditada</span></h1>
-    <p>Do laboratório à farmácia, do TFD à vigilância sanitária — tudo em uma única plataforma com rastreabilidade completa e transparência pública.</p>
+    <p>Do laboratório à farmácia, do TFD ao protocolo, do almoxarifado à vigilância sanitária — tudo em uma única plataforma com rastreabilidade completa e transparência pública.</p>
     <div class="hero-actions">
         <a href="#modulos" class="btn-primary">Conhecer funcionalidades</a>
         <a href="#contato" class="btn-outline">Solicitar demonstração</a>
@@ -316,7 +318,7 @@
 <div class="stats" aria-label="Números do sistema">
     <div class="stats-grid">
         <div>
-            <div class="stat-num">10+</div>
+            <div class="stat-num">15+</div>
             <div class="stat-label">Módulos integrados</div>
         </div>
         <div>
@@ -328,8 +330,8 @@
             <div class="stat-label">Ações auditadas</div>
         </div>
         <div>
-            <div class="stat-num">Lei 2488</div>
-            <div class="stat-label">Transparência farmacêutica</div>
+            <div class="stat-num">6</div>
+            <div class="stat-label">Perfis de acesso</div>
         </div>
         <div>
             <div class="stat-num">IA</div>
@@ -363,7 +365,7 @@
             <article class="module-card">
                 <div class="module-icon" style="background:#e6f7f0;">💊</div>
                 <h3>Farmácia Municipal</h3>
-                <p>Controle de estoque, disponibilidade e conformidade pública (Lei 2488).</p>
+                <p>Controle de estoque, disponibilidade e transparência pública de medicamentos.</p>
                 <ul>
                     <li>Cadastro de medicamentos com código interno e princípio ativo</li>
                     <li>Disponibilidade diária por medicamento</li>
@@ -431,10 +433,75 @@
                 <p>Indicadores da Atenção Primária à Saúde direto do eSUS PEC.</p>
                 <ul>
                     <li>15 indicadores de qualidade (Portaria GM/MS 6.907/2025)</li>
-                    <li>Indicadores de vínculo territorial</li>
+                    <li>Indicadores de vínculo territorial por equipe</li>
                     <li>Repasse federal por quadrimestre</li>
                     <li>Histórico de desempenho por equipe</li>
                     <li>Conexão read-only ao banco eSUS PEC</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#e0f2fe;">📦</div>
+                <h3>Almoxarifado</h3>
+                <p>Controle completo de estoque, movimentações e requisições por secretaria.</p>
+                <ul>
+                    <li>Cadastro de produtos por categoria, espécie e unidade</li>
+                    <li>Controle de estoque com entradas e saídas</li>
+                    <li>Requisições com aprovação e rastreamento</li>
+                    <li>Relatórios por secretaria e período</li>
+                    <li>PDF de requisição com dados completos</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#fef2f2;">📋</div>
+                <h3>Protocolo de Documentos</h3>
+                <p>Gestão de protocolos com fluxo de aprovação e caixa de entrada digital.</p>
+                <ul>
+                    <li>Numeração automática por tipo de protocolo</li>
+                    <li>Caixa de entrada com triagem e encaminhamento</li>
+                    <li>Fluxo de aprovação configurável</li>
+                    <li>Histórico completo de tramitação</li>
+                    <li>Geração de PDF oficial do protocolo</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#f0fdf4;">🏥</div>
+                <h3>Painel eSUS</h3>
+                <p>Acesso integrado aos dados do eSUS PEC diretamente no painel de gestão.</p>
+                <ul>
+                    <li>Listagem de cidadãos e visitas dos ACS</li>
+                    <li>Conformidade de cidadãos por equipe</li>
+                    <li>Fila eSUS e agendamentos</li>
+                    <li>Dados de equipe de Atenção Primária</li>
+                    <li>Leitura direta do banco eSUS sem replicação</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#fdf4ff;">💬</div>
+                <h3>Chat e Comunicação Interna</h3>
+                <p>Mensagens em tempo real entre os profissionais da secretaria de saúde.</p>
+                <ul>
+                    <li>Mensagens instantâneas entre usuários</li>
+                    <li>Histórico de conversas por setor</li>
+                    <li>Notificações de novos avisos do sistema</li>
+                    <li>Avisos gerais visíveis a todos os perfis</li>
+                    <li>Integração com WhatsApp (configurável)</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#fffbeb;">✅</div>
+                <h3>Kanban de Tarefas</h3>
+                <p>Quadro Kanban para organização e acompanhamento de demandas internas.</p>
+                <ul>
+                    <li>Colunas configuráveis por fluxo de trabalho</li>
+                    <li>Cartões com responsável, prazo e descrição</li>
+                    <li>Arrastar e soltar entre colunas</li>
+                    <li>Visão por equipe ou por usuário</li>
+                    <li>Registro de movimentações para auditoria</li>
                 </ul>
             </article>
 
@@ -479,7 +546,7 @@
             <div class="benefit-card">
                 <div class="icon">🗂️</div>
                 <h3>Elimina planilhas e sistemas isolados</h3>
-                <p>Laboratório, farmácia, TFD e vigilância em um único sistema integrado, sem retrabalho ou duplicação de dados.</p>
+                <p>Laboratório, farmácia, TFD, protocolo, almoxarifado e vigilância em um único sistema integrado, sem retrabalho ou duplicação de dados.</p>
             </div>
             <div class="benefit-card">
                 <div class="icon">🔍</div>
@@ -493,8 +560,8 @@
             </div>
             <div class="benefit-card">
                 <div class="icon">⚖️</div>
-                <h3>Conformidade legal</h3>
-                <p>Atende à Lei 2488 (transparência farmacêutica) e à Portaria GM/MS 6.907/2025 (indicadores APS).</p>
+                <h3>Conformidade com a legislação</h3>
+                <p>Atende às exigências de transparência pública em saúde e à Portaria GM/MS 6.907/2025 para indicadores da Atenção Primária.</p>
             </div>
             <div class="benefit-card">
                 <div class="icon">🤖</div>
@@ -538,7 +605,25 @@
             </div>
 
             <div>
-                <h3 style="font-size:1rem; font-weight:700; color:#9333ea; margin-bottom:1.5rem;">🚌 TFD</h3>
+                <h3 style="font-size:1rem; font-weight:700; color:#9333ea; margin-bottom:1.5rem;">📋 Protocolo</h3>
+                <div class="steps">
+                    <div class="step"><div class="step-num">1</div><div><h3>Abertura do protocolo</h3><p>Documento protocolado com numeração automática e tipo configurável.</p></div></div>
+                    <div class="step"><div class="step-num">2</div><div><h3>Tramitação</h3><p>Encaminhado para o setor responsável com registro de cada movimentação.</p></div></div>
+                    <div class="step"><div class="step-num">3</div><div><h3>Conclusão</h3><p>Aprovado, arquivado ou devolvido com histórico completo e PDF gerado.</p></div></div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="font-size:1rem; font-weight:700; color:#b45309; margin-bottom:1.5rem;">📦 Almoxarifado</h3>
+                <div class="steps">
+                    <div class="step"><div class="step-num">1</div><div><h3>Requisição</h3><p>Secretaria solicita materiais com quantidade e justificativa.</p></div></div>
+                    <div class="step"><div class="step-num">2</div><div><h3>Aprovação e baixa</h3><p>Responsável aprova e o estoque é atualizado automaticamente.</p></div></div>
+                    <div class="step"><div class="step-num">3</div><div><h3>Relatório</h3><p>Movimentações por período, secretaria e produto disponíveis em PDF.</p></div></div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="font-size:1rem; font-weight:700; color:#0891b2; margin-bottom:1.5rem;">🚌 TFD</h3>
                 <div class="steps">
                     <div class="step"><div class="step-num">1</div><div><h3>Cadastro da viagem</h3><p>Gestor cria viagem com rota, data, veículo e motorista.</p></div></div>
                     <div class="step"><div class="step-num">2</div><div><h3>Pacientes confirmados</h3><p>Pacientes são adicionados e confirmam presença individualmente.</p></div></div>
@@ -580,7 +665,7 @@
 
             <details>
                 <summary>O sistema funciona para municípios de qualquer porte?</summary>
-                <p>Sim. O Sysdoc foi desenvolvido pensando em municípios de pequeno e médio porte, onde uma única plataforma precisa cobrir laboratório, farmácia, TFD, vigilância sanitária e documentação. O sistema de permissões granular permite configurar o acesso de cada colaborador exatamente ao que ele precisa.</p>
+                <p>Sim. O Sysdoc foi desenvolvido pensando em municípios de pequeno e médio porte, onde uma única plataforma precisa cobrir laboratório, farmácia, TFD, vigilância sanitária, protocolo, almoxarifado e documentação. O sistema de permissões granular permite configurar o acesso de cada colaborador exatamente ao que ele precisa.</p>
             </details>
 
             <details>
@@ -590,7 +675,7 @@
 
             <details>
                 <summary>Como funciona a transparência pública da farmácia?</summary>
-                <p>O Sysdoc publica automaticamente a disponibilidade diária de medicamentos e as aquisições mensais em painéis públicos, atendendo à Lei 2488. O cidadão acessa via link direto, sem login, e visualiza o status de cada medicamento e os valores pagos nas aquisições.</p>
+                <p>O Sysdoc publica automaticamente a disponibilidade diária de medicamentos e as aquisições mensais em painéis públicos. O cidadão acessa via link direto, sem login, e visualiza o status de cada medicamento e os valores pagos nas aquisições, atendendo às exigências de transparência pública em saúde.</p>
             </details>
 
             <details>
@@ -613,17 +698,24 @@
                 <p>O Sysdoc possui 6 perfis pré-configurados (admin, gestor, usuário, TFD, motorista e parceiro), cada um com acesso restrito aos módulos pertinentes. O administrador pode ainda criar perfis personalizados e definir quais páginas cada perfil pode acessar, com controle granular por página.</p>
             </details>
 
+            <details>
+                <summary>O módulo de almoxarifado integra com outros módulos?</summary>
+                <p>Sim. O almoxarifado se integra ao sistema de secretarias e setores, permitindo que cada unidade faça suas requisições de forma autônoma. O responsável pelo almoxarifado aprova, e o estoque é atualizado automaticamente com geração de PDF da requisição.</p>
+            </details>
+
         </div>
     </div>
 </section>
 
-<!-- ── CTA FINAL ── -->
+<!-- ── CTA FINAL / CONTATO ── -->
 <section id="contato" class="cta-final" aria-labelledby="cta-title">
     <div class="cta-box">
         <h2 id="cta-title">Pronto para modernizar a gestão de saúde do seu município?</h2>
         <p>Entre em contato e agende uma demonstração gratuita. Mostre ao gestor como o Sysdoc funciona na prática — com os dados reais da sua secretaria.</p>
-        <a href="mailto:contato@dlsistemas.com.br" class="cta-email">contato@dlsistemas.com.br</a>
-        <br><br>
+        <ul class="contact-list">
+            <li>✉️ <a href="mailto:douglaslundy@gmail.com">douglaslundy@gmail.com</a></li>
+            <li>📱 <a href="https://wa.me/5535984297193" target="_blank" rel="noopener">WhatsApp: (35) 98429-7193</a></li>
+        </ul>
         <a href="/public/manual/manual.html" class="btn-primary" style="display:inline-block;">
             📖 Baixar manual de uso
         </a>
@@ -647,6 +739,9 @@
                 <li>Fila de Atendimento</li>
                 <li>Documentos com IA</li>
                 <li>Monitor APS</li>
+                <li>Almoxarifado</li>
+                <li>Protocolo de Documentos</li>
+                <li>Painel eSUS</li>
             </ul>
         </div>
         <div class="footer-col">
@@ -654,16 +749,18 @@
             <ul>
                 <li>Dashboards analíticos</li>
                 <li>Auditoria completa</li>
-                <li>Transparência pública (Lei 2488)</li>
+                <li>Transparência pública</li>
                 <li>Consulta pública de exames</li>
                 <li>Painel TV de atendimento</li>
+                <li>Kanban de tarefas</li>
+                <li>Chat interno</li>
             </ul>
         </div>
         <div class="footer-col">
             <h4>Contato</h4>
             <ul>
-                <li>contato@dlsistemas.com.br</li>
-                <li>dlsistemas.com.br</li>
+                <li><a href="mailto:douglaslundy@gmail.com">douglaslundy@gmail.com</a></li>
+                <li><a href="https://wa.me/5535984297193" target="_blank" rel="noopener">WhatsApp: (35) 98429-7193</a></li>
             </ul>
         </div>
     </div>
