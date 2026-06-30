@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 
 class AlvaraController extends Controller
 {
@@ -84,14 +85,24 @@ class AlvaraController extends Controller
     {
         $dados = $request->validated();
 
-        $alvara = DB::transaction(function () use ($dados) {
-            $dados['numero_alvara'] = AlvaraNumberService::gerar($dados['data_alvara']);
+        try {
+            $alvara = DB::transaction(function () use ($dados) {
+                $dados['numero_alvara'] = AlvaraNumberService::gerar($dados['data_alvara']);
 
-            $alvara = Alvara::create($dados);
-            $alvara->load('estabelecimento');
+                $alvara = Alvara::create($dados);
+                $alvara->load('estabelecimento');
 
-            return $alvara;
-        });
+                return $alvara;
+            });
+        } catch (QueryException $e) {
+            if ((string) $e->getCode() === '23000' && str_contains((string) $e->getMessage(), 'alvaras_numero_alvara_unique')) {
+                return response()->json([
+                    'message' => 'Nao foi possivel gerar um novo numero de alvara. Tente novamente.',
+                ], 422);
+            }
+
+            throw $e;
+        }
 
         return response()->json(new AlvaraResource($alvara), 201);
     }

@@ -19,18 +19,21 @@ class AlvaraNumberService
             $mes = $data->month;
             $ano = $data->year;
 
-            $ultimo = Alvara::whereYear('data_alvara', $ano)
+            $sequencial = Alvara::withTrashed()
+                ->whereYear('data_alvara', $ano)
                 ->whereMonth('data_alvara', $mes)
                 ->lockForUpdate()
-                ->orderByDesc('id')
-                ->first();
+                ->get(['numero_alvara'])
+                ->map(function ($alvara) {
+                    if (preg_match('/^(\d+)-/', (string) $alvara->numero_alvara, $matches) !== 1) {
+                        return 0;
+                    }
 
-            if ($ultimo) {
-                $partes = explode('-', $ultimo->numero_alvara);
-                $sequencial = intval($partes[0]) + 1;
-            } else {
-                $sequencial = 1;
-            }
+                    return (int) $matches[1];
+                })
+                ->max();
+
+            $sequencial = ((int) $sequencial) + 1;
 
             return sprintf('%02d-%02d/%04d', $sequencial, $mes, $ano);
         });
