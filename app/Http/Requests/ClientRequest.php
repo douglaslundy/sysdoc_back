@@ -30,6 +30,9 @@ class ClientRequest extends FormRequest
      */
     public function rules()
     {
+        $client = $this->route('client');
+        $clientId = $client?->id ?? $this->id;
+
         $rules = [
             'name' => ['string', 'required', 'min:5', 'max:100'],
             'mother' => ['nullable', 'string', 'max:100'],
@@ -53,22 +56,8 @@ class ClientRequest extends FormRequest
             'addresses.complement' => ['nullable', 'max:50'],
         ];
 
-        $client = $this->route('client');
-        $clientId = $client?->id ?? $this->id;
-
-        if (in_array($this->method(), ['PUT', 'PATCH'], true)) {
-            $rules['cpf'][] = Rule::unique('clients', 'cpf')->ignore($clientId)->where(function ($query) {
-                return $query->where(function ($q) {
-                    $q->where('active', 1);
-                })->orWhereNull('active');
-            });
-        } else {
-            $rules['cpf'] = ['required', 'string', 'max:18', new ValidCpf(), Rule::unique('clients', 'cpf')->where(function ($query) {
-                return $query->where(function ($q) {
-                    $q->where('active', 1);
-                })->orWhereNull('active');
-            })];
-        }
+        $rules['cpf'][] = Rule::unique('clients', 'cpf')->ignore($clientId);
+        $rules['cns'][] = Rule::unique('clients', 'cns')->ignore($clientId);
 
         return $rules;
     }
@@ -81,6 +70,7 @@ class ClientRequest extends FormRequest
             'cpf.required' => 'O campo CPF é obrigatório.',
             'cpf.max' => 'O campo CPF não pode ter mais de 18 caracteres.',
             'cpf.unique' => 'O CPF informado já foi utilizado.',
+            'cns.unique' => 'O CNS informado já foi utilizado.',
             'addresses.zip_code.required' => 'O CEP é obrigatório.',
             'addresses.zip_code.max' => 'O CEP não pode ter mais de 10 caracteres.',
             'addresses.city.required' => 'A cidade é obrigatória.',
