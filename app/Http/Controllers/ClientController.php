@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ClientRequest;
+use App\Http\Requests\DeleteDuplicateClientsRequest;
 use App\Http\Requests\ListClientsRequest;
 use App\Http\Resources\ClientListResource;
 use App\Models\Addresses;
 use App\Models\Client;
 use App\Services\AuditService;
 use App\Services\Authorization\PagePermissionService;
+use App\Services\ClientDuplicateService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -44,6 +46,45 @@ class ClientController extends Controller
         return response()->json(ClientListResource::collection($clients)->resolve());
     }
 
+
+    public function duplicateCandidates(Request $request): JsonResponse
+    {
+        if (($request->user()?->profile ?? null) !== 'admin') {
+            return response()->json(['message' => 'Voce nao possui permissao para executar esta acao.'], 403);
+        }
+
+        $type = $request->query('type', 'all');
+
+        if (! in_array($type, ['all', 'cpf', 'cns'], true)) {
+            return response()->json(['message' => 'O filtro type informado e invalido.'], 422);
+        }
+
+        $service = app(ClientDuplicateService::class);
+        $groups = $service->listDuplicateGroups($type);
+
+        return response()->json([
+            'groups' => $groups,
+            'summary' => $service->summarize($groups),
+        ]);
+    }
+
+    public function destroyDuplicateCandidates(DeleteDuplicateClientsRequest $request): JsonResponse
+    {
+        $result = app(ClientDuplicateService::class)->deleteCandidates($request->validated('ids'));
+
+        if ($result['invalid_ids'] !== []) {
+            return response()->json([
+                'message' => 'Um ou mais clients nao podem ser excluidos por esta rotina.',
+                'invalid_ids' => $result['invalid_ids'],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Clients duplicados excluidos com sucesso.',
+            'deleted_ids' => $result['deleted_ids'],
+            'deleted_count' => $result['deleted_count'],
+        ]);
+    }
     private function listQuery(array $filters): Builder
     {
         $query = Client::query()

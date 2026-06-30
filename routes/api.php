@@ -432,6 +432,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('/clients/buscar-cpf-cns', [ClientController::class, 'buscarPorCpfCns']);
         Route::get('/clients/select', [ClientController::class, 'select']);
+        Route::middleware('admin')->group(function () {
+            Route::get('/clients/duplicates', [ClientController::class, 'duplicateCandidates']);
+            Route::delete('/clients/duplicates', [ClientController::class, 'destroyDuplicateCandidates']);
+        });
         Route::apiResource('clients', ClientController::class);
         Route::get('/detailed-client-report', [ClientController::class, 'detailedClientReport']);
     });
