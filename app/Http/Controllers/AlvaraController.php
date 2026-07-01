@@ -9,10 +9,12 @@ use App\Models\Alvara;
 use App\Services\AlvaraNumberService;
 use App\Services\AlvaraPdfService;
 use App\Services\AuditService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 
 class AlvaraController extends Controller
@@ -85,26 +87,51 @@ class AlvaraController extends Controller
     {
         $dados = $request->validated();
 
-        try {
-            $alvara = DB::transaction(function () use ($dados) {
-                $dados['numero_alvara'] = AlvaraNumberService::gerar($dados['data_alvara']);
+        if (empty($dados['vencimento_alvara'])) {
+            $dados['vencimento_alvara'] = self::vencimentoPadrao($dados['data_alvara']);
+        }
 
-                $alvara = Alvara::create($dados);
-                $alvara->load('estabelecimento');
+        $maxTentativas = 3;
 
-                return $alvara;
-            });
-        } catch (QueryException $e) {
-            if ((string) $e->getCode() === '23000' && str_contains((string) $e->getMessage(), 'alvaras_numero_alvara_unique')) {
+        for ($tentativa = 1; $tentativa <= $maxTentativas; $tentativa++) {
+            try {
+                $alvara = DB::transaction(function () use ($dados) {
+                    $dados['numero_alvara'] = AlvaraNumberService::gerar($dados['data_alvara']);
+
+                    $alvara = Alvara::create($dados);
+                    $alvara->load('estabelecimento');
+
+                    return $alvara;
+                });
+
+                return response()->json(new AlvaraResource($alvara), 201);
+            } catch (QueryException $e) {
+                $numeroAlvaraDuplicado = (string) $e->getCode() === '23000'
+                    && str_contains((string) $e->getMessage(), 'alvaras_numero_alvara_unique');
+
+                if (! $numeroAlvaraDuplicado) {
+                    throw $e;
+                }
+
+                $contexto = [
+                    'tentativa' => $tentativa,
+                    'data_alvara' => $dados['data_alvara'],
+                    'exception' => $e->getMessage(),
+                ];
+
+                if ($tentativa < $maxTentativas) {
+                    Log::warning('Colisao ao gerar numero de alvara, tentando novamente.', $contexto);
+
+                    continue;
+                }
+
+                Log::error('Nao foi possivel gerar numero de alvara apos multiplas tentativas.', $contexto);
+
                 return response()->json([
                     'message' => 'Nao foi possivel gerar um novo numero de alvara. Tente novamente.',
                 ], 422);
             }
-
-            throw $e;
         }
-
-        return response()->json(new AlvaraResource($alvara), 201);
     }
 
     public function update(UpdateAlvaraRequest $request, int $id): JsonResponse
@@ -115,10 +142,21 @@ class AlvaraController extends Controller
             return response()->json(['error' => 'Alvará não encontrado'], 404);
         }
 
-        $alvara->update($request->validated());
+        $dados = $request->validated();
+
+        if (array_key_exists('vencimento_alvara', $dados) && empty($dados['vencimento_alvara'])) {
+            $dados['vencimento_alvara'] = self::vencimentoPadrao($dados['data_alvara'] ?? $alvara->data_alvara);
+        }
+
+        $alvara->update($dados);
         $alvara->load('estabelecimento');
 
         return response()->json(new AlvaraResource($alvara));
+    }
+
+    private static function vencimentoPadrao(string $dataAlvara): string
+    {
+        return Carbon::parse($dataAlvara)->addDays(365)->toDateString();
     }
 
     public function destroy(int $id): JsonResponse

@@ -99,13 +99,56 @@ class AlvaraTest extends TestCase
             ->assertJsonValidationErrors(['vencimento_alvara']);
     }
 
-    public function test_vencimento_nulo_e_permitido(): void
+    public function test_vencimento_nulo_e_calculado_automaticamente_em_365_dias(): void
     {
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson('/api/alvaras', $this->payload(['vencimento_alvara' => null]));
+            ->postJson('/api/alvaras', $this->payload([
+                'data_alvara' => '2026-05-11',
+                'vencimento_alvara' => null,
+            ]));
 
         $response->assertStatus(201);
-        $this->assertNull($response->json('vencimento_alvara'));
+        $this->assertSame('2027-05-11', $response->json('vencimento_alvara'));
+    }
+
+    public function test_vencimento_omitido_e_calculado_automaticamente_em_365_dias(): void
+    {
+        $payload = $this->payload(['data_alvara' => '2026-05-11']);
+        unset($payload['vencimento_alvara']);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $payload);
+
+        $response->assertStatus(201);
+        $this->assertSame('2027-05-11', $response->json('vencimento_alvara'));
+    }
+
+    public function test_vencimento_informado_nao_e_sobrescrito(): void
+    {
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload([
+                'data_alvara' => '2026-05-11',
+                'vencimento_alvara' => '2026-08-01',
+            ]));
+
+        $response->assertStatus(201);
+        $this->assertSame('2026-08-01', $response->json('vencimento_alvara'));
+    }
+
+    public function test_vencimento_limpo_na_atualizacao_e_calculado_automaticamente(): void
+    {
+        $criado = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload([
+                'data_alvara' => '2026-05-11',
+                'vencimento_alvara' => '2026-08-01',
+            ]))
+            ->json();
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->putJson("/api/alvaras/{$criado['id']}", ['vencimento_alvara' => null]);
+
+        $response->assertStatus(200);
+        $this->assertSame('2027-05-11', $response->json('vencimento_alvara'));
     }
 
     public function test_nivel_risco_na_e_aceito(): void
@@ -165,6 +208,28 @@ class AlvaraTest extends TestCase
         $response->assertStatus(201);
         $this->assertNotSame($primeiro['numero_alvara'], $response->json('numero_alvara'));
         $this->assertSame('02-05/2026', $response->json('numero_alvara'));
+    }
+
+    public function test_criar_apos_editar_data_para_fora_do_mes_nao_gera_numero_duplicado(): void
+    {
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload(['data_alvara' => '2026-05-01']));
+
+        $segundo = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload(['data_alvara' => '2026-05-02']))
+            ->json();
+
+        // numero_alvara permanece "02-05/2026" mesmo apos a data sair de maio/2026,
+        // deixando o numero "orfao" do seu mes/ano original (ver test_atualizacao_nao_altera_numero_alvara).
+        $this->actingAs($this->user, 'sanctum')
+            ->putJson("/api/alvaras/{$segundo['id']}", ['data_alvara' => '2027-01-01'])
+            ->assertStatus(200);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload(['data_alvara' => '2026-05-20']));
+
+        $response->assertStatus(201);
+        $this->assertSame('03-05/2026', $response->json('numero_alvara'));
     }
 
     public function test_listagem_paginada(): void
