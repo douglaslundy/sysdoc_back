@@ -149,6 +149,24 @@ class AlvaraTest extends TestCase
         $this->assertSoftDeleted('alvaras', ['id' => $alvara->id]);
     }
 
+    public function test_criar_apos_excluir_no_mesmo_mes_nao_gera_numero_duplicado(): void
+    {
+        $primeiro = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload(['data_alvara' => '2026-05-01']))
+            ->json();
+
+        $this->actingAs($this->user, 'sanctum')
+            ->deleteJson("/api/alvaras/{$primeiro['id']}")
+            ->assertStatus(200);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/alvaras', $this->payload(['data_alvara' => '2026-05-15']));
+
+        $response->assertStatus(201);
+        $this->assertNotSame($primeiro['numero_alvara'], $response->json('numero_alvara'));
+        $this->assertSame('02-05/2026', $response->json('numero_alvara'));
+    }
+
     public function test_listagem_paginada(): void
     {
         $this->actingAs($this->user, 'sanctum');
