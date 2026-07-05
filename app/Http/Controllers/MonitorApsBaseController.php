@@ -35,7 +35,7 @@ abstract class MonitorApsBaseController extends Controller
 
     protected function db(): \Illuminate\Database\ConnectionInterface
     {
-        @set_time_limit(120);
+        @set_time_limit(180);
 
         if ($this->apsConn !== null) return $this->apsConn;
 
@@ -82,7 +82,7 @@ abstract class MonitorApsBaseController extends Controller
         $this->apsConn = DB::connection('pgsql_esus_runtime');
 
         try {
-            $this->apsConn->statement("SET statement_timeout = '60s'");
+            $this->apsConn->statement("SET statement_timeout = '120s'");
         } catch (\Throwable $e) {
             // SET statement_timeout só falha se a conexão/autenticação falhou.
             // Propagamos para que o caller receba 503 em vez de uma conexão quebrada
@@ -142,22 +142,26 @@ abstract class MonitorApsBaseController extends Controller
     {
         $v   = $this->schemaCacheVersion();
         $key = "aps_table2_{$v}_{$table}";
-        return Cache::remember($key, 86400, function () use ($table) {
-            try {
-                $row = $this->db()->selectOne("
-                    SELECT 1
-                    FROM pg_catalog.pg_class c
-                    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-                    WHERE c.relname = ?
-                      AND c.relkind = 'r'
-                      AND n.nspname = 'public'
-                    LIMIT 1
-                ", [$table]);
-                return $row !== null;
-            } catch (\Throwable) {
-                return false;
-            }
-        });
+
+        $cached = Cache::get($key);
+        if ($cached !== null) return (bool) $cached;
+
+        // Sem try/catch: falha de conexão deve propagar e virar 503 no endpoint.
+        // Cachear "false" numa instabilidade transitória gerava 24h de falso negativo.
+        $row = $this->db()->selectOne("
+            SELECT 1
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relname = ?
+              AND c.relkind = 'r'
+              AND n.nspname = 'public'
+            LIMIT 1
+        ", [$table]);
+
+        $exists = $row !== null;
+        Cache::put($key, $exists, 86400);
+
+        return $exists;
     }
 
     /**
@@ -184,21 +188,43 @@ abstract class MonitorApsBaseController extends Controller
     {
         $v   = $this->schemaCacheVersion();
         $key = "aps_col2_{$v}_{$table}_{$column}";
-        return Cache::remember($key, 86400, function () use ($table, $column) {
-            try {
-                $row = $this->db()->selectOne("
-                    SELECT 1 FROM pg_catalog.pg_attribute
-                    WHERE attrelid = ?::regclass
-                      AND attname   = ?
-                      AND attnum    > 0
-                      AND NOT attisdropped
-                    LIMIT 1
-                ", [$table, $column]);
-                return $row !== null;
-            } catch (\Throwable) {
+
+        $cached = Cache::get($key);
+        if ($cached !== null) return (bool) $cached;
+
+        try {
+            $row = $this->db()->selectOne("
+                SELECT 1 FROM pg_catalog.pg_attribute
+                WHERE attrelid = ?::regclass
+                  AND attname   = ?
+                  AND attnum    > 0
+                  AND NOT attisdropped
+                LIMIT 1
+            ", [$table, $column]);
+        } catch (\Throwable $e) {
+            // Tabela inexistente (::regclass lança erro) => coluna não existe: pode cachear.
+            // Falha de conexão deve propagar — nunca cachear falso negativo por 24h.
+            if ($this->isMissingRelationError($e)) {
+                Cache::put($key, false, 86400);
                 return false;
             }
-        });
+            throw $e;
+        }
+
+        $exists = $row !== null;
+        Cache::put($key, $exists, 86400);
+
+        return $exists;
+    }
+
+    /**
+     * true se o erro é "relation does not exist" (SQLSTATE 42P01) — schema sem a
+     * tabela — e não uma falha de conexão/timeout.
+     */
+    private function isMissingRelationError(\Throwable $e): bool
+    {
+        $msg = $e->getMessage();
+        return str_contains($msg, '42P01') || stripos($msg, 'does not exist') !== false;
     }
 
     /**

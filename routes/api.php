@@ -151,7 +151,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Monitor APS — indicadores Portaria GM/MS 6.907/2025
     // audit.read removido: auditoria granular feita no frontend (1 VIEW por page load, 1 READ por filtro aplicado)
-    Route::prefix('monitor-aps')->middleware(['throttle:60,1', 'equipe.aps'])->group(function () {
+    // throttle 180/min: cada página dispara 4-7 consultas por troca de filtro (com retry no front)
+    Route::prefix('monitor-aps')->middleware(['throttle:180,1', 'equipe.aps'])->group(function () {
         Route::get('/minhas-equipes', [MonitorApsController::class, 'minhasEquipes']);
         Route::prefix('indicadores')->group(function () {
             Route::get('/resumo', [MonitorApsController::class, 'resumo']);
