@@ -86,7 +86,7 @@ class MonitorApsController extends MonitorApsBaseController
             });
             return response()->json($data);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->monitorApsErrorResponse($e, 'MonitorAps.resumo');
         }
     }
 
@@ -129,7 +129,7 @@ class MonitorApsController extends MonitorApsBaseController
             $data = Cache::remember($cacheKey, 600, fn() => $this->calcularVinculo($ano, $quad, $ine, $allowedInes));
             return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'equipes' => $data]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->monitorApsErrorResponse($e, 'MonitorAps.vinculo');
         }
     }
 
@@ -163,7 +163,7 @@ class MonitorApsController extends MonitorApsBaseController
             });
             return response()->json(['periodo' => ['ano' => $ano, 'quadrimestre' => $quad], 'indicadores' => $indicadores]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->monitorApsErrorResponse($e, 'MonitorAps.qualidade');
         }
     }
 
@@ -186,7 +186,7 @@ class MonitorApsController extends MonitorApsBaseController
         try {
             return response()->json($this->$method($ine, $ano, $quad));
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->monitorApsErrorResponse($e, 'MonitorAps.qualidadeIndicador');
         }
     }
 
@@ -236,7 +236,7 @@ class MonitorApsController extends MonitorApsBaseController
             });
             return response()->json($data);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->monitorApsErrorResponse($e, 'MonitorAps.repasse');
         }
     }
 
@@ -271,14 +271,16 @@ class MonitorApsController extends MonitorApsBaseController
                         try {
                             $d = $this->$method($ine, $ano, $quad);
                             if ($d) $resultado[] = ['ano' => $ano, 'quadrimestre' => $quad, ...($d['indicador']['resultado'] ?? [])];
-                        } catch (\Throwable) {}
+                        } catch (\Throwable $e) {
+                            $this->monitorApsQueryFailed('MonitorAps.historico.periodo', $e);
+                        }
                     }
                 }
                 return $resultado;
             });
             return response()->json(['ine' => $ine, 'indicador_id' => $indicadorId, 'historico' => $historico]);
         } catch (\Throwable $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->monitorApsErrorResponse($e, 'MonitorAps.historico');
         }
     }
 
@@ -457,7 +459,9 @@ class MonitorApsController extends MonitorApsBaseController
             try {
                 $r = $this->{"calcularInd{$id}"}($ine, $ano, $quad);
                 if ($r !== null) $results[] = $r;
-            } catch (\Throwable) {}
+            } catch (\Throwable $e) {
+                $this->monitorApsQueryFailed("MonitorAps.calcularESF.ind{$id}", $e);
+            }
         }
         // ind7–ind10: complementares — exibidos no painel mas NÃO entram na média de qualidade
         foreach ([7,8,9,10] as $id) {
@@ -467,7 +471,9 @@ class MonitorApsController extends MonitorApsBaseController
                     $r['indicador']['complementar'] = true;
                     $results[] = $r;
                 }
-            } catch (\Throwable) {}
+            } catch (\Throwable $e) {
+                $this->monitorApsQueryFailed("MonitorAps.calcularESF.complementar{$id}", $e);
+            }
         }
         return $results;
     }
@@ -479,7 +485,9 @@ class MonitorApsController extends MonitorApsBaseController
             try {
                 $r = $this->{"calcularInd{$id}"}($ine, $ano, $quad);
                 if ($r !== null) $results[] = $r;
-            } catch (\Throwable) {}
+            } catch (\Throwable $e) {
+                $this->monitorApsQueryFailed("MonitorAps.calcularESB.ind{$id}", $e);
+            }
         }
         return $results;
     }
@@ -538,7 +546,9 @@ class MonitorApsController extends MonitorApsBaseController
                     ],
                 ]];
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind1', $e);
+        }
 
         // ── IND 2: Cuidado Longitudinal da Criança ───────────────────────────
         try {
@@ -628,7 +638,9 @@ class MonitorApsController extends MonitorApsBaseController
                         ['nome' => 'Vacinação completa',             'valor' => $vals[3], 'total' => $den],
                     ]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind2', $e);
+        }
 
         // ── IND 3: Gestante ────────────────────────────────────────────────
         try {
@@ -663,7 +675,9 @@ class MonitorApsController extends MonitorApsBaseController
                     $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind3_gestante',
                     [['nome' => 'Gestantes com ≥6 consultas médico/enfermeiro', 'valor' => $num, 'total' => $den]]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind3', $e);
+        }
 
         // ── IND 4: Hipertensão ─────────────────────────────────────────────
         try {
@@ -696,7 +710,9 @@ class MonitorApsController extends MonitorApsBaseController
                     $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind4_hipertensao',
                     [['nome' => 'Hipertensos com ≥2 atendimentos', 'valor' => $num, 'total' => $den]]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind4', $e);
+        }
 
         // ── IND 5: Diabetes ────────────────────────────────────────────────
         try {
@@ -729,7 +745,9 @@ class MonitorApsController extends MonitorApsBaseController
                     $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind5_diabetes',
                     [['nome' => 'Diabéticos com ≥2 atendimentos', 'valor' => $num, 'total' => $den]]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind5', $e);
+        }
 
         // ── IND 6: Pessoa Idosa ────────────────────────────────────────────
         try {
@@ -761,7 +779,9 @@ class MonitorApsController extends MonitorApsBaseController
                     $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind6_idoso',
                     [['nome' => 'Idosos atendidos no quadrimestre', 'valor' => $num, 'total' => $den]]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind6', $e);
+        }
 
         // ── IND 7: Saúde Mental (complementar) ────────────────────────────
         try {
@@ -795,7 +815,9 @@ class MonitorApsController extends MonitorApsBaseController
                 $r['indicador']['complementar'] = true;
                 $results[] = $r;
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind7', $e);
+        }
 
         // ── IND 8: Visita ACS/TACS (complementar) ─────────────────────────
         try {
@@ -828,7 +850,9 @@ class MonitorApsController extends MonitorApsBaseController
                 $r['indicador']['complementar'] = true;
                 $results[] = $r;
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind8', $e);
+        }
 
         // ── IND 9: Vacinação (complementar) ───────────────────────────────
         try {
@@ -870,7 +894,9 @@ class MonitorApsController extends MonitorApsBaseController
                 $r['indicador']['complementar'] = true;
                 $results[] = $r;
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind9', $e);
+        }
 
         // ── IND 10: Ações Interprofissionais (complementar) ────────────────
         try {
@@ -904,7 +930,9 @@ class MonitorApsController extends MonitorApsBaseController
                 $r['indicador']['complementar'] = true;
                 $results[] = $r;
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind10', $e);
+        }
 
         // ── IND 11: Cuidado da Mulher — Prevenção do Câncer ───────────────
         try {
@@ -1018,7 +1046,9 @@ class MonitorApsController extends MonitorApsBaseController
                         ['nome' => 'Mamografia (50–69 anos)',              'valor' => $num4v, 'total' => $den4v],
                     ]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESFBatch.ind11', $e);
+        }
 
         return $results;
     }
@@ -1066,7 +1096,9 @@ class MonitorApsController extends MonitorApsBaseController
                     $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind13_acesso_bucal',
                     [['nome' => 'Primeiras consultas odontológicas', 'valor' => $num, 'total' => $den]]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESBBatch.ind13', $e);
+        }
 
         // ── IND 14: Conclusão de Tratamento Odontológico ──────────────────
         try {
@@ -1098,7 +1130,9 @@ class MonitorApsController extends MonitorApsBaseController
                     $ine, $nomeMap[$ine] ?? '', $ano, $quad, $num, $den, $pct, 'ind14_conclusao',
                     [['nome' => 'Tratamentos concluídos', 'valor' => $num, 'total' => $den]]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESBBatch.ind14', $e);
+        }
 
         // ── IND 15: Ações Coletivas em Saúde Bucal ────────────────────────
         try {
@@ -1133,7 +1167,9 @@ class MonitorApsController extends MonitorApsBaseController
                         ['nome' => 'Participantes em escovação supervisionada', 'valor' => $part, 'total' => $den],
                     ]);
             }
-        } catch (\Throwable) {}
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('MonitorAps.calcularESBBatch.ind15', $e);
+        }
 
         return $results;
     }

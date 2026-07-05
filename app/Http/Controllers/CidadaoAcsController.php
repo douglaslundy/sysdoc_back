@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class CidadaoAcsController extends MonitorApsBaseController
 {
@@ -112,8 +111,8 @@ class CidadaoAcsController extends MonitorApsBaseController
 
         try {
             $db = $this->db();
-        } catch (\Throwable) {
-            return response()->json(['error' => 'Não foi possível conectar ao e-SUS.'], 503);
+        } catch (\Throwable $e) {
+            return $this->monitorApsErrorResponse($e, 'CidadaoAcs.index.connect', 'Não foi possível conectar ao e-SUS.');
         }
 
         try {
@@ -458,8 +457,7 @@ class CidadaoAcsController extends MonitorApsBaseController
                 ],
             ]);
         } catch (\Throwable $e) {
-            Log::error('CidadaoAcs.index: ' . $e->getMessage());
-            return response()->json(['error' => 'Erro ao consultar cidadãos.'], 500);
+            return $this->monitorApsErrorResponse($e, 'CidadaoAcs.index');
         }
     }
 
@@ -477,8 +475,8 @@ class CidadaoAcsController extends MonitorApsBaseController
 
         try {
             $db = $this->db();
-        } catch (\Throwable) {
-            return response()->json(['error' => 'Não foi possível conectar ao e-SUS.'], 503);
+        } catch (\Throwable $e) {
+            return $this->monitorApsErrorResponse($e, 'CidadaoAcs.agentes.connect', 'Não foi possível conectar ao e-SUS.');
         }
 
         try {
@@ -541,8 +539,7 @@ class CidadaoAcsController extends MonitorApsBaseController
 
             return response()->json(['agentes' => $rows]);
         } catch (\Throwable $e) {
-            Log::error('CidadaoAcs.agentes: ' . $e->getMessage());
-            return response()->json(['error' => 'Erro ao consultar agentes.'], 500);
+            return $this->monitorApsErrorResponse($e, 'CidadaoAcs.agentes');
         }
     }
 }

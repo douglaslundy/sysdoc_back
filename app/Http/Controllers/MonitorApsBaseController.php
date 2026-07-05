@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use PDO;
 
 abstract class MonitorApsBaseController extends Controller
@@ -33,6 +35,8 @@ abstract class MonitorApsBaseController extends Controller
 
     protected function db(): \Illuminate\Database\ConnectionInterface
     {
+        @set_time_limit(120);
+
         if ($this->apsConn !== null) return $this->apsConn;
 
         $row = Cache::remember('aps_db_config', 3600, function () {
@@ -78,7 +82,7 @@ abstract class MonitorApsBaseController extends Controller
         $this->apsConn = DB::connection('pgsql_esus_runtime');
 
         try {
-            $this->apsConn->statement("SET statement_timeout = '25s'");
+            $this->apsConn->statement("SET statement_timeout = '60s'");
         } catch (\Throwable $e) {
             // SET statement_timeout só falha se a conexão/autenticação falhou.
             // Propagamos para que o caller receba 503 em vez de uma conexão quebrada
@@ -87,6 +91,37 @@ abstract class MonitorApsBaseController extends Controller
         }
 
         return $this->apsConn;
+    }
+
+    protected function monitorApsErrorResponse(
+        \Throwable $e,
+        string $context,
+        string $message = 'Não foi possível consultar o banco eSUS PEC.',
+        int $status = 503
+    ): JsonResponse {
+        Log::error($context . ': ' . $e->getMessage(), [
+            'exception' => get_class($e),
+            'previous' => $e->getPrevious()?->getMessage(),
+        ]);
+
+        return response()->json(['error' => $message], $status);
+    }
+
+    protected function monitorApsQueryFailed(string $context, \Throwable $e): void
+    {
+        throw new \RuntimeException("Falha parcial no Monitor APS ({$context}).", 0, $e);
+    }
+
+    protected function monitorApsLogSlowQuery(string $context, float $startedAt, array $extra = []): void
+    {
+        $elapsedMs = (int) round((microtime(true) - $startedAt) * 1000);
+        if ($elapsedMs < 3000) {
+            return;
+        }
+
+        Log::warning($context . ': consulta lenta no Monitor APS', array_merge([
+            'elapsed_ms' => $elapsedMs,
+        ], $extra));
     }
 
     /**

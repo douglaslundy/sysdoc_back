@@ -489,8 +489,8 @@ class VisitaAcsController extends MonitorApsBaseController
                     ON dp.co_seq_dim_profissional = d.co_dim_profissional
                 WHERE " . implode(' AND ', $where) . "
             ", $params);
-        } catch (\Throwable) {
-            return $empty;
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('VisitaAcs.domicilioCadastroStats', $e);
         }
 
         return [
@@ -555,8 +555,8 @@ class VisitaAcsController extends MonitorApsBaseController
                 WHERE " . implode(' AND ', $where) . "
                 GROUP BY dp.no_profissional, dp.nu_cns
             ", $params);
-        } catch (\Throwable) {
-            return [];
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('VisitaAcs.domicilioCadastroStatsPorAgente', $e);
         }
 
         $map = [];
@@ -632,8 +632,8 @@ class VisitaAcsController extends MonitorApsBaseController
                     COUNT(*) FILTER (WHERE tem_ausente) AS domicilios_ausentes
                 FROM domicilio_status
             ", $params);
-        } catch (\Throwable) {
-            return $empty;
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('VisitaAcs.domicilioVisitaStats', $e);
         }
 
         return [
@@ -703,8 +703,8 @@ class VisitaAcsController extends MonitorApsBaseController
                 FROM domicilio_status
                 GROUP BY agente, agente_cns
             ", $params);
-        } catch (\Throwable) {
-            return [];
+        } catch (\Throwable $e) {
+            $this->monitorApsQueryFailed('VisitaAcs.domicilioVisitaStatsPorAgente', $e);
         }
 
         $map = [];
@@ -933,8 +933,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 LIMIT ? OFFSET ?
             ", array_merge($params, [$perPage, $offset]));
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('VisitaAcs.index: ' . $e->getMessage());
-            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+            return $this->monitorApsErrorResponse($e, 'VisitaAcs.index');
         }
 
         $total = (int) ($rows[0]->total_count ?? 0);
@@ -996,8 +995,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 WHERE {$where}
             ", $params);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('VisitaAcs.resumo: ' . $e->getMessage());
-            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+            return $this->monitorApsErrorResponse($e, 'VisitaAcs.resumo');
         }
 
         $domicilioCadastro = $this->domicilioCadastroStats($ine, $agentName, $agentCns, $allowedInes);
@@ -1209,8 +1207,7 @@ class VisitaAcsController extends MonitorApsBaseController
         try {
             $rows = $this->db()->select($sql, $queryParams);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('VisitaAcs.lista: ' . $e->getMessage());
-            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+            return $this->monitorApsErrorResponse($e, 'VisitaAcs.lista');
         }
 
         $total = (int) ($rows[0]->total_count ?? 0);
@@ -1663,8 +1660,7 @@ class VisitaAcsController extends MonitorApsBaseController
         try {
             $rows = $this->db()->select($sql, $params);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('VisitaAcs.mapa: ' . $e->getMessage());
-            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+            return $this->monitorApsErrorResponse($e, 'VisitaAcs.mapa');
         }
 
         $pontos = array_map(fn ($r) => [
@@ -1780,8 +1776,7 @@ class VisitaAcsController extends MonitorApsBaseController
                 ORDER BY total DESC
             ", $params);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('VisitaAcs.agentes: ' . $e->getMessage());
-            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+            return $this->monitorApsErrorResponse($e, 'VisitaAcs.agentes');
         }
 
         // Total de famílias por agente — baseado em vínculos cadastrais, não visitas
@@ -1822,7 +1817,9 @@ class VisitaAcsController extends MonitorApsBaseController
                 foreach ($totFamRows as $tfRow) {
                     $famTotalMap[$this->agentMapKey($tfRow->agente_cns ?? null, $tfRow->agente ?? null)] = (int) ($tfRow->familias_total ?? 0);
                 }
-            } catch (\Throwable) {}
+            } catch (\Throwable $e) {
+                $this->monitorApsQueryFailed('VisitaAcs.agentes.familiasTotal', $e);
+            }
         }
 
         $domicilioMap      = $this->domicilioCadastroStatsPorAgente($ine, $agentName, $agentCns, $allowedInes);
@@ -1905,8 +1902,7 @@ class VisitaAcsController extends MonitorApsBaseController
         try {
             $rows = $this->db()->select($sql, $params);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('VisitaAcs.anosDisponiveis: ' . $e->getMessage());
-            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+            return $this->monitorApsErrorResponse($e, 'VisitaAcs.anosDisponiveis');
         }
 
         return response()->json([
@@ -2004,8 +2000,7 @@ class VisitaAcsController extends MonitorApsBaseController
         try {
             $rows = $this->db()->select($sql, $params);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('VisitaAcs.evolucao: ' . $e->getMessage());
-            return response()->json(['error' => 'Não foi possível consultar o banco eSUS PEC.'], 503);
+            return $this->monitorApsErrorResponse($e, 'VisitaAcs.evolucao');
         }
 
         $index = [];
