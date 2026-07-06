@@ -177,6 +177,29 @@ class PainelEsusController extends MonitorApsBaseController
         ];
     }
 
+    /**
+     * Resolve o período (data_inicio/data_fim) da requisição, com fallback para
+     * o parâmetro legado `data` e para a data atual. Intervalo máximo: 30 dias.
+     *
+     * @return array{0: string, 1: string, 2: ?string} [inicio, fim, erro]
+     */
+    private function resolvePeriodo(Request $request): array
+    {
+        $inicio = $request->input('data_inicio') ?: ($request->input('data') ?: now()->toDateString());
+        $fim    = $request->input('data_fim') ?: $inicio;
+
+        if ($fim < $inicio) {
+            [$inicio, $fim] = [$fim, $inicio];
+        }
+
+        $dias = \Carbon\Carbon::parse($inicio)->diffInDays(\Carbon\Carbon::parse($fim));
+        if ($dias > 30) {
+            return [$inicio, $fim, 'O intervalo entre as datas não pode ultrapassar 30 dias.'];
+        }
+
+        return [$inicio, $fim, null];
+    }
+
     private function resolveUnidadeColumns(): array
     {
         return [
@@ -483,14 +506,20 @@ class PainelEsusController extends MonitorApsBaseController
             'equipe'       => 'nullable|integer',
             'profissional' => 'nullable|integer',
             'data'         => 'nullable|date_format:Y-m-d',
+            'data_inicio'  => 'nullable|date_format:Y-m-d',
+            'data_fim'     => 'nullable|date_format:Y-m-d',
             'situacao'     => 'nullable|in:aguardando,atendidos,nao_aguardaram',
         ]);
 
         $cnes     = trim($request->input('cnes'));
         $equipeId = $request->input('equipe');
         $profId   = $request->input('profissional');
-        $hoje     = $request->input('data') ?: now()->toDateString();
         $situacao = $request->input('situacao', 'aguardando');
+
+        [$inicio, $fim, $erroPeriodo] = $this->resolvePeriodo($request);
+        if ($erroPeriodo) {
+            return response()->json(['error' => $erroPeriodo], 422);
+        }
 
         try {
             $db = $this->db();
@@ -513,8 +542,8 @@ class PainelEsusController extends MonitorApsBaseController
             $aguardandoStatus = $filaTable === 'ta_agendado' ? 0 : 1;
             $counterJoins = in_array($filaTable, ['ta_agendado', 'tb_atend'], true) ? $joins['profJoin'] : '';
 
-            $where  = "{$cnesWhere} AND la.{$cols['dtCol']}::date = ?";
-            $params = [$cnes, $hoje];
+            $where  = "{$cnesWhere} AND la.{$cols['dtCol']}::date BETWEEN ? AND ?";
+            $params = [$cnes, $inicio, $fim];
 
             if ($equipeId !== null) {
                 if ($filaTable === 'ta_agendado') {
@@ -599,10 +628,18 @@ class PainelEsusController extends MonitorApsBaseController
             ]));
             $saidaExpr = "TO_CHAR({$saidaBaseExpr}, 'HH24:MI')";
 
+            // CPF/CNS do cidadão — usados na busca do frontend
+            $cpfCol  = $this->firstExistingColumn('tb_cidadao', ['nu_cpf', 'nu_cpf_cidadao']);
+            $cnsCol  = $this->firstExistingColumn('tb_cidadao', ['nu_cns', 'nu_cartao_sus']);
+            $cpfExpr = $cpfCol ? "c.{$cpfCol}::text" : 'NULL';
+            $cnsExpr = $cnsCol ? "c.{$cnsCol}::text" : 'NULL';
+
             $aguardando = $db->select("
                 SELECT
                     la.{$cols['pkCol']}                              AS id,
                     {$joins['cidExpr']}                              AS cidadao,
+                    {$cpfExpr}                                       AS cpf,
+                    {$cnsExpr}                                       AS cns,
                     TO_CHAR(la.{$cols['dtCol']}, 'DD/MM/YYYY')       AS data_atendimento,
                     TO_CHAR(la.{$cols['hrChegadaCol']}, 'HH24:MI')  AS hr_chegada,
                     {$saidaExpr}                                     AS hr_saida,
@@ -638,16 +675,23 @@ class PainelEsusController extends MonitorApsBaseController
 
     /**
      * GET /painel-esus/filtros?cnes=X
-     * Autenticado. Retorna equipes e profissionais do dia para popular os dropdowns.
+     * Autenticado. Retorna equipes e profissionais com registros no período
+     * selecionado para popular os dropdowns.
      */
     public function filtros(Request $request): JsonResponse
     {
         $request->validate([
-            'cnes' => 'required|string|max:20',
-            'data' => 'nullable|date_format:Y-m-d',
+            'cnes'        => 'required|string|max:20',
+            'data'        => 'nullable|date_format:Y-m-d',
+            'data_inicio' => 'nullable|date_format:Y-m-d',
+            'data_fim'    => 'nullable|date_format:Y-m-d',
         ]);
         $cnes = trim($request->input('cnes'));
-        $hoje = $request->input('data') ?: now()->toDateString();
+
+        [$inicio, $fim, $erroPeriodo] = $this->resolvePeriodo($request);
+        if ($erroPeriodo) {
+            return response()->json(['error' => $erroPeriodo], 422);
+        }
 
         try {
             $db = $this->db();
@@ -681,10 +725,10 @@ class PainelEsusController extends MonitorApsBaseController
                             FROM {$filaTable} la
                             {$joins['profJoin']}
                             {$joins['eqJoin']}
-                            WHERE us.nu_cnes = ? AND la.{$dtCol}::date = ?
+                            WHERE us.nu_cnes = ? AND la.{$dtCol}::date BETWEEN ? AND ?
                               AND e.co_seq_equipe IS NOT NULL
                             ORDER BY e.no_equipe
-                        ", [$cnes, $hoje]);
+                        ", [$cnes, $inicio, $fim]);
                     } catch (\Throwable) {}
                 }
 
@@ -698,12 +742,12 @@ class PainelEsusController extends MonitorApsBaseController
                                     COALESCE(NULLIF(p.no_civil_profissional,''), NULLIF(p.no_social_profissional,''), '') AS nome
                                 FROM {$filaTable} la
                                 {$joins['profJoin']}
-                                WHERE us.nu_cnes = ? AND la.{$dtCol}::date = ?
+                                WHERE us.nu_cnes = ? AND la.{$dtCol}::date BETWEEN ? AND ?
                                   AND p.co_seq_prof IS NOT NULL
                                   AND COALESCE(p.no_civil_profissional, p.no_social_profissional) IS NOT NULL
                             ) sub
                             ORDER BY nome
-                        ", [$cnes, $hoje]);
+                        ", [$cnes, $inicio, $fim]);
                     } catch (\Throwable) {}
                 }
             } else {
@@ -711,17 +755,17 @@ class PainelEsusController extends MonitorApsBaseController
                     SELECT DISTINCT e.co_seq_equipe AS id, e.no_equipe AS nome
                     FROM {$filaTable} la
                     JOIN tb_equipe e ON e.co_seq_equipe = la.{$equipeFk}
-                    WHERE la.{$cnesCol} = ? AND la.{$dtCol} = ?
+                    WHERE la.{$cnesCol} = ? AND la.{$dtCol}::date BETWEEN ? AND ?
                     ORDER BY e.no_equipe
-                ", [$cnes, $hoje]);
+                ", [$cnes, $inicio, $fim]);
 
                 $profissionais = $db->select("
                     SELECT DISTINCT p.co_seq_profissional AS id, p.no_profissional AS nome
                     FROM {$filaTable} la
                     JOIN tb_profissional p ON p.co_seq_profissional = la.{$profFk}
-                    WHERE la.{$cnesCol} = ? AND la.{$dtCol} = ?
+                    WHERE la.{$cnesCol} = ? AND la.{$dtCol}::date BETWEEN ? AND ?
                     ORDER BY p.no_profissional
-                ", [$cnes, $hoje]);
+                ", [$cnes, $inicio, $fim]);
             }
 
             // RT restrito a equipe(s): lista apenas as equipes permitidas na unidade,
