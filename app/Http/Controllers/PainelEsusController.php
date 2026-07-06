@@ -230,6 +230,26 @@ class PainelEsusController extends MonitorApsBaseController
 
         try {
             $cols = $this->resolveUnidadeColumns();
+
+            // RT restrito a equipe(s): lista apenas as unidades das equipes dele.
+            // (statuses() chama este método sem o middleware equipe.aps — nesse
+            // caso _ines_permitidos é null e a lista completa é retornada.)
+            $allowedInes = $this->resolveAllowedInes(request());
+            if ($allowedInes !== null) {
+                if (empty($allowedInes)) {
+                    return response()->json(['unidades' => []]);
+                }
+                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                $rows = $db->select("
+                    SELECT DISTINCT us.{$cols['cnesCol']} AS cnes, us.{$cols['nomeCol']} AS nome
+                    FROM tb_unidade_saude us
+                    JOIN tb_equipe e ON e.co_unidade_saude = us.co_seq_unidade_saude
+                    WHERE e.nu_ine IN ({$ph})
+                    ORDER BY us.{$cols['nomeCol']}
+                ", $allowedInes);
+                return response()->json(['unidades' => $rows]);
+            }
+
             $rows = $db->select(
                 "SELECT {$cols['cnesCol']} AS cnes, {$cols['nomeCol']} AS nome
                  FROM tb_unidade_saude

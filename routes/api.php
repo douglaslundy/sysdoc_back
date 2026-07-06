@@ -194,7 +194,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::prefix('painel-esus')->group(function () {
         Route::get('/fila',     [PainelEsusController::class, 'fila'])->middleware('equipe.aps');
         Route::get('/filtros',  [PainelEsusController::class, 'filtros'])->middleware('equipe.aps');
-        Route::get('/unidades', [PainelEsusController::class, 'unidades']);
+        Route::get('/unidades', [PainelEsusController::class, 'unidades'])->middleware('equipe.aps');
         Route::get('/default-cnes', [PainelEsusController::class, 'defaultCnes'])->middleware('equipe.aps');
         Route::get('/statuses', [PainelEsusController::class, 'statuses']);
     });
