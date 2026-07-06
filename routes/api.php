@@ -192,8 +192,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Painel de atendimento eSUS PEC — gestão de fila (autenticado)
     Route::prefix('painel-esus')->group(function () {
-        Route::get('/fila',     [PainelEsusController::class, 'fila']);
-        Route::get('/filtros',  [PainelEsusController::class, 'filtros']);
+        Route::get('/fila',     [PainelEsusController::class, 'fila'])->middleware('equipe.aps');
+        Route::get('/filtros',  [PainelEsusController::class, 'filtros'])->middleware('equipe.aps');
         Route::get('/unidades', [PainelEsusController::class, 'unidades']);
         Route::get('/default-cnes', [PainelEsusController::class, 'defaultCnes'])->middleware('equipe.aps');
         Route::get('/statuses', [PainelEsusController::class, 'statuses']);

@@ -513,6 +513,37 @@ class PainelEsusController extends MonitorApsBaseController
                 $params[] = (int) $profId;
             }
 
+            // RT restrito a equipe(s): equipe pedida deve ser permitida; sem equipe
+            // selecionada ("Todas"), a fila é limitada às equipes do usuário.
+            $allowedInes = $this->resolveAllowedInes($request);
+            if ($allowedInes !== null) {
+                $vazio = [
+                    'contadores' => ['aguardando' => 0, 'atendidos' => 0, 'nao_aguardaram' => 0, 'tempo_medio_espera' => '0h 00min'],
+                    'aguardando' => [],
+                ];
+                if (empty($allowedInes)) {
+                    return response()->json($vazio);
+                }
+                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                if ($equipeId !== null) {
+                    $ok = $db->selectOne(
+                        "SELECT 1 FROM tb_equipe WHERE co_seq_equipe = ? AND nu_ine IN ({$ph}) LIMIT 1",
+                        array_merge([(int) $equipeId], $allowedInes)
+                    );
+                    if (!$ok) {
+                        return response()->json(['error' => 'Equipe não autorizada.'], 403);
+                    }
+                } else {
+                    $eqExpr = match ($filaTable) {
+                        'ta_agendado' => 'l.co_equipe',
+                        'tb_atend'    => "COALESCE(la.{$cols['equipeFk']}, l.co_equipe)",
+                        default       => "la.{$cols['equipeFk']}",
+                    };
+                    $where .= " AND {$eqExpr} IN (SELECT co_seq_equipe FROM tb_equipe WHERE nu_ine IN ({$ph}))";
+                    $params = array_merge($params, $allowedInes);
+                }
+            }
+
             $atendidosCond = $filaTable === 'tb_atend'
                 ? "la.{$cols['statusCol']} = 4"
                 : "la.{$cols['statusCol']} IN (2, 4)";
@@ -673,9 +704,28 @@ class PainelEsusController extends MonitorApsBaseController
                 ", [$cnes, $hoje]);
             }
 
+            // RT restrito a equipe(s): lista apenas as equipes permitidas na unidade,
+            // independente de terem fila no dia, para o front poder pré-selecionar.
+            $allowedInes = $this->resolveAllowedInes($request);
+            if ($allowedInes !== null) {
+                if (empty($allowedInes)) {
+                    $equipes = [];
+                } else {
+                    $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                    $equipes = $db->select("
+                        SELECT DISTINCT e.co_seq_equipe AS id, e.no_equipe AS nome
+                        FROM tb_equipe e
+                        JOIN tb_unidade_saude us ON us.co_seq_unidade_saude = e.co_unidade_saude
+                        WHERE us.nu_cnes = ? AND e.nu_ine IN ({$ph})
+                        ORDER BY e.no_equipe
+                    ", array_merge([$cnes], $allowedInes));
+                }
+            }
+
             return response()->json([
                 'equipes'       => $equipes,
                 'profissionais' => $profissionais,
+                'restrito'      => $allowedInes !== null,
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('PainelEsus.filtros: ' . $e->getMessage());
