@@ -685,8 +685,10 @@ class PainelEsusController extends MonitorApsBaseController
             'data'        => 'nullable|date_format:Y-m-d',
             'data_inicio' => 'nullable|date_format:Y-m-d',
             'data_fim'    => 'nullable|date_format:Y-m-d',
+            'equipe'      => 'nullable|integer',
         ]);
-        $cnes = trim($request->input('cnes'));
+        $cnes     = trim($request->input('cnes'));
+        $equipeId = $request->input('equipe');
 
         [$inicio, $fim, $erroPeriodo] = $this->resolvePeriodo($request);
         if ($erroPeriodo) {
@@ -716,6 +718,30 @@ class PainelEsusController extends MonitorApsBaseController
                 ? 'us.nu_cnes = ?'
                 : "la.{$cnesCol} = ?";
 
+            $allowedInes = $this->resolveAllowedInes($request);
+
+            // Profissionais devem refletir a equipe selecionada; sem equipe
+            // selecionada, RT restrito vê apenas profissionais das equipes dele.
+            // Usa a MESMA expressão de equipe da consulta da fila para não
+            // listar profissional que a fila depois não retorna.
+            $eqExprProf = match ($filaTable) {
+                'ta_agendado' => 'l.co_equipe',
+                'tb_atend'    => "COALESCE(la.{$equipeFk}, l.co_equipe)",
+                default       => "la.{$equipeFk}",
+            };
+            $profEquipeWhere  = '';
+            $profEquipeParams = [];
+            if ($equipeId !== null) {
+                $profEquipeWhere    = " AND {$eqExprProf} = ?";
+                $profEquipeParams[] = (int) $equipeId;
+            } elseif ($allowedInes !== null && !empty($allowedInes)) {
+                $ph = implode(',', array_fill(0, count($allowedInes), '?'));
+                $profEquipeWhere  = " AND {$eqExprProf} IN (SELECT co_seq_equipe FROM tb_equipe WHERE nu_ine IN ({$ph}))";
+                $profEquipeParams = $allowedInes;
+            } elseif ($allowedInes !== null) {
+                $profEquipeWhere = ' AND 1=0';
+            }
+
             if (in_array($filaTable, ['ta_agendado', 'tb_atend'], true)) {
                 $equipes = [];
                 if ($joins['eqJoin']) {
@@ -743,11 +769,12 @@ class PainelEsusController extends MonitorApsBaseController
                                 FROM {$filaTable} la
                                 {$joins['profJoin']}
                                 WHERE us.nu_cnes = ? AND la.{$dtCol}::date BETWEEN ? AND ?
+                                  {$profEquipeWhere}
                                   AND p.co_seq_prof IS NOT NULL
                                   AND COALESCE(p.no_civil_profissional, p.no_social_profissional) IS NOT NULL
                             ) sub
                             ORDER BY nome
-                        ", [$cnes, $inicio, $fim]);
+                        ", array_merge([$cnes, $inicio, $fim], $profEquipeParams));
                     } catch (\Throwable) {}
                 }
             } else {
@@ -764,13 +791,13 @@ class PainelEsusController extends MonitorApsBaseController
                     FROM {$filaTable} la
                     JOIN tb_profissional p ON p.co_seq_profissional = la.{$profFk}
                     WHERE la.{$cnesCol} = ? AND la.{$dtCol}::date BETWEEN ? AND ?
+                      {$profEquipeWhere}
                     ORDER BY p.no_profissional
-                ", [$cnes, $inicio, $fim]);
+                ", array_merge([$cnes, $inicio, $fim], $profEquipeParams));
             }
 
             // RT restrito a equipe(s): lista apenas as equipes permitidas na unidade,
             // independente de terem fila no dia, para o front poder pré-selecionar.
-            $allowedInes = $this->resolveAllowedInes($request);
             if ($allowedInes !== null) {
                 if (empty($allowedInes)) {
                     $equipes = [];
