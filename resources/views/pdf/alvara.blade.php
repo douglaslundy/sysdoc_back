@@ -119,6 +119,7 @@
     $responsavel = strtoupper($est?->nome_responsavel ?? 'XXXXXXXXXXXXXXXXX');
     $estabelecimento = strtoupper($est?->nome_estabelecimento ?? 'XXXXXXXXXXXXXXXXX');
     $endereco = strtoupper($est?->endereco ?? 'XXXXXXXXXXXXXXXXX');
+    $cnpjEstabelecimento = $est?->cnpj ?: 'XXXXXXXXXXXXXX';
     $cnaes = collect();
     if ($est && method_exists($est, 'relationLoaded') && $est->relationLoaded('cnaes')) {
       $cnaes = collect($est->getRelation('cnaes'));
@@ -165,7 +166,7 @@
         O setor de Vigilância Sanitária da diretoria de ações descentralizadas da saúde do Município de
         <strong>{{ $municipio }}</strong> - Estado de {{ $estado }}, de acordo com a Lei Municipal 1.543, de 15/12/2006
         em seu Art. 13 e a legislação Estadual vigente e tendo em vista a regularidade do processo em que é interessado
-        (a) <strong>{{ $estabelecimento }}</strong>, CNPJ: <strong>{{ $config->cnpj_secretaria ?: 'XXXXXXXXXXXXXX' }}</strong>
+        (a) <strong>{{ $estabelecimento }}</strong>, CNPJ: <strong>{{ $cnpjEstabelecimento }}</strong>
         situado (a) na <strong>{{ $endereco }}</strong>, {{ $municipio }} - {{ strtoupper(substr($estado,0,2)) }} CEP
         <strong>{{ $config->cep ?: 'XX.XXX-XXX' }}</strong>, resolve conceder-lhe o <strong>ALVARÁ SANITÁRIO</strong>
         pelo período de 1 (um) ano, que o habilita a manter as seguintes atividades:
