@@ -43,15 +43,22 @@ class DashboardInicioTest extends TestCase
         ]);
 
         // Vigilância: 1 alvará vencido, 1 vigente.
-        $estabelecimento = Estabelecimento::create(['nome_estabelecimento' => 'Farmácia Central']);
+        $estabelecimento = Estabelecimento::create([
+            'nome_estabelecimento' => 'Farmácia Central',
+            'nome_responsavel' => 'Responsável Teste',
+            'endereco' => 'Rua Teste, 123',
+            'cnaes' => 'farmacia',
+        ]);
         Alvara::create([
             'numero_alvara' => 'ALV-001', 'status' => 'Deferido',
-            'estabelecimento_id' => $estabelecimento->id,
+            'estabelecimento_id' => $estabelecimento->id, 'nivel_risco' => 'alto',
+            'data_alvara' => now()->subMonths(1)->toDateString(),
             'vencimento_alvara' => now()->subDay()->toDateString(),
         ]);
         Alvara::create([
             'numero_alvara' => 'ALV-002', 'status' => 'Deferido',
-            'estabelecimento_id' => $estabelecimento->id,
+            'estabelecimento_id' => $estabelecimento->id, 'nivel_risco' => 'baixo',
+            'data_alvara' => now()->subMonths(1)->toDateString(),
             'vencimento_alvara' => now()->addMonths(6)->toDateString(),
         ]);
 
@@ -133,7 +140,7 @@ class DashboardInicioTest extends TestCase
     public function test_usuario_sem_permissao_de_pagina_nao_recebe_o_setor(): void
     {
         $profile = AccessProfile::create([
-            'nome' => 'Perfil Restrito', 'slug' => 'restrito-'.uniqid(),
+            'nome' => 'Perfil Restrito', 'slug' => 'rest'.rand(100, 999),
             'descricao' => 'Perfil de teste', 'ativo' => true,
         ]);
         foreach (['/dashboard/inicio', '/dashboard/farmacia', '/dashboard/laboratorio'] as $path) {
