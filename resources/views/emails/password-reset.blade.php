@@ -43,7 +43,7 @@
         </div>
         <div class="footer">
             <p>Este e-mail foi enviado automaticamente. Não responda a esta mensagem.</p>
-            <p>SysDoc — Sistema de Gestão Jr Ferragens</p>
+            <p>SysDoc — Sistema de Gestão</p>
         </div>
     </div>
 </body>

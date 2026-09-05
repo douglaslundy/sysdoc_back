@@ -5,7 +5,7 @@ description: Run, start, test, or smoke-test the sysdoc_back Laravel API. Use wh
 
 # run-sysdoc-back
 
-Laravel 10 REST API for the Sysdoc system (Jr Ferragens). Driven by `curl`-based smoke tests in `.claude/skills/run-sysdoc-back/smoke.sh`.
+Laravel 10 REST API for the Sysdoc system. Driven by `curl`-based smoke tests in `.claude/skills/run-sysdoc-back/smoke.sh`.
 
 All commands below were verified on this machine (PHP 8.2, MySQL 8.0, Windows 11).
 
