@@ -14,11 +14,22 @@ class ChatRealtimeService
 
     public function publish(int $recipientId, string $eventName, array $payload): void
     {
+        $settings = $this->broadcastConfig->apply();
+        if (! $settings?->active) {
+            return;
+        }
+        if (! $this->broadcastConfig->isReady()) {
+            $this->increment('failed_events');
+            Log::warning('Broadcast do chat pulado: credenciais ausentes/incompletas apesar de "ativo".', [
+                'recipient_id' => $recipientId,
+                'event' => $eventName,
+                'engine' => $settings->engine,
+            ]);
+
+            return;
+        }
+
         try {
-            $settings = $this->broadcastConfig->apply();
-            if (! $settings?->active) {
-                return;
-            }
             broadcast(new ChatRealtimeEvent($recipientId, $eventName, $payload));
             $this->increment('events_published');
         } catch (\Throwable $e) {
@@ -33,11 +44,20 @@ class ChatRealtimeService
 
     public function publishPresence(array $payload): void
     {
+        $settings = $this->broadcastConfig->apply();
+        if (! $settings?->active) {
+            return;
+        }
+        if (! $this->broadcastConfig->isReady()) {
+            $this->increment('failed_events');
+            Log::warning('Broadcast de presenca do chat pulado: credenciais ausentes/incompletas apesar de "ativo".', [
+                'engine' => $settings->engine,
+            ]);
+
+            return;
+        }
+
         try {
-            $settings = $this->broadcastConfig->apply();
-            if (! $settings?->active) {
-                return;
-            }
             broadcast(new ChatRealtimeEvent(null, 'presence.updated', $payload));
             $this->increment('events_published');
         } catch (\Throwable $e) {

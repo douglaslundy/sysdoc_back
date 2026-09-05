@@ -70,7 +70,7 @@ class ChatController extends Controller
                 ->whereNull('chat_conversation_participants.deleted_at'))
             ->with([
                 'participants:id,name,preferred_name,email',
-                'messages' => fn ($query) => $query->with(['attachments', 'sender:id,name,preferred_name,email'])->latest()->limit(1),
+                'messages' => fn ($query) => $query->with(['attachments', 'sender:id,name,preferred_name,email'])->whereNull('deleted_at')->latest()->limit(1),
             ])
             ->orderByDesc('last_message_at')
             ->get()
@@ -488,6 +488,7 @@ class ChatController extends Controller
             ->whereIn('conversation_id', $conversationIds)
             ->where('sender_id', '!=', $userId)
             ->whereNull('read_at')
+            ->whereNull('deleted_at')
             ->selectRaw('conversation_id, COUNT(*) as total')
             ->groupBy('conversation_id')
             ->pluck('total', 'conversation_id');
@@ -581,6 +582,7 @@ class ChatController extends Controller
         $unread = $conversation->messages()
             ->where('sender_id', '!=', $userId)
             ->whereNull('read_at')
+            ->whereNull('deleted_at')
             ->count();
 
         return [

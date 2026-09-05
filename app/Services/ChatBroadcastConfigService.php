@@ -29,6 +29,16 @@ class ChatBroadcastConfigService
         return $settings;
     }
 
+    // Usado por ChatRealtimeService::publish() para distinguir "config aplicada" de
+    // "ativo mas sem credencial" — sem isso, um broadcast() com credencial incompleta
+    // falha dentro do cliente Pusher e o erro só aparece em log, nunca pro usuário.
+    public function isReady(): bool
+    {
+        $settings = $this->currentOrFallback();
+
+        return (bool) ($settings && $settings->active && $this->hasCredentials($settings));
+    }
+
     public function publicPayload(?ChatRealtimeConfig $settings = null): array
     {
         $settings ??= $this->currentOrFallback();

@@ -172,6 +172,64 @@ class ChatModuleTest extends TestCase
         $this->assertNull($message->fresh()->deleted_at);
     }
 
+    public function test_destinatario_ve_mensagens_apagadas_em_lote_apos_novo_fetch(): void
+    {
+        $conversation = $this->startConversation();
+        $messages = collect(['Primeira', 'Segunda', 'Terceira'])->map(fn ($body) => ChatMessage::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $this->sender->id,
+            'body' => $body,
+            'message_type' => 'text',
+            'status' => 'sent',
+        ]));
+
+        $toDelete = $messages->take(2)->pluck('id')->all();
+        $this->actingAs($this->sender, 'sanctum')
+            ->deleteJson('/api/chat/messages', ['message_ids' => $toDelete])
+            ->assertOk();
+
+        // Simula F5: destinatário faz um fetch novo, sem cache, sem socket.
+        $after = $this->actingAs($this->recipient, 'sanctum')
+            ->getJson("/api/chat/conversations/{$conversation->id}/messages")
+            ->assertOk();
+
+        foreach ($toDelete as $id) {
+            $found = collect($after->json('data'))->firstWhere('id', $id);
+            $this->assertNotNull($found);
+            $this->assertTrue($found['is_deleted']);
+            $this->assertEquals('Mensagem apagada', $found['display_body']);
+        }
+    }
+
+    public function test_previa_da_lista_de_conversas_pula_ultima_mensagem_apagada(): void
+    {
+        $conversation = $this->startConversation();
+        $first = ChatMessage::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $this->sender->id,
+            'body' => 'Visivel',
+            'message_type' => 'text',
+            'status' => 'sent',
+        ]);
+        $last = ChatMessage::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $this->sender->id,
+            'body' => 'Apagada depois',
+            'message_type' => 'text',
+            'status' => 'sent',
+        ]);
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->deleteJson("/api/chat/messages/{$last->id}")
+            ->assertOk();
+
+        $this->actingAs($this->sender, 'sanctum')
+            ->getJson('/api/chat/conversations')
+            ->assertOk()
+            ->assertJsonPath('0.last_message.id', $first->id)
+            ->assertJsonPath('0.last_message.display_body', 'Visivel');
+    }
+
     public function test_dashboard_do_chat_exibe_consumo_e_totais(): void
     {
         $conversation = $this->startConversation();
