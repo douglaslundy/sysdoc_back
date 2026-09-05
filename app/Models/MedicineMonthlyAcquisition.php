@@ -28,9 +28,10 @@ class MedicineMonthlyAcquisition extends Model
         'published_at' => 'datetime',
     ];
 
+    // withTrashed: histórico de aquisição não pode virar registro "em branco" se o medicamento for removido do catálogo depois.
     public function medicineItem(): BelongsTo
     {
-        return $this->belongsTo(MedicineItem::class);
+        return $this->belongsTo(MedicineItem::class)->withTrashed();
     }
 
     public function updatedBy(): BelongsTo
