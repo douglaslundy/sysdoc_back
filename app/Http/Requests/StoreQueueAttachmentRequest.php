@@ -18,9 +18,9 @@ class StoreQueueAttachmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240', 'required_without:files'],
+            'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:30720', 'required_without:files'],
             'files' => ['nullable', 'array', 'required_without:file'],
-            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:30720'],
         ];
     }
 }

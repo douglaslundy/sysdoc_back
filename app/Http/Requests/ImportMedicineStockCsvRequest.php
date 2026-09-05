@@ -17,7 +17,7 @@ class ImportMedicineStockCsvRequest extends BaseApiFormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'mimes:csv,txt', 'max:10240'],
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:30720'],
         ];
     }
 
@@ -27,7 +27,7 @@ class ImportMedicineStockCsvRequest extends BaseApiFormRequest
             'file.required' => 'O arquivo CSV é obrigatório.',
             'file.file' => 'O arquivo enviado é inválido.',
             'file.mimes' => 'Envie um arquivo no formato CSV.',
-            'file.max' => 'O arquivo deve ter no máximo 10MB.',
+            'file.max' => 'O arquivo deve ter no máximo 30MB.',
         ];
     }
 }
