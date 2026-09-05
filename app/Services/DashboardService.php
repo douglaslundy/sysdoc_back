@@ -7,10 +7,7 @@ use App\Models\CategoriaExame;
 use App\Models\Client;
 use App\Models\Estabelecimento;
 use App\Models\Exame;
-use App\Models\Letter;
 use App\Models\MedicoSolicitante;
-use App\Models\Models;
-use App\Models\Ordinance;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
 use App\Models\Speciality;
@@ -507,10 +504,6 @@ class DashboardService
             ->orderBy('dia')
             ->get();
     }
-
-    // -------------------------------------------------------------------------
-    // Seção: Início — contadores gerais do sistema
-    // -------------------------------------------------------------------------
 
     // -------------------------------------------------------------------------
     // Seção: Vigilância Sanitária — alvarás e estabelecimentos
