@@ -102,8 +102,8 @@ class LetterProtocolTest extends TestCase
             'mime_type' => 'application/pdf',
             'ativo' => true,
         ]);
-        Storage::disk('public')->assertExists($attachmentPath);
-        $this->assertSame('pdf-original-do-oficio', Storage::disk('public')->get($attachmentPath));
+        Storage::disk('private')->assertExists($attachmentPath);
+        $this->assertSame('pdf-original-do-oficio', Storage::disk('private')->get($attachmentPath));
 
         $this->actingAs($destination, 'sanctum')
             ->getJson("/api/protocolos/{$protocolId}")

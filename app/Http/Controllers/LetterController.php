@@ -316,7 +316,7 @@ class LetterController extends Controller
 
                 $filename = basename(str_replace('\\', '/', $pdfAttachment->original_name));
                 $storedPath = 'protocolos/'.$protocol->id.'/'.$filename;
-                Storage::disk('public')->put(
+                Storage::disk('private')->put(
                     $storedPath,
                     Storage::disk($pdfAttachment->disk)->get($pdfAttachment->path)
                 );
@@ -327,7 +327,7 @@ class LetterController extends Controller
                     'nome_original' => $filename,
                     'caminho' => $storedPath,
                     'mime_type' => 'application/pdf',
-                    'tamanho_bytes' => Storage::disk('public')->size($storedPath),
+                    'tamanho_bytes' => Storage::disk('private')->size($storedPath),
                     'descricao' => 'Ofício que originou o protocolo.',
                     'ativo' => true,
                 ]);
@@ -363,8 +363,8 @@ class LetterController extends Controller
                 ]);
             });
         } catch (\Throwable $exception) {
-            if ($storedPath && Storage::disk('public')->exists($storedPath)) {
-                Storage::disk('public')->delete($storedPath);
+            if ($storedPath && Storage::disk('private')->exists($storedPath)) {
+                Storage::disk('private')->delete($storedPath);
             }
 
             report($exception);
@@ -494,7 +494,7 @@ class LetterController extends Controller
 
                 $filename = basename(str_replace('\\', '/', $pdfAttachment->original_name));
                 $storedPath = 'protocolos/'.$protocol->id.'/'.$filename;
-                Storage::disk('public')->put(
+                Storage::disk('private')->put(
                     $storedPath,
                     Storage::disk($pdfAttachment->disk)->get($pdfAttachment->path)
                 );
@@ -505,7 +505,7 @@ class LetterController extends Controller
                     'nome_original' => $filename,
                     'caminho' => $storedPath,
                     'mime_type' => 'application/pdf',
-                    'tamanho_bytes' => Storage::disk('public')->size($storedPath),
+                    'tamanho_bytes' => Storage::disk('private')->size($storedPath),
                     'descricao' => 'Ofício que originou o protocolo.',
                     'ativo' => true,
                 ]);
@@ -542,8 +542,8 @@ class LetterController extends Controller
                 ]);
             });
         } catch (\Throwable $exception) {
-            if ($storedPath && Storage::disk('public')->exists($storedPath)) {
-                Storage::disk('public')->delete($storedPath);
+            if ($storedPath && Storage::disk('private')->exists($storedPath)) {
+                Storage::disk('private')->delete($storedPath);
             }
 
             report($exception);

@@ -82,8 +82,8 @@ class ProtocolInteractionTest extends TestCase
 
     public function test_download_do_anexo_retorna_o_arquivo_com_nome_original(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->put('protocolos/arquivo-teste.pdf', 'conteudo-pdf');
+        Storage::fake('private');
+        Storage::disk('private')->put('protocolos/arquivo-teste.pdf', 'conteudo-pdf');
 
         $attachment = ProtocolAttachment::create([
             'protocol_id' => $this->protocol->id,

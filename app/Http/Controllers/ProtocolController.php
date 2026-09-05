@@ -433,7 +433,7 @@ class ProtocolController extends Controller
     public function attach(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
-            'arquivo' => 'required|file|max:20480',
+            'arquivo' => 'required|file|max:30720|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx',
             'descricao' => 'nullable|string|max:255',
         ]);
 
@@ -443,7 +443,7 @@ class ProtocolController extends Controller
         }
 
         $file = $validated['arquivo'];
-        $path = $file->store('protocolos', 'public');
+        $path = $file->store('protocolos', 'private');
 
         $attachment = ProtocolAttachment::create([
             'protocol_id' => $protocol->id,
@@ -469,7 +469,7 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Anexo não encontrado.'], 404);
         }
 
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('private');
         if (! $disk->exists($attachmentModel->caminho)) {
             return response()->json(['message' => 'Arquivo do anexo não encontrado.'], 404);
         }
