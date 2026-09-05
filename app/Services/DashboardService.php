@@ -512,53 +512,6 @@ class DashboardService
     // Seção: Início — contadores gerais do sistema
     // -------------------------------------------------------------------------
 
-    public function getInicioTotais(): array
-    {
-        return [
-            'clientes' => Client::where('active', true)->count(),
-            'especialidades' => Speciality::count(),
-            'oficios' => Letter::count(),
-            'portarias' => Ordinance::count(),
-            'modelos_ia' => Models::count(),
-        ];
-    }
-
-    public function getOficiosPorMes(): array
-    {
-        $rows = DB::table('letters')
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as mes"), DB::raw('count(*) as total'))
-            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
-            ->groupBy('mes')
-            ->orderBy('mes')
-            ->pluck('total', 'mes');
-
-        $resultado = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $chave = now()->subMonths($i)->format('Y-m');
-            $resultado[$chave] = (int) ($rows[$chave] ?? 0);
-        }
-
-        return $resultado;
-    }
-
-    public function getPortariasPorMes(): array
-    {
-        $rows = DB::table('ordinances')
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as mes"), DB::raw('count(*) as total'))
-            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
-            ->groupBy('mes')
-            ->orderBy('mes')
-            ->pluck('total', 'mes');
-
-        $resultado = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $chave = now()->subMonths($i)->format('Y-m');
-            $resultado[$chave] = (int) ($rows[$chave] ?? 0);
-        }
-
-        return $resultado;
-    }
-
     // -------------------------------------------------------------------------
     // Seção: Vigilância Sanitária — alvarás e estabelecimentos
     // -------------------------------------------------------------------------

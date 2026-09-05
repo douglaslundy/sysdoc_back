@@ -479,40 +479,108 @@ class DashboardController extends MonitorApsBaseController
 
     public function inicio()
     {
-        try {
-            $totais = $this->service->getInicioTotais();
-        } catch (\Throwable $e) {
-            Log::error('DashboardInicio totais: '.$e->getMessage());
-            $totais = ['clientes' => 0, 'especialidades' => 0, 'oficios' => 0, 'portarias' => 0, 'modelos_ia' => 0];
-        }
+        $user = request()->user();
+        $permissionService = app(\App\Services\Authorization\PagePermissionService::class);
+        $hoje = now()->toDateString();
 
-        try {
-            $clientesPorMes = $this->service->getClientesPorMes();
-        } catch (\Throwable $e) {
-            Log::error('DashboardInicio clientes_por_mes: '.$e->getMessage());
-            $clientesPorMes = [];
-        }
+        $definicoes = [
+            'farmacia' => [
+                'label' => 'Farmácia',
+                'permissao' => '/dashboard/farmacia',
+                'calcular' => function () {
+                    $ativos = DB::table('medicine_items')->whereNull('deleted_at')->where('active', true);
+                    $registrosStatusHoje = (clone $ativos)->count();
+                    $statusAtual = DB::table('medicine_items as m')
+                        ->leftJoin('medicine_daily_statuses as s', function ($join) {
+                            $join->on('s.medicine_item_id', '=', 'm.id')
+                                ->whereRaw('s.id = (
+                                    select s2.id
+                                    from medicine_daily_statuses s2
+                                    where s2.medicine_item_id = m.id
+                                    order by s2.reference_date desc, s2.id desc
+                                    limit 1
+                                )');
+                        })
+                        ->whereNull('m.deleted_at')
+                        ->where('m.active', true);
+                    $disponiveisHoje = (int) (clone $statusAtual)
+                        ->where('s.availability_status', 'available')
+                        ->where('s.available_quantity', '>', 0)
+                        ->count();
+                    return max($registrosStatusHoje - $disponiveisHoje, 0);
+                },
+            ],
+            'vigilancia' => [
+                'label' => 'Vigilância Sanitária',
+                'permissao' => '/dashboard/vigilancia',
+                'calcular' => fn () => \App\Models\Alvara::whereNotNull('vencimento_alvara')
+                    ->whereDate('vencimento_alvara', '<', $hoje)
+                    ->count(),
+            ],
+            'almoxarifado' => [
+                'label' => 'Almoxarifado',
+                'permissao' => '/dashboard/almoxarifado',
+                'calcular' => fn () => DB::table('almoxarifado_estoques as e')
+                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
+                    ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
+                    ->count(),
+            ],
+            'protocolo' => [
+                'label' => 'Protocolo',
+                'permissao' => '/protocolo',
+                'calcular' => fn () => \App\Models\Protocol::whereNotNull('prazo_atendimento')
+                    ->whereDate('prazo_atendimento', '<', now())
+                    ->count(),
+            ],
+            'laboratorio' => [
+                'label' => 'Laboratório',
+                'permissao' => '/dashboard/laboratorio',
+                'calcular' => fn () => \App\Models\PedidoExame::whereNull('deleted_at')->count(),
+            ],
+            'fila' => [
+                'label' => 'Fila',
+                'permissao' => '/dashboard/fila',
+                'calcular' => fn () => DB::table('queue')->where('done', 0)->count(),
+            ],
+            'tfd' => [
+                'label' => 'TFD',
+                'permissao' => '/dashboard/tfd',
+                'calcular' => function () {
+                    $inicioDoMes = now()->startOfMonth();
+                    $fimDoMes = now()->endOfMonth();
+                    return DB::table('trip_clients')
+                        ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
+                        ->whereBetween('trips.departure_date', [$inicioDoMes, $fimDoMes])
+                        ->count();
+                },
+            ],
+        ];
 
-        try {
-            $oficiosPorMes = $this->service->getOficiosPorMes();
-        } catch (\Throwable $e) {
-            Log::error('DashboardInicio oficios_por_mes: '.$e->getMessage());
-            $oficiosPorMes = [];
-        }
+        $setoresComAlerta = ['farmacia', 'vigilancia', 'almoxarifado', 'protocolo'];
 
-        try {
-            $portariasPorMes = $this->service->getPortariasPorMes();
-        } catch (\Throwable $e) {
-            Log::error('DashboardInicio portarias_por_mes: '.$e->getMessage());
-            $portariasPorMes = [];
-        }
+        $cacheKey = 'dashboard.inicio.v3.'.$user->id.'.'.now()->format('Y-m-d-H').'-'.now()->format('i');
+        $setores = Cache::remember($cacheKey, 120, function () use ($definicoes, $user, $permissionService, $setoresComAlerta) {
+            $resultado = [];
+            foreach ($definicoes as $chave => $definicao) {
+                if (! $permissionService->canAccess($user, $definicao['permissao'])) {
+                    continue;
+                }
+                try {
+                    $valor = (int) ($definicao['calcular'])();
+                } catch (\Throwable $e) {
+                    Log::error("DashboardInicio {$chave}: ".$e->getMessage());
+                    continue;
+                }
+                $resultado[$chave] = [
+                    'label' => $definicao['label'],
+                    'valor' => $valor,
+                    'alerta' => in_array($chave, $setoresComAlerta, true) && $valor > 0,
+                ];
+            }
+            return $resultado;
+        });
 
-        return response()->json([
-            'totais' => $totais,
-            'clientes_por_mes' => $clientesPorMes,
-            'oficios_por_mes' => $oficiosPorMes,
-            'portarias_por_mes' => $portariasPorMes,
-        ]);
+        return response()->json(['setores' => $setores]);
     }
 
     private function resolveUnidadeColumns(): array
