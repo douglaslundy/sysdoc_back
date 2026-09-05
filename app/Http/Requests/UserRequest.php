@@ -38,7 +38,12 @@ class UserRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $user = $this->user();
+
+        // Reforço: a rota já exige o middleware 'admin', mas a autorização não deve
+        // depender só do roteamento — gestão de usuários (inclusive campo `profile`,
+        // que define permissões) é restrita a administradores.
+        return $user !== null && $user->profile === 'admin';
     }
 
     /**

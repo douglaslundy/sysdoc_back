@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,9 @@ class StoreAlvaraRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        return $user !== null && app(PagePermissionService::class)->canAccess($user, '/alvaras');
     }
 
     public function rules(): array

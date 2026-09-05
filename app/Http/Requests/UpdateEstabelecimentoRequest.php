@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateEstabelecimentoRequest extends FormRequest
@@ -15,7 +16,9 @@ class UpdateEstabelecimentoRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        return $user !== null && app(PagePermissionService::class)->canAccess($user, '/estabelecimentos');
     }
 
     public function rules(): array

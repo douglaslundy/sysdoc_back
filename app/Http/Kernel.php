@@ -70,5 +70,6 @@ class Kernel extends HttpKernel
         'equipe.aps' => \App\Http\Middleware\EnsureEquipeAps::class,
         'chat.access' => \App\Http\Middleware\EnsureChatAccess::class,
         'almoxarifado.permission' => \App\Http\Middleware\EnsureAlmoxarifadoPermission::class,
+        'page.permission' => \App\Http\Middleware\EnsurePagePermission::class,
     ];
 }

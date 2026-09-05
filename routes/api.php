@@ -94,7 +94,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/401', [AuthController::class, 'unauthorized'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('throttle:login')->post('/login', [AuthController::class, 'login']);
 
 Route::middleware('throttle:5,1')->post('/register', [AuthController::class, 'register']);
 
@@ -243,20 +243,37 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/laboratorio/config', [LabConfigController::class, 'show']);
 
     Route::prefix('almoxarifado')->group(function () {
+        // Páginas de catálogo (páginas exatas variam pelo {type}: categorias/especies/unidades-medida/
+        // fornecedores/localizacoes/secretarias) — checa acesso a QUALQUER uma delas para as rotas de escrita,
+        // já que o tipo só é conhecido em runtime.
+        $catalogPages = [
+            '/almoxarifado/categorias',
+            '/almoxarifado/especies',
+            '/almoxarifado/unidades-medida',
+            '/almoxarifado/fornecedores',
+            '/almoxarifado/localizacoes',
+            '/almoxarifado/secretarias',
+        ];
+
         Route::get('/catalogos/{type}', [AlmoxarifadoCatalogController::class, 'index']);
-        Route::post('/catalogos/{type}', [AlmoxarifadoCatalogController::class, 'store']);
-        Route::put('/catalogos/{type}/{id}', [AlmoxarifadoCatalogController::class, 'update']);
-        Route::delete('/catalogos/{type}/{id}', [AlmoxarifadoCatalogController::class, 'destroy']);
+        Route::middleware('page.permission:'.implode(',', $catalogPages))->group(function () {
+            Route::post('/catalogos/{type}', [AlmoxarifadoCatalogController::class, 'store']);
+            Route::put('/catalogos/{type}/{id}', [AlmoxarifadoCatalogController::class, 'update']);
+            Route::delete('/catalogos/{type}/{id}', [AlmoxarifadoCatalogController::class, 'destroy']);
+        });
 
         Route::get('/produtos/opcoes', [AlmoxarifadoProdutoController::class, 'options']);
         Route::get('/produtos', [AlmoxarifadoProdutoController::class, 'index']);
         Route::get('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'show']);
-        Route::post('/produtos', [AlmoxarifadoProdutoController::class, 'store']);
-        Route::put('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'update']);
-        Route::delete('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'destroy']);
+        Route::middleware('page.permission:/almoxarifado/produtos')->group(function () {
+            Route::post('/produtos', [AlmoxarifadoProdutoController::class, 'store']);
+            Route::put('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'update']);
+            Route::delete('/produtos/{id}', [AlmoxarifadoProdutoController::class, 'destroy']);
+        });
 
         Route::get('/estoque', [AlmoxarifadoEstoqueController::class, 'index']);
-        Route::post('/estoque/movimentar', [AlmoxarifadoEstoqueController::class, 'movimentar']);
+        Route::post('/estoque/movimentar', [AlmoxarifadoEstoqueController::class, 'movimentar'])
+            ->middleware('page.permission:/almoxarifado/estoque');
 
         Route::get('/movimentacoes', [AlmoxarifadoMovimentacaoController::class, 'index']);
 
@@ -268,7 +285,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/requisicoes/{id}/pdf', [AlmoxarifadoRequisicaoController::class, 'downloadPdf']);
 
         Route::get('/configuracoes', [AlmoxarifadoConfigController::class, 'show']);
-        Route::put('/configuracoes', [AlmoxarifadoConfigController::class, 'update']);
+        Route::put('/configuracoes', [AlmoxarifadoConfigController::class, 'update'])
+            ->middleware('page.permission:/almoxarifado/configuracoes');
     });
 
     Route::middleware('admin')->group(function () {
@@ -412,8 +430,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/letters/{letter}/attachments/{attachment}/download', [LetterAttachmentController::class, 'download']);
     Route::delete('/letters/{letter}/attachments/{attachment}', [LetterAttachmentController::class, 'destroy']);
 
-    // users
-    Route::apiResource('users', UserController::class);
+    // users — gestão de usuários é restrita a administradores (evita que qualquer usuário
+    // autenticado se autopromova a admin ou edite/exclua a conta de outro usuário).
+    Route::middleware('admin')->group(function () {
+        Route::apiResource('users', UserController::class);
+    });
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     // Equipes APS por usuário (admin)
@@ -504,9 +525,15 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     // ATENCAO: rotas estaticas ANTES de apiResource para nao conflitar com {id}
     Route::get('/estabelecimentos/select', [EstabelecimentoController::class, 'select']);
     Route::get('/cnaes/select', [EstabelecimentoController::class, 'cnaesSelect']);
-    Route::apiResource('estabelecimentos', EstabelecimentoController::class);
+    Route::apiResource('estabelecimentos', EstabelecimentoController::class)->only(['index', 'show']);
+    Route::middleware('page.permission:/estabelecimentos')->group(function () {
+        Route::apiResource('estabelecimentos', EstabelecimentoController::class)->only(['store', 'update', 'destroy']);
+    });
     Route::get('/alvaras/{id}/pdf', [AlvaraController::class, 'downloadPdf']);
-    Route::apiResource('alvaras', AlvaraController::class);
+    Route::apiResource('alvaras', AlvaraController::class)->only(['index', 'show']);
+    Route::middleware('page.permission:/alvaras')->group(function () {
+        Route::apiResource('alvaras', AlvaraController::class)->only(['store', 'update', 'destroy']);
+    });
 
     // Configuração da Vigilância Sanitária (somente admin)
     Route::middleware('admin')->group(function () {

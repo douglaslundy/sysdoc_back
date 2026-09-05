@@ -113,6 +113,19 @@ class RouteServiceProvider extends ServiceProvider
                 });
         });
 
+        RateLimiter::for('login', function (Request $request) {
+            $cpf = (string) $request->input('cpf', '');
+            $key = sprintf('login|%s|%s', preg_replace('/\D/', '', $cpf), $request->ip());
+
+            return Limit::perMinutes(1, 5)
+                ->by($key)
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Muitas tentativas de login. Aguarde um instante e tente novamente.',
+                    ], 429);
+                });
+        });
+
         RateLimiter::for('forgot-password', function (Request $request) {
             $email = (string) $request->input('email', '');
             $key = sprintf('forgot-password|%s|%s', mb_strtolower(trim($email)), $request->ip());
