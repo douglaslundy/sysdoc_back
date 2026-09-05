@@ -2,14 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRouteRequest extends FormRequest
 {
-    // Determina se o usuário está autorizado a fazer essa request
-    public function authorize()
+    public function authorize(): bool
     {
-        return true; // Alterar para 'false' se for necessário controlar o acesso
+        $user = $this->user();
+
+        return $user !== null
+            && app(PagePermissionService::class)->canAccess($user, '/routes');
     }
 
     protected function prepareForValidation(): void

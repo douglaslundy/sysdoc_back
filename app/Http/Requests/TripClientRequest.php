@@ -4,19 +4,18 @@ namespace App\Http\Requests;
 
 use App\Models\Trip;
 use App\Models\TripClient;
+use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class TripClientRequest extends FormRequest
 {
-    /**
-     * Determina se o usuário está autorizado a fazer esta solicitação.
-     *
-     * @return bool
-     */
-    public function authorize()
+    public function authorize(): bool
     {
-        return true; // Ajuste conforme sua lógica de autorização
+        $user = $this->user();
+
+        return $user !== null
+            && app(PagePermissionService::class)->canAccess($user, '/trips');
     }
 
     /**

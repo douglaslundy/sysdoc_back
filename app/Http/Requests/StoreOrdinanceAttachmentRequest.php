@@ -2,21 +2,25 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOrdinanceAttachmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        return $user !== null
+            && app(PagePermissionService::class)->canAccess($user, '/ordinance');
     }
 
     public function rules(): array
     {
         return [
-            'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240', 'required_without:files'],
+            'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:30720', 'required_without:files'],
             'files' => ['nullable', 'array', 'required_without:file'],
-            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:30720'],
         ];
     }
 }
