@@ -498,6 +498,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/queue-treatment-plans/{plan}', [QueueTreatmentPlanController::class, 'show']);
         Route::get('/queues/{queueId}/treatment-plan', [QueueTreatmentPlanController::class, 'forQueue'])->whereNumber('queueId');
         Route::put('/queue-treatment-sessions/{session}/reschedule', [QueueTreatmentSessionController::class, 'reschedule']);
+        Route::put('/queue-treatment-sessions/{session}/complete', [QueueTreatmentSessionController::class, 'complete']);
     });
 
     // QueueCall

@@ -47,4 +47,30 @@ class QueueTreatmentSessionController extends Controller
 
         return response()->json(QueueTreatmentPlanController::formatPlan($plan));
     }
+
+    public function complete(Request $request, QueueTreatmentSession $session)
+    {
+        $plan = $session->plan;
+        $user = $request->user();
+
+        if (! app(SpecialityPermissionService::class)->canEdit($user, $plan->speciality_id)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
+        DB::transaction(function () use ($session, $plan) {
+            $session->update(['status' => 'done']);
+
+            $remaining = $plan->sessions()
+                ->whereNotIn('status', ['done', 'cancelled'])
+                ->count();
+
+            if ($remaining === 0) {
+                $plan->update(['status' => 'completed']);
+            }
+        });
+
+        $plan->refresh()->load('sessions');
+
+        return response()->json(QueueTreatmentPlanController::formatPlan($plan));
+    }
 }
