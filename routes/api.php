@@ -79,6 +79,7 @@ use App\Http\Controllers\SystemPageController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserEquipeApsController;
+use App\Http\Controllers\UserSpecialityPermissionController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VigilanciaConfigController;
 use App\Http\Controllers\VisitaAcsController;
@@ -441,6 +442,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('admin')->group(function () {
         Route::get('/users/{user}/equipe-aps', [UserEquipeApsController::class, 'show']);
         Route::put('/users/{user}/equipe-aps', [UserEquipeApsController::class, 'update']);
+    });
+
+    // Permissões por especialidade da Fila (admin)
+    Route::middleware('admin')->group(function () {
+        Route::get('/users/{user}/speciality-permissions', [UserSpecialityPermissionController::class, 'show']);
+        Route::put('/users/{user}/speciality-permissions', [UserSpecialityPermissionController::class, 'update']);
     });
 
     // Models
