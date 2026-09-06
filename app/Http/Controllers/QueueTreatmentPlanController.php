@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Queue;
 use App\Models\QueueTreatmentPlan;
 use App\Models\QueueTreatmentSession;
+use App\Services\AuditService;
 use App\Services\Authorization\SpecialityPermissionService;
 use App\Services\TreatmentPlanScheduler;
 use Illuminate\Http\Request;
@@ -86,6 +87,40 @@ class QueueTreatmentPlanController extends Controller
         $plan->load('sessions');
 
         return response()->json($this->formatPlan($plan), 201);
+    }
+
+    public function cancel(Request $request, QueueTreatmentPlan $plan)
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:10'],
+        ]);
+
+        $user = $request->user();
+
+        DB::transaction(function () use ($plan, $data, $user) {
+            $plan->update([
+                'status' => 'cancelled',
+                'cancelled_by_user_id' => $user->id,
+                'cancelled_reason' => $data['reason'],
+                'cancelled_at' => now(),
+            ]);
+
+            $plan->sessions()
+                ->whereIn('status', ['pending', 'rescheduled_pending'])
+                ->update(['status' => 'cancelled']);
+
+            $queue = $plan->queue;
+            $queue->update(['done' => false, 'date_of_realized' => null]);
+
+            AuditService::record('RETURN_TO_QUEUE', $queue, null, [
+                'treatment_plan_id' => $plan->id,
+                'cancelled_reason' => $data['reason'],
+            ], $user);
+        });
+
+        $plan->refresh()->load('sessions');
+
+        return response()->json(self::formatPlan($plan));
     }
 
     public function index(Request $request)

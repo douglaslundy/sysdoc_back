@@ -501,6 +501,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('/queue-treatment-sessions/{session}/complete', [QueueTreatmentSessionController::class, 'complete']);
     });
 
+    // Cancelamento de plano de tratamento e devolucao a fila (admin)
+    Route::middleware('admin')->group(function () {
+        Route::put('/queue-treatment-plans/{plan}/cancel', [QueueTreatmentPlanController::class, 'cancel']);
+    });
+
     // QueueCall
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('/queues/specialities-options', [QueueController::class, 'specialityOptions']);
