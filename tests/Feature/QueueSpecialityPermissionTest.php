@@ -139,6 +139,54 @@ class QueueSpecialityPermissionTest extends TestCase
         $response->assertStatus(403);
     }
 
+    public function test_reatribuir_para_especialidade_sem_can_insert_no_destino_retorna_403(): void
+    {
+        $editor = User::factory()->create(['profile' => 'user', 'active' => true]);
+        UserSpecialityPermission::create([
+            'user_id' => $editor->id,
+            'speciality_id' => $this->fisio->id,
+            'can_view' => true,
+            'can_edit' => true,
+            'can_insert' => true,
+        ]);
+        // $editor não tem nenhuma permissão em Fonoaudiologia (nem can_insert).
+
+        $queueId = $this->insertQueueRow($this->fisio);
+
+        $response = $this->actingAs($editor, 'sanctum')->putJson("/api/queues/{$queueId}", [
+            'id_specialities' => $this->fono->id,
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_reatribuir_para_especialidade_com_can_insert_no_destino_funciona(): void
+    {
+        $editor = User::factory()->create(['profile' => 'user', 'active' => true]);
+        UserSpecialityPermission::create([
+            'user_id' => $editor->id,
+            'speciality_id' => $this->fisio->id,
+            'can_view' => true,
+            'can_edit' => true,
+            'can_insert' => true,
+        ]);
+        UserSpecialityPermission::create([
+            'user_id' => $editor->id,
+            'speciality_id' => $this->fono->id,
+            'can_view' => true,
+            'can_edit' => false,
+            'can_insert' => true,
+        ]);
+
+        $queueId = $this->insertQueueRow($this->fisio);
+
+        $response = $this->actingAs($editor, 'sanctum')->putJson("/api/queues/{$queueId}", [
+            'id_specialities' => $this->fono->id,
+        ]);
+
+        $response->assertOk();
+    }
+
     public function test_admin_nunca_e_bloqueado(): void
     {
         $queueId = $this->insertQueueRow($this->fono);

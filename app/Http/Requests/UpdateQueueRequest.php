@@ -22,7 +22,19 @@ class UpdateQueueRequest extends BaseApiFormRequest
             return true;
         }
 
-        return app(SpecialityPermissionService::class)->canEdit($user, $queue->id_specialities);
+        $service = app(SpecialityPermissionService::class);
+
+        if (! $service->canEdit($user, $queue->id_specialities)) {
+            return false;
+        }
+
+        $newSpecialityId = (int) $this->input('id_specialities', $queue->id_specialities);
+
+        if ($newSpecialityId > 0 && $newSpecialityId !== (int) $queue->id_specialities) {
+            return $service->canInsert($user, $newSpecialityId);
+        }
+
+        return true;
     }
 
     public function rules(): array
