@@ -88,6 +88,68 @@ class QueueTreatmentPlanController extends Controller
         return response()->json($this->formatPlan($plan), 201);
     }
 
+    public function index(Request $request)
+    {
+        $status = $request->query('status', 'active');
+        $user = $request->user();
+        $service = app(SpecialityPermissionService::class);
+
+        $plans = QueueTreatmentPlan::query()
+            ->with(['sessions', 'client:id,name', 'speciality:id,name'])
+            ->where('status', $status)
+            ->orderBy('expected_end_at')
+            ->get()
+            ->filter(fn ($plan) => $service->canView($user, $plan->speciality_id))
+            ->values();
+
+        return response()->json($plans->map(function ($plan) {
+            return array_merge(self::formatPlan($plan), [
+                'client_name' => $plan->client?->name,
+                'speciality_name' => $plan->speciality?->name,
+            ]);
+        }));
+    }
+
+    public function show(Request $request, QueueTreatmentPlan $plan)
+    {
+        $user = $request->user();
+        if (! app(SpecialityPermissionService::class)->canView($user, $plan->speciality_id)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
+        $plan->load(['sessions', 'client:id,name', 'speciality:id,name']);
+
+        return response()->json(array_merge(self::formatPlan($plan), [
+            'client_name' => $plan->client?->name,
+            'speciality_name' => $plan->speciality?->name,
+        ]));
+    }
+
+    public function forQueue(Request $request, $queueId)
+    {
+        $queue = Queue::findOrFail($queueId);
+        $user = $request->user();
+
+        if (! app(SpecialityPermissionService::class)->canView($user, $queue->id_specialities)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
+        $plan = QueueTreatmentPlan::query()
+            ->with(['sessions', 'client:id,name', 'speciality:id,name'])
+            ->where('queue_id', $queueId)
+            ->latest('id')
+            ->first();
+
+        if (! $plan) {
+            return response()->json(['plan' => null]);
+        }
+
+        return response()->json(array_merge(self::formatPlan($plan), [
+            'client_name' => $plan->client?->name,
+            'speciality_name' => $plan->speciality?->name,
+        ]));
+    }
+
     public static function formatPlan(QueueTreatmentPlan $plan): array
     {
         return [

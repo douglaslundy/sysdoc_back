@@ -1,30 +1,24 @@
 <?php
 
 use App\Http\Controllers\AccessProfileController;
-use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AgendaColetaController;
-use App\Http\Controllers\AlvaraController;
 use App\Http\Controllers\AlmoxarifadoCatalogController;
 use App\Http\Controllers\AlmoxarifadoConfigController;
 use App\Http\Controllers\AlmoxarifadoEstoqueController;
 use App\Http\Controllers\AlmoxarifadoMovimentacaoController;
-use App\Http\Controllers\AlmoxarifadoRequisicaoController;
 use App\Http\Controllers\AlmoxarifadoProdutoController;
-use App\Http\Controllers\ProtocolAlertController;
-use App\Http\Controllers\ProtocolConfigController;
-use App\Http\Controllers\ProtocolController;
-use App\Http\Controllers\ProtocolOrganizationalUnitController;
-use App\Http\Controllers\ProtocolTypeController;
-use App\Http\Controllers\WhatsappConfigController;
+use App\Http\Controllers\AlmoxarifadoRequisicaoController;
+use App\Http\Controllers\AlvaraController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CallController;
 use App\Http\Controllers\CallServiceController;
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\ChatRealtimeConfigController;
 use App\Http\Controllers\CampoReferenciaController;
 use App\Http\Controllers\CategoriaExameController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ChatRealtimeConfigController;
 use App\Http\Controllers\CidadaoAcsController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ConformidadeCidadaoController;
@@ -40,6 +34,7 @@ use App\Http\Controllers\ErrorLogController;
 use App\Http\Controllers\EstabelecimentoController;
 use App\Http\Controllers\ExameCampoController;
 use App\Http\Controllers\ExameController;
+use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\LetterAttachmentController;
 use App\Http\Controllers\LetterController;
@@ -47,8 +42,8 @@ use App\Http\Controllers\MedicineComplianceController;
 use App\Http\Controllers\MedicineDailyStatusController;
 use App\Http\Controllers\MedicineItemController;
 use App\Http\Controllers\MedicineMonthlyAcquisitionController;
-use App\Http\Controllers\MedicinePublicationController;
 use App\Http\Controllers\MedicinePanelSettingController;
+use App\Http\Controllers\MedicinePublicationController;
 use App\Http\Controllers\MedicineStockImportController;
 use App\Http\Controllers\MedicineTransparencyPublicController;
 use App\Http\Controllers\MedicoSolicitanteController;
@@ -60,11 +55,15 @@ use App\Http\Controllers\OrdinanceController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\PageViewAuditController;
 use App\Http\Controllers\PainelEsusController;
-use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PedidoExameController;
 use App\Http\Controllers\PharmacyCatalogAdminController;
 use App\Http\Controllers\PharmacyCatalogController;
+use App\Http\Controllers\ProtocolAlertController;
+use App\Http\Controllers\ProtocolConfigController;
+use App\Http\Controllers\ProtocolController;
+use App\Http\Controllers\ProtocolOrganizationalUnitController;
+use App\Http\Controllers\ProtocolTypeController;
 use App\Http\Controllers\QRCodeLogController;
 use App\Http\Controllers\QueueAttachmentController;
 use App\Http\Controllers\QueueController;
@@ -84,6 +83,7 @@ use App\Http\Controllers\UserSpecialityPermissionController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VigilanciaConfigController;
 use App\Http\Controllers\VisitaAcsController;
+use App\Http\Controllers\WhatsappConfigController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -116,7 +116,7 @@ Route::get('/attendance/panel/state', [AttendanceController::class, 'panelState'
 // Painel de atendimento eSUS PEC — público (sala de espera)
 Route::middleware('throttle:30,1')->group(function () {
     Route::get('/public/painel-esus/validar-cnes', [PainelEsusController::class, 'validarCnes']);
-    Route::get('/public/painel-esus/estado',       [PainelEsusController::class, 'estado']);
+    Route::get('/public/painel-esus/estado', [PainelEsusController::class, 'estado']);
 });
 
 // Redefinição de senha (throttle: 3 req/min por IP)
@@ -186,7 +186,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
             Route::get('/config/explorar', [MonitorApsConfigController::class, 'explorar']);
         });
         Route::prefix('cidadaos')->group(function () {
-            Route::get('/',        [CidadaoAcsController::class, 'index']);
+            Route::get('/', [CidadaoAcsController::class, 'index']);
             Route::get('/agentes', [CidadaoAcsController::class, 'agentes']);
         });
 
@@ -194,8 +194,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Painel de atendimento eSUS PEC — gestão de fila (autenticado)
     Route::prefix('painel-esus')->group(function () {
-        Route::get('/fila',     [PainelEsusController::class, 'fila'])->middleware('equipe.aps');
-        Route::get('/filtros',  [PainelEsusController::class, 'filtros'])->middleware('equipe.aps');
+        Route::get('/fila', [PainelEsusController::class, 'fila'])->middleware('equipe.aps');
+        Route::get('/filtros', [PainelEsusController::class, 'filtros'])->middleware('equipe.aps');
         Route::get('/unidades', [PainelEsusController::class, 'unidades'])->middleware('equipe.aps');
         Route::get('/default-cnes', [PainelEsusController::class, 'defaultCnes'])->middleware('equipe.aps');
         Route::get('/statuses', [PainelEsusController::class, 'statuses']);
@@ -493,6 +493,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('throttle:60,1')->group(function () {
         Route::post('/queue-treatment-plans/preview', [QueueTreatmentPlanController::class, 'preview']);
         Route::post('/queue-treatment-plans', [QueueTreatmentPlanController::class, 'store']);
+        Route::get('/queue-treatment-plans', [QueueTreatmentPlanController::class, 'index']);
+        Route::get('/queue-treatment-plans/{plan}', [QueueTreatmentPlanController::class, 'show']);
+        Route::get('/queues/{queueId}/treatment-plan', [QueueTreatmentPlanController::class, 'forQueue'])->whereNumber('queueId');
     });
 
     // QueueCall
