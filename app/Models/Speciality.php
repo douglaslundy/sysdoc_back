@@ -19,6 +19,11 @@ class Speciality extends Model
         'allows_session_scheduling',
     ];
 
+    // Define os casts dos campos
+    protected $casts = [
+        'allows_session_scheduling' => 'boolean',
+    ];
+
     /**
      * Define o relacionamento Many-to-One com a tabela users.
      * Um usuário pode ter várias especialidades, mas uma especialidade pertence a um único usuário.
