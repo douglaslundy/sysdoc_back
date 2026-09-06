@@ -23,10 +23,12 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\Alvara;
 use App\Models\Estabelecimento;
+use App\Models\Fiscalizacao;
 use App\Models\VigilanciaConfig;
 use App\Observers\AccessProfileObserver;
 use App\Observers\AlvaraObserver;
 use App\Observers\EstabelecimentoObserver;
+use App\Observers\FiscalizacaoObserver;
 use App\Observers\CategoriaExameObserver;
 use App\Observers\ClientObserver;
 use App\Observers\ExameObserver;
@@ -77,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
         Ordinance::observe(OrdinanceObserver::class);
         Estabelecimento::observe(EstabelecimentoObserver::class);
         Alvara::observe(AlvaraObserver::class);
+        Fiscalizacao::observe(FiscalizacaoObserver::class);
         SystemPage::observe(SystemPageObserver::class);
         PageCategory::observe(PageCategoryObserver::class);
     }
