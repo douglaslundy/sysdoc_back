@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Queue;
 use App\Services\Authorization\PagePermissionService;
+use App\Services\Authorization\SpecialityPermissionService;
 
 class UpdateQueueRequest extends BaseApiFormRequest
 {
@@ -10,8 +12,17 @@ class UpdateQueueRequest extends BaseApiFormRequest
     {
         $user = $this->user();
 
-        return $user !== null
-            && app(PagePermissionService::class)->canAccess($user, '/queue');
+        if ($user === null || ! app(PagePermissionService::class)->canAccess($user, '/queue')) {
+            return false;
+        }
+
+        $queue = Queue::find($this->route('queue'));
+
+        if ($queue === null) {
+            return true;
+        }
+
+        return app(SpecialityPermissionService::class)->canEdit($user, $queue->id_specialities);
     }
 
     public function rules(): array

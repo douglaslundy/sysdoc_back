@@ -11,6 +11,7 @@ use App\Models\QRCodeLog;
 use App\Models\Queue;
 use App\Services\AuditService;
 use App\Services\Authorization\PagePermissionService;
+use App\Services\Authorization\SpecialityPermissionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -22,7 +23,7 @@ class QueueController extends Controller
         $validated = $request->validated();
         $perPage = (int) ($validated['per_page'] ?? 10);
 
-        $queues = $this->listQuery($validated)
+        $queues = $this->listQuery($validated, $request->user())
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc')
             ->paginate($perPage);
@@ -40,6 +41,10 @@ class QueueController extends Controller
 
         if (! $queue) {
             return response()->json(['error' => 'Registro não encontrado'], 404);
+        }
+
+        if (! app(SpecialityPermissionService::class)->canView($request->user(), $queue->id_specialities)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
         AuditService::record('VIEW', $queue, null, [
@@ -136,6 +141,10 @@ class QueueController extends Controller
             return response()->json(['message' => 'Registro não encontrado'], 404);
         }
 
+        if (! app(SpecialityPermissionService::class)->canEdit($request->user(), $queue->id_specialities)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
         AuditService::record('DELETE', $queue, $queue->toArray(), null);
         $queue->delete();
 
@@ -205,7 +214,7 @@ class QueueController extends Controller
         return response()->json(['message' => 'Localização salva com sucesso']);
     }
 
-    private function listQuery(array $filters): Builder
+    private function listQuery(array $filters, \App\Models\User $user): Builder
     {
         $query = Queue::query()
             ->select('queue.*')
@@ -263,7 +272,35 @@ class QueueController extends Controller
             });
         }
 
+        $viewableSpecialityIds = app(SpecialityPermissionService::class)->viewableSpecialityIds($user);
+        if ($viewableSpecialityIds !== null) {
+            $query->whereIn('id_specialities', $viewableSpecialityIds);
+        }
+
         return $query;
+    }
+
+    public function specialityOptions(Request $request)
+    {
+        if (! $this->canAccessQueue($request)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
+        $user = $request->user();
+        $service = app(SpecialityPermissionService::class);
+        $isAdmin = $user->profile === 'admin';
+
+        $options = \App\Models\Speciality::orderBy('name')->get(['id', 'name'])->map(function ($speciality) use ($service, $user, $isAdmin) {
+            return [
+                'id' => $speciality->id,
+                'name' => $speciality->name,
+                'can_view' => $isAdmin || $service->canView($user, $speciality->id),
+                'can_edit' => $isAdmin || $service->canEdit($user, $speciality->id),
+                'can_insert' => $isAdmin || $service->canInsert($user, $speciality->id),
+            ];
+        })->values();
+
+        return response()->json($options);
     }
 
     private function calculateQueuePosition(Queue $queue): int

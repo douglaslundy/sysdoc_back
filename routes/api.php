@@ -490,6 +490,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // QueueCall
     Route::middleware('throttle:60,1')->group(function () {
+        Route::get('/queues/specialities-options', [QueueController::class, 'specialityOptions']);
         Route::apiResource('queues', QueueController::class);
         Route::get('/queues/{queue}/attachments', [QueueAttachmentController::class, 'index']);
         Route::post('/queues/{queue}/attachments', [QueueAttachmentController::class, 'store']);
