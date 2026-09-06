@@ -104,4 +104,24 @@ class QueueTreatmentSessionCompleteTest extends TestCase
             ->putJson("/api/queue-treatment-sessions/{$this->session1->id}/complete")
             ->assertStatus(403);
     }
+
+    public function test_concluir_sessao_de_plano_cancelado_retorna_422_e_nao_reabre_o_plano(): void
+    {
+        $this->plan->update(['status' => 'cancelled']);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->putJson("/api/queue-treatment-sessions/{$this->session1->id}/complete");
+
+        $response->assertStatus(422);
+
+        $this->assertDatabaseHas('queue_treatment_sessions', [
+            'id' => $this->session1->id,
+            'status' => 'pending',
+        ]);
+
+        $this->assertDatabaseHas('queue_treatment_plans', [
+            'id' => $this->plan->id,
+            'status' => 'cancelled',
+        ]);
+    }
 }

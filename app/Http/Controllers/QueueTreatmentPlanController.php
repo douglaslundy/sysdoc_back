@@ -21,13 +21,18 @@ class QueueTreatmentPlanController extends Controller
             'weekdays.*' => ['integer', 'between:1,7'],
             'total_sessions' => ['required', 'integer', 'min:1', 'max:200'],
         ]);
+        $data['weekdays'] = array_values(array_unique(array_map('intval', $data['weekdays'])));
 
         $user = $request->user();
         if (! app(SpecialityPermissionService::class)->canInsert($user, (int) $data['speciality_id'])) {
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
-        $dates = (new TreatmentPlanScheduler())->distributeDates($data['weekdays'], $data['total_sessions']);
+        try {
+            $dates = (new TreatmentPlanScheduler())->distributeDates($data['weekdays'], $data['total_sessions']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json([
             'dates' => array_map(fn ($date) => $date->toDateString(), $dates),
@@ -42,6 +47,7 @@ class QueueTreatmentPlanController extends Controller
             'weekdays.*' => ['integer', 'between:1,7'],
             'total_sessions' => ['required', 'integer', 'min:1', 'max:200'],
         ]);
+        $data['weekdays'] = array_values(array_unique(array_map('intval', $data['weekdays'])));
 
         $queue = Queue::with('speciality')->findOrFail($data['queue_id']);
 
@@ -56,9 +62,24 @@ class QueueTreatmentPlanController extends Controller
             ], 422);
         }
 
-        $dates = (new TreatmentPlanScheduler())->distributeDates($data['weekdays'], $data['total_sessions']);
+        try {
+            $dates = (new TreatmentPlanScheduler())->distributeDates($data['weekdays'], $data['total_sessions']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
-        $plan = DB::transaction(function () use ($queue, $data, $dates, $user) {
+        $existingActivePlan = false;
+
+        $plan = DB::transaction(function () use ($data, $dates, $user, &$existingActivePlan) {
+            $queue = Queue::lockForUpdate()->with('speciality')->findOrFail($data['queue_id']);
+
+            $existingActive = QueueTreatmentPlan::where('queue_id', $queue->id)->where('status', 'active')->exists();
+            if ($existingActive) {
+                $existingActivePlan = true;
+
+                return null;
+            }
+
             $plan = QueueTreatmentPlan::create([
                 'queue_id' => $queue->id,
                 'speciality_id' => $queue->id_specialities,
@@ -81,8 +102,17 @@ class QueueTreatmentPlanController extends Controller
 
             $queue->update(['done' => true, 'date_of_realized' => now()->toDateString()]);
 
+            AuditService::record('SCHEDULE_SESSIONS', $queue, null, [
+                'treatment_plan_id' => $plan->id,
+                'total_sessions' => $data['total_sessions'],
+            ], $user);
+
             return $plan;
         });
+
+        if ($existingActivePlan) {
+            return response()->json(['message' => 'Esta fila já possui um plano de tratamento ativo.'], 422);
+        }
 
         $plan->load('sessions');
 
@@ -96,6 +126,10 @@ class QueueTreatmentPlanController extends Controller
         ]);
 
         $user = $request->user();
+
+        if ($plan->status !== 'active') {
+            return response()->json(['message' => 'Este plano não está ativo e não pode ser cancelado.'], 422);
+        }
 
         DB::transaction(function () use ($plan, $data, $user) {
             $plan->update([

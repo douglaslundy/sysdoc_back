@@ -150,4 +150,63 @@ class QueueTreatmentPlanCreateTest extends TestCase
 
         $response->assertStatus(201);
     }
+
+    public function test_preview_com_weekdays_em_formato_string_nao_trava_e_calcula_certo(): void
+    {
+        // Regressão: um form-encoded POST (ou cliente JS que serializa arrays como string)
+        // envia weekdays como ["1", "5"]. A regra "integer" do validate() aceita a string
+        // numérica sem fazer cast. Antes do fix, isso travava o worker num loop infinito.
+        $response = $this->actingAs($this->admin, 'sanctum')->postJson('/api/queue-treatment-plans/preview', [
+            'speciality_id' => $this->fisio->id,
+            'weekdays' => ['1', '5'],
+            'total_sessions' => 3,
+        ]);
+
+        $response->assertOk();
+        $this->assertCount(3, $response->json('dates'));
+    }
+
+    public function test_criar_plano_com_weekdays_em_formato_string_nao_trava_e_cria_normalmente(): void
+    {
+        $response = $this->actingAs($this->admin, 'sanctum')->postJson('/api/queue-treatment-plans', [
+            'queue_id' => $this->queueId,
+            'weekdays' => ['1', '5'],
+            'total_sessions' => 2,
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonCount(2, 'sessions');
+    }
+
+    public function test_segunda_criacao_de_plano_para_a_mesma_fila_com_plano_ativo_retorna_422(): void
+    {
+        $this->actingAs($this->admin, 'sanctum')->postJson('/api/queue-treatment-plans', [
+            'queue_id' => $this->queueId,
+            'weekdays' => [1],
+            'total_sessions' => 1,
+        ])->assertStatus(201);
+
+        $response = $this->actingAs($this->admin, 'sanctum')->postJson('/api/queue-treatment-plans', [
+            'queue_id' => $this->queueId,
+            'weekdays' => [1],
+            'total_sessions' => 1,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseCount('queue_treatment_plans', 1);
+    }
+
+    public function test_criar_plano_registra_auditoria_de_agendamento(): void
+    {
+        $this->actingAs($this->admin, 'sanctum')->postJson('/api/queue-treatment-plans', [
+            'queue_id' => $this->queueId,
+            'weekdays' => [1],
+            'total_sessions' => 1,
+        ])->assertStatus(201);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'SCHEDULE_SESSIONS',
+            'user_id' => $this->admin->id,
+        ]);
+    }
 }

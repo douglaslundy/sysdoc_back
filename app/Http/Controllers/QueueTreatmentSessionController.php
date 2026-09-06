@@ -24,6 +24,10 @@ class QueueTreatmentSessionController extends Controller
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
+        if ($plan->status !== 'active' || ! in_array($session->status, ['pending', 'rescheduled_pending'], true)) {
+            return response()->json(['message' => 'Esta sessão não pode ser reagendada.'], 422);
+        }
+
         $oldDate = Carbon::parse($session->scheduled_date);
         $newDate = Carbon::parse($data['new_date']);
         $delayDays = $oldDate->diffInDays($newDate, false);
@@ -55,6 +59,10 @@ class QueueTreatmentSessionController extends Controller
 
         if (! app(SpecialityPermissionService::class)->canEdit($user, $plan->speciality_id)) {
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
+        if ($plan->status !== 'active' || ! in_array($session->status, ['pending', 'rescheduled_pending'], true)) {
+            return response()->json(['message' => 'Esta sessão não pode ser concluída.'], 422);
         }
 
         DB::transaction(function () use ($session, $plan) {

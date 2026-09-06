@@ -8,6 +8,7 @@ use App\Models\QueueTreatmentPlan;
 use App\Models\QueueTreatmentSession;
 use App\Models\Speciality;
 use App\Models\User;
+use App\Models\UserSpecialityPermission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -109,5 +110,49 @@ class QueueTreatmentPlanListTest extends TestCase
 
         $response->assertOk();
         $response->assertJson(['plan' => null]);
+    }
+
+    private function makeLimitedUserWithoutViewOnPlanSpeciality(): User
+    {
+        $outraEspecialidade = Speciality::create(['id_user' => $this->admin->id, 'name' => 'Cardiologia']);
+        $limited = User::factory()->create(['profile' => 'user', 'active' => true]);
+        // can_view apenas em uma especialidade DIFERENTE da do plano sob teste.
+        UserSpecialityPermission::create([
+            'user_id' => $limited->id,
+            'speciality_id' => $outraEspecialidade->id,
+            'can_view' => true,
+            'can_edit' => false,
+            'can_insert' => false,
+        ]);
+
+        return $limited;
+    }
+
+    public function test_index_exclui_plano_de_especialidade_sem_permissao_de_visualizacao(): void
+    {
+        $limited = $this->makeLimitedUserWithoutViewOnPlanSpeciality();
+
+        $response = $this->actingAs($limited, 'sanctum')->getJson('/api/queue-treatment-plans?status=active');
+
+        $response->assertOk();
+        $this->assertCount(0, $response->json());
+    }
+
+    public function test_show_sem_permissao_de_visualizacao_retorna_403(): void
+    {
+        $limited = $this->makeLimitedUserWithoutViewOnPlanSpeciality();
+
+        $response = $this->actingAs($limited, 'sanctum')->getJson("/api/queue-treatment-plans/{$this->plan->id}");
+
+        $response->assertStatus(403);
+    }
+
+    public function test_forqueue_sem_permissao_de_visualizacao_retorna_403(): void
+    {
+        $limited = $this->makeLimitedUserWithoutViewOnPlanSpeciality();
+
+        $response = $this->actingAs($limited, 'sanctum')->getJson("/api/queues/{$this->queue->id}/treatment-plan");
+
+        $response->assertStatus(403);
     }
 }

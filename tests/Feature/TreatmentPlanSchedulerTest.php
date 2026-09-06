@@ -48,4 +48,31 @@ class TreatmentPlanSchedulerTest extends TestCase
 
         $this->assertSame('2026-09-14', $dates[0]->toDateString());
     }
+
+    public function test_aceita_dias_da_semana_como_string_sem_travar(): void
+    {
+        // Regressão: Request::validate() com a regra "integer" não faz cast — valores
+        // numéricos em formato string (ex.: vindos de um POST form-encoded) passam na
+        // validação mas quebravam o antigo in_array(..., true) estrito.
+        Carbon::setTestNow(Carbon::parse('2026-09-07'));
+
+        $scheduler = new TreatmentPlanScheduler();
+        $dates = $scheduler->distributeDates(['1', '5'], 4);
+
+        $this->assertCount(4, $dates);
+        $this->assertSame('2026-09-07', $dates[0]->toDateString());
+        $this->assertSame('2026-09-11', $dates[1]->toDateString());
+        $this->assertSame('2026-09-14', $dates[2]->toDateString());
+        $this->assertSame('2026-09-18', $dates[3]->toDateString());
+    }
+
+    public function test_lanca_excecao_em_vez_de_travar_quando_nenhum_dia_e_valido(): void
+    {
+        // Sem guarda, in_array() nunca teria um dayOfWeekIso de 1 a 7 correspondente
+        // a um array vazio, e o while(...) rodaria para sempre.
+        $this->expectException(\InvalidArgumentException::class);
+
+        $scheduler = new TreatmentPlanScheduler();
+        $scheduler->distributeDates([], 3);
+    }
 }

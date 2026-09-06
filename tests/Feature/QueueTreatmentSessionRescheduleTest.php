@@ -130,4 +130,23 @@ class QueueTreatmentSessionRescheduleTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_adiar_sessao_ja_concluida_retorna_422_e_nao_altera_nada(): void
+    {
+        $this->session->update(['status' => 'done']);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->putJson("/api/queue-treatment-sessions/{$this->session->id}/reschedule", [
+                'new_date' => '2026-09-09',
+                'reason' => 'Tentativa de reagendar sessao ja concluida',
+            ]);
+
+        $response->assertStatus(422);
+
+        $this->assertDatabaseHas('queue_treatment_sessions', [
+            'id' => $this->session->id,
+            'status' => 'done',
+            'scheduled_date' => '2026-09-07',
+        ]);
+    }
 }

@@ -9,6 +9,8 @@ use App\Models\QueueTreatmentSession;
 use App\Models\Speciality;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class QueueTreatmentPlanCancelTest extends TestCase
@@ -126,5 +128,72 @@ class QueueTreatmentPlanCancelTest extends TestCase
             'action' => 'RETURN_TO_QUEUE',
             'user_id' => $this->admin->id,
         ]);
+    }
+
+    public function test_cancelar_plano_ja_finalizado_retorna_422_e_nao_altera_a_fila(): void
+    {
+        $this->plan->update(['status' => 'completed']);
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->putJson("/api/queue-treatment-plans/{$this->plan->id}/cancel", [
+                'reason' => 'Tentativa de cancelar um plano ja concluido',
+            ]);
+
+        $response->assertStatus(422);
+
+        $this->assertDatabaseHas('queue_treatment_plans', [
+            'id' => $this->plan->id,
+            'status' => 'completed',
+        ]);
+
+        $this->assertDatabaseHas('queue', [
+            'id' => $this->queue->id,
+            'done' => 1,
+        ]);
+    }
+
+    public function test_paciente_volta_para_a_posicao_correta_na_fila_ao_cancelar(): void
+    {
+        $originalCreatedAt = $this->queue->created_at->copy();
+
+        // Paciente que entrou na fila ANTES do paciente cancelado (deve continuar na frente).
+        DB::table('queue')->insert([
+            'uuid' => (string) Str::uuid(),
+            'id_client' => $this->queue->id_client,
+            'id_specialities' => $this->queue->id_specialities,
+            'id_user' => $this->admin->id,
+            'done' => false,
+            'urgency' => false,
+            'created_at' => $originalCreatedAt->copy()->subMinutes(10),
+            'updated_at' => $originalCreatedAt->copy()->subMinutes(10),
+        ]);
+
+        // Paciente que entrou na fila DEPOIS do paciente cancelado (deve continuar atras).
+        DB::table('queue')->insert([
+            'uuid' => (string) Str::uuid(),
+            'id_client' => $this->queue->id_client,
+            'id_specialities' => $this->queue->id_specialities,
+            'id_user' => $this->admin->id,
+            'done' => false,
+            'urgency' => false,
+            'created_at' => $originalCreatedAt->copy()->addMinutes(10),
+            'updated_at' => $originalCreatedAt->copy()->addMinutes(10),
+        ]);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->putJson("/api/queue-treatment-plans/{$this->plan->id}/cancel", [
+                'reason' => 'Paciente solicitou reagendamento manual com outro profissional',
+            ])
+            ->assertOk();
+
+        $response = $this->actingAs($this->admin, 'sanctum')->getJson(
+            "/api/queues?speciality_id={$this->queue->id_specialities}&done=0&urgency=0&per_page=50"
+        );
+
+        $response->assertOk();
+
+        $entry = collect($response->json('data'))->firstWhere('id', $this->queue->id);
+        $this->assertNotNull($entry, 'Fila com o paciente cancelado nao encontrada na listagem.');
+        $this->assertSame(2, $entry['position']);
     }
 }
