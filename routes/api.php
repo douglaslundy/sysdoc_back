@@ -68,6 +68,7 @@ use App\Http\Controllers\QRCodeLogController;
 use App\Http\Controllers\QueueAttachmentController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\QueueTreatmentPlanController;
+use App\Http\Controllers\QueueTreatmentSessionController;
 use App\Http\Controllers\ResultadoExameController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RouteController;
@@ -496,6 +497,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/queue-treatment-plans', [QueueTreatmentPlanController::class, 'index']);
         Route::get('/queue-treatment-plans/{plan}', [QueueTreatmentPlanController::class, 'show']);
         Route::get('/queues/{queueId}/treatment-plan', [QueueTreatmentPlanController::class, 'forQueue'])->whereNumber('queueId');
+        Route::put('/queue-treatment-sessions/{session}/reschedule', [QueueTreatmentSessionController::class, 'reschedule']);
     });
 
     // QueueCall
