@@ -32,6 +32,7 @@ use App\Http\Controllers\EmailConfigController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\ErrorLogController;
 use App\Http\Controllers\EstabelecimentoController;
+use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\ExameCampoController;
 use App\Http\Controllers\ExameController;
 use App\Http\Controllers\KanbanController;
@@ -559,6 +560,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('alvaras', AlvaraController::class)->only(['index', 'show']);
     Route::middleware('page.permission:/alvaras')->group(function () {
         Route::apiResource('alvaras', AlvaraController::class)->only(['store', 'update', 'destroy']);
+    });
+
+    // Fiscalizações (Vigilância Sanitária)
+    Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['index', 'show']);
+    Route::middleware('page.permission:/fiscalizacoes')->group(function () {
+        Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['store', 'update', 'destroy']);
     });
 
     // Configuração da Vigilância Sanitária (somente admin)
