@@ -322,6 +322,8 @@ class DashboardController extends MonitorApsBaseController
             'aquisicoes_por_mes' => [],
             'top_indisponiveis' => [],
             'fontes_aquisicao_mes' => [],
+            'consumo_ranking' => [],
+            'risco_falta' => [],
         ];
 
         $currentMonth = now()->format('Y-m');
@@ -451,6 +453,128 @@ class DashboardController extends MonitorApsBaseController
                     $fontesAquisicaoMes = collect();
                 }
 
+                try {
+                    $mesesFechados = [];
+                    for ($i = 1; $i <= 3; $i++) {
+                        $mesesFechados[] = now()->subMonths($i)->format('Y-m');
+                    }
+
+                    $statusDetalhado = DB::table('medicine_daily_statuses as s')
+                        ->join('medicine_items as m', 'm.id', '=', 's.medicine_item_id')
+                        ->select(
+                            's.medicine_item_id',
+                            'm.active_ingredient',
+                            'm.concentration',
+                            DB::raw("DATE_FORMAT(s.reference_date, '%Y-%m') as mes"),
+                            's.reference_date',
+                            's.available_quantity'
+                        )
+                        ->whereNull('m.deleted_at')
+                        ->where('m.active', true)
+                        ->whereIn(DB::raw("DATE_FORMAT(s.reference_date, '%Y-%m')"), $mesesFechados)
+                        ->orderBy('s.medicine_item_id')
+                        ->orderBy('s.reference_date')
+                        ->get();
+
+                    $porMedicamentoMes = [];
+                    foreach ($statusDetalhado as $linha) {
+                        $chave = $linha->medicine_item_id.'|'.$linha->mes;
+                        if (! isset($porMedicamentoMes[$chave])) {
+                            $porMedicamentoMes[$chave] = [
+                                'medicine_item_id' => $linha->medicine_item_id,
+                                'active_ingredient' => $linha->active_ingredient,
+                                'concentration' => $linha->concentration,
+                                'estoque_inicio' => (float) $linha->available_quantity,
+                                'estoque_fim' => (float) $linha->available_quantity,
+                            ];
+                        } else {
+                            $porMedicamentoMes[$chave]['estoque_fim'] = (float) $linha->available_quantity;
+                        }
+                    }
+
+                    $aquisicoesPorMedicamentoMes = DB::table('medicine_monthly_acquisitions')
+                        ->select('medicine_item_id', 'reference_month', DB::raw('SUM(acquired_quantity) as total'))
+                        ->whereIn('reference_month', $mesesFechados)
+                        ->groupBy('medicine_item_id', 'reference_month')
+                        ->get()
+                        ->keyBy(fn ($r) => $r->medicine_item_id.'|'.$r->reference_month);
+
+                    $consumoPorMedicamento = [];
+                    foreach ($porMedicamentoMes as $chave => $dadosMes) {
+                        [$idMedicamento, $mesRef] = explode('|', $chave);
+                        $aquisicao = $aquisicoesPorMedicamentoMes->get($idMedicamento.'|'.$mesRef);
+                        $adquirido = $aquisicao ? (float) $aquisicao->total : 0.0;
+                        $consumoMes = max(0.0, $dadosMes['estoque_inicio'] + $adquirido - $dadosMes['estoque_fim']);
+
+                        if (! isset($consumoPorMedicamento[$idMedicamento])) {
+                            $consumoPorMedicamento[$idMedicamento] = [
+                                'medicine_item_id' => (int) $idMedicamento,
+                                'active_ingredient' => $dadosMes['active_ingredient'],
+                                'concentration' => $dadosMes['concentration'],
+                                'meses_com_dado' => 0,
+                                'consumo_total' => 0.0,
+                            ];
+                        }
+                        $consumoPorMedicamento[$idMedicamento]['meses_com_dado']++;
+                        $consumoPorMedicamento[$idMedicamento]['consumo_total'] += $consumoMes;
+                    }
+
+                    $estoqueAtualPorMedicamento = DB::table('medicine_items as m')
+                        ->leftJoin('medicine_daily_statuses as s', function ($join) {
+                            $join->on('s.medicine_item_id', '=', 'm.id')
+                                ->whereRaw('s.id = (
+                                    select s2.id
+                                    from medicine_daily_statuses s2
+                                    where s2.medicine_item_id = m.id
+                                    order by s2.reference_date desc, s2.id desc
+                                    limit 1
+                                )');
+                        })
+                        ->whereNull('m.deleted_at')
+                        ->where('m.active', true)
+                        ->select('m.id', DB::raw('COALESCE(s.available_quantity, 0) as estoque_atual'))
+                        ->get()
+                        ->keyBy('id');
+
+                    $consumoRanking = [];
+                    $riscoFalta = [];
+                    foreach ($consumoPorMedicamento as $idMedicamento => $dadosConsumo) {
+                        $consumoMedioMensal = $dadosConsumo['consumo_total'] / $dadosConsumo['meses_com_dado'];
+                        $consumoMedioDiario = $consumoMedioMensal / 30;
+                        $nome = trim($dadosConsumo['active_ingredient'].' '.$dadosConsumo['concentration']);
+
+                        $consumoRanking[] = [
+                            'medicine_item_id' => $idMedicamento,
+                            'nome' => $nome,
+                            'consumo_medio_mensal' => round($consumoMedioMensal, 2),
+                            'meses_com_dado' => $dadosConsumo['meses_com_dado'],
+                        ];
+
+                        if ($consumoMedioDiario > 0) {
+                            $estoqueAtual = (float) ($estoqueAtualPorMedicamento->get($idMedicamento)->estoque_atual ?? 0);
+                            $diasRestantes = $estoqueAtual / $consumoMedioDiario;
+                            if ($diasRestantes < 15) {
+                                $riscoFalta[] = [
+                                    'medicine_item_id' => $idMedicamento,
+                                    'nome' => $nome,
+                                    'estoque_atual' => $estoqueAtual,
+                                    'consumo_medio_diario' => round($consumoMedioDiario, 2),
+                                    'dias_restantes' => round($diasRestantes, 1),
+                                ];
+                            }
+                        }
+                    }
+
+                    usort($consumoRanking, fn ($a, $b) => $b['consumo_medio_mensal'] <=> $a['consumo_medio_mensal']);
+                    $consumoRanking = array_slice($consumoRanking, 0, 10);
+
+                    usort($riscoFalta, fn ($a, $b) => $a['dias_restantes'] <=> $b['dias_restantes']);
+                } catch (\Throwable $e) {
+                    Log::error('DashboardFarmacia consumo_ranking/risco_falta: '.$e->getMessage());
+                    $consumoRanking = [];
+                    $riscoFalta = [];
+                }
+
                 return [
                     'janela_dias' => $janelaDias,
                     'janela_meses' => $janelaMeses,
@@ -467,6 +591,8 @@ class DashboardController extends MonitorApsBaseController
                     'aquisicoes_por_mes' => $aquisicoesPorMes,
                     'top_indisponiveis' => $topIndisponiveis,
                     'fontes_aquisicao_mes' => $fontesAquisicaoMes,
+                    'consumo_ranking' => $consumoRanking,
+                    'risco_falta' => $riscoFalta,
                 ];
             });
         } catch (\Throwable $e) {
