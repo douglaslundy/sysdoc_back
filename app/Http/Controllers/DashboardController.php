@@ -454,9 +454,10 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
+                    $mesInicial = now()->startOfMonth();
                     $mesesFechados = [];
                     for ($i = 1; $i <= 3; $i++) {
-                        $mesesFechados[] = now()->subMonths($i)->format('Y-m');
+                        $mesesFechados[] = $mesInicial->copy()->subMonths($i)->format('Y-m');
                     }
 
                     $statusDetalhado = DB::table('medicine_daily_statuses as s')

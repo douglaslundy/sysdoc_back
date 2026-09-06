@@ -50,12 +50,15 @@ class DashboardFarmaciaConsumoTest extends TestCase
     {
         $admin = User::factory()->create(['profile' => 'admin', 'active' => true]);
 
+        $this->travelTo(\Carbon\Carbon::parse('2026-06-15 12:00:00'));
+
         // Medicamento 1: consumo constante de 90/mes (com aquisicao no meio pra provar que ela entra na conta),
         // estoque atual baixo -> deve entrar em risco_falta.
         $dipirona = $this->criarMedicamento('Dipirona', '500mg');
-        $mes3 = now()->subMonths(3);
-        $mes2 = now()->subMonths(2);
-        $mes1 = now()->subMonths(1);
+        $mesInicial = now()->startOfMonth();
+        $mes3 = $mesInicial->copy()->subMonths(3);
+        $mes2 = $mesInicial->copy()->subMonths(2);
+        $mes1 = $mesInicial->copy()->subMonths(1);
 
         $this->lancarStatus($dipirona, $mes3->copy()->startOfMonth(), 300);
         $this->lancarStatus($dipirona, $mes3->copy()->endOfMonth(), 210); // consumo = 300+0-210 = 90
@@ -66,6 +69,10 @@ class DashboardFarmaciaConsumoTest extends TestCase
 
         $this->lancarStatus($dipirona, $mes1->copy()->startOfMonth(), 170);
         $this->lancarStatus($dipirona, $mes1->copy()->endOfMonth(), 80); // consumo = 170+0-80 = 90
+
+        // Grande alteracao no mes corrente (ainda aberto): nao deve entrar na media de consumo,
+        // provando que o mes aberto e corretamente excluido do calculo.
+        $this->lancarStatus($dipirona, $mesInicial->copy()->addDays(2), 9999);
 
         $this->lancarStatus($dipirona, now(), 15); // estoque atual
 
@@ -153,9 +160,12 @@ class DashboardFarmaciaConsumoTest extends TestCase
     {
         $admin = User::factory()->create(['profile' => 'admin', 'active' => true]);
 
-        $mes3 = now()->subMonths(3);
-        $mes2 = now()->subMonths(2);
-        $mes1 = now()->subMonths(1);
+        $this->travelTo(\Carbon\Carbon::parse('2026-06-15 12:00:00'));
+
+        $mesInicial = now()->startOfMonth();
+        $mes3 = $mesInicial->copy()->subMonths(3);
+        $mes2 = $mesInicial->copy()->subMonths(2);
+        $mes1 = $mesInicial->copy()->subMonths(1);
 
         // Create 12 medications with different consumption rates (110, 120, 130, ..., 220)
         $medicamentos = [];
