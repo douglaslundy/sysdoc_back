@@ -50,6 +50,28 @@ class SpecialityPermissionService
             ->all();
     }
 
+    /**
+     * @return array<int, array{can_view: bool, can_edit: bool, can_insert: bool}> keyed by speciality_id.
+     *         For admin, returns an empty array — callers must treat a missing key as "true for all three flags" when the user is admin.
+     */
+    public function permissionsFor(User $user): array
+    {
+        if ($user->profile === 'admin') {
+            return [];
+        }
+
+        return UserSpecialityPermission::query()
+            ->where('user_id', $user->id)
+            ->get(['speciality_id', 'can_view', 'can_edit', 'can_insert'])
+            ->keyBy('speciality_id')
+            ->map(fn ($row) => [
+                'can_view' => (bool) $row->can_view,
+                'can_edit' => (bool) $row->can_edit,
+                'can_insert' => (bool) $row->can_insert,
+            ])
+            ->all();
+    }
+
     private function hasFlag(User $user, int $specialityId, string $flag): bool
     {
         return UserSpecialityPermission::query()

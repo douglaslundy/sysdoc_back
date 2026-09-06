@@ -73,7 +73,9 @@ class UserSpecialityPermissionBackfiller
             return 0;
         }
 
-        DB::table('user_speciality_permissions')->insert($rows);
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('user_speciality_permissions')->insert($chunk);
+        }
 
         return count($rows);
     }

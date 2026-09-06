@@ -287,16 +287,18 @@ class QueueController extends Controller
         }
 
         $user = $request->user();
-        $service = app(SpecialityPermissionService::class);
         $isAdmin = $user->profile === 'admin';
+        $permissions = app(SpecialityPermissionService::class)->permissionsFor($user);
 
-        $options = \App\Models\Speciality::orderBy('name')->get(['id', 'name'])->map(function ($speciality) use ($service, $user, $isAdmin) {
+        $options = \App\Models\Speciality::orderBy('name')->get(['id', 'name'])->map(function ($speciality) use ($permissions, $isAdmin) {
+            $perm = $permissions[$speciality->id] ?? ['can_view' => false, 'can_edit' => false, 'can_insert' => false];
+
             return [
                 'id' => $speciality->id,
                 'name' => $speciality->name,
-                'can_view' => $isAdmin || $service->canView($user, $speciality->id),
-                'can_edit' => $isAdmin || $service->canEdit($user, $speciality->id),
-                'can_insert' => $isAdmin || $service->canInsert($user, $speciality->id),
+                'can_view' => $isAdmin || $perm['can_view'],
+                'can_edit' => $isAdmin || $perm['can_edit'],
+                'can_insert' => $isAdmin || $perm['can_insert'],
             ];
         })->values();
 

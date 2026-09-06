@@ -7,6 +7,7 @@ use App\Models\Queue;
 use App\Models\QueueAttachment;
 use App\Services\AuditService;
 use App\Services\Authorization\PagePermissionService;
+use App\Services\Authorization\SpecialityPermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +24,10 @@ class QueueAttachmentController extends Controller
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
+        if (! app(SpecialityPermissionService::class)->canView($request->user(), $queue->id_specialities)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
         $attachments = $queue->attachments()
             ->with('uploader:id,name')
             ->orderByDesc('id')
@@ -33,6 +38,10 @@ class QueueAttachmentController extends Controller
 
     public function store(StoreQueueAttachmentRequest $request, Queue $queue): JsonResponse
     {
+        if (! app(SpecialityPermissionService::class)->canEdit($request->user(), $queue->id_specialities)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
         $files = $request->hasFile('files')
             ? $request->file('files')
             : [$request->file('file')];
@@ -81,6 +90,10 @@ class QueueAttachmentController extends Controller
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
+        if (! app(SpecialityPermissionService::class)->canView($request->user(), $queue->id_specialities)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
         if (! $this->belongsToQueue($queue, $attachment)) {
             return response()->json(['message' => 'Anexo não pertence a este registro.'], 422);
         }
@@ -107,6 +120,10 @@ class QueueAttachmentController extends Controller
     public function destroy(Request $request, Queue $queue, QueueAttachment $attachment): JsonResponse
     {
         if (! $this->canAccessQueue($request)) {
+            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        }
+
+        if (! app(SpecialityPermissionService::class)->canEdit($request->user(), $queue->id_specialities)) {
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 

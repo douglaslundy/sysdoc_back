@@ -187,6 +187,15 @@ class QueueSpecialityPermissionTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_visualizar_em_especialidade_sem_can_view_retorna_403(): void
+    {
+        $queueId = $this->insertQueueRow($this->fono);
+
+        $response = $this->actingAs($this->limited, 'sanctum')->getJson("/api/queues/{$queueId}");
+
+        $response->assertStatus(403);
+    }
+
     public function test_admin_nunca_e_bloqueado(): void
     {
         $queueId = $this->insertQueueRow($this->fono);
