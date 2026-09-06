@@ -32,9 +32,10 @@ use App\Http\Controllers\EmailConfigController;
 use App\Http\Controllers\EndedController;
 use App\Http\Controllers\ErrorLogController;
 use App\Http\Controllers\EstabelecimentoController;
-use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\ExameCampoController;
 use App\Http\Controllers\ExameController;
+use App\Http\Controllers\FiscalizacaoAttachmentController;
+use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\LetterAttachmentController;
@@ -566,6 +567,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['index', 'show']);
     Route::middleware('page.permission:/fiscalizacoes')->group(function () {
         Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['store', 'update', 'destroy']);
+    });
+    Route::get('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'index']);
+    Route::get('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}/download', [FiscalizacaoAttachmentController::class, 'download']);
+    Route::middleware('page.permission:/fiscalizacoes')->group(function () {
+        Route::post('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'store']);
+        Route::delete('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}', [FiscalizacaoAttachmentController::class, 'destroy']);
     });
 
     // Configuração da Vigilância Sanitária (somente admin)
