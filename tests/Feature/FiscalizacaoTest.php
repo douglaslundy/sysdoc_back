@@ -46,7 +46,7 @@ class FiscalizacaoTest extends TestCase
         $response->assertJsonPath('estabelecimento.nome_estabelecimento', $this->estabelecimento->nome_estabelecimento);
     }
 
-    public function test_lista_filtra_por_estabelecimento_e_resultado(): void
+    public function test_lista_filtra_por_estabelecimento(): void
     {
         Fiscalizacao::create($this->payload(['fiscal_id' => $this->admin->id, 'resultado' => 'Conforme']));
         $outro = Estabelecimento::factory()->create();
@@ -63,6 +63,48 @@ class FiscalizacaoTest extends TestCase
         $response->assertOk();
         $this->assertCount(1, $response->json('data'));
         $this->assertSame('Conforme', $response->json('data.0.resultado'));
+    }
+
+    public function test_lista_filtra_por_resultado(): void
+    {
+        // Create two fiscalizações for the SAME estabelecimento with different resultados
+        Fiscalizacao::create($this->payload(['fiscal_id' => $this->admin->id, 'resultado' => 'Conforme']));
+        Fiscalizacao::create($this->payload(['fiscal_id' => $this->admin->id, 'resultado' => 'Não conforme']));
+
+        // Filter by resultado = 'Conforme'
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/fiscalizacoes?resultado=Conforme');
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame('Conforme', $response->json('data.0.resultado'));
+    }
+
+    public function test_lista_filtra_por_busca_nome_estabelecimento(): void
+    {
+        $estabelecimento1 = Estabelecimento::factory()->create(['nome_estabelecimento' => 'Padaria Central']);
+        $estabelecimento2 = Estabelecimento::factory()->create(['nome_estabelecimento' => 'Restaurante da Cidade']);
+
+        Fiscalizacao::create([
+            'estabelecimento_id' => $estabelecimento1->id,
+            'fiscal_id' => $this->admin->id,
+            'data_visita' => '2026-09-06',
+            'resultado' => 'Conforme',
+        ]);
+        Fiscalizacao::create([
+            'estabelecimento_id' => $estabelecimento2->id,
+            'fiscal_id' => $this->admin->id,
+            'data_visita' => '2026-09-06',
+            'resultado' => 'Conforme',
+        ]);
+
+        // Search for 'Padaria'
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/fiscalizacoes?busca=Padaria');
+
+        $response->assertOk();
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame('Padaria Central', $response->json('data.0.estabelecimento.nome_estabelecimento'));
     }
 
     public function test_criar_sem_permissao_de_pagina_retorna_403(): void
