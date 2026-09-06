@@ -109,4 +109,15 @@ class UserSpecialityPermissionControllerTest extends TestCase
             ->putJson("/api/users/{$this->target->id}/speciality-permissions", ['permissions' => []])
             ->assertStatus(403);
     }
+
+    public function test_permissoes_duplicadas_no_payload_sao_rejeitadas(): void
+    {
+        $this->actingAs($this->admin, 'sanctum')
+            ->putJson("/api/users/{$this->target->id}/speciality-permissions", [
+                'permissions' => [
+                    ['speciality_id' => $this->fisio->id, 'can_view' => true, 'can_edit' => false, 'can_insert' => false],
+                    ['speciality_id' => $this->fisio->id, 'can_view' => false, 'can_edit' => true, 'can_insert' => false],
+                ],
+            ])->assertStatus(422);
+    }
 }

@@ -6,6 +6,7 @@ use App\Models\Speciality;
 use App\Models\User;
 use App\Models\UserSpecialityPermission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserSpecialityPermissionController extends Controller
 {
@@ -18,31 +19,33 @@ class UserSpecialityPermissionController extends Controller
     {
         $data = $request->validate([
             'permissions' => ['present', 'array'],
-            'permissions.*.speciality_id' => ['required', 'integer', 'exists:specialities,id'],
+            'permissions.*.speciality_id' => ['required', 'integer', 'distinct', 'exists:specialities,id'],
             'permissions.*.can_view' => ['boolean'],
             'permissions.*.can_edit' => ['boolean'],
             'permissions.*.can_insert' => ['boolean'],
         ]);
 
-        UserSpecialityPermission::where('user_id', $user->id)->delete();
+        DB::transaction(function () use ($data, $user) {
+            UserSpecialityPermission::where('user_id', $user->id)->delete();
 
-        foreach ($data['permissions'] as $item) {
-            $canEdit = (bool) ($item['can_edit'] ?? false);
-            $canInsert = (bool) ($item['can_insert'] ?? false);
-            $canView = (bool) ($item['can_view'] ?? false) || $canEdit || $canInsert;
+            foreach ($data['permissions'] as $item) {
+                $canEdit = (bool) ($item['can_edit'] ?? false);
+                $canInsert = (bool) ($item['can_insert'] ?? false);
+                $canView = (bool) ($item['can_view'] ?? false) || $canEdit || $canInsert;
 
-            if (! $canView && ! $canEdit && ! $canInsert) {
-                continue;
+                if (! $canView && ! $canEdit && ! $canInsert) {
+                    continue;
+                }
+
+                UserSpecialityPermission::create([
+                    'user_id' => $user->id,
+                    'speciality_id' => $item['speciality_id'],
+                    'can_view' => $canView,
+                    'can_edit' => $canEdit,
+                    'can_insert' => $canInsert,
+                ]);
             }
-
-            UserSpecialityPermission::create([
-                'user_id' => $user->id,
-                'speciality_id' => $item['speciality_id'],
-                'can_view' => $canView,
-                'can_edit' => $canEdit,
-                'can_insert' => $canInsert,
-            ]);
-        }
+        });
 
         return response()->json($this->currentPermissions($user));
     }
