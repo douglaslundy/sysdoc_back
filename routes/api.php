@@ -68,6 +68,7 @@ use App\Http\Controllers\PharmacyCatalogController;
 use App\Http\Controllers\QRCodeLogController;
 use App\Http\Controllers\QueueAttachmentController;
 use App\Http\Controllers\QueueController;
+use App\Http\Controllers\QueueTreatmentPlanController;
 use App\Http\Controllers\ResultadoExameController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RouteController;
@@ -487,6 +488,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     // Speciality
     Route::apiResource('specialities', SpecialityController::class);
+
+    // Agendamento por sessoes da Fila
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::post('/queue-treatment-plans/preview', [QueueTreatmentPlanController::class, 'preview']);
+        Route::post('/queue-treatment-plans', [QueueTreatmentPlanController::class, 'store']);
+    });
 
     // QueueCall
     Route::middleware('throttle:60,1')->group(function () {

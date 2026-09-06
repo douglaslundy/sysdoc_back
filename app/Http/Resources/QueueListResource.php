@@ -33,6 +33,7 @@ class QueueListResource extends JsonResource
             'speciality' => $this->whenLoaded('speciality', fn () => [
                 'id' => $this->speciality?->id,
                 'name' => $this->speciality?->name,
+                'allows_session_scheduling' => (bool) $this->speciality?->allows_session_scheduling,
             ]),
             'user' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user?->id,

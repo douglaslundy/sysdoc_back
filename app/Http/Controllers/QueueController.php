@@ -221,7 +221,7 @@ class QueueController extends Controller
             ->with([
                 'client:id,name,mother,cpf,cns,phone',
                 'user:id,name',
-                'speciality:id,name',
+                'speciality:id,name,allows_session_scheduling',
             ])
             ->withCount('attachments')
             ->selectSub(function ($query) {
