@@ -16,6 +16,7 @@ class Speciality extends Model
     protected $fillable = [
         'id_user',
         'name',
+        'allows_session_scheduling',
     ];
 
     /**

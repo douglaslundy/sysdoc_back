@@ -32,6 +32,7 @@ class SpecialityController extends Controller
         $validatedData = $request->validate([
             'id_user' => 'required|exists:users,id',
             'name' => 'required|string|max:50',
+            'allows_session_scheduling' => 'sometimes|boolean',
         ]);
 
         // Cria uma nova especialidade
@@ -63,6 +64,7 @@ class SpecialityController extends Controller
         $validatedData = $request->validate([
             'id_user' => 'required|exists:users,id',
             'name' => 'required|string|max:50',
+            'allows_session_scheduling' => 'sometimes|boolean',
         ]);
 
         // Atualiza a especialidade com os dados validados
