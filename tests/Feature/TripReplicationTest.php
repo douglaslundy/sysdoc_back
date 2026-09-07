@@ -172,4 +172,15 @@ class TripReplicationTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    public function test_replicar_viagem_rejeita_usuario_sem_permissao_de_trips(): void
+    {
+        $trip = $this->createTripWithClients();
+        $semPermissao = User::factory()->create(['profile' => 'user', 'active' => true]);
+
+        $response = $this->actingAs($semPermissao, 'sanctum')
+            ->postJson("/api/trips/{$trip->id}/replicate", ['dates' => [now()->addDay()->toDateString()]]);
+
+        $response->assertStatus(403);
+    }
 }
