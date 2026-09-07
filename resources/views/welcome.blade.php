@@ -318,20 +318,20 @@
 <div class="stats" aria-label="Números do sistema">
     <div class="stats-grid">
         <div>
-            <div class="stat-num">15+</div>
+            <div class="stat-num">18+</div>
             <div class="stat-label">Módulos integrados</div>
         </div>
         <div>
-            <div class="stat-num">120+</div>
-            <div class="stat-label">Endpoints de API</div>
+            <div class="stat-num">95</div>
+            <div class="stat-label">Telas em produção</div>
         </div>
         <div>
             <div class="stat-num">100%</div>
             <div class="stat-label">Ações auditadas</div>
         </div>
         <div>
-            <div class="stat-num">6</div>
-            <div class="stat-label">Perfis de acesso</div>
+            <div class="stat-num">22</div>
+            <div class="stat-label">Módulos com auditoria automática</div>
         </div>
         <div>
             <div class="stat-num">IA</div>
@@ -365,12 +365,13 @@
             <article class="module-card">
                 <div class="module-icon" style="background:#e6f7f0;">💊</div>
                 <h3>Farmácia Municipal</h3>
-                <p>Controle de estoque, disponibilidade e transparência pública de medicamentos.</p>
+                <p>Controle de estoque, previsão de falta e transparência pública de medicamentos.</p>
                 <ul>
                     <li>Cadastro de medicamentos com código interno e princípio ativo</li>
                     <li>Disponibilidade diária por medicamento</li>
                     <li>Aquisições mensais com fonte e custo</li>
-                    <li>Painel público de transparência farmacêutica</li>
+                    <li>Previsão de falta e ranking de consumo, calculados a partir do histórico</li>
+                    <li>Painel público de transparência farmacêutica (Lei 2.488)</li>
                     <li>Integração com REMUME e SUS-MG</li>
                 </ul>
             </article>
@@ -378,10 +379,12 @@
             <article class="module-card">
                 <div class="module-icon" style="background:#fff7ed;">🏥</div>
                 <h3>Fila de Atendimento</h3>
-                <p>Sistema de senhas digitais com painel TV em tempo real.</p>
+                <p>Sistema de senhas digitais com painel TV em tempo real e agendamento por sessões.</p>
                 <ul>
                     <li>Emissão de senha com número sequencial diário</li>
                     <li>Fila ordenada por prioridade</li>
+                    <li>Agendamento por sessões: paciente com tratamento contínuo (ex: fisioterapia) sai da fila na hora, sem travar os demais</li>
+                    <li>Permissão de acesso por especialidade, configurável por usuário</li>
                     <li>Painel TV público sem necessidade de login</li>
                     <li>Controle de múltiplas salas de atendimento</li>
                     <li>Histórico completo por atendente e sala</li>
@@ -391,11 +394,13 @@
             <article class="module-card">
                 <div class="module-icon" style="background:#fce7f3;">🛡️</div>
                 <h3>Vigilância Sanitária</h3>
-                <p>Cadastro de estabelecimentos e controle de alvarás com PDF oficial.</p>
+                <p>Cadastro de estabelecimentos, alvarás e fiscalizações com prova em foto.</p>
                 <ul>
                     <li>Cadastro por CNAE, responsável e endereço</li>
                     <li>Emissão e vencimento de alvarás sanitários</li>
                     <li>Download do alvará em PDF</li>
+                    <li>Registro de fiscalização com data, resultado e observações por estabelecimento</li>
+                    <li>Foto ou documento anexado direto da câmera do celular, sem instalar aplicativo</li>
                     <li>Controle por nível de risco</li>
                     <li>Dashboard com alvarás a vencer</li>
                 </ul>
@@ -508,10 +513,11 @@
             <article class="module-card">
                 <div class="module-icon" style="background:#e0f2fe;">📈</div>
                 <h3>Dashboards Analíticos</h3>
-                <p>Painéis gerenciais por módulo para tomada de decisão em tempo real.</p>
+                <p>Painéis gerenciais por módulo — e um painel executivo com todos os setores juntos.</p>
                 <ul>
+                    <li>Dashboard executivo consolidado: farmácia, vigilância, fila, laboratório, TFD e mais numa única tela, com alerta visual automático</li>
                     <li>Dashboard de laboratório com top exames e médicos</li>
-                    <li>Dashboard de farmácia com disponibilidade</li>
+                    <li>Dashboard de farmácia com disponibilidade e previsão de falta</li>
                     <li>Dashboard de vigilância com vencimentos</li>
                     <li>Dashboard TFD com km e pessoas</li>
                     <li>Dashboard de logs e acessos</li>
@@ -523,8 +529,8 @@
                 <h3>Controle de Acesso e Auditoria</h3>
                 <p>Perfis, permissões granulares e rastreamento completo de todas as ações.</p>
                 <ul>
-                    <li>6 perfis de acesso pré-configurados</li>
-                    <li>Permissões por página e por perfil</li>
+                    <li>Perfis de acesso configuráveis por página</li>
+                    <li>Permissão granular por especialidade dentro da Fila — ver, editar e inserir paciente, definidos por usuário</li>
                     <li>Auditoria automática de CREATE/UPDATE/DELETE</li>
                     <li>Registro de IP, user-agent e endpoint</li>
                     <li>Consulta de logs com filtros avançados</li>
@@ -695,7 +701,7 @@
 
             <details>
                 <summary>Como são gerenciados os perfis de acesso?</summary>
-                <p>O Sysdoc possui 6 perfis pré-configurados (admin, gestor, usuário, TFD, motorista e parceiro), cada um com acesso restrito aos módulos pertinentes. O administrador pode ainda criar perfis personalizados e definir quais páginas cada perfil pode acessar, com controle granular por página.</p>
+                <p>O administrador define, por perfil, quais páginas cada colaborador pode acessar — controle granular por página, não por um conjunto fixo de perfis. Dentro do módulo de Fila, dá pra ir ainda mais fundo: por especialidade (ex: Fisioterapia, Fonoaudiologia), cada usuário pode ter permissão configurada separadamente para visualizar, editar ou inserir paciente — em vez de acesso tudo-ou-nada ao módulo inteiro.</p>
             </details>
 
             <details>
@@ -714,7 +720,7 @@
         <p>Entre em contato e agende uma demonstração gratuita. Mostre ao gestor como o Sysdoc funciona na prática — com os dados reais da sua secretaria.</p>
         <ul class="contact-list">
             <li>✉️ <a href="mailto:douglaslundy@gmail.com">douglaslundy@gmail.com</a></li>
-            <li>📱 <a href="https://wa.me/5535984297193" target="_blank" rel="noopener">WhatsApp: (35) 98429-7193</a></li>
+            <li>📱 <a href="https://web.whatsapp.com/send?phone=5535984297193&amp;text=Ol%C3%A1!%20Vi%20o%20site%20do%20Sysdoc%20e%20quero%20saber%20mais%20sobre%20o%20sistema%20para%20a%20minha%20secretaria%20de%20sa%C3%BAde." target="_blank" rel="noopener">WhatsApp: (35) 98429-7193</a></li>
         </ul>
         <a href="/public/manual/manual.html" class="btn-primary" style="display:inline-block;">
             📖 Baixar manual de uso
@@ -760,7 +766,7 @@
             <h4>Contato</h4>
             <ul>
                 <li><a href="mailto:douglaslundy@gmail.com">douglaslundy@gmail.com</a></li>
-                <li><a href="https://wa.me/5535984297193" target="_blank" rel="noopener">WhatsApp: (35) 98429-7193</a></li>
+                <li><a href="https://web.whatsapp.com/send?phone=5535984297193&amp;text=Ol%C3%A1!%20Vi%20o%20site%20do%20Sysdoc%20e%20quero%20saber%20mais%20sobre%20o%20sistema%20para%20a%20minha%20secretaria%20de%20sa%C3%BAde." target="_blank" rel="noopener">WhatsApp: (35) 98429-7193</a></li>
             </ul>
         </div>
     </div>
