@@ -154,7 +154,7 @@ class DashboardController extends MonitorApsBaseController
                 return [
                     'totais' => [
                         'especialidades' => $totais['especialidades'],
-                        'total_fila' => $totais['total_na_fila'],
+                        'total_na_fila' => $totais['total_na_fila'],
                         'fila_7dias' => $totais['fila_7_dias'],
                         'total_realizados' => $totais['total_realizados'],
                     ],
@@ -166,7 +166,7 @@ class DashboardController extends MonitorApsBaseController
             });
         } catch (\Throwable $e) {
             Log::error('DashboardFila cache: '.$e->getMessage());
-            $data = ['totais' => ['especialidades' => 0, 'total_fila' => 0, 'fila_7dias' => 0, 'total_realizados' => 0], 'especialidades' => [], 'entradas_por_mes' => [], 'especialidades_realizadas' => [], 'realizadas_por_mes' => []];
+            $data = ['totais' => ['especialidades' => 0, 'total_na_fila' => 0, 'fila_7dias' => 0, 'total_realizados' => 0], 'especialidades' => [], 'entradas_por_mes' => [], 'especialidades_realizadas' => [], 'realizadas_por_mes' => []];
         }
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=300');
@@ -233,7 +233,7 @@ class DashboardController extends MonitorApsBaseController
                 return [
                     'totais' => [
                         'total_viagens' => $totais['total_viagens_mes'],
-                        'pessoas_transportadas' => $totais['pessoas_transportadas_mes'],
+                        'pessoas_transportadas_mes' => $totais['pessoas_transportadas_mes'],
                         'km_rodados' => $totais['km_rodados_mes'],
                     ],
                     'viagens_por_dia' => $viagensPorDia,
@@ -247,7 +247,7 @@ class DashboardController extends MonitorApsBaseController
             });
         } catch (\Throwable $e) {
             Log::error('DashboardTfd cache: '.$e->getMessage());
-            $data = ['totais' => ['total_viagens' => 0, 'pessoas_transportadas' => 0, 'km_rodados' => 0], 'viagens_por_dia' => [], 'viagens_por_dia_agendadas' => [], 'motoristas' => [], 'rotas' => [], 'viagens_por_mes' => [], 'viagens_por_ano' => [], 'periodo' => $periodo];
+            $data = ['totais' => ['total_viagens' => 0, 'pessoas_transportadas_mes' => 0, 'km_rodados' => 0], 'viagens_por_dia' => [], 'viagens_por_dia_agendadas' => [], 'motoristas' => [], 'rotas' => [], 'viagens_por_mes' => [], 'viagens_por_ano' => [], 'periodo' => $periodo];
         }
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=300');
