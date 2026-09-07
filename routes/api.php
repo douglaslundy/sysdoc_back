@@ -564,13 +564,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
 
     // Fiscalizações (Vigilância Sanitária)
-    Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['index', 'show']);
+    Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['index', 'show'])
+        ->parameters(['fiscalizacoes' => 'fiscalizacao']);
     Route::middleware('page.permission:/fiscalizacoes')->group(function () {
-        Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['store', 'update', 'destroy']);
-    });
-    Route::get('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'index']);
-    Route::get('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}/download', [FiscalizacaoAttachmentController::class, 'download']);
-    Route::middleware('page.permission:/fiscalizacoes')->group(function () {
+        Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['store', 'update', 'destroy'])
+            ->parameters(['fiscalizacoes' => 'fiscalizacao']);
+        Route::get('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'index']);
+        Route::get('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}/download', [FiscalizacaoAttachmentController::class, 'download']);
         Route::post('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'store']);
         Route::delete('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}', [FiscalizacaoAttachmentController::class, 'destroy']);
     });

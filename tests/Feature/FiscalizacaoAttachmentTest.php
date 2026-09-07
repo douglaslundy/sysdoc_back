@@ -70,4 +70,14 @@ class FiscalizacaoAttachmentTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_listar_anexos_sem_permissao_de_pagina_retorna_403(): void
+    {
+        $user = User::factory()->create(['profile' => 'user', 'active' => true]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/fiscalizacoes/{$this->fiscalizacao->id}/attachments");
+
+        $response->assertStatus(403);
+    }
 }

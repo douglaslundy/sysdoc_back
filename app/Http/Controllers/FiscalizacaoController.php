@@ -38,7 +38,7 @@ class FiscalizacaoController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $fiscalizacao = Fiscalizacao::with(['estabelecimento', 'fiscal', 'attachments'])->find($id);
+        $fiscalizacao = Fiscalizacao::with(['estabelecimento', 'fiscal'])->find($id);
 
         if (! $fiscalizacao) {
             return response()->json(['error' => 'Fiscalização não encontrada'], 404);
@@ -72,13 +72,8 @@ class FiscalizacaoController extends Controller
         return response()->json(new FiscalizacaoResource($fiscalizacao));
     }
 
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        $user = $request->user();
-        if (! app(\App\Services\Authorization\PagePermissionService::class)->canAccess($user, '/fiscalizacoes')) {
-            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
-        }
-
         $fiscalizacao = Fiscalizacao::find($id);
 
         if (! $fiscalizacao) {
