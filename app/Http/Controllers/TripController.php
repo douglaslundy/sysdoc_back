@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReplicateTripRequest;
 use App\Http\Requests\TripClientRequest;
 use App\Http\Requests\TripRequest;
 use App\Models\Trip;
@@ -93,6 +94,46 @@ class TripController extends Controller
         });
 
         return response()->json(['status' => 'updated', 'trip' => $trip], 200);
+    }
+
+    public function replicate(ReplicateTripRequest $request, Trip $trip)
+    {
+        $trip->load('clients');
+
+        $newTrips = DB::transaction(function () use ($request, $trip) {
+            $created = [];
+
+            foreach ($request->dates as $date) {
+                $newTrip = Trip::create([
+                    'user_id' => auth()->id(),
+                    'driver_id' => null,
+                    'vehicle_id' => null,
+                    'route_id' => $trip->route_id,
+                    'departure_time' => null,
+                    'departure_date' => $date,
+                    'obs' => $trip->obs,
+                ]);
+
+                foreach ($trip->clients as $client) {
+                    TripClient::create([
+                        'trip_id' => $newTrip->id,
+                        'client_id' => $client->id,
+                        'person_type' => $client->pivot->person_type,
+                        'phone' => $client->pivot->phone,
+                        'departure_location' => $client->pivot->departure_location,
+                        'destination_location' => $client->pivot->destination_location,
+                        'time' => $client->pivot->time,
+                        'is_confirmed' => false,
+                    ]);
+                }
+
+                $created[] = $newTrip->load('driver', 'route', 'vehicle', 'user', 'clients');
+            }
+
+            return $created;
+        });
+
+        return response()->json(['status' => 'replicated', 'trips' => $newTrips], 201);
     }
 
     public function destroy($id)

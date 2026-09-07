@@ -523,6 +523,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //Trip
     Route::apiResource('trips', TripController::class);
+    Route::post('/trips/{trip}/replicate', [TripController::class, 'replicate']);
     Route::post('/trip-clients', [TripController::class, 'insertTripClient']);
     Route::patch('/confirm-trip-client/{client_id}', [TripController::class, 'confirmTripClient']);
     Route::patch('/unconfirm-trip-client/{client_id}', [TripController::class, 'unconfirmTripClient']);
