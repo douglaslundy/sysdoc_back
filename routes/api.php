@@ -323,6 +323,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/caixa-entrada', [ProtocolController::class, 'inbox']);
         Route::get('/contadores', [ProtocolController::class, 'counts']);
         Route::get('/contexto-novo', [ProtocolController::class, 'creationContext']);
+        Route::get('/usuarios-elegiveis', [ProtocolController::class, 'eligibleDestinationUsers']);
         Route::get('/tipos', [ProtocolTypeController::class, 'index']);
         Route::post('/tipos', [ProtocolTypeController::class, 'store']);
         Route::put('/tipos/{id}', [ProtocolTypeController::class, 'update'])->whereNumber('id');

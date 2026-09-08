@@ -518,6 +518,54 @@ class ProtocolController extends Controller
         ]);
     }
 
+    /**
+     * Usuarios que podem legitimamente ser escolhidos como destinatario
+     * especifico de um protocolo endereçado a uma secretaria (usado no
+     * "Novo Protocolo" e no "Encaminhar"): precisa pertencer a essa
+     * secretaria (ou a uma unidade dentro dela) via protocol_user_units
+     * E o perfil dele precisa ter acesso a pagina /protocolo - do
+     * contrario o protocolo fica endereçado a alguem que nunca vai
+     * conseguir abrir a tela para ve-lo/recebe-lo.
+     */
+    public function eligibleDestinationUsers(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'unit_id' => 'required|integer|exists:protocol_organizational_units,id',
+        ]);
+
+        $unitIds = $this->collectDescendantUnitIds((int) $validated['unit_id']);
+
+        $userIds = ProtocolUserUnit::query()
+            ->whereIn('protocol_organizational_unit_id', $unitIds)
+            ->where('ativo', true)
+            ->pluck('user_id')
+            ->unique();
+
+        $pagePermissions = app(\App\Services\Authorization\PagePermissionService::class);
+
+        $eligible = User::query()
+            ->whereIn('id', $userIds)
+            ->where('active', true)
+            ->get(['id', 'name', 'profile'])
+            ->filter(fn (User $user) => $pagePermissions->canAccess($user, '/protocolo'))
+            ->values()
+            ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name]);
+
+        return response()->json($eligible);
+    }
+
+    private function collectDescendantUnitIds(int $unitId): array
+    {
+        $ids = [$unitId];
+
+        $childIds = ProtocolOrganizationalUnit::query()->where('parent_id', $unitId)->pluck('id');
+        foreach ($childIds as $childId) {
+            $ids = array_merge($ids, $this->collectDescendantUnitIds((int) $childId));
+        }
+
+        return $ids;
+    }
+
     public function moveFromKanban(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
