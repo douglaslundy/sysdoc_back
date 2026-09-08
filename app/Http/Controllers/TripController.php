@@ -52,6 +52,11 @@ class TripController extends Controller
             // Caso tenha apenas o 'date_begin'
             $query->whereDate('departure_date', '=', $request->date_begin);
         }
+        if ($request->has('client_id')) {
+            $query->whereHas('clients', function ($clientsQuery) use ($request) {
+                $clientsQuery->where('clients.id', $request->client_id);
+            });
+        }
 
         $trips = $query
             ->with(['driver', 'vehicle', 'route', 'clients'])
