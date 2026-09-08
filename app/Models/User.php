@@ -93,6 +93,24 @@ class User extends Authenticatable implements JWTSubject
         return $column ? (bool) $this->accessProfile()->value($column) : false;
     }
 
+    public function canViewClientTrips(): bool
+    {
+        if ($this->profile === 'admin') {
+            return true;
+        }
+
+        return (bool) $this->accessProfile()->value('client_trips_view_enabled');
+    }
+
+    public function canViewClientReport(): bool
+    {
+        if ($this->profile === 'admin') {
+            return true;
+        }
+
+        return (bool) $this->accessProfile()->value('client_report_view_enabled');
+    }
+
     public function chatDisplayName(): string
     {
         $preferred = trim((string) ($this->preferred_name ?? ''));

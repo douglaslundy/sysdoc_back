@@ -26,6 +26,8 @@ class AccessProfileController extends Controller
             'almoxarifado_create_enabled' => 'nullable|boolean',
             'almoxarifado_approve_enabled' => 'nullable|boolean',
             'almoxarifado_deliver_enabled' => 'nullable|boolean',
+            'client_trips_view_enabled' => 'nullable|boolean',
+            'client_report_view_enabled' => 'nullable|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
@@ -39,6 +41,8 @@ class AccessProfileController extends Controller
             'almoxarifado_create_enabled' => $request->boolean('almoxarifado_create_enabled', true),
             'almoxarifado_approve_enabled' => $request->boolean('almoxarifado_approve_enabled'),
             'almoxarifado_deliver_enabled' => $request->boolean('almoxarifado_deliver_enabled'),
+            'client_trips_view_enabled' => $request->boolean('client_trips_view_enabled'),
+            'client_report_view_enabled' => $request->boolean('client_report_view_enabled'),
         ]);
 
         if ($request->has('page_ids')) {
@@ -74,6 +78,8 @@ class AccessProfileController extends Controller
             'almoxarifado_create_enabled' => 'sometimes|boolean',
             'almoxarifado_approve_enabled' => 'sometimes|boolean',
             'almoxarifado_deliver_enabled' => 'sometimes|boolean',
+            'client_trips_view_enabled' => 'sometimes|boolean',
+            'client_report_view_enabled' => 'sometimes|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
@@ -87,6 +93,8 @@ class AccessProfileController extends Controller
             'almoxarifado_create_enabled',
             'almoxarifado_approve_enabled',
             'almoxarifado_deliver_enabled',
+            'client_trips_view_enabled',
+            'client_report_view_enabled',
         ]));
 
         if ($request->has('page_ids')) {
@@ -135,6 +143,8 @@ class AccessProfileController extends Controller
                     'almoxarifado_create' => $user->canUseAlmoxarifadoAction('create'),
                     'almoxarifado_approve' => $user->canUseAlmoxarifadoAction('approve'),
                     'almoxarifado_deliver' => $user->canUseAlmoxarifadoAction('deliver'),
+                    'client_trips_view' => $user->canViewClientTrips(),
+                    'client_report_view' => $user->canViewClientReport(),
                 ],
             ]);
         }
@@ -202,6 +212,8 @@ class AccessProfileController extends Controller
                 'almoxarifado_create' => $user->canUseAlmoxarifadoAction('create'),
                 'almoxarifado_approve' => $user->canUseAlmoxarifadoAction('approve'),
                 'almoxarifado_deliver' => $user->canUseAlmoxarifadoAction('deliver'),
+                'client_trips_view' => $user->canViewClientTrips(),
+                'client_report_view' => $user->canViewClientReport(),
             ],
         ]);
     }

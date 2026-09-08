@@ -15,6 +15,8 @@ class AccessProfile extends Model
         'almoxarifado_create_enabled',
         'almoxarifado_approve_enabled',
         'almoxarifado_deliver_enabled',
+        'client_trips_view_enabled',
+        'client_report_view_enabled',
     ];
 
     protected $casts = [
@@ -23,6 +25,8 @@ class AccessProfile extends Model
         'almoxarifado_create_enabled' => 'boolean',
         'almoxarifado_approve_enabled' => 'boolean',
         'almoxarifado_deliver_enabled' => 'boolean',
+        'client_trips_view_enabled' => 'boolean',
+        'client_report_view_enabled' => 'boolean',
     ];
 
     public function pages()
