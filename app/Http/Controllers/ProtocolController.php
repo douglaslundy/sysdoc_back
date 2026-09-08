@@ -556,14 +556,25 @@ class ProtocolController extends Controller
 
     private function collectDescendantUnitIds(int $unitId): array
     {
-        $ids = [$unitId];
+        $visited = [];
+        $queue = [$unitId];
 
-        $childIds = ProtocolOrganizationalUnit::query()->where('parent_id', $unitId)->pluck('id');
-        foreach ($childIds as $childId) {
-            $ids = array_merge($ids, $this->collectDescendantUnitIds((int) $childId));
+        while (! empty($queue)) {
+            $currentId = array_shift($queue);
+            if (isset($visited[$currentId])) {
+                continue;
+            }
+            $visited[$currentId] = true;
+
+            $childIds = ProtocolOrganizationalUnit::query()->where('parent_id', $currentId)->pluck('id');
+            foreach ($childIds as $childId) {
+                if (! isset($visited[(int) $childId])) {
+                    $queue[] = (int) $childId;
+                }
+            }
         }
 
-        return $ids;
+        return array_keys($visited);
     }
 
     public function moveFromKanban(Request $request, int $id): JsonResponse
