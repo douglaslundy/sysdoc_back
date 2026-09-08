@@ -106,6 +106,7 @@ class ClientController extends Controller
                 'st_falecido',
             ])
             ->with(['addresses:id_client,street,number,district,city'])
+            ->withCount(['trips', 'queue', 'pedidosExame'])
             ->where('active', true);
 
         if (! empty($filters['search'])) {

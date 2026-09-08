@@ -25,6 +25,9 @@ class ClientListResource extends JsonResource
             'data_obito' => $this->data_obito,
             'active' => $this->active,
             'st_falecido' => $this->st_falecido,
+            'trips_count' => $this->trips_count,
+            'queue_count' => $this->queue_count,
+            'pedidos_exame_count' => $this->pedidos_exame_count,
             'addresses' => $this->whenLoaded('addresses'),
         ];
     }
