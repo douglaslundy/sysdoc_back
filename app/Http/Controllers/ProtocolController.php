@@ -345,6 +345,14 @@ class ProtocolController extends Controller
 
     public function receive(Request $request, int $id): JsonResponse
     {
+        $protocol = Protocol::find($id);
+        if (! $protocol) {
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+        if (! $this->canReceive($protocol, $request->user())) {
+            return response()->json(['message' => 'Você não é o destinatário deste protocolo.'], 403);
+        }
+
         return $this->applyAction($request, $id, 'recebido', function (Protocol $protocol) use ($request) {
             $protocol->update([
                 'status' => 'recebido',
@@ -655,6 +663,27 @@ class ProtocolController extends Controller
             || $protocol->criado_por_id === $user?->id
             || in_array($protocol->origem_unit_id, $unitIds, true)
             || in_array($protocol->destino_unit_id, $unitIds, true);
+    }
+
+    /**
+     * Quem pode marcar o protocolo como recebido: precisa ser de fato o
+     * destinatário (usuário atribuído, ou membro da unidade de destino
+     * quando ainda não há usuário específico atribuído) — nunca quem
+     * apenas criou/enviou o protocolo, mesmo que ele tenha visibilidade
+     * ampla via canAccess().
+     */
+    private function canReceive(Protocol $protocol, ?User $user): bool
+    {
+        if ($this->isAdmin($user)) {
+            return true;
+        }
+
+        if ($protocol->responsavel_atual_id) {
+            return $protocol->responsavel_atual_id === $user?->id;
+        }
+
+        $unitIds = $this->visibleUnitIds($user);
+        return in_array($protocol->destino_unit_id, $unitIds, true);
     }
 
     private function applyAction(Request $request, int $id, string $acao, \Closure $callback): JsonResponse
