@@ -522,6 +522,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('errorlogs', ErrorLogController::class);
 
     //Trip
+    Route::get('/trips/drivers-options', [TripController::class, 'drivers']);
     Route::apiResource('trips', TripController::class);
     Route::post('/trips/{trip}/replicate', [TripController::class, 'replicate']);
     Route::post('/trip-clients', [TripController::class, 'insertTripClient']);

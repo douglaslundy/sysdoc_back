@@ -7,11 +7,28 @@ use App\Http\Requests\TripClientRequest;
 use App\Http\Requests\TripRequest;
 use App\Models\Trip;
 use App\Models\TripClient;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
+    /**
+     * Lista mínima de motoristas ativos (id + nome) para preencher o select de
+     * motorista no cadastro/edição de viagem. Qualquer usuário autenticado que
+     * pode acessar o módulo de viagens (mesmo nível de acesso de /vehicles e
+     * /routes) precisa disso — diferente de GET /users (dados completos de
+     * usuário), que é restrito a admin.
+     */
+    public function drivers()
+    {
+        return User::query()
+            ->where('active', true)
+            ->where('is_driver', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
     public function index(Request $request)
     {
         $query = Trip::query();
