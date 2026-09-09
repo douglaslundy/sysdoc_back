@@ -42,11 +42,11 @@ class ProtocolEligibleDestinationUsersTest extends TestCase
         ]);
     }
 
-    private function grantProtocolPageAccess(string $profileSlug): void
+    private function grantProtocolPageAccess(string $profileSlug, string $path = '/protocolo'): void
     {
         $page = SystemPage::firstOrCreate(
-            ['path' => '/protocolo'],
-            ['titulo' => 'Protocolo', 'icone' => 'inbox', 'ordem' => 1, 'ativo' => true]
+            ['path' => $path],
+            ['titulo' => $path, 'icone' => 'inbox', 'ordem' => 1, 'ativo' => true]
         );
 
         $profile = AccessProfile::firstOrCreate(
@@ -95,6 +95,19 @@ class ProtocolEligibleDestinationUsersTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonFragment(['id' => $usuarioSemLotacao->id, 'name' => $usuarioSemLotacao->name]);
+    }
+
+    public function test_inclui_usuario_cujo_perfil_so_tem_uma_subpagina_do_protocolo(): void
+    {
+        // Perfil tem "Caixa de Entrada" mas NAO a pagina raiz "/protocolo".
+        $usuario = User::factory()->create(['profile' => 'atendente_protocolo', 'active' => true]);
+        $this->grantProtocolPageAccess('atendente_protocolo', '/protocolo/caixa-entrada');
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/protocolos/usuarios-elegiveis?unit_id={$this->secretaria->id}");
+
+        $response->assertOk();
+        $response->assertJsonFragment(['id' => $usuario->id, 'name' => $usuario->name]);
     }
 
     public function test_exclui_usuario_inativo_mesmo_com_acesso_a_pagina(): void

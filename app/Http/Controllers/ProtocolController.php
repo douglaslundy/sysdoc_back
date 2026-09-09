@@ -618,12 +618,16 @@ class ProtocolController extends Controller
     /**
      * Usuarios que podem legitimamente ser escolhidos como destinatario
      * especifico de um protocolo (usado no "Novo Protocolo" e no "Encaminhar"):
-     * precisa estar ativo e ter, pelo perfil, acesso a pagina /protocolo - do
+     * precisa estar ativo e ter, pelo perfil, acesso a QUALQUER pagina do modulo
+     * Protocolo (/protocolo, /protocolo/caixa-entrada, /protocolo/novo, ...) - do
      * contrario o protocolo fica endereçado a alguem que nunca vai conseguir
-     * abrir a tela para ve-lo/recebe-lo. A lotacao em unidade (protocol_user_units)
-     * NAO e mais exigida: muitos municipios liberam o Protocolo por perfil sem
-     * cadastrar a lotacao de cada usuario, e isso deixava a lista praticamente
-     * vazia. O parametro unit_id e aceito por compatibilidade mas nao filtra.
+     * abrir a tela para ve-lo/recebe-lo. Basta uma pagina /protocolo* porque a
+     * navegacao do frontend resolve o acesso ao modulo por prefixo de rota.
+     *
+     * A lotacao em unidade (protocol_user_units) NAO e exigida: muitos municipios
+     * liberam o Protocolo por perfil sem cadastrar a lotacao de cada usuario, e
+     * isso deixava a lista praticamente vazia. O parametro unit_id e aceito por
+     * compatibilidade mas nao filtra.
      */
     public function eligibleDestinationUsers(Request $request): JsonResponse
     {
@@ -633,7 +637,7 @@ class ProtocolController extends Controller
 
         $allowedProfiles = AccessProfile::query()
             ->where('ativo', true)
-            ->whereHas('pages', fn ($q) => $q->where('path', '/protocolo')->where('ativo', true))
+            ->whereHas('pages', fn ($q) => $q->where('path', 'like', '/protocolo%')->where('ativo', true))
             ->pluck('slug');
 
         $eligible = User::query()
