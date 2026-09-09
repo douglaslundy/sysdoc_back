@@ -34,8 +34,10 @@ class Protocol extends Model
         'encaminhado_em',
         'encerrado_em',
         'reaberto_em',
+        'devolvido_em',
         'cancelado_em',
         'justificativa_encerramento',
+        'justificativa_devolucao',
         'justificativa_cancelamento',
         'novo',
         'vencido',
@@ -47,6 +49,7 @@ class Protocol extends Model
         'encaminhado_em' => 'datetime',
         'encerrado_em' => 'datetime',
         'reaberto_em' => 'datetime',
+        'devolvido_em' => 'datetime',
         'cancelado_em' => 'datetime',
         'novo' => 'boolean',
         'vencido' => 'boolean',
@@ -55,7 +58,7 @@ class Protocol extends Model
     public static function gerarNumero(): string
     {
         do {
-            $numero = 'PRT-' . now()->format('Y') . '-' . strtoupper(Str::random(8));
+            $numero = 'PRT-'.now()->format('Y').'-'.strtoupper(Str::random(8));
         } while (self::where('numero', $numero)->exists());
 
         return $numero;

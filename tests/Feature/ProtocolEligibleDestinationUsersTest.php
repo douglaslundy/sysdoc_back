@@ -15,6 +15,7 @@ class ProtocolEligibleDestinationUsersTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private ProtocolOrganizationalUnit $secretaria;
 
     protected function setUp(): void
@@ -81,6 +82,31 @@ class ProtocolEligibleDestinationUsersTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonFragment(['id' => $usuarioComAcesso->id, 'name' => $usuarioComAcesso->name]);
+    }
+
+    public function test_inclui_usuario_com_acesso_a_pagina_mesmo_sem_lotacao_em_unidade(): void
+    {
+        $usuarioSemLotacao = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => true]);
+        $this->grantProtocolPageAccess('user_com_protocolo');
+        // Nenhum ProtocolUserUnit criado para este usuario.
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/protocolos/usuarios-elegiveis?unit_id={$this->secretaria->id}");
+
+        $response->assertOk();
+        $response->assertJsonFragment(['id' => $usuarioSemLotacao->id, 'name' => $usuarioSemLotacao->name]);
+    }
+
+    public function test_exclui_usuario_inativo_mesmo_com_acesso_a_pagina(): void
+    {
+        $usuarioInativo = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => false]);
+        $this->grantProtocolPageAccess('user_com_protocolo');
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/protocolos/usuarios-elegiveis?unit_id={$this->secretaria->id}");
+
+        $response->assertOk();
+        $response->assertJsonMissing(['id' => $usuarioInativo->id]);
     }
 
     public function test_inclui_usuario_de_unidade_filha_da_secretaria_selecionada(): void

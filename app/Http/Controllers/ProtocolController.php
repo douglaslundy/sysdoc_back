@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
+use App\Models\AccessProfile;
 use App\Models\Protocol;
 use App\Models\ProtocolAttachment;
 use App\Models\ProtocolComment;
@@ -10,8 +10,8 @@ use App\Models\ProtocolConfig;
 use App\Models\ProtocolMovement;
 use App\Models\ProtocolNotification;
 use App\Models\ProtocolOrganizationalUnit;
-use App\Models\ProtocolView;
 use App\Models\ProtocolUserUnit;
+use App\Models\ProtocolView;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
@@ -29,8 +29,7 @@ class ProtocolController extends Controller
     public function __construct(
         private readonly ProtocolKanbanService $kanbanService,
         private readonly WhatsappEvolutionService $whatsapp
-    )
-    {
+    ) {
     }
 
     public function index(Request $request): JsonResponse
@@ -71,6 +70,7 @@ class ProtocolController extends Controller
         }
 
         $perPage = max(1, min(100, (int) $request->input('per_page', 15)));
+
         return response()->json($query->paginate($perPage));
     }
 
@@ -133,7 +133,7 @@ class ProtocolController extends Controller
             $request->filled('view_session') ? Str::limit((string) $request->input('view_session'), 64, '') : null
         );
 
-        return response()->json($protocol->fresh([
+        return response()->json($this->withReturnInfo($protocol->fresh([
             'origemUnit:id,nome,tipo',
             'destinoUnit:id,nome,tipo',
             'responsavelAtual:id,name',
@@ -142,7 +142,7 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
             'notifications.user:id,name',
-        ]));
+        ]), $request->user()));
     }
 
     public function visualizations(int $id): JsonResponse
@@ -258,8 +258,12 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Selecione um usuário de destino ativo.'], 422);
         }
 
-        if ($destinationUser && $this->linkedOriginUnit($destinationUser)?->id !== $destinationUnit->id) {
-            return response()->json(['message' => 'O usuário de destino deve pertencer à secretaria selecionada.'], 422);
+        // Só barra quando o usuário TEM lotação e ela é de outra secretaria.
+        // Usuário sem lotação nenhuma pode ser escolhido: o protocolo fica na
+        // secretaria informada e ele passa a ser o responsável.
+        $destinationUserUnit = $destinationUser ? $this->linkedOriginUnit($destinationUser) : null;
+        if ($destinationUserUnit && $destinationUserUnit->id !== $destinationUnit->id) {
+            return response()->json(['message' => 'O usuário de destino pertence a outra secretaria.'], 422);
         }
 
         $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser) {
@@ -438,6 +442,98 @@ class ProtocolController extends Controller
         });
     }
 
+    public function returnToSender(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'motivo' => 'required|string|min:5',
+        ]);
+
+        $protocol = Protocol::find($id);
+        if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
+            return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+
+        $user = $request->user();
+        if (! $this->isAdmin($user) && $protocol->responsavel_atual_id !== $user?->id) {
+            return response()->json(['message' => 'Apenas o responsável atual pode devolver o protocolo.'], 403);
+        }
+
+        if (in_array($protocol->status, ['encerrado', 'cancelado'], true)) {
+            return response()->json(['message' => 'Protocolo encerrado não pode ser devolvido.'], 422);
+        }
+
+        $senderUserId = $this->previousSenderUserId($protocol, $user);
+        if (! $senderUserId || $senderUserId === $user?->id) {
+            return response()->json(['message' => 'Não foi possível identificar um remetente anterior. Use "Encaminhar" para enviar a outro setor.'], 422);
+        }
+
+        $target = $this->resolveReturnTarget($senderUserId, $protocol);
+        if (! $target['user_id'] && ! $target['unit_id']) {
+            return response()->json(['message' => 'Não foi possível determinar um destinatário válido para a devolução.'], 422);
+        }
+
+        $previousStatus = $protocol->status;
+
+        return $this->applyAction($request, $id, 'devolvido', function (Protocol $protocol) use ($request, $validated, $target, $previousStatus) {
+            $fromUnitId = $protocol->destino_unit_id;
+
+            $protocol->update([
+                'status' => 'devolvido',
+                'responsavel_atual_id' => $target['user_id'],
+                'destino_unit_id' => $target['unit_id'] ?? $protocol->destino_unit_id,
+                'devolvido_em' => now(),
+                'justificativa_devolucao' => $validated['motivo'],
+                'novo' => true,
+            ]);
+
+            $this->movimentar($protocol, 'devolvido', $fromUnitId, 'devolvido', $request->user()?->id, [
+                'motivo' => $validated['motivo'],
+                'observacao' => $validated['motivo'],
+                'status_anterior' => $previousStatus,
+                'devolvido_para_user_id' => $target['user_id'],
+                'devolvido_para_unit_id' => $target['unit_id'],
+            ]);
+        });
+    }
+
+    /**
+     * ID do usuário do último encaminhamento feito por outra pessoa que não o
+     * usuário atual — é para ele que a devolução volta. Se ninguém além do
+     * próprio usuário encaminhou, cai para quem criou o protocolo.
+     */
+    private function previousSenderUserId(Protocol $protocol, ?User $currentUser): ?int
+    {
+        $lastForward = ProtocolMovement::query()
+            ->where('protocol_id', $protocol->id)
+            ->where('acao', 'encaminhado')
+            ->when($currentUser, fn ($q) => $q->where('user_id', '!=', $currentUser->id))
+            ->orderByDesc('id')
+            ->first();
+
+        return $lastForward?->user_id ?? $protocol->criado_por_id;
+    }
+
+    /**
+     * Resolve o destino concreto da devolução. Se o remetente ainda está ativo,
+     * o protocolo volta com ele como responsável; se foi desativado, a devolução
+     * é endereçada apenas à unidade dele — qualquer membro assume, espelhando o
+     * fluxo de criação de protocolo.
+     *
+     * @return array{user_id: int|null, unit_id: int|null}
+     */
+    private function resolveReturnTarget(int $senderUserId, Protocol $protocol): array
+    {
+        $senderUser = User::find($senderUserId);
+        $senderUnitId = $senderUser
+            ? ($this->linkedOriginUnit($senderUser)?->id ?? $protocol->origem_unit_id)
+            : $protocol->origem_unit_id;
+
+        return [
+            'user_id' => ($senderUser && $senderUser->active) ? $senderUserId : null,
+            'unit_id' => $senderUnitId,
+        ];
+    }
+
     public function attach(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
@@ -492,6 +588,7 @@ class ProtocolController extends Controller
     public function counts(Request $request): JsonResponse
     {
         $query = $this->baseQuery($request->user())->where('novo', true);
+
         return response()->json([
             'novos' => $query->count(),
             'vence_em_breve' => (clone $query)->whereDate('prazo_atendimento', '<=', now()->addDays(3))->count(),
@@ -520,61 +617,33 @@ class ProtocolController extends Controller
 
     /**
      * Usuarios que podem legitimamente ser escolhidos como destinatario
-     * especifico de um protocolo endereçado a uma secretaria (usado no
-     * "Novo Protocolo" e no "Encaminhar"): precisa pertencer a essa
-     * secretaria (ou a uma unidade dentro dela) via protocol_user_units
-     * E o perfil dele precisa ter acesso a pagina /protocolo - do
-     * contrario o protocolo fica endereçado a alguem que nunca vai
-     * conseguir abrir a tela para ve-lo/recebe-lo.
+     * especifico de um protocolo (usado no "Novo Protocolo" e no "Encaminhar"):
+     * precisa estar ativo e ter, pelo perfil, acesso a pagina /protocolo - do
+     * contrario o protocolo fica endereçado a alguem que nunca vai conseguir
+     * abrir a tela para ve-lo/recebe-lo. A lotacao em unidade (protocol_user_units)
+     * NAO e mais exigida: muitos municipios liberam o Protocolo por perfil sem
+     * cadastrar a lotacao de cada usuario, e isso deixava a lista praticamente
+     * vazia. O parametro unit_id e aceito por compatibilidade mas nao filtra.
      */
     public function eligibleDestinationUsers(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'unit_id' => 'required|integer|exists:protocol_organizational_units,id',
+        $request->validate([
+            'unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
         ]);
 
-        $unitIds = $this->collectDescendantUnitIds((int) $validated['unit_id']);
-
-        $userIds = ProtocolUserUnit::query()
-            ->whereIn('protocol_organizational_unit_id', $unitIds)
+        $allowedProfiles = AccessProfile::query()
             ->where('ativo', true)
-            ->pluck('user_id')
-            ->unique();
-
-        $pagePermissions = app(\App\Services\Authorization\PagePermissionService::class);
+            ->whereHas('pages', fn ($q) => $q->where('path', '/protocolo')->where('ativo', true))
+            ->pluck('slug');
 
         $eligible = User::query()
-            ->whereIn('id', $userIds)
             ->where('active', true)
-            ->get(['id', 'name', 'profile'])
-            ->filter(fn (User $user) => $pagePermissions->canAccess($user, '/protocolo'))
-            ->values()
+            ->where(fn ($q) => $q->whereIn('profile', $allowedProfiles)->orWhere('profile', 'admin'))
+            ->orderBy('name')
+            ->get(['id', 'name'])
             ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name]);
 
         return response()->json($eligible);
-    }
-
-    private function collectDescendantUnitIds(int $unitId): array
-    {
-        $visited = [];
-        $queue = [$unitId];
-
-        while (! empty($queue)) {
-            $currentId = array_shift($queue);
-            if (isset($visited[$currentId])) {
-                continue;
-            }
-            $visited[$currentId] = true;
-
-            $childIds = ProtocolOrganizationalUnit::query()->where('parent_id', $currentId)->pluck('id');
-            foreach ($childIds as $childId) {
-                if (! isset($visited[(int) $childId])) {
-                    $queue[] = (int) $childId;
-                }
-            }
-        }
-
-        return array_keys($visited);
     }
 
     public function moveFromKanban(Request $request, int $id): JsonResponse
@@ -718,6 +787,7 @@ class ProtocolController extends Controller
         }
 
         $unitIds = $this->visibleUnitIds($user);
+
         return $protocol->responsavel_atual_id === $user?->id
             || $protocol->criado_por_id === $user?->id
             || in_array($protocol->origem_unit_id, $unitIds, true)
@@ -742,6 +812,7 @@ class ProtocolController extends Controller
         }
 
         $unitIds = $this->visibleUnitIds($user);
+
         return in_array($protocol->destino_unit_id, $unitIds, true);
     }
 
@@ -752,14 +823,14 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
-        DB::transaction(function () use ($request, $protocol, $acao, $callback) {
+        DB::transaction(function () use ($protocol, $acao, $callback) {
             $old = $protocol->toArray();
             $callback($protocol);
             $protocol->refresh();
             AuditService::record(strtoupper($acao), $protocol, $old, $protocol->toArray());
         });
 
-        return response()->json($protocol->fresh()->load([
+        return response()->json($this->withReturnInfo($protocol->fresh()->load([
             'origemUnit:id,nome,tipo',
             'destinoUnit:id,nome,tipo',
             'responsavelAtual:id,name',
@@ -771,7 +842,27 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
             'notifications.user:id,name',
-        ]));
+        ]), $request->user()));
+    }
+
+    /**
+     * Anexa ao payload do protocolo os campos que o frontend usa para decidir se
+     * mostra a ação "Devolver ao remetente" e para quem a devolução iria.
+     */
+    private function withReturnInfo(Protocol $protocol, ?User $user): array
+    {
+        $senderUserId = $this->previousSenderUserId($protocol, $user);
+
+        $podeDevolver = $this->canAccess($protocol, $user)
+            && ($this->isAdmin($user) || $protocol->responsavel_atual_id === $user?->id)
+            && ! in_array($protocol->status, ['encerrado', 'cancelado'], true)
+            && $senderUserId
+            && $senderUserId !== $user?->id;
+
+        return $protocol->toArray() + [
+            'pode_devolver' => (bool) $podeDevolver,
+            'devolver_para' => $podeDevolver ? optional(User::find($senderUserId))->name : null,
+        ];
     }
 
     private function movimentar(Protocol $protocol, string $acao, ?int $fromUnitId, ?string $statusNovo, ?int $userId, ?array $dados = null): void
@@ -852,6 +943,7 @@ class ProtocolController extends Controller
     private function userDepartmentLabel(?User $user): ?string
     {
         $user?->loadMissing('equipeAps');
+
         return optional($user?->equipeAps->first())->no_equipe;
     }
 
@@ -859,6 +951,7 @@ class ProtocolController extends Controller
     {
         $user?->loadMissing('equipeAps');
         $equipe = $user?->equipeAps->first();
+
         return $equipe ? trim((string) ($equipe->no_equipe ?? $equipe->nu_ine ?? '')) : null;
     }
 }

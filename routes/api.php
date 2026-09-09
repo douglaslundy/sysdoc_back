@@ -349,6 +349,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/{id}/comentarios', [ProtocolController::class, 'comment'])->whereNumber('id');
         Route::post('/{id}/encerrar', [ProtocolController::class, 'close'])->whereNumber('id');
         Route::post('/{id}/reabrir', [ProtocolController::class, 'reopen'])->whereNumber('id');
+        Route::post('/{id}/devolver', [ProtocolController::class, 'returnToSender'])->whereNumber('id');
         Route::post('/{id}/kanban-status', [ProtocolController::class, 'moveFromKanban'])->whereNumber('id');
         Route::post('/{id}/anexos', [ProtocolController::class, 'attach'])->whereNumber('id');
         Route::get('/{id}/historico', [ProtocolController::class, 'historico'])->whereNumber('id');
