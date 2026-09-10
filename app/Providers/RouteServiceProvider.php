@@ -58,7 +58,16 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(120)->by(optional($request->user())->id ?: $request->ip());
+            // IMPORTANTE: o guard default e 'api' (driver jwt) e nao le o token
+            // Sanctum que o frontend envia. Sem resolver pelo guard 'sanctum'
+            // aqui, $request->user() volta null e TODOS os usuarios autenticados
+            // de um mesmo IP (ex: uma secretaria inteira atras de um unico link)
+            // dividiam o mesmo balde de 120/min -> 429 em massa.
+            $userId = optional($request->user('sanctum'))->id;
+
+            return $userId
+                ? Limit::perMinute(300)->by('user:'.$userId)
+                : Limit::perMinute(60)->by('ip:'.$request->ip());
         });
 
         RateLimiter::for('chat-sync', function (Request $request) {
