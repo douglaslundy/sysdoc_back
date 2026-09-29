@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ProtocolAlert;
 use App\Models\User;
+use App\Support\AfterResponse;
 use Illuminate\Support\Collection;
 
 class SystemAlertService
@@ -14,7 +15,16 @@ class SystemAlertService
     ) {
     }
 
+    /**
+     * Dispara os alertas depois da resposta HTTP: cada canal (WhatsApp/e-mail)
+     * faz chamada externa lenta e nao pode segurar o usuario.
+     */
     public function dispatch(string $module, string $trigger, array $context = []): void
+    {
+        AfterResponse::run(fn () => $this->deliver($module, $trigger, $context));
+    }
+
+    private function deliver(string $module, string $trigger, array $context): void
     {
         $alerts = ProtocolAlert::query()
             ->where('ativo', true)

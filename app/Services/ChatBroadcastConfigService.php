@@ -118,9 +118,9 @@ class ChatBroadcastConfigService
 
     private function currentOrFallback(): ?ChatRealtimeConfig
     {
-        if (Schema::hasTable('chat_realtime_configs')) {
+        if (ChatRealtimeConfig::tableExists()) {
             try {
-                $settings = ChatRealtimeConfig::query()->first();
+                $settings = ChatRealtimeConfig::firstOrNull();
                 if ($settings) {
                     return $settings;
                 }
@@ -129,21 +129,21 @@ class ChatBroadcastConfigService
             }
         }
 
-        if (! env('PUSHER_APP_KEY')) {
+        if (! config('chat.pusher.app_key')) {
             return null;
         }
 
         return new ChatRealtimeConfig([
-            'engine' => env('PUSHER_HOST') ? 'soketi' : 'pusher',
+            'engine' => config('chat.pusher.host') ? 'soketi' : 'pusher',
             'active' => true,
-            'app_id' => env('PUSHER_APP_ID'),
-            'app_key' => env('PUSHER_APP_KEY'),
-            'app_secret' => env('PUSHER_APP_SECRET'),
-            'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
-            'host' => env('PUSHER_HOST'),
-            'port' => env('PUSHER_PORT', 443),
-            'scheme' => env('PUSHER_SCHEME', 'https'),
-            'use_tls' => env('PUSHER_SCHEME', 'https') === 'https',
+            'app_id' => config('chat.pusher.app_id'),
+            'app_key' => config('chat.pusher.app_key'),
+            'app_secret' => config('chat.pusher.app_secret'),
+            'cluster' => (config('chat.pusher.cluster') ?? 'mt1'),
+            'host' => config('chat.pusher.host'),
+            'port' => (config('chat.pusher.port') ?? 443),
+            'scheme' => (config('chat.pusher.scheme') ?? 'https'),
+            'use_tls' => (config('chat.pusher.scheme') ?? 'https') === 'https',
             'auto_open_on_message' => ChatRealtimeConfig::BEHAVIOR_DEFAULTS['auto_open_on_message'],
             'play_sound_on_message' => ChatRealtimeConfig::BEHAVIOR_DEFAULTS['play_sound_on_message'],
         ]);

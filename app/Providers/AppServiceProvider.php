@@ -49,6 +49,7 @@ use App\Observers\UserObserver;
 use App\Observers\VehicleObserver;
 use App\Observers\VigilanciaConfigObserver;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -58,6 +59,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Sanctum::usePersonalAccessTokenModel(\App\Models\PersonalAccessToken::class);
+
         app(\App\Services\ChatBroadcastConfigService::class)->apply();
         User::observe(UserObserver::class);
         Client::observe(ClientObserver::class);

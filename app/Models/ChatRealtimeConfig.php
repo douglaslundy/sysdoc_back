@@ -12,7 +12,7 @@ class ChatRealtimeConfig extends Model
     public const RATE_LIMIT_DEFAULTS = [
         'rate_limit_decay_minutes' => 1,
         'rate_limit_global' => 300,
-        'rate_limit_sync' => 120,
+        'rate_limit_sync' => 300,
         'rate_limit_messages' => 30,
         'rate_limit_typing' => 60,
         'rate_limit_presence' => 60,
@@ -50,15 +50,66 @@ class ChatRealtimeConfig extends Model
 
     protected $hidden = ['app_id', 'app_key', 'app_secret'];
 
+    private const MEMO_CURRENT = 'chat.realtime.config.current';
+    private const MEMO_FIRST = 'chat.realtime.config.first';
+    private const MEMO_TABLE = 'chat.realtime.config.table';
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => static::flushMemo());
+        static::deleted(fn () => static::flushMemo());
+    }
+
+    /**
+     * A config do chat e lida por quase toda requisicao do chat (limitadores de
+     * taxa, broadcast, controllers). Memoiza no container: 1 leitura por
+     * requisicao em vez de varias (hasTable + first a cada chamada). O container
+     * e recriado a cada requisicao/teste, entao nunca fica desatualizado entre eles.
+     */
+    public static function flushMemo(): void
+    {
+        foreach ([self::MEMO_CURRENT, self::MEMO_FIRST, self::MEMO_TABLE] as $key) {
+            app()->forgetInstance($key);
+        }
+    }
+
+    public static function tableExists(): bool
+    {
+        if (app()->bound(self::MEMO_TABLE)) {
+            return app(self::MEMO_TABLE);
+        }
+        $exists = Schema::hasTable('chat_realtime_configs');
+        app()->instance(self::MEMO_TABLE, $exists);
+
+        return $exists;
+    }
+
+    public static function firstOrNull(): ?self
+    {
+        if (app()->bound(self::MEMO_FIRST)) {
+            return app(self::MEMO_FIRST)['value'];
+        }
+        $value = static::query()->first();
+        app()->instance(self::MEMO_FIRST, ['value' => $value]);
+
+        return $value;
+    }
+
     public static function current(): self
     {
-        if (! Schema::hasTable('chat_realtime_configs')) {
-            return new static(static::fallbackAttributes());
+        if (app()->bound(self::MEMO_CURRENT)) {
+            return app(self::MEMO_CURRENT);
         }
 
-        return static::query()->first() ?? static::query()->create([
-            ...static::fallbackAttributes(),
-        ]);
+        $config = ! static::tableExists()
+            ? new static(static::fallbackAttributes())
+            : (static::firstOrNull() ?? static::query()->create([
+                ...static::fallbackAttributes(),
+            ]));
+
+        app()->instance(self::MEMO_CURRENT, $config);
+
+        return $config;
     }
 
     public static function rateLimits(): array
@@ -94,16 +145,16 @@ class ChatRealtimeConfig extends Model
     private static function fallbackAttributes(): array
     {
         return [
-            'engine' => env('PUSHER_HOST') ? 'soketi' : 'pusher',
-            'active' => filled(env('PUSHER_APP_KEY')),
-            'app_id' => env('PUSHER_APP_ID'),
-            'app_key' => env('PUSHER_APP_KEY'),
-            'app_secret' => env('PUSHER_APP_SECRET'),
+            'engine' => config('chat.pusher.host') ? 'soketi' : 'pusher',
+            'active' => filled(config('chat.pusher.app_key')),
+            'app_id' => config('chat.pusher.app_id'),
+            'app_key' => config('chat.pusher.app_key'),
+            'app_secret' => config('chat.pusher.app_secret'),
             'cluster' => 'mt1',
-            'host' => env('PUSHER_HOST'),
-            'port' => env('PUSHER_PORT', 443),
-            'scheme' => env('PUSHER_SCHEME', 'https'),
-            'use_tls' => env('PUSHER_SCHEME', 'https') === 'https',
+            'host' => config('chat.pusher.host'),
+            'port' => (config('chat.pusher.port') ?? 443),
+            'scheme' => (config('chat.pusher.scheme') ?? 'https'),
+            'use_tls' => (config('chat.pusher.scheme') ?? 'https') === 'https',
             ...static::RATE_LIMIT_DEFAULTS,
             ...static::BEHAVIOR_DEFAULTS,
         ];

@@ -26,6 +26,9 @@ class ProtocolController extends Controller
 {
     private const VISUALIZATION_DEDUPLICATION_MINUTES = 30;
 
+    // Movimentações de desfecho: quem já encaminhou/criou continua acompanhando o resultado.
+    private const OUTCOME_ACTIONS = ['encerrado', 'reaberto', 'cancelado'];
+
     public function __construct(
         private readonly ProtocolKanbanService $kanbanService,
         private readonly WhatsappEvolutionService $whatsapp
@@ -77,7 +80,8 @@ class ProtocolController extends Controller
     public function inbox(Request $request): JsonResponse
     {
         $query = $this->baseQuery($request->user())->where(function ($q) use ($request) {
-            $q->where('responsavel_atual_id', $request->user()?->id);
+            $q->where('responsavel_atual_id', $request->user()?->id)
+                ->orWhere('criado_por_id', $request->user()?->id);
 
             $unitIds = $this->visibleUnitIds($request->user());
             if ($unitIds) {
@@ -133,7 +137,7 @@ class ProtocolController extends Controller
             $request->filled('view_session') ? Str::limit((string) $request->input('view_session'), 64, '') : null
         );
 
-        return response()->json($this->withReturnInfo($protocol->fresh([
+        $fresh = $protocol->fresh([
             'origemUnit:id,nome,tipo',
             'destinoUnit:id,nome,tipo',
             'responsavelAtual:id,name',
@@ -142,7 +146,10 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
             'notifications.user:id,name',
-        ]), $request->user()));
+        ]);
+        $this->applyVisibilityWindow($fresh, $this->visibilityCutoff($fresh, $request->user()));
+
+        return response()->json($this->withReturnInfo($fresh, $request->user()));
     }
 
     public function visualizations(int $id): JsonResponse
@@ -152,9 +159,14 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
+        $cutoff = $this->visibilityCutoff($protocol, request()->user());
+
         $views = ProtocolView::query()
             ->with(['user.equipeAps'])
             ->where('protocol_id', $protocol->id)
+            ->when($cutoff, fn ($q) => $q->where(fn ($w) => $w
+                ->where('visualized_at', '<=', $cutoff)
+                ->orWhere(fn ($n) => $n->whereNull('visualized_at')->where('created_at', '<=', $cutoff))))
             ->orderByDesc('visualized_at')
             ->orderByDesc('id')
             ->get()
@@ -185,7 +197,10 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
+        $cutoff = $this->visibilityCutoff($protocol, request()->user());
+
         $historico = $protocol->movements
+            ->when($cutoff, fn ($items) => $items->filter(fn (ProtocolMovement $m) => in_array($m->acao, self::OUTCOME_ACTIONS, true) || ($m->created_at && $m->created_at->lte($cutoff))))
             ->sortByDesc(fn (ProtocolMovement $movement) => $movement->created_at?->getTimestamp() ?? 0)
             ->values()
             ->map(function (ProtocolMovement $movement) {
@@ -357,6 +372,11 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Você não é o destinatário deste protocolo.'], 403);
         }
 
+        // Recebimento é único: quem já recebeu não precisa (nem consegue) receber de novo.
+        if ($protocol->recebido_em && $protocol->responsavel_atual_id === $request->user()?->id) {
+            return $this->protocolResponse($protocol->fresh(), $request);
+        }
+
         return $this->applyAction($request, $id, 'recebido', function (Protocol $protocol) use ($request) {
             $protocol->update([
                 'status' => 'recebido',
@@ -381,6 +401,7 @@ class ProtocolController extends Controller
                 'destino_unit_id' => $validated['destino_unit_id'] ?? $protocol->destino_unit_id,
                 'responsavel_atual_id' => $validated['destino_user_id'] ?? null,
                 'encaminhado_em' => now(),
+                'recebido_em' => null,
                 'novo' => false,
             ]);
             $this->movimentar($protocol, 'encaminhado', $protocol->origem_unit_id, 'encaminhado', $request->user()?->id, $validated);
@@ -482,6 +503,7 @@ class ProtocolController extends Controller
                 'responsavel_atual_id' => $target['user_id'],
                 'destino_unit_id' => $target['unit_id'] ?? $protocol->destino_unit_id,
                 'devolvido_em' => now(),
+                'recebido_em' => null,
                 'justificativa_devolucao' => $validated['motivo'],
                 'novo' => true,
             ]);
@@ -570,6 +592,11 @@ class ProtocolController extends Controller
     {
         $attachmentModel = ProtocolAttachment::with('protocol')->find($attachment);
         if (! $attachmentModel || ! $attachmentModel->ativo || ! $attachmentModel->protocol || ! $this->canAccess($attachmentModel->protocol, $request->user())) {
+            return response()->json(['message' => 'Anexo não encontrado.'], 404);
+        }
+
+        $cutoff = $this->visibilityCutoff($attachmentModel->protocol, $request->user());
+        if ($cutoff && $attachmentModel->created_at && $attachmentModel->created_at->gt($cutoff)) {
             return response()->json(['message' => 'Anexo não encontrado.'], 404);
         }
 
@@ -834,7 +861,12 @@ class ProtocolController extends Controller
             AuditService::record(strtoupper($acao), $protocol, $old, $protocol->toArray());
         });
 
-        return response()->json($this->withReturnInfo($protocol->fresh()->load([
+        return $this->protocolResponse($protocol->fresh(), $request);
+    }
+
+    private function protocolResponse(Protocol $protocol, Request $request): JsonResponse
+    {
+        $protocol->load([
             'origemUnit:id,nome,tipo',
             'destinoUnit:id,nome,tipo',
             'responsavelAtual:id,name',
@@ -846,7 +878,55 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
             'notifications.user:id,name',
-        ]), $request->user()));
+        ]);
+        $this->applyVisibilityWindow($protocol, $this->visibilityCutoff($protocol, $request->user()));
+
+        return response()->json($this->withReturnInfo($protocol, $request->user()));
+    }
+
+    /**
+     * Quem já encaminhou/devolveu o protocolo e não está mais com ele só enxerga
+     * o que aconteceu até o momento da saída. Retorna esse instante, ou null
+     * quando o usuário não tem restrição (admin, ou detentor atual).
+     */
+    private function visibilityCutoff(Protocol $protocol, ?User $user): ?\Illuminate\Support\Carbon
+    {
+        if (! $user || $this->isAdmin($user)) {
+            return null;
+        }
+
+        $isHolder = $protocol->responsavel_atual_id
+            ? $protocol->responsavel_atual_id === $user->id
+            : in_array($protocol->destino_unit_id, $this->visibleUnitIds($user), true);
+        if ($isHolder) {
+            return null;
+        }
+
+        return ProtocolMovement::query()
+            ->where('protocol_id', $protocol->id)
+            ->where('user_id', $user->id)
+            ->whereIn('acao', ['encaminhado', 'devolvido'])
+            ->orderByDesc('id')
+            ->first()?->created_at;
+    }
+
+    private function applyVisibilityWindow(Protocol $protocol, ?\Illuminate\Support\Carbon $cutoff): void
+    {
+        if (! $cutoff) {
+            return;
+        }
+
+        foreach (['movements', 'comments', 'attachments', 'notifications'] as $relation) {
+            if ($protocol->relationLoaded($relation)) {
+                $protocol->setRelation(
+                    $relation,
+                    $protocol->getRelation($relation)
+                        ->filter(fn ($item) => ($relation === 'movements' && in_array($item->acao, self::OUTCOME_ACTIONS, true))
+                            || ($item->created_at && $item->created_at->lte($cutoff)))
+                        ->values()
+                );
+            }
+        }
     }
 
     /**
@@ -908,13 +988,17 @@ class ProtocolController extends Controller
                 'dados' => $dados,
             ]);
 
-            $result = $this->whatsapp->sendTextToUser($protocol->responsavelAtual, $notification->mensagem);
+            // Envio pelo WhatsApp (timeout de ate 25 s) fora da requisicao e da transacao.
+            $recipient = $protocol->responsavelAtual;
+            \App\Support\AfterResponse::run(function () use ($recipient, $notification) {
+                $result = $this->whatsapp->sendTextToUser($recipient, $notification->mensagem);
 
-            $notification->update([
-                'status_envio' => $result['ok'] ? 'enviado' : 'erro',
-                'enviada_em' => $result['ok'] ? now() : null,
-                'erro' => $result['ok'] ? null : ($result['error'] ?? 'Erro ao enviar mensagem pelo WhatsApp.'),
-            ]);
+                $notification->update([
+                    'status_envio' => $result['ok'] ? 'enviado' : 'erro',
+                    'enviada_em' => $result['ok'] ? now() : null,
+                    'erro' => $result['ok'] ? null : ($result['error'] ?? 'Erro ao enviar mensagem pelo WhatsApp.'),
+                ]);
+            });
         }
     }
 

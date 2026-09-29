@@ -191,7 +191,7 @@ class OrdinanceController extends Controller
 
         try {
             $result = OpenAI::chat()->create([
-                'model' => env('MODEL'),
+                'model' => config('openai.model'),
                 'temperature' => 0.7,
                 'messages' => $prompt,
             ]);

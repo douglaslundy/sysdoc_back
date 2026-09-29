@@ -61,6 +61,7 @@ class ProtocolWhatsappAlertTest extends TestCase
                 'descricao' => 'Criando protocolo com alerta WhatsApp.',
                 'tipo' => $tipo->codigo,
                 'origem_unit_id' => $origem->id,
+                'destino_unit_id' => $origem->id,
                 'destino_user_id' => $responsavel->id,
             ]);
 
@@ -77,7 +78,7 @@ class ProtocolWhatsappAlertTest extends TestCase
 
         Http::assertSent(function ($request) {
             return $request->url() === 'http://evolution.test/message/sendText/sysdoc'
-                && data_get($request->data(), 'number') === '62999991111';
+                && data_get($request->data(), 'number') === '5562999991111';
         });
 
         $notification = ProtocolNotification::query()

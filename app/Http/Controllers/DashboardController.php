@@ -1097,7 +1097,8 @@ class DashboardController extends MonitorApsBaseController
 
     public function almoxarifado()
     {
-        $data = [
+        // Dados globais (iguais para todos): 60 s de cache no servidor evita repetir 8 consultas por usuario.
+        $data = Cache::remember('dashboard.almoxarifado', 60, fn () => [
             'totais' => [
                 'produtos' => DB::table('almoxarifado_produtos')->where('ativo', true)->count(),
                 'quantidade_disponivel' => (float) DB::table('almoxarifado_estoques')->sum('quantidade_disponivel'),
@@ -1128,14 +1129,14 @@ class DashboardController extends MonitorApsBaseController
                 ->orderByDesc('m.created_at')
                 ->limit(8)
                 ->get(['m.id', 'p.nome as produto', 'm.tipo', 'm.quantidade', 'm.created_at']),
-        ];
+        ]);
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=120');
     }
 
     public function arquivo()
     {
-        $data = [
+        $data = Cache::remember('dashboard.arquivo', 60, fn () => [
             'totais' => [
                 'documentos' => DB::table('documents')->whereNull('deleted_at')->count(),
                 'versoes' => DB::table('document_versions')->whereNull('deleted_at')->count(),
@@ -1164,7 +1165,7 @@ class DashboardController extends MonitorApsBaseController
                 ->orderByDesc('d.updated_at')
                 ->limit(8)
                 ->get(['d.id', 'd.titulo', 'd.status', 'd.sigilo', 'd.current_version_number', 'd.updated_at', 't.nome as tipo']),
-        ];
+        ]);
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=120');
     }

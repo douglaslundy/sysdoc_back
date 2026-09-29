@@ -25,9 +25,9 @@ abstract class MonitorApsBaseController extends Controller
         }
 
         $this->apsConfigCache = (object) [
-            'municipio_ibge' => $row?->municipio_ibge ?? env('MONITOR_APS_MUNICIPIO_IBGE', ''),
-            'municipio_nome' => $row?->municipio_nome ?? env('MONITOR_APS_MUNICIPIO_NOME', ''),
-            'estrato_ied'    => (int) ($row?->estrato_ied ?? env('MONITOR_APS_ESTRATO_IED', 4)),
+            'municipio_ibge' => $row?->municipio_ibge ?? (config('monitor_aps.municipio_ibge') ?? ''),
+            'municipio_nome' => $row?->municipio_nome ?? (config('monitor_aps.municipio_nome') ?? ''),
+            'estrato_ied'    => (int) ($row?->estrato_ied ?? (config('monitor_aps.estrato_ied') ?? 4)),
         ];
 
         return $this->apsConfigCache;
@@ -44,11 +44,11 @@ abstract class MonitorApsBaseController extends Controller
             catch (\Throwable) { return null; }
         });
 
-        $host     = $row?->aps_db_host     ?? env('APS_DB_HOST', '');
-        $port     = $row?->aps_db_port     ?? env('APS_DB_PORT', 5432);
-        $database = $row?->aps_db_database ?? env('APS_DB_DATABASE', 'esus');
-        $username = $row?->aps_db_username ?? env('APS_DB_USERNAME', '');
-        $password = $row?->aps_db_password ?? env('APS_DB_PASSWORD', '');
+        $host     = $row?->aps_db_host     ?? (config('monitor_aps.db.host') ?? '');
+        $port     = $row?->aps_db_port     ?? (config('monitor_aps.db.port') ?? 5432);
+        $database = $row?->aps_db_database ?? (config('monitor_aps.db.database') ?? 'esus');
+        $username = $row?->aps_db_username ?? (config('monitor_aps.db.username') ?? '');
+        $password = $row?->aps_db_password ?? (config('monitor_aps.db.password') ?? '');
 
         if ($password) {
             try { $password = decrypt($password); } catch (\Throwable) {}

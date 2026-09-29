@@ -28,11 +28,11 @@ class ConformidadeCidadaoService
             try { $row = DB::table('monitor_aps_configs')->first(); } catch (\Throwable) { $row = null; }
         }
 
-        $host     = $row?->aps_db_host     ?? env('APS_DB_HOST', '');
-        $port     = (int) ($row?->aps_db_port ?? env('APS_DB_PORT', 5432));
-        $database = $row?->aps_db_database ?? env('APS_DB_DATABASE', 'esus');
-        $username = $row?->aps_db_username ?? env('APS_DB_USERNAME', '');
-        $password = $row?->aps_db_password ?? env('APS_DB_PASSWORD', '');
+        $host     = $row?->aps_db_host     ?? (config('monitor_aps.db.host') ?? '');
+        $port     = (int) ($row?->aps_db_port ?? (config('monitor_aps.db.port') ?? 5432));
+        $database = $row?->aps_db_database ?? (config('monitor_aps.db.database') ?? 'esus');
+        $username = $row?->aps_db_username ?? (config('monitor_aps.db.username') ?? '');
+        $password = $row?->aps_db_password ?? (config('monitor_aps.db.password') ?? '');
 
         if ($password) {
             try { $password = decrypt($password); } catch (\Throwable) {}

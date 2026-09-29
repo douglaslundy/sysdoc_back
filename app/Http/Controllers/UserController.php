@@ -25,8 +25,10 @@ class UserController extends Controller
             ->orderBy('id', 'desc')
             ->get();
         $presences = UserPresence::query()->get()->keyBy('user_id');
+        // Um mapa perfil => chat_enabled em vez de uma consulta por usuario (canUseChat()).
+        $chatEnabledByProfile = \App\Models\AccessProfile::query()->pluck('chat_enabled', 'slug');
 
-        return $users->map(function (User $user) use ($presences) {
+        return $users->map(function (User $user) use ($presences, $chatEnabledByProfile) {
             $presence = $presences->get($user->id);
             $lastSeenAt = $presence?->last_seen_at;
             $isOnline = $lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subMinutes(5));
@@ -36,7 +38,7 @@ class UserController extends Controller
                 'is_online' => $isOnline,
                 'last_seen_at' => $lastSeenAt?->toDateTimeString(),
                 'last_path' => $presence?->last_path,
-                'can_chat' => $user->canUseChat(),
+                'can_chat' => $user->canUseChatWith($chatEnabledByProfile),
                 'protocol_unit_ids' => $user->protocolUnits
                     ->where('ativo', true)
                     ->pluck('protocol_organizational_unit_id')

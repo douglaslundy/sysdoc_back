@@ -44,14 +44,14 @@ class ApiRateLimitTest extends TestCase
         $headers = $this->bearer($user);
 
         $status = 200;
-        for ($i = 0; $i < 340; $i++) {
+        for ($i = 0; $i < 640; $i++) {
             $status = $this->withHeaders($headers)->getJson('/api/user')->status();
             if ($status === 429) {
                 break;
             }
         }
 
-        // Continua havendo um limite (300/min) — so que agora por usuario.
+        // Continua havendo um limite (600/min) — por usuario, nao por IP.
         $this->assertSame(429, $status);
     }
 }

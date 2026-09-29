@@ -28,7 +28,7 @@ class PasswordResetTest extends TestCase
 
         $response->assertOk()
             ->assertJson([
-                'message' => 'Se o e-mail estiver cadastrado, voce recebera o link de redefinicao.',
+                'message' => 'Se o e-mail estiver cadastrado, você receberá o link de redefinição.',
             ]);
 
         $this->assertDatabaseHas('password_reset_tokens', [

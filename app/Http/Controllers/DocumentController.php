@@ -51,19 +51,25 @@ class DocumentController extends Controller
             ->when(! $this->isAdmin($request->user()), function ($builder) use ($request) {
                 $visibleUnitIds = $this->visibleDocumentUnitIds($request->user());
 
+                // Rascunho é visível apenas para quem criou (e admin) até ser publicado.
                 $builder->where(function ($q) use ($request, $visibleUnitIds) {
-                    $q->where('sigilo', 'publico')
-                        ->orWhere('created_by', $request->user()?->id)
-                        ->orWhere(function ($internalQuery) use ($visibleUnitIds) {
-                            $internalQuery
-                                ->where('sigilo', 'interno')
-                                ->whereHas('creator.protocolUnits', function ($protocolUnitQuery) use ($visibleUnitIds) {
-                                    $protocolUnitQuery
-                                        ->where('ativo', true)
-                                        ->whereHas('unit', function ($unitQuery) use ($visibleUnitIds) {
-                                            $unitQuery
-                                                ->whereIn('id', $visibleUnitIds)
-                                                ->orWhereIn('parent_id', $visibleUnitIds);
+                    $q->where('created_by', $request->user()?->id)
+                        ->orWhere(function ($others) use ($visibleUnitIds) {
+                            $others->where('status', '!=', 'rascunho')
+                                ->where(function ($scope) use ($visibleUnitIds) {
+                                    $scope->where('sigilo', 'publico')
+                                        ->orWhere(function ($internalQuery) use ($visibleUnitIds) {
+                                            $internalQuery
+                                                ->where('sigilo', 'interno')
+                                                ->whereHas('creator.protocolUnits', function ($protocolUnitQuery) use ($visibleUnitIds) {
+                                                    $protocolUnitQuery
+                                                        ->where('ativo', true)
+                                                        ->whereHas('unit', function ($unitQuery) use ($visibleUnitIds) {
+                                                            $unitQuery
+                                                                ->whereIn('id', $visibleUnitIds)
+                                                                ->orWhereIn('parent_id', $visibleUnitIds);
+                                                        });
+                                                });
                                         });
                                 });
                         });
@@ -527,6 +533,10 @@ class DocumentController extends Controller
 
         if ((int) $document->created_by === (int) $user->id) {
             return true;
+        }
+
+        if ($document->status === 'rascunho') {
+            return false;
         }
 
         if ($document->sigilo === 'publico') {

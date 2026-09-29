@@ -74,6 +74,7 @@ class LetterProtocolTest extends TestCase
 
         $response = $this->actingAs($sender, 'sanctum')
             ->postJson("/api/letters/{$letter->id}/protocol", [
+                'destino_unit_id' => $destinationUnit->id,
                 'destino_user_id' => $destination->id,
             ])
             ->assertCreated()
@@ -120,6 +121,17 @@ class LetterProtocolTest extends TestCase
         Storage::fake('private');
         $sender = User::factory()->create(['profile' => 'admin', 'active' => true]);
         $destination = User::factory()->create(['active' => true]);
+        $destinationUnit = ProtocolOrganizationalUnit::create([
+            'tipo' => 'secretaria',
+            'nome' => 'Secretaria de Destino',
+            'ativo' => true,
+        ]);
+        ProtocolUserUnit::create([
+            'user_id' => $destination->id,
+            'protocol_organizational_unit_id' => $destinationUnit->id,
+            'papel' => 'lotacao',
+            'ativo' => true,
+        ]);
         $letter = Letter::create([
             'id_user' => $sender->id,
             'number' => 16,
@@ -141,6 +153,7 @@ class LetterProtocolTest extends TestCase
 
         $this->actingAs($sender, 'sanctum')
             ->postJson("/api/letters/{$letter->id}/protocol", [
+                'destino_unit_id' => $destinationUnit->id,
                 'destino_user_id' => $destination->id,
             ])
             ->assertStatus(422)
@@ -188,11 +201,11 @@ class LetterProtocolTest extends TestCase
         ]);
 
         $this->actingAs($sender, 'sanctum')
-            ->postJson("/api/letters/{$letter->id}/protocol", ['destino_user_id' => $destination->id])
+            ->postJson("/api/letters/{$letter->id}/protocol", ['destino_unit_id' => $unit->id, 'destino_user_id' => $destination->id])
             ->assertCreated();
 
         $this->actingAs($sender, 'sanctum')
-            ->postJson("/api/letters/{$letter->id}/protocol", ['destino_user_id' => $destination->id])
+            ->postJson("/api/letters/{$letter->id}/protocol", ['destino_unit_id' => $unit->id, 'destino_user_id' => $destination->id])
             ->assertStatus(422)
             ->assertJsonPath('message', 'Este ofício já possui um protocolo aberto vinculado.');
     }

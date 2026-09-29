@@ -5,7 +5,10 @@ namespace App\Exceptions;
 use App\Models\ErrorLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
@@ -49,6 +52,14 @@ class Handler extends ExceptionHandler
             return;
         }
 
+        // Excesso de requisicoes (429) e um evento de carga, nao um defeito: gravar
+        // um registro completo com trace para CADA requisicao barrada piora a
+        // sobrecarga (mais escrita no banco justamente quando ele esta pressionado).
+        // Registra no maximo uma vez por minuto por usuario/IP e rota.
+        if ($this->isThrottleException($exception) && ! $this->shouldLogThrottle()) {
+            return;
+        }
+
         $requestUserId = null;
         $requestUserEmail = null;
         $requestUserName = null;
@@ -81,6 +92,25 @@ class Handler extends ExceptionHandler
         } catch (Throwable $e) {
             // O logger de erro nunca deve derrubar/mascarar a excecao original.
             Log::error('Erro ao salvar log de excecao: '.$e->getMessage());
+        }
+    }
+
+    protected function isThrottleException(Throwable $exception): bool
+    {
+        return $exception instanceof ThrottleRequestsException
+            || ($exception instanceof HttpResponseException && $exception->getResponse()->getStatusCode() === 429);
+    }
+
+    protected function shouldLogThrottle(): bool
+    {
+        try {
+            $request = request();
+            $who = $request?->user()?->id ?? $request?->ip() ?? 'anon';
+            $key = 'throttle-log:'.$who.':'.md5((string) $request?->path());
+
+            return Cache::add($key, 1, 60);
+        } catch (Throwable) {
+            return true;
         }
     }
 

@@ -18,6 +18,13 @@ return [
     'default' => env('CACHE_DRIVER', 'file'),
 
     /*
+    | Store do limitador de requisicoes (throttle). Vazio = usa o store padrao.
+    | Em producao com muitos usuarios, aponte para redis/memcached (CACHE_LIMITER=redis):
+    | o store 'file' serializa leitura/escrita em disco a cada requisicao.
+    */
+    'limiter' => env('CACHE_LIMITER'),
+
+    /*
     |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------

@@ -77,6 +77,24 @@ class User extends Authenticatable implements JWTSubject
         return (bool) $this->accessProfile()->value('chat_enabled');
     }
 
+    /**
+     * Mesma regra de canUseChat(), mas usando um mapa perfil => chat_enabled ja
+     * carregado (AccessProfile::pluck('chat_enabled', 'slug')). Use em listagens:
+     * canUseChat() faz uma consulta por usuario (N+1).
+     */
+    public function canUseChatWith($chatEnabledByProfile): bool
+    {
+        if ($this->profile === 'admin') {
+            return true;
+        }
+
+        if ($this->chat_access_override !== null) {
+            return (bool) $this->chat_access_override;
+        }
+
+        return (bool) ($chatEnabledByProfile[$this->profile] ?? false);
+    }
+
     public function canUseAlmoxarifadoAction(string $action): bool
     {
         if ($this->profile === 'admin') {

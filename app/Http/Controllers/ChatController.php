@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccessProfile;
 use App\Models\ChatAttachment;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
@@ -16,6 +17,7 @@ use App\Services\SystemAlertService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -34,22 +36,25 @@ class ChatController extends Controller
     public function users(Request $request): JsonResponse
     {
         $currentUserId = (int) $request->user()->id;
-        $this->removeStaleConnections();
         $presences = UserPresence::query()->get()->keyBy('user_id');
+
+        // Permissao de chat resolvida com UMA consulta (perfil -> chat_enabled) em vez
+        // de uma consulta por usuario (User::canUseChat() -> accessProfile()).
+        $chatEnabledByProfile = AccessProfile::query()->pluck('chat_enabled', 'slug');
 
         $users = User::query()
             ->where('active', true)
             ->whereKeyNot($currentUserId)
             ->orderBy('name')
-            ->get(['id', 'name', 'preferred_name', 'email', 'profile'])
-            ->filter(fn (User $user) => $user->canUseChat())
+            ->get(['id', 'name', 'preferred_name', 'email', 'profile', 'chat_access_override'])
+            ->filter(fn (User $user) => $user->canUseChatWith($chatEnabledByProfile))
             ->map(function (User $user) use ($presences) {
                 $presence = $presences->get($user->id);
                 $recent = $presence?->last_seen_at?->greaterThanOrEqualTo(now()->subMinutes(2)) ?? false;
                 $online = $recent && ($presence?->connection_count ?? 0) > 0;
 
                 return [
-                    ...$user->toArray(),
+                    ...$user->only(['id', 'preferred_name', 'email', 'profile']),
                     'name' => $user->chatDisplayName(),
                     'presence' => $online ? ($presence->status ?: 'online') : 'offline',
                     'is_online' => $online,
@@ -64,17 +69,44 @@ class ChatController extends Controller
     public function conversations(Request $request): JsonResponse
     {
         $userId = (int) $request->user()->id;
-        $items = ChatConversation::query()
+        $conversations = ChatConversation::query()
             ->whereHas('participants', fn (Builder $query) => $query
                 ->where('users.id', $userId)
                 ->whereNull('chat_conversation_participants.deleted_at'))
-            ->with([
-                'participants:id,name,preferred_name,email',
-                'messages' => fn ($query) => $query->with(['attachments', 'sender:id,name,preferred_name,email'])->whereNull('deleted_at')->latest()->limit(1),
-            ])
+            ->with(['participants:id,name,preferred_name,email'])
             ->orderByDesc('last_message_at')
+            ->get();
+
+        $conversationIds = $conversations->pluck('id');
+
+        // Ultima mensagem de cada conversa e contagem de nao lidas em consultas
+        // unicas (antes: eager load com limit(1) global e um COUNT por conversa).
+        $lastIds = ChatMessage::query()
+            ->whereIn('conversation_id', $conversationIds)
+            ->whereNull('deleted_at')
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('conversation_id')
+            ->pluck('id');
+        $lastByConversation = ChatMessage::query()
+            ->with(['attachments', 'sender:id,name,preferred_name,email'])
+            ->whereIn('id', $lastIds)
             ->get()
-            ->map(fn (ChatConversation $conversation) => $this->conversationPayload($conversation, $userId));
+            ->keyBy('conversation_id');
+        $unreadByConversation = ChatMessage::query()
+            ->whereIn('conversation_id', $conversationIds)
+            ->where('sender_id', '!=', $userId)
+            ->whereNull('read_at')
+            ->whereNull('deleted_at')
+            ->selectRaw('conversation_id, COUNT(*) as total')
+            ->groupBy('conversation_id')
+            ->pluck('total', 'conversation_id');
+
+        $items = $conversations->map(fn (ChatConversation $conversation) => $this->conversationPayload(
+            $conversation,
+            $userId,
+            $lastByConversation->get($conversation->id),
+            (int) ($unreadByConversation[$conversation->id] ?? 0)
+        ));
 
         return response()->json($items);
     }
@@ -209,8 +241,6 @@ class ChatController extends Controller
                     'storage_path' => $path,
                 ]);
 
-                $this->realtime->increment('attachments_sent');
-                $this->realtime->increment('attachment_bytes', (int) $file->getSize());
             }
 
             $conversation->update(['last_message_at' => now()]);
@@ -225,11 +255,14 @@ class ChatController extends Controller
         $payload = $this->messagePayload($message);
         $recipientIds = $this->recipientIds($conversation, $userId);
 
-        foreach ($recipientIds as $recipientId) {
-            $this->realtime->publish($recipientId, 'message.new', $payload);
-        }
+        // Envio ao tempo real e contadores saem depois da resposta (ver ChatRealtimeService).
+        $this->realtime->publishMany($recipientIds, 'message.new', $payload);
         $this->realtime->publish($userId, 'message.sent', $payload);
         $this->realtime->increment('messages_sent');
+        if ($message->attachments->isNotEmpty()) {
+            $this->realtime->increment('attachments_sent', $message->attachments->count());
+            $this->realtime->increment('attachment_bytes', (int) $message->attachments->sum('file_size'));
+        }
 
         AuditService::record('CHAT_MESSAGE_SENT', $message, null, [
             'conversation_id' => $conversation->id,
@@ -252,14 +285,18 @@ class ChatController extends Controller
             ->orderBy('id')
             ->first();
 
-        app(SystemAlertService::class)->dispatch('chat', 'chat_mensagem_enviada', [
-            'conversation' => $conversation->loadMissing('participants:id,name,preferred_name,email'),
-            'message' => $message,
-            'sender' => $request->user(),
-            'recipient' => $otherParticipant,
-            'participants' => $conversation->participants ?? [],
-            'requester' => $request->user(),
-        ]);
+        // Alertas (WhatsApp/e-mail) podem fazer chamadas externas lentas: rodam depois da resposta.
+        $sender = $request->user();
+        $this->realtime->afterResponse(function () use ($conversation, $message, $sender, $otherParticipant) {
+            app(SystemAlertService::class)->dispatch('chat', 'chat_mensagem_enviada', [
+                'conversation' => $conversation->loadMissing('participants:id,name,preferred_name,email'),
+                'message' => $message,
+                'sender' => $sender,
+                'recipient' => $otherParticipant,
+                'participants' => $conversation->participants ?? [],
+                'requester' => $sender,
+            ]);
+        });
 
         return response()->json($payload, 201);
     }
@@ -404,13 +441,15 @@ class ChatController extends Controller
         $this->authorizeParticipant($conversation, $userId);
         $data = $request->validate(['typing' => ['required', 'boolean']]);
 
-        foreach ($this->recipientIds($conversation, $userId) as $recipientId) {
-            $this->realtime->publish($recipientId, $data['typing'] ? 'typing.started' : 'typing.stopped', [
+        $this->realtime->publishMany(
+            $this->recipientIds($conversation, $userId),
+            $data['typing'] ? 'typing.started' : 'typing.stopped',
+            [
                 'conversation_id' => $conversation->id,
                 'user_id' => $userId,
                 'name' => $request->user()->chatDisplayName(),
-            ]);
-        }
+            ]
+        );
 
         return response()->json(['ok' => true]);
     }
@@ -446,11 +485,12 @@ class ChatController extends Controller
             );
         }
 
-        $connectionCount = DB::table('chat_connections')->where('user_id', $userId)->count();
-        $aggregateStatus = DB::table('chat_connections')
+        $stats = DB::table('chat_connections')
             ->where('user_id', $userId)
-            ->where('status', 'online')
-            ->exists() ? 'online' : ($connectionCount > 0 ? 'away' : 'offline');
+            ->selectRaw("COUNT(*) as total, COALESCE(SUM(status = 'online'), 0) as online_total")
+            ->first();
+        $connectionCount = (int) $stats->total;
+        $aggregateStatus = (int) $stats->online_total > 0 ? 'online' : ($connectionCount > 0 ? 'away' : 'offline');
 
         $presence->fill([
             'status' => $aggregateStatus,
@@ -460,11 +500,12 @@ class ChatController extends Controller
             'last_path' => $data['path'] ?? null,
         ])->save();
 
-        $onlineConnections = (int) UserPresence::query()->sum('connection_count');
-        $this->realtime->increment('connection_events');
-        $this->realtime->updatePeakConnections($onlineConnections);
-
+        // O heartbeat comum (nada mudou) so atualiza last_seen_at. Estatisticas, pico
+        // de conexoes e broadcast de presenca so rodam quando o estado realmente muda.
         if ($previousStatus !== $presence->status || $previousConnectionCount !== $presence->connection_count) {
+            $onlineConnections = (int) UserPresence::query()->sum('connection_count');
+            $this->realtime->increment('connection_events');
+            $this->realtime->updatePeakConnections($onlineConnections);
             $this->realtime->publishPresence([
                 'user_id' => $userId,
                 'presence' => $presence->status,
@@ -517,7 +558,7 @@ class ChatController extends Controller
 
     public function dashboard(): JsonResponse
     {
-        $this->removeStaleConnections();
+        $this->removeStaleConnections(true);
         $realtimeConfig = $this->broadcastConfig->publicPayload();
         $isSoketi = ($realtimeConfig['engine'] ?? null) === 'soketi';
         $today = now()->toDateString();
@@ -575,11 +616,15 @@ class ChatController extends Controller
             ->all();
     }
 
-    private function conversationPayload(ChatConversation $conversation, int $userId): array
+    private function conversationPayload(ChatConversation $conversation, int $userId, ?ChatMessage $lastMessage = null, ?int $unread = null): array
     {
         $other = $conversation->participants->firstWhere('id', '!=', $userId);
-        $lastMessage = $conversation->messages->first();
-        $unread = $conversation->messages()
+        $lastMessage ??= $conversation->messages()
+            ->with(['attachments', 'sender:id,name,preferred_name,email'])
+            ->whereNull('deleted_at')
+            ->latest('id')
+            ->first();
+        $unread ??= $conversation->messages()
             ->where('sender_id', '!=', $userId)
             ->whereNull('read_at')
             ->whereNull('deleted_at')
@@ -686,8 +731,13 @@ class ChatController extends Controller
         return trim(preg_replace('/[^A-Za-z0-9._ -]/', '', str_replace(['\\', '/'], '-', $filename)) ?: 'arquivo');
     }
 
-    private function removeStaleConnections(): void
+    private function removeStaleConnections(bool $force = false): void
     {
+        // Varredura no maximo a cada 20s (antes rodava em toda leitura de usuarios e em todo heartbeat).
+        if (! $force && ! Cache::add('chat:stale-sweep', 1, 20)) {
+            return;
+        }
+
         $staleUserIds = DB::table('chat_connections')
             ->where('last_seen_at', '<', now()->subMinutes(2))
             ->pluck('user_id')

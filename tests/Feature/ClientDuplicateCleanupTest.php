@@ -177,7 +177,7 @@ class ClientDuplicateCleanupTest extends TestCase
     private function createQueue(int $clientId, int $specialityId): void
     {
         DB::table('queue')->insert([
-            'date_of_received' => now(),
+            'uuid' => (string) \Illuminate\Support\Str::uuid(),
             'id_client' => $clientId,
             'id_specialities' => $specialityId,
             'id_user' => $this->admin->id,

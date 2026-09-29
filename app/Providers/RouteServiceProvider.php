@@ -65,9 +65,12 @@ class RouteServiceProvider extends ServiceProvider
             // dividiam o mesmo balde de 120/min -> 429 em massa.
             $userId = optional($request->user('sanctum'))->id;
 
+            // Teto por usuario (600/min = 10 req/s) e por IP para nao autenticados.
+            // O balde por IP e COMPARTILHADO por todos os usuarios atras do mesmo link
+            // (uma prefeitura inteira sai por 1 IP), por isso e bem mais folgado.
             return $userId
-                ? Limit::perMinute(300)->by('user:'.$userId)
-                : Limit::perMinute(60)->by('ip:'.$request->ip());
+                ? Limit::perMinute(600)->by('user:'.$userId)
+                : Limit::perMinute(240)->by('ip:'.$request->ip());
         });
 
         RateLimiter::for('chat-sync', function (Request $request) {

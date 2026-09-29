@@ -101,7 +101,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/401', [AuthController::class, 'unauthorized'])->name('login');
 Route::middleware('throttle:login')->post('/login', [AuthController::class, 'login']);
 
-Route::middleware('throttle:5,1')->post('/register', [AuthController::class, 'register']);
 
 // Rota pública para consulta da Queue por UUID
 Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']);
@@ -302,7 +301,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/pharmacy/catalogs/{type}/{id}', [PharmacyCatalogAdminController::class, 'destroy']);
     });
 
-    Route::prefix('whatsapp')->group(function () {
+    Route::prefix('whatsapp')->middleware('page.permission:/configuracoes/whatsapp')->group(function () {
         Route::get('/config', [WhatsappConfigController::class, 'show']);
         Route::post('/config', [WhatsappConfigController::class, 'update']);
         Route::get('/status', [WhatsappConfigController::class, 'status']);
@@ -312,7 +311,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/enviar-teste', [WhatsappConfigController::class, 'sendTest']);
     });
 
-    Route::prefix('email')->group(function () {
+    Route::prefix('email')->middleware('page.permission:/configuracoes/email')->group(function () {
         Route::get('/config', [EmailConfigController::class, 'show']);
         Route::post('/config', [EmailConfigController::class, 'update']);
         Route::post('/testar', [EmailConfigController::class, 'test']);
@@ -325,21 +324,21 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/contexto-novo', [ProtocolController::class, 'creationContext']);
         Route::get('/usuarios-elegiveis', [ProtocolController::class, 'eligibleDestinationUsers']);
         Route::get('/tipos', [ProtocolTypeController::class, 'index']);
-        Route::post('/tipos', [ProtocolTypeController::class, 'store']);
-        Route::put('/tipos/{id}', [ProtocolTypeController::class, 'update'])->whereNumber('id');
-        Route::delete('/tipos/{id}', [ProtocolTypeController::class, 'destroy'])->whereNumber('id');
-        Route::get('/configuracoes', [ProtocolConfigController::class, 'show']);
-        Route::put('/configuracoes', [ProtocolConfigController::class, 'update']);
+        Route::post('/tipos', [ProtocolTypeController::class, 'store'])->middleware('page.permission:/protocolo/tipos');
+        Route::put('/tipos/{id}', [ProtocolTypeController::class, 'update'])->whereNumber('id')->middleware('page.permission:/protocolo/tipos');
+        Route::delete('/tipos/{id}', [ProtocolTypeController::class, 'destroy'])->whereNumber('id')->middleware('page.permission:/protocolo/tipos');
+        Route::get('/configuracoes', [ProtocolConfigController::class, 'show'])->middleware('page.permission:/protocolo/configuracoes');
+        Route::put('/configuracoes', [ProtocolConfigController::class, 'update'])->middleware('page.permission:/protocolo/configuracoes');
 
         Route::get('/unidades-organizacionais', [ProtocolOrganizationalUnitController::class, 'index']);
-        Route::post('/unidades-organizacionais', [ProtocolOrganizationalUnitController::class, 'store']);
-        Route::put('/unidades-organizacionais/{id}', [ProtocolOrganizationalUnitController::class, 'update']);
-        Route::delete('/unidades-organizacionais/{id}', [ProtocolOrganizationalUnitController::class, 'destroy']);
+        Route::post('/unidades-organizacionais', [ProtocolOrganizationalUnitController::class, 'store'])->middleware('page.permission:/protocolo/estrutura');
+        Route::put('/unidades-organizacionais/{id}', [ProtocolOrganizationalUnitController::class, 'update'])->middleware('page.permission:/protocolo/estrutura');
+        Route::delete('/unidades-organizacionais/{id}', [ProtocolOrganizationalUnitController::class, 'destroy'])->middleware('page.permission:/protocolo/estrutura');
 
-        Route::get('/alertas', [ProtocolAlertController::class, 'index']);
-        Route::post('/alertas', [ProtocolAlertController::class, 'store']);
-        Route::put('/alertas/{id}', [ProtocolAlertController::class, 'update']);
-        Route::delete('/alertas/{id}', [ProtocolAlertController::class, 'destroy']);
+        Route::get('/alertas', [ProtocolAlertController::class, 'index'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
+        Route::post('/alertas', [ProtocolAlertController::class, 'store'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
+        Route::put('/alertas/{id}', [ProtocolAlertController::class, 'update'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
+        Route::delete('/alertas/{id}', [ProtocolAlertController::class, 'destroy'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
 
         Route::post('/', [ProtocolController::class, 'store']);
         Route::get('/{id}', [ProtocolController::class, 'show'])->whereNumber('id');
@@ -521,7 +520,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
 
     // Logs de Erro
-    Route::apiResource('errorlogs', ErrorLogController::class);
+    Route::apiResource('errorlogs', ErrorLogController::class)->middleware('page.permission:/errorlogs');
 
     //Trip
     Route::get('/trips/drivers-options', [TripController::class, 'drivers']);
