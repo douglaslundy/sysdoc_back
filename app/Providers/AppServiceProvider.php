@@ -63,6 +63,12 @@ class AppServiceProvider extends ServiceProvider
 
         app(\App\Services\ChatBroadcastConfigService::class)->apply();
         User::observe(UserObserver::class);
+
+        // Auditoria generica para os models listados em config/audit.php.
+        foreach (config('audit.models', []) as $auditedModel) {
+            $auditedModel::observe(\App\Observers\AuditableObserver::class);
+        }
+
         Client::observe(ClientObserver::class);
         PedidoExame::observe(PedidoExameObserver::class);
         ResultadoExame::observe(ResultadoExameObserver::class);
