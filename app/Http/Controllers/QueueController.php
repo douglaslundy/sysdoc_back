@@ -23,10 +23,24 @@ class QueueController extends Controller
         $validated = $request->validated();
         $perPage = (int) ($validated['per_page'] ?? 10);
 
-        $queues = $this->listQuery($validated, $request->user())
-            ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc')
-            ->paginate($perPage);
+        $query = $this->listQuery($validated, $request->user());
+
+        // Ordenacao opcional (usada nos "realizados"): data da baixa, data de
+        // realizacao ou id. Sem parametro mantem a ordem de chegada na fila.
+        $sortBy = $validated['sort_by'] ?? null;
+        $sortDir = ($validated['sort_dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy === 'done_at' || $sortBy === 'date_of_realized') {
+            $query->orderByRaw("`queue`.`{$sortBy}` IS NULL")
+                ->orderBy("queue.{$sortBy}", $sortDir)
+                ->orderBy('queue.id', $sortDir);
+        } elseif ($sortBy === 'id') {
+            $query->orderBy('queue.id', $sortDir);
+        } else {
+            $query->orderBy('created_at', 'asc')->orderBy('id', 'asc');
+        }
+
+        $queues = $query->paginate($perPage);
 
         return QueueListResource::collection($queues);
     }

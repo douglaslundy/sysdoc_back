@@ -24,6 +24,10 @@ class Queue extends Model
         'obs',
     ];
 
+    protected $casts = [
+        'done_at' => 'datetime',
+    ];
+
     /**
      * Método boot para adicionar o UUID automaticamente na criação do registro.
      */
@@ -36,6 +40,16 @@ class Queue extends Model
             if (empty($model->uuid)) {
                 $model->uuid = (string) Str::uuid();
             }
+        });
+
+        // Data/hora da baixa: registrada quando o item passa a "realizado" e limpa se
+        // for reaberto. Edicoes posteriores (obs, anexos...) nao alteram o valor.
+        static::saving(function ($model) {
+            if (! $model->isDirty('done')) {
+                return;
+            }
+
+            $model->done_at = $model->done ? ($model->done_at ?? now()) : null;
         });
     }
 
