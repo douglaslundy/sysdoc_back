@@ -10,7 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AuditServiceBatchTest extends TestCase
@@ -120,10 +119,12 @@ class AuditServiceBatchTest extends TestCase
 
     public function test_falha_ao_gravar_a_auditoria_nao_quebra_quem_chamou(): void
     {
-        Schema::drop('audit_logs');
+        // Nome do usuario maior que a coluna (100): o INSERT falha em modo estrito.
+        $tooLong = new User(['name' => str_repeat('a', 300)]);
 
-        AuditService::record('UPDATE', null, null, ['x' => 1]);
+        AuditService::record('UPDATE', null, null, ['x' => 1], $tooLong);
 
+        $this->assertSame(0, AuditLog::count());
         $this->assertTrue(true, 'Nenhuma excecao foi lancada.');
     }
 }
