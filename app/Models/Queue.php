@@ -22,6 +22,7 @@ class Queue extends Model
         'date_of_realized',
         'urgency',
         'obs',
+        'done_by',
     ];
 
     protected $casts = [
@@ -50,6 +51,10 @@ class Queue extends Model
             }
 
             $model->done_at = $model->done ? ($model->done_at ?? now()) : null;
+            // Quem deu a baixa: o usuario autenticado da requisicao (ou o definido explicitamente).
+            $model->done_by = $model->done
+                ? ($model->done_by ?? request()->user()?->id ?? auth()->id())
+                : null;
         });
     }
 
@@ -59,6 +64,14 @@ class Queue extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    /**
+     * Usuario que deu a baixa (done = 1).
+     */
+    public function doneBy()
+    {
+        return $this->belongsTo(User::class, 'done_by');
     }
 
     /**

@@ -20,6 +20,11 @@ class QueueListResource extends JsonResource
             'urgency' => (int) $this->urgency,
             'date_of_realized' => $this->date_of_realized,
             'done_at' => $this->done_at,
+            'done_by' => $this->done_by,
+            'done_by_user' => $this->whenLoaded('doneBy', fn () => $this->doneBy ? [
+                'id' => $this->doneBy->id,
+                'name' => $this->doneBy->name,
+            ] : null),
             'obs' => $this->obs,
             'created_at' => $this->created_at,
             'attachments_count' => (int) ($this->attachments_count ?? 0),

@@ -112,7 +112,7 @@ class QueueController extends Controller
         $queue = Queue::create($request->validated());
         AuditService::record('CREATE', $queue, null, $queue->toArray());
 
-        $queue->load('client', 'speciality', 'user')->loadCount('attachments');
+        $queue->load('client', 'speciality', 'user', 'doneBy')->loadCount('attachments');
         $queue->position = $this->calculateQueuePosition($queue);
 
         return (new QueueListResource($queue))->response()->setStatusCode(201);
@@ -137,7 +137,7 @@ class QueueController extends Controller
                 ->update(['updated_at' => now()]);
         }
 
-        $queue->load('client', 'speciality', 'user')->loadCount('attachments');
+        $queue->load('client', 'speciality', 'user', 'doneBy')->loadCount('attachments');
         $queue->position = $this->calculateQueuePosition($queue);
 
         return new QueueListResource($queue);
@@ -235,6 +235,7 @@ class QueueController extends Controller
             ->with([
                 'client:id,name,mother,cpf,cns,phone',
                 'user:id,name',
+                'doneBy:id,name',
                 'speciality:id,name,allows_session_scheduling',
             ])
             ->withCount('attachments')
@@ -255,6 +256,16 @@ class QueueController extends Controller
 
         if (array_key_exists('done', $filters) && (int) $filters['done'] !== 2) {
             $query->where('done', (int) $filters['done']);
+        }
+
+        // Intervalo pela data da baixa (so faz sentido para os realizados).
+        if (array_key_exists('done', $filters) && (int) $filters['done'] === 1) {
+            if (! empty($filters['date_from'])) {
+                $query->where('done_at', '>=', $filters['date_from'].' 00:00:00');
+            }
+            if (! empty($filters['date_to'])) {
+                $query->where('done_at', '<=', $filters['date_to'].' 23:59:59');
+            }
         }
 
         if (array_key_exists('urgency', $filters) && (int) $filters['urgency'] !== 2) {
