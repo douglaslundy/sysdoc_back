@@ -43,7 +43,7 @@ class MedicineTransparencyService
             })->values(),
         ];
 
-        AuditService::record('VIEW_PUBLIC_MEDICINES_DAILY', null, null, [
+        AuditService::recordOncePerVisitor('VIEW_PUBLIC_MEDICINES_DAILY', [
             'reference_date' => $referenceDate,
             'items_count' => count($result['items']),
         ]);
@@ -100,7 +100,7 @@ class MedicineTransparencyService
             })->values(),
         ];
 
-        AuditService::record('VIEW_PUBLIC_MEDICINES_PANEL', null, null, [
+        AuditService::recordOncePerVisitor('VIEW_PUBLIC_MEDICINES_PANEL', [
             'reference_date' => $referenceDate,
             'items_count' => count($result['items']),
         ]);
@@ -149,7 +149,7 @@ class MedicineTransparencyService
             })->values(),
         ];
 
-        AuditService::record('VIEW_PUBLIC_MEDICINES_MONTHLY', null, null, [
+        AuditService::recordOncePerVisitor('VIEW_PUBLIC_MEDICINES_MONTHLY', [
             'reference_month' => $referenceMonth,
             'items_count' => count($result['items']),
         ]);

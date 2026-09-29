@@ -6,11 +6,32 @@ use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AuditService
 {
     private static array $sensitive = ['password', 'remember_token', 'token'];
+
+    /**
+     * Registra a auditoria no maximo UMA vez por visitante (IP) e por acao dentro da
+     * janela informada. Para paginas publicas consultadas o dia inteiro (paineis de TV
+     * fazem polling continuo), gravar cada requisicao enche a tabela de logs sem valor.
+     * O visitante segue rastreavel (IP no registro), mas 1 linha por hora em vez de milhares.
+     */
+    public static function recordOncePerVisitor(
+        string $action,
+        ?array $new = null,
+        int $windowSeconds = 3600
+    ): void {
+        $ip = request()->ip() ?? 'cli';
+
+        if (! Cache::add('audit-once:'.$action.':'.sha1($ip), 1, $windowSeconds)) {
+            return;
+        }
+
+        self::record($action, null, null, $new);
+    }
 
     public static function record(
         string $action,

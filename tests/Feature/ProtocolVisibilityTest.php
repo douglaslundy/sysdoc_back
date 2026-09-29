@@ -182,4 +182,25 @@ class ProtocolVisibilityTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_listagens_informam_quantos_anexos_ativos_cada_protocolo_tem(): void
+    {
+        $admin = User::factory()->create(['profile' => 'admin', 'active' => true]);
+        $com = $this->makeProtocol($admin, $admin);
+        $sem = $this->makeProtocol($admin, $admin);
+
+        foreach ([true, true, false] as $ativo) {
+            ProtocolAttachment::create([
+                'protocol_id' => $com->id, 'user_id' => $admin->id, 'nome_original' => 'a.pdf',
+                'caminho' => 'x/a.pdf', 'mime_type' => 'application/pdf', 'tamanho_bytes' => 1, 'ativo' => $ativo,
+            ]);
+        }
+
+        foreach (['/api/protocolos/caixa-entrada', '/api/protocolos'] as $uri) {
+            $this->app['auth']->forgetGuards();
+            $rows = collect($this->actingAs($admin, 'sanctum')->getJson($uri)->assertOk()->json('data'))->keyBy('id');
+            $this->assertSame(2, (int) $rows[$com->id]['attachments_count'], $uri);
+            $this->assertSame(0, (int) $rows[$sem->id]['attachments_count'], $uri);
+        }
+    }
 }

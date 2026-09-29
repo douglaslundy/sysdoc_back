@@ -37,7 +37,7 @@ class ProtocolController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = $this->baseQuery($request->user());
+        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount());
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
@@ -79,7 +79,7 @@ class ProtocolController extends Controller
 
     public function inbox(Request $request): JsonResponse
     {
-        $query = $this->baseQuery($request->user())->where(function ($q) use ($request) {
+        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount())->where(function ($q) use ($request) {
             $q->where('responsavel_atual_id', $request->user()?->id)
                 ->orWhere('criado_por_id', $request->user()?->id);
 
@@ -727,6 +727,12 @@ class ProtocolController extends Controller
             'comments.user:id,name',
             'attachments.user:id,name',
         ]));
+    }
+
+    /** Contagem de anexos ativos (sem carregar os anexos) para o icone da listagem. */
+    private function activeAttachmentsCount(): array
+    {
+        return ['attachments as attachments_count' => fn ($q) => $q->where('ativo', true)];
     }
 
     private function baseQuery(?User $user)

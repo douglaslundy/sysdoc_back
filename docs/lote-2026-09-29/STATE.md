@@ -8,9 +8,9 @@ alterados + suíte completa antes de marcar como concluída.
 | # | Tarefa | Status | Notas |
 |---|--------|--------|-------|
 | T1 | /queue realizados: nome de quem deu baixa, hora na baixa, datepicker (padrão dia 1 do mês → hoje) | **CONCLUÍDA** (back 344 testes / front 87) | done_by novo; filtro date_from/date_to sobre done_at |
-| T2 | Painel público de medicamentos grava log por requisição | pendente | origem: MedicineTransparencyService::AuditService::record (3 pontos) |
+| T2 | Painel público de medicamentos grava log por requisição | **CONCLUÍDA** (back 348 / front 90) | origem: MedicineTransparencyService::AuditService::record (3 pontos) |
 | T3 | Histórico do cidadão (drawer lateral, mais recente em cima) | pendente | depende de T5 (cobertura de auditoria) |
-| T4 | /protocolo/[id] botão voltar + ícone de anexo na caixa de entrada | pendente | inbox precisa de attachments_count |
+| T4 | /protocolo/[id] botão voltar + ícone de anexo na caixa de entrada | **CONCLUÍDA** | inbox precisa de attachments_count |
 | T5 | Auditoria: CRUD completo + ações especiais em todos os endpoints, com desempenho | pendente | levantar lacunas, corrigir |
 | T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | pendente | modal de erro só fecha no botão |
 | T7 | Fiscalizações: nº de protocolo, histórico de movimentação, PDF interno | pendente | |
@@ -24,4 +24,6 @@ alterados + suíte completa antes de marcar como concluída.
 
 ## Log de execução
 (preencher abaixo, mais recente em cima)
+- T4 concluída: attachments_count (anexos ativos) em /protocolos e caixa-entrada; ícone paperclip; botão Voltar (history.back, fallback caixa-entrada). Testes: ProtocolVisibilityTest, tests/protocolo.
+- T2 concluída: AuditService::recordOncePerVisitor (1 log/IP/tipo/hora) nos 3 pontos do painel público. Teste: PublicMedicinesAuditThrottleTest.
 - T1 concluída: migration `2026_09_29_110000_add_done_by_to_queue_table` (done_by), filtro date_from/date_to em done_at, resource com done_by_user, tela com Baixa por/hora/datepickers (padrão dia 1 do mês → hoje). Testes: QueueDoneByAndRangeTest, tests/queue/*.
