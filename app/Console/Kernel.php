@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('kanban:arquivar-concluidas')->dailyAt('02:00');
+        $schedule->command('logs:limpar-erros')->dailyAt('03:00');
     }
 
     /**

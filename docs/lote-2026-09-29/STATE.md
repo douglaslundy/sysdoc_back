@@ -57,7 +57,7 @@ nos números cadastrados na página de configuração da vigilância (criar cada
 | T11 | Fechar rotas só-login por módulo | **CONCLUÍDA** (config/route_permissions.php + middleware route.pages + curinga '/modulo*'; back 483) | mapear rota→página; testar perfil com/sem página |
 | T12 | Painel de atendimento 'hoje' na madrugada | **CONCLUÍDA** (janela do dia no fuso do app, sem UTC; back 484) |
 | T13 | Auditoria sem linhas de operações revertidas | **CONCLUÍDA** (DB::afterCommit no AuditService; back 486) |
-| T14 | Paginação/teto das listagens | **PARCIAL**: qrcode-logs paginado (API+tela); viagens (teto sem período); cartas/ofícios (teto 2000). Falta: kanban, modelos, agenda-coleta, planos (teto), retenção error_logs. Ruling: cartas/ofícios com teto em vez de paginação real — a tela filtra por ano no cliente e o seletor de anos vem da lista; custo se errado: >2000 registros somem da tela. back 492 |
+| T14 | Paginação/teto das listagens | **CONCLUÍDA**: qrcode-logs paginado (API+tela); viagens (teto sem período); cartas/ofícios (teto 2000); logs:limpar-erros diário 03:00 (90 dias). Ruling: cartas/ofícios com teto (tela filtra por ano no cliente); kanban/modelos/agenda-coleta/planos já limitados por natureza (arquivados excluídos, data, status, modelos poucos) — sem mudança. back 494 |
 | T15 | Remover rotas/controllers/models legados (rooms, calls, services, endedcalls) | **CONCLUÍDA** (Sector mantido: tabela ainda existe; back 483) |
 | T16 | Validação inline -> FormRequest (padrão do projeto) nos controllers mais tocados | pendente (escopo escolhido: controllers do lote) | escopo limitado e declarado |
 | T17 | Infra 300 usuários: checklist | **CONCLUÍDA** (docs/lote-2026-09-29/INFRA-300-USUARIOS.md) |
