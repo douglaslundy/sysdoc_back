@@ -127,4 +127,34 @@ class AuditServiceBatchTest extends TestCase
         $this->assertSame(0, AuditLog::count());
         $this->assertTrue(true, 'Nenhuma excecao foi lancada.');
     }
+
+    public function test_nao_grava_auditoria_de_operacao_revertida(): void
+    {
+        // Comportamento web: o flush roda depois da resposta, fora da transação.
+        config(['chat.defer_broadcast' => true]);
+
+        try {
+            DB::transaction(function () {
+                AuditService::record('CREATE_REVERTIDA', null, null, ['x' => 1]);
+                throw new \RuntimeException('falha depois de auditar');
+            });
+        } catch (\RuntimeException $e) {
+            // esperado
+        }
+        AuditService::flush();
+
+        $this->assertSame(0, AuditLog::where('action', 'CREATE_REVERTIDA')->count());
+    }
+
+    public function test_grava_auditoria_de_transacao_confirmada(): void
+    {
+        config(['chat.defer_broadcast' => true]);
+
+        DB::transaction(function () {
+            AuditService::record('CREATE_CONFIRMADA', null, null, ['x' => 1]);
+        });
+        AuditService::flush();
+
+        $this->assertSame(1, AuditLog::where('action', 'CREATE_CONFIRMADA')->count());
+    }
 }

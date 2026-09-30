@@ -56,7 +56,7 @@ nos números cadastrados na página de configuração da vigilância (criar cada
 | T10 | Aviso WhatsApp aos profissionais da Vigilância (denúncia nova + fiscalização interna) + cadastro nome/telefone na config | **CONCLUÍDA** (migration 2026_09_30_130000; msg só protocolo/assunto/local) | usa WhatsappEvolutionService + AfterResponse |
 | T11 | Fechar rotas só-login por módulo | **CONCLUÍDA** (config/route_permissions.php + middleware route.pages + curinga '/modulo*'; back 483) | mapear rota→página; testar perfil com/sem página |
 | T12 | Painel de atendimento 'hoje' na madrugada | **CONCLUÍDA** (janela do dia no fuso do app, sem UTC; back 484) |
-| T13 | Auditoria: não gravar linha de operação revertida (afterCommit) | pendente | |
+| T13 | Auditoria sem linhas de operações revertidas | **CONCLUÍDA** (DB::afterCommit no AuditService; back 486) |
 | T14 | Paginação server-side das listagens sem limite (+ telas) | pendente | letters, ordinances, qrcode-logs, trips, kanban... |
 | T15 | Remover rotas/controllers/models legados (rooms, calls, services, endedcalls) | **CONCLUÍDA** (Sector mantido: tabela ainda existe; back 483) |
 | T16 | Validação inline -> FormRequest (padrão do projeto) nos controllers mais tocados | pendente | escopo limitado e declarado |

@@ -9,6 +9,7 @@ use App\Support\AfterResponse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AuditService
@@ -59,7 +60,7 @@ class AuditService
         try {
             $user = $actingUser ?? Auth::user();
 
-            self::$buffer[] = [
+            $row = [
                 'user_id' => $user?->id,
                 'user_name' => $user?->name ?? 'Sistema',
                 'action' => $action,
@@ -75,10 +76,9 @@ class AuditService
                 'created_at' => now(),
             ];
 
-            if (self::$scheduledFor?->get() !== app()) {
-                self::$scheduledFor = \WeakReference::create(app());
-                AfterResponse::run(fn () => self::flush());
-            }
+            // Dentro de transação, a linha só vale se ela for confirmada: operação revertida
+            // não pode deixar rastro de auditoria de algo que não aconteceu.
+            DB::afterCommit(fn () => self::enqueue($row));
         } catch (\Throwable $e) {
             // Auditoria não pode quebrar a aplicação, mas a falha precisa ser rastreável.
             Log::error('Falha ao gravar auditoria.', [
@@ -86,6 +86,16 @@ class AuditService
                 'model_type' => $model ? class_basename($model) : null,
                 'error' => $e->getMessage(),
             ]);
+        }
+    }
+
+    private static function enqueue(array $row): void
+    {
+        self::$buffer[] = $row;
+
+        if (self::$scheduledFor?->get() !== app()) {
+            self::$scheduledFor = \WeakReference::create(app());
+            AfterResponse::run(fn () => self::flush());
         }
     }
 
