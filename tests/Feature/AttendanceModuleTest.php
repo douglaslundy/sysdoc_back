@@ -204,7 +204,7 @@ class AttendanceModuleTest extends TestCase
             ->postJson("/api/attendance/service/{$oldTicketId}/start")
             ->assertStatus(200);
 
-        $yesterday = now('America/Sao_Paulo')->subDay()->setTime(14, 0)->utc();
+        $yesterday = now()->subDay()->setTime(14, 0);
         DB::table('attendance_tickets')
             ->where('id', $oldTicketId)
             ->update([
@@ -236,6 +236,30 @@ class AttendanceModuleTest extends TestCase
             $this->assertNotContains($oldTicketCode, array_column($panel->json('currentInService'), 'ticketCode'));
             $this->assertNotContains($oldTicketCode, array_column($panel->json('lastCalls'), 'ticketCode'));
         }
+    }
+
+    public function test_painel_considera_o_dia_de_brasilia_na_madrugada(): void
+    {
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-09-30 22:00:00', 'America/Sao_Paulo'));
+        $ontem = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/attendance/tickets', ['clientId' => $this->createClient('100.000.000-31')->id, 'roomId' => $this->room->id])
+            ->json('id');
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/attendance/queue/{$ontem}/call", ['roomId' => $this->room->id])
+            ->assertStatus(200);
+
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-01 01:30:00', 'America/Sao_Paulo'));
+        $hoje = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/attendance/tickets', ['clientId' => $this->createClient('100.000.000-32')->id, 'roomId' => $this->room->id])
+            ->json('id');
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson("/api/attendance/queue/{$hoje}/call", ['roomId' => $this->room->id])
+            ->assertStatus(200);
+
+        $panel = $this->getJson('/api/attendance/panel/state')->assertStatus(200);
+
+        $this->assertNotNull($panel->json('currentCall'));
+        $this->assertSame([], $panel->json('lastCalls'), 'a chamada de ontem à noite não pode aparecer hoje');
     }
 
     public function test_lista_atendimentos_com_filtros_de_sala_usuario_status_e_periodo(): void

@@ -9,8 +9,10 @@ class AttendancePanelService
 {
     public function state(): array
     {
-        $startOfDay = now('America/Sao_Paulo')->startOfDay()->utc();
-        $endOfDay = now('America/Sao_Paulo')->endOfDay()->utc();
+        // As colunas guardam o horário no fuso do app (America/Sao_Paulo); converter para UTC
+        // deslocava a janela em 3h e escondia as chamadas entre 00:00 e 03:00.
+        $startOfDay = now()->startOfDay();
+        $endOfDay = now()->endOfDay();
 
         $latestCall = AttendanceCall::query()
             ->with(['ticket', 'client', 'room', 'user'])
