@@ -33,7 +33,7 @@ class StoreQueueRequest extends BaseApiFormRequest
             'done' => ['boolean'],
             'date_of_realized' => ['nullable', 'date'],
             'urgency' => ['required', 'boolean'],
-            'obs' => ['nullable', 'string', 'max:200'],
+            'obs' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

@@ -46,7 +46,7 @@ class UpdateQueueRequest extends BaseApiFormRequest
             'done' => ['boolean'],
             'date_of_realized' => ['nullable', 'date'],
             'urgency' => ['sometimes', 'required', 'boolean'],
-            'obs' => ['nullable', 'string', 'max:200'],
+            'obs' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }
