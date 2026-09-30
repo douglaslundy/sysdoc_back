@@ -112,6 +112,7 @@ Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']
 Route::middleware('throttle:10,1')->post('/consulta-exame', [ConsultaPublicaController::class, 'consultar']);
 // Denúncia pública de vigilância sanitária (sem login)
 Route::middleware('throttle:denuncia-create')->post('/public/denuncias', [DenunciaPublicaController::class, 'store']);
+Route::middleware('throttle:denuncia-consulta')->post('/public/denuncias/consulta', [DenunciaPublicaController::class, 'consultar']);
 Route::middleware('throttle:10,1')->post('/consulta-exame/pdf/{protocolo}', [ConsultaPublicaController::class, 'downloadPdf']);
 
 // Transparência pública - Farmácia básica (Lei 2488)

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ConsultaDenunciaRequest;
 use App\Http\Requests\StoreDenunciaRequest;
 use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoAttachment;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,6 +24,17 @@ class DenunciaPublicaController extends Controller
     private const SENHA_TAMANHO = 8;
 
     private const DISK = 'private';
+
+    private const MAX_FALHAS = 5;
+
+    private const BLOQUEIO_SEGUNDOS = 900; // 15 minutos
+
+    private const TITULOS = [
+        'denuncia_recebida' => 'Denúncia recebida',
+        'mensagem_publica' => 'Mensagem ao denunciante',
+        'observacao' => 'Atualização',
+        'situacao_alterada' => 'Situação alterada',
+    ];
 
     public function __construct(private FiscalizacaoTimeline $timeline)
     {
@@ -85,6 +98,62 @@ class DenunciaPublicaController extends Controller
         });
 
         return response()->json($this->recibo($fiscalizacao->protocolo, $senha), 201);
+    }
+
+    /**
+     * Consulta pública por protocolo + senha. Resposta idêntica para protocolo inexistente e
+     * senha errada; 5 erros no mesmo protocolo bloqueiam por 15 minutos.
+     */
+    public function consultar(ConsultaDenunciaRequest $request): JsonResponse
+    {
+        $protocolo = strtoupper(trim((string) $request->input('protocolo')));
+        $senha = strtoupper(trim((string) $request->input('senha')));
+        $chaveFalhas = 'denuncia-falhas:'.$protocolo;
+
+        if ((int) Cache::get($chaveFalhas, 0) >= self::MAX_FALHAS) {
+            return response()->json([
+                'error' => 'Muitas tentativas. Tente novamente em alguns minutos.',
+            ], 429);
+        }
+
+        $fiscalizacao = Fiscalizacao::query()
+            ->where('protocolo', $protocolo)
+            ->where('origem', 'denuncia')
+            ->whereNotNull('senha_consulta_hash')
+            ->first();
+
+        // O hash fica oculto no model; lê o valor bruto para conferir a senha.
+        $confere = $fiscalizacao && Hash::check($senha, (string) $fiscalizacao->getRawOriginal('senha_consulta_hash'));
+
+        if (! $confere) {
+            Cache::add($chaveFalhas, 0, self::BLOQUEIO_SEGUNDOS);
+            Cache::increment($chaveFalhas);
+
+            return response()->json(['error' => 'Protocolo ou senha inválidos.'], 404);
+        }
+
+        Cache::forget($chaveFalhas);
+
+        $movimentacoes = $fiscalizacao->movimentacoes()
+            ->where('publico', true)
+            ->reorder('id', 'desc')
+            ->get()
+            ->map(fn ($mov) => [
+                'titulo' => self::TITULOS[$mov->acao] ?? 'Atualização',
+                'descricao' => $mov->descricao,
+                'data' => $mov->created_at?->toISOString(),
+            ])
+            ->values();
+
+        return response()->json([
+            'protocolo' => $fiscalizacao->protocolo,
+            // Não expõe o resultado interno: só se já foi apurada ou não.
+            'situacao' => $fiscalizacao->resultado === 'Pendente de apuração' ? 'Pendente de apuração' : 'Apurada',
+            'assunto' => $fiscalizacao->assunto,
+            'local_endereco' => $fiscalizacao->local_endereco,
+            'registrada_em' => $fiscalizacao->created_at?->toISOString(),
+            'movimentacoes' => $movimentacoes,
+        ]);
     }
 
     private function recibo(string $protocolo, string $senha): array

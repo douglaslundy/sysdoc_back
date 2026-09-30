@@ -147,6 +147,15 @@ class RouteServiceProvider extends ServiceProvider
                 ], 429));
         });
 
+        // Consulta da denúncia: 10 por minuto por IP (o bloqueio por protocolo fica no controller).
+        RateLimiter::for('denuncia-consulta', function (Request $request) {
+            return Limit::perMinute(10)
+                ->by('denuncia-consulta|'.$request->ip())
+                ->response(fn () => response()->json([
+                    'error' => 'Muitas consultas. Aguarde um instante e tente novamente.',
+                ], 429));
+        });
+
         RateLimiter::for('forgot-password', function (Request $request) {
             $email = (string) $request->input('email', '');
             $key = sprintf('forgot-password|%s|%s', mb_strtolower(trim($email)), $request->ip());
