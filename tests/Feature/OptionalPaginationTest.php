@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Letter;
 use App\Models\QRCodeLog;
 use App\Models\Trip;
 use App\Models\User;
@@ -20,7 +21,7 @@ class OptionalPaginationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->grantPages('user', ['/qrcodelogs', '/trips']);
+        $this->grantPages('user', ['/qrcodelogs', '/trips', '/letters']);
         $this->user = User::factory()->create(['profile' => 'user', 'active' => true]);
     }
 
@@ -117,5 +118,21 @@ class OptionalPaginationTest extends TestCase
             ->getJson('/api/trips?date_begin=2026-01-01&date_end=2026-01-31');
 
         $resposta->assertOk()->assertJsonCount(3);
+    }
+
+    public function test_cartas_sem_page_devolvem_as_mais_recentes_dentro_do_teto(): void
+    {
+        foreach ([1, 2, 3] as $numero) {
+            Letter::create([
+                'id_user' => $this->user->id, 'number' => $numero, 'subject_matter' => "Assunto {$numero}",
+                'sender' => 'Secretaria', 'recipient' => 'Diretor',
+            ]);
+        }
+        config(['pagination.list_cap' => 2]);
+
+        $resposta = $this->actingAs($this->user, 'sanctum')->getJson('/api/letters');
+
+        $resposta->assertOk()->assertJsonCount(2);
+        $this->assertSame([3, 2], array_column($resposta->json(), 'number'));
     }
 }

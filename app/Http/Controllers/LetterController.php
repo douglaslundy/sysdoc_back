@@ -30,7 +30,8 @@ class LetterController extends Controller
 
     public function index()
     {
-        $letters = Letter::with(['user'])->withCount('attachments')->orderBy('id', 'desc')->get();
+        $letters = Letter::with(['user'])->withCount('attachments')->orderBy('id', 'desc')
+            ->limit((int) config('pagination.list_cap', 2000))->get();
 
         return $this->withProtocolState($letters);
     }

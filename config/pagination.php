@@ -6,4 +6,7 @@ return [
 
     // Teto de linhas quando a listagem é chamada sem ?page= (formato antigo, lista simples).
     'legacy_cap' => (int) env('PAGINATION_LEGACY_CAP', 500),
+
+    // Teto de segurança das listagens que a tela filtra por ano no cliente (cartas e ofícios).
+    'list_cap' => (int) env('PAGINATION_LIST_CAP', 2000),
 ];

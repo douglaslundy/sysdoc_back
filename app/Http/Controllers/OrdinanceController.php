@@ -19,6 +19,7 @@ class OrdinanceController extends Controller
         return Ordinance::with(['user'])
             ->withCount('attachments')
             ->orderBy('id', 'desc')
+            ->limit((int) config('pagination.list_cap', 2000))
             ->get();
     }
 
