@@ -129,6 +129,16 @@ class User extends Authenticatable implements JWTSubject
         return (bool) $this->accessProfile()->value('client_report_view_enabled');
     }
 
+    /** Ver o historico (auditoria) de um cidadao: permissao propria por perfil; admin sempre. */
+    public function canViewClientHistory(): bool
+    {
+        if ($this->profile === 'admin') {
+            return true;
+        }
+
+        return (bool) $this->accessProfile()->value('client_history_view_enabled');
+    }
+
     public function chatDisplayName(): string
     {
         $preferred = trim((string) ($this->preferred_name ?? ''));

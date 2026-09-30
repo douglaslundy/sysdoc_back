@@ -21,6 +21,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatRealtimeConfigController;
 use App\Http\Controllers\CidadaoAcsController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientHistoryController;
 use App\Http\Controllers\ConformidadeCidadaoController;
 use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardController;
@@ -466,6 +467,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('/clients/buscar-cpf-cns', [ClientController::class, 'buscarPorCpfCns']);
         Route::get('/clients/select', [ClientController::class, 'select']);
+        Route::get('/clients/{client}/historico', [ClientHistoryController::class, 'index'])->whereNumber('client');
         Route::middleware('admin')->group(function () {
             Route::get('/clients/duplicates', [ClientController::class, 'duplicateCandidates']);
             Route::delete('/clients/duplicates', [ClientController::class, 'destroyDuplicateCandidates']);

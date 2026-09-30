@@ -28,6 +28,7 @@ class AccessProfileController extends Controller
             'almoxarifado_deliver_enabled' => 'nullable|boolean',
             'client_trips_view_enabled' => 'nullable|boolean',
             'client_report_view_enabled' => 'nullable|boolean',
+            'client_history_view_enabled' => 'nullable|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
@@ -43,6 +44,7 @@ class AccessProfileController extends Controller
             'almoxarifado_deliver_enabled' => $request->boolean('almoxarifado_deliver_enabled'),
             'client_trips_view_enabled' => $request->boolean('client_trips_view_enabled'),
             'client_report_view_enabled' => $request->boolean('client_report_view_enabled'),
+            'client_history_view_enabled' => $request->boolean('client_history_view_enabled'),
         ]);
 
         if ($request->has('page_ids')) {
@@ -80,6 +82,7 @@ class AccessProfileController extends Controller
             'almoxarifado_deliver_enabled' => 'sometimes|boolean',
             'client_trips_view_enabled' => 'sometimes|boolean',
             'client_report_view_enabled' => 'sometimes|boolean',
+            'client_history_view_enabled' => 'sometimes|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
         ]);
@@ -95,6 +98,7 @@ class AccessProfileController extends Controller
             'almoxarifado_deliver_enabled',
             'client_trips_view_enabled',
             'client_report_view_enabled',
+            'client_history_view_enabled',
         ]));
 
         if ($request->has('page_ids')) {
@@ -145,6 +149,7 @@ class AccessProfileController extends Controller
                     'almoxarifado_deliver' => $user->canUseAlmoxarifadoAction('deliver'),
                     'client_trips_view' => $user->canViewClientTrips(),
                     'client_report_view' => $user->canViewClientReport(),
+                    'client_history_view' => $user->canViewClientHistory(),
                 ],
             ]);
         }
@@ -214,6 +219,7 @@ class AccessProfileController extends Controller
                 'almoxarifado_deliver' => $user->canUseAlmoxarifadoAction('deliver'),
                 'client_trips_view' => $user->canViewClientTrips(),
                 'client_report_view' => $user->canViewClientReport(),
+                    'client_history_view' => $user->canViewClientHistory(),
             ],
         ]);
     }
