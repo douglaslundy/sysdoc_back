@@ -109,6 +109,9 @@ Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']
 // Consulta pública de resultado de exame (throttle: 10 req/min por IP)
 Route::middleware('throttle:10,1')->post('/consulta-exame', [ConsultaPublicaController::class, 'consultar']);
 // Denúncia pública de vigilância sanitária (sem login)
+Route::middleware('throttle:denuncia-create')->post('/public/petitions', [DenunciaPublicaController::class, 'store']);
+Route::middleware('throttle:denuncia-consulta')->post('/public/petitions/consulta', [DenunciaPublicaController::class, 'consultar']);
+// Rotas antigas (links/clientes já em uso)
 Route::middleware('throttle:denuncia-create')->post('/public/denuncias', [DenunciaPublicaController::class, 'store']);
 Route::middleware('throttle:denuncia-consulta')->post('/public/denuncias/consulta', [DenunciaPublicaController::class, 'consultar']);
 Route::middleware('throttle:10,1')->post('/consulta-exame/pdf/{protocolo}', [ConsultaPublicaController::class, 'downloadPdf']);

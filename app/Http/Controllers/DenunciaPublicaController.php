@@ -57,6 +57,7 @@ class DenunciaPublicaController extends Controller
             $fiscalizacao = Fiscalizacao::create([
                 'resultado' => 'Pendente de apuração',
                 'origem' => 'denuncia',
+                'motivo_id' => $request->input('motivo_id'),
                 'assunto' => $request->input('assunto'),
                 'descricao_denuncia' => $request->input('descricao_denuncia'),
                 'local_endereco' => $request->input('local_endereco'),
@@ -121,6 +122,7 @@ class DenunciaPublicaController extends Controller
         }
 
         $fiscalizacao = Fiscalizacao::query()
+            ->with('motivo:id,nome')
             ->where('protocolo', $protocolo)
             ->where('origem', 'denuncia')
             ->whereNotNull('senha_consulta_hash')
@@ -153,6 +155,7 @@ class DenunciaPublicaController extends Controller
             'protocolo' => $fiscalizacao->protocolo,
             // Não expõe o resultado interno: só se já foi apurada ou não.
             'situacao' => $fiscalizacao->resultado === 'Pendente de apuração' ? 'Pendente de apuração' : 'Apurada',
+            'motivo' => $fiscalizacao->motivo?->nome,
             'assunto' => $fiscalizacao->assunto,
             'local_endereco' => $fiscalizacao->local_endereco,
             'registrada_em' => $fiscalizacao->created_at?->toISOString(),
@@ -165,7 +168,7 @@ class DenunciaPublicaController extends Controller
         return [
             'protocolo' => $protocolo,
             'senha' => $senha,
-            'url_consulta' => rtrim((string) config('app.frontend_url'), '/').'/denuncia/consulta?protocolo='.$protocolo,
+            'url_consulta' => rtrim((string) config('app.frontend_url'), '/').'/petition/track?protocolo='.$protocolo,
         ];
     }
 

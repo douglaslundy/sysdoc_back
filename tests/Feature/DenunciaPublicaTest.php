@@ -66,7 +66,7 @@ class DenunciaPublicaTest extends TestCase
         $response = $this->enviar($this->payload())->assertCreated();
 
         $this->assertSame(
-            'https://sistema.exemplo.gov.br/denuncia/consulta?protocolo='.$response->json('protocolo'),
+            'https://sistema.exemplo.gov.br/petition/track?protocolo='.$response->json('protocolo'),
             $response->json('url_consulta')
         );
         $this->assertStringNotContainsString($response->json('senha'), $response->json('url_consulta'));

@@ -64,8 +64,11 @@ class VigilanciaAvisoService
         $link = rtrim((string) config('app.frontend_url'), '/').'/fiscalizacoes';
 
         if ($f->origem === 'denuncia') {
-            return "🔔 Nova denúncia recebida\n"
+            $f->loadMissing('motivo');
+
+            return "🔔 Nova petição recebida\n"
                 ."Protocolo: {$f->protocolo}\n"
+                .'Motivo: '.($f->motivo?->nome ?: '—')."\n"
                 .'Assunto: '.($f->assunto ?: '—')."\n"
                 .'Local: '.($f->local_endereco ?: '—')."\n"
                 ."Acesse: {$link}";

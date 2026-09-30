@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PeticaoMotivo;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-/** Denúncia pública: qualquer pessoa pode enviar; identificação é opcional. */
+/** Petição pública (denúncia, vistoria...): qualquer pessoa pode enviar; identificação é opcional. */
 class StoreDenunciaRequest extends FormRequest
 {
     public const MAX_FILES = 5;
@@ -18,7 +20,16 @@ class StoreDenunciaRequest extends FormRequest
 
     public function rules(): array
     {
+        // O motivo é obrigatório assim que existir algum motivo ativo cadastrado; antes disso
+        // (transição, até o admin cadastrar) a petição continua sendo aceita sem motivo.
+        $haMotivos = PeticaoMotivo::where('ativo', true)->exists();
+
         return [
+            'motivo_id' => [
+                $haMotivos ? 'required' : 'nullable',
+                'integer',
+                Rule::exists('peticao_motivos', 'id')->where('ativo', true),
+            ],
             'assunto' => ['required', 'string', 'max:200'],
             'descricao_denuncia' => ['required', 'string', 'max:4000'],
             'local_endereco' => ['required', 'string', 'max:255'],
