@@ -9,9 +9,9 @@ alterados + suíte completa antes de marcar como concluída.
 |---|--------|--------|-------|
 | T1 | /queue realizados: nome de quem deu baixa, hora na baixa, datepicker (padrão dia 1 do mês → hoje) | **CONCLUÍDA** (back 344 testes / front 87) | done_by novo; filtro date_from/date_to sobre done_at |
 | T2 | Painel público de medicamentos grava log por requisição | **CONCLUÍDA** (back 348 / front 90) | origem: MedicineTransparencyService::AuditService::record (3 pontos) |
-| T3 | Histórico do cidadão (drawer lateral, mais recente em cima) | AGUARDANDO APROVAÇÃO DO DESENHO (brainstorming T5+T3) | depende de T5 (cobertura de auditoria) |
+| T3 | Histórico do cidadão (drawer lateral, mais recente em cima) | **CONCLUÍDA** (back 394 / front 101) | depende de T5 (cobertura de auditoria) |
 | T4 | /protocolo/[id] botão voltar + ícone de anexo na caixa de entrada | **CONCLUÍDA** | inbox precisa de attachments_count |
-| T5 | Auditoria: CRUD completo + ações especiais em todos os endpoints, com desempenho | AGUARDANDO APROVAÇÃO DO DESENHO | levantar lacunas, corrigir |
+| T5 | Auditoria: CRUD completo + ações especiais em todos os endpoints, com desempenho | **CONCLUÍDA** (back 394 / front 101) | levantar lacunas, corrigir |
 | T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | pendente | modal de erro só fecha no botão |
 | T7 | Fiscalizações: nº de protocolo, histórico de movimentação, PDF interno | pendente | |
 | T8 | Denúncia pública + consulta por protocolo/senha + PDF do cidadão | pendente | depende de T7 |
@@ -25,6 +25,7 @@ alterados + suíte completa antes de marcar como concluída.
 
 ## Log de execução
 (preencher abaixo, mais recente em cima)
+- T5+T3 concluídas (plano Tasks 1-9). Front: HistoryDrawer genérico (reutilizável na T7), ClientHistoryDrawer, botão Histórico em Cidadãos (capability canViewClientHistory), switch em Perfis. Deferred minor: auditoria bufferizada não acompanha rollback de transação (linha pode existir para operação revertida) — avaliar DB::afterCommit. Migrations a rodar: 2026_09_29_100000/110000 (fila) + 2026_09_30_000001/2/3 (auditoria). Próximo: T7 (brainstorming), T8, T6, T9.
 - T5/T3 backend (plano Tasks 1-7) concluído e commitado: client_id em audit_logs + AuditContext; AuditService em lote/máscara/viewOncePer; AuditableObserver + config/audit.php (inclui TripClient); AuditDescriber; ClientHistoryController + client_history_view_enabled; backfill. Ruling: passageiros de viagem auditados via observer de TripClient (tem client_id) em vez de ações TRIP_CLIENT_* no controller — menos código, cobre também replicação. Migrations novas: 2026_09_30_000001/2/3. Falta: frontend (Task 8) e regressão final (Task 9).
 - Spec T5+T3 aprovado pelo usuário (docs/superpowers/specs/2026-09-29-auditoria-e-historico-do-cidadao-design.md). Escrevendo plano em docs/superpowers/plans/2026-09-29-auditoria-e-historico-do-cidadao.md.
 - T9 adicionada ao backlog a pedido do usuário (KPI/gráficos de fiscalizações no dashboard da vigilância).
