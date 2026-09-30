@@ -15,6 +15,7 @@ return [
         \App\Models\DocumentType::class,
         // Passageiros de viagem: alimenta o historico do cidadao (tem client_id).
         \App\Models\TripClient::class,
+        \App\Models\VigilanciaContatoWhatsapp::class,
         \App\Models\KanbanTask::class,
         \App\Models\SystemNotice::class,
         \App\Models\NotificationChannelConfig::class,

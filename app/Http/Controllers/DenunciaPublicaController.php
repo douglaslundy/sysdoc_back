@@ -8,6 +8,7 @@ use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoAttachment;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
+use App\Services\Fiscalizacao\VigilanciaAvisoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +37,7 @@ class DenunciaPublicaController extends Controller
         'situacao_alterada' => 'Situação alterada',
     ];
 
-    public function __construct(private FiscalizacaoTimeline $timeline)
+    public function __construct(private FiscalizacaoTimeline $timeline, private VigilanciaAvisoService $aviso)
     {
     }
 
@@ -96,6 +97,9 @@ class DenunciaPublicaController extends Controller
 
             return $fiscalizacao;
         });
+
+        // Avisa os profissionais da Vigilância (WhatsApp) depois da resposta; nunca leva dados do denunciante.
+        $this->aviso->notificarNova($fiscalizacao);
 
         return response()->json($this->recibo($fiscalizacao->protocolo, $senha), 201);
     }

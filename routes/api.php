@@ -88,6 +88,7 @@ use App\Http\Controllers\UserEquipeApsController;
 use App\Http\Controllers\UserSpecialityPermissionController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VigilanciaConfigController;
+use App\Http\Controllers\VigilanciaContatoWhatsappController;
 use App\Http\Controllers\VisitaAcsController;
 use App\Http\Controllers\WhatsappConfigController;
 use Illuminate\Http\Request;
@@ -591,6 +592,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('admin')->group(function () {
         Route::get('/vigilancia/config', [VigilanciaConfigController::class, 'show']);
         Route::put('/vigilancia/config', [VigilanciaConfigController::class, 'update']);
+        // Profissionais que recebem avisos por WhatsApp (nome + telefone)
+        Route::apiResource('vigilancia/contatos-whatsapp', VigilanciaContatoWhatsappController::class)
+            ->except(['show'])
+            ->parameters(['contatos-whatsapp' => 'contato']);
     });
 
     // Pharmacy / medicines transparency

@@ -8,13 +8,14 @@ use App\Http\Resources\FiscalizacaoResource;
 use App\Models\Fiscalizacao;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
+use App\Services\Fiscalizacao\VigilanciaAvisoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FiscalizacaoController extends Controller
 {
-    public function __construct(private FiscalizacaoTimeline $timeline)
+    public function __construct(private FiscalizacaoTimeline $timeline, private VigilanciaAvisoService $aviso)
     {
     }
 
@@ -73,6 +74,7 @@ class FiscalizacaoController extends Controller
         $fiscalizacao->refresh(); // traz os padrões do banco (ex.: origem = interna)
         $this->timeline->registrar($fiscalizacao, 'criada', 'Fiscalização criada', false, $request->user()->id);
         $fiscalizacao->load(['estabelecimento', 'fiscal']);
+        $this->aviso->notificarNova($fiscalizacao);
 
         return response()->json(new FiscalizacaoResource($fiscalizacao), 201);
     }

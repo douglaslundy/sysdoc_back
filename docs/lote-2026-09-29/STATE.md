@@ -53,7 +53,7 @@ nos números cadastrados na página de configuração da vigilância (criar cada
 
 | # | Tarefa | Status | Notas |
 |---|--------|--------|-------|
-| T10 | Aviso WhatsApp aos profissionais da Vigilância (denúncia nova) + cadastro nome/telefone na config | EM BRAINSTORMING | usa WhatsappEvolutionService + AfterResponse |
+| T10 | Aviso WhatsApp aos profissionais da Vigilância (denúncia nova + fiscalização interna) + cadastro nome/telefone na config | **CONCLUÍDA** (migration 2026_09_30_130000; msg só protocolo/assunto/local) | usa WhatsappEvolutionService + AfterResponse |
 | T11 | Fechar rotas só-login (305) por módulo com page.permission | pendente | mapear rota→página; testar perfil com/sem página |
 | T12 | Painel de atendimento de madrugada (fuso do "hoje") | pendente | teste falha 00:00-03:00 BRT |
 | T13 | Auditoria: não gravar linha de operação revertida (afterCommit) | pendente | |
