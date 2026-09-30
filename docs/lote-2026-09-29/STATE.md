@@ -12,7 +12,7 @@ alterados + suíte completa antes de marcar como concluída.
 | T3 | Histórico do cidadão (drawer lateral, mais recente em cima) | **CONCLUÍDA** (back 394 / front 101) | depende de T5 (cobertura de auditoria) |
 | T4 | /protocolo/[id] botão voltar + ícone de anexo na caixa de entrada | **CONCLUÍDA** | inbox precisa de attachments_count |
 | T5 | Auditoria: CRUD completo + ações especiais em todos os endpoints, com desempenho | **CONCLUÍDA** (back 394 / front 101) | levantar lacunas, corrigir |
-| T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | EM ANDAMENTO (causas confirmadas R1-R3; corrigindo) | modal de erro só fecha no botão |
+| T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | **CONCLUÍDA** (back 433 / front 145) | modal de erro só fecha no botão |
 | T7 | Fiscalizações: nº de protocolo, histórico de movimentação, PDF interno | **CONCLUÍDA** (Parte A do plano; back 414 / front 110) | |
 | T8 | Denúncia pública + consulta por protocolo/senha + PDF do cidadão | **CONCLUÍDA** (back 431 / front 121) | depende de T7 |
 | T9 | Dashboard da Vigilância Sanitária: gráficos/cards de KPI sobre as fiscalizações | BACKLOG (pedido em 2026-09-29, executar depois de T7/T8) | usa dados de fiscalizações; aplicar skill `dataviz`; brainstorming se houver dúvida de desenho |
@@ -25,6 +25,8 @@ alterados + suíte completa antes de marcar como concluída.
 
 ## Log de execução
 (preencher abaixo, mais recente em cima)
+- T6 concluída: migration 2026_09_30_120000 (queue.obs 1000), obs seguro no front (buildConclusionObs), diálogo bloqueante BlockingErrorDialog (só fecha no botão) no modal de baixa e na exclusão, mensagens de erro claras (queueErrors.js), recarga da lista após baixa (buildListParams/reloadQueues), botão Gravar desabilitado enquanto grava. Botão Excluir da fila segue desabilitado (decisão de produto existente).
+- Próximo: T9 (KPIs de fiscalizações no dashboard da vigilância) — explorar dashboard existente e apresentar desenho.
 - T6 investigação: R1 reducer editQueue mantém o item na lista (filtro Realizado=NÃO) -> refetch após baixa; R2 obs = obs+'
 '+conclusão pode virar 'null
 undefined' e passar de 200 chars (UpdateQueueRequest obs max:200 => 422, baixa não grava) -> alargar obs p/ 1000 + montar obs seguro; R3 erro em faixa que some em 12s, sem botão, modal fecha ao clicar fora, data.message quebra em erro de rede -> diálogo bloqueante com botão. Também: proteger duplo clique.
