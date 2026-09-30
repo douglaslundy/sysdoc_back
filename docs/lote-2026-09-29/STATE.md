@@ -15,6 +15,7 @@ alterados + suíte completa antes de marcar como concluída.
 | T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | pendente | modal de erro só fecha no botão |
 | T7 | Fiscalizações: nº de protocolo, histórico de movimentação, PDF interno | pendente | |
 | T8 | Denúncia pública + consulta por protocolo/senha + PDF do cidadão | pendente | depende de T7 |
+| T9 | Dashboard da Vigilância Sanitária: gráficos/cards de KPI sobre as fiscalizações | BACKLOG (pedido em 2026-09-29, executar depois de T7/T8) | usa dados de fiscalizações; aplicar skill `dataviz`; brainstorming se houver dúvida de desenho |
 
 ## Decisões / premissas
 - Item 1 do pedido veio truncado ("preciso que informe o / ver nome de quem deu baixa"): interpretado como
@@ -24,6 +25,9 @@ alterados + suíte completa antes de marcar como concluída.
 
 ## Log de execução
 (preencher abaixo, mais recente em cima)
+- T5/T3 backend (plano Tasks 1-7) concluído e commitado: client_id em audit_logs + AuditContext; AuditService em lote/máscara/viewOncePer; AuditableObserver + config/audit.php (inclui TripClient); AuditDescriber; ClientHistoryController + client_history_view_enabled; backfill. Ruling: passageiros de viagem auditados via observer de TripClient (tem client_id) em vez de ações TRIP_CLIENT_* no controller — menos código, cobre também replicação. Migrations novas: 2026_09_30_000001/2/3. Falta: frontend (Task 8) e regressão final (Task 9).
+- Spec T5+T3 aprovado pelo usuário (docs/superpowers/specs/2026-09-29-auditoria-e-historico-do-cidadao-design.md). Escrevendo plano em docs/superpowers/plans/2026-09-29-auditoria-e-historico-do-cidadao.md.
+- T9 adicionada ao backlog a pedido do usuário (KPI/gráficos de fiscalizações no dashboard da vigilância).
 - Brainstorming T5+T3 apresentado ao usuário (gate). Levantamento: 23 models com observer; 23 controllers com escrita sem auditoria nenhuma (Almoxarifado*, DocumentType, Email/WhatsApp config, Kanban, Medicine*, Protocol{Alert,Config,Type,OrganizationalUnit}, SystemNotice, Conformidade, StockImport, PharmacyCatalog). Queue/Kanban não têm observer. audit_logs não tem coluna de cidadão (client_id).
 - T4 concluída: attachments_count (anexos ativos) em /protocolos e caixa-entrada; ícone paperclip; botão Voltar (history.back, fallback caixa-entrada). Testes: ProtocolVisibilityTest, tests/protocolo.
 - T2 concluída: AuditService::recordOncePerVisitor (1 log/IP/tipo/hora) nos 3 pontos do painel público. Teste: PublicMedicinesAuditThrottleTest.
