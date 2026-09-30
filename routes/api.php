@@ -37,6 +37,7 @@ use App\Http\Controllers\ExameCampoController;
 use App\Http\Controllers\ExameController;
 use App\Http\Controllers\FiscalizacaoAttachmentController;
 use App\Http\Controllers\FiscalizacaoController;
+use App\Http\Controllers\FiscalizacaoHistoricoController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\LetterAttachmentController;
@@ -574,6 +575,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::middleware('page.permission:/fiscalizacoes')->group(function () {
         Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['store', 'update', 'destroy'])
             ->parameters(['fiscalizacoes' => 'fiscalizacao']);
+        Route::get('/fiscalizacoes/{fiscalizacao}/historico', [FiscalizacaoHistoricoController::class, 'index']);
+        Route::post('/fiscalizacoes/{fiscalizacao}/movimentacoes', [FiscalizacaoHistoricoController::class, 'store']);
         Route::get('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'index']);
         Route::get('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}/download', [FiscalizacaoAttachmentController::class, 'download']);
         Route::post('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'store']);
