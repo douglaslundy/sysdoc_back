@@ -12,7 +12,7 @@ alterados + suíte completa antes de marcar como concluída.
 | T3 | Histórico do cidadão (drawer lateral, mais recente em cima) | **CONCLUÍDA** (back 394 / front 101) | depende de T5 (cobertura de auditoria) |
 | T4 | /protocolo/[id] botão voltar + ícone de anexo na caixa de entrada | **CONCLUÍDA** | inbox precisa de attachments_count |
 | T5 | Auditoria: CRUD completo + ações especiais em todos os endpoints, com desempenho | **CONCLUÍDA** (back 394 / front 101) | levantar lacunas, corrigir |
-| T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | pendente | modal de erro só fecha no botão |
+| T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | EM ANDAMENTO (causas confirmadas R1-R3; corrigindo) | modal de erro só fecha no botão |
 | T7 | Fiscalizações: nº de protocolo, histórico de movimentação, PDF interno | **CONCLUÍDA** (Parte A do plano; back 414 / front 110) | |
 | T8 | Denúncia pública + consulta por protocolo/senha + PDF do cidadão | **CONCLUÍDA** (back 431 / front 121) | depende de T7 |
 | T9 | Dashboard da Vigilância Sanitária: gráficos/cards de KPI sobre as fiscalizações | BACKLOG (pedido em 2026-09-29, executar depois de T7/T8) | usa dados de fiscalizações; aplicar skill `dataviz`; brainstorming se houver dúvida de desenho |
@@ -25,6 +25,9 @@ alterados + suíte completa antes de marcar como concluída.
 
 ## Log de execução
 (preencher abaixo, mais recente em cima)
+- T6 investigação: R1 reducer editQueue mantém o item na lista (filtro Realizado=NÃO) -> refetch após baixa; R2 obs = obs+'
+'+conclusão pode virar 'null
+undefined' e passar de 200 chars (UpdateQueueRequest obs max:200 => 422, baixa não grava) -> alargar obs p/ 1000 + montar obs seguro; R3 erro em faixa que some em 12s, sem botão, modal fecha ao clicar fora, data.message quebra em erro de rede -> diálogo bloqueante com botão. Também: proteger duplo clique.
 - T8 (Parte B) concluída: POST /api/public/denuncias (5/h/IP, isca, 5 arquivos/10MB), POST /api/public/denuncias/consulta (10/min/IP, bloqueio 15 min após 5 erros, resposta única), páginas públicas /denuncia e /denuncia/consulta (+ PUBLIC_PATHS e _app), PDF público. Ruling: consulta pública expõe situação 'Pendente de apuração' ou 'Apurada' (nunca o resultado interno) — o desfecho detalhado vai por mensagem pública do fiscal. Variável nova: FRONTEND_URL (config/app.php frontend_url). Achados: specialityPermissions.test.js do front é intermitente sob carga (passa isolado). Próximo: T6, depois T9.
 - T7 (Parte A do plano 2026-09-30) concluída: protocolo FIS-AAAA-NNNNNN, campos de denúncia, fiscalizacao_movimentacoes, FiscalizacaoTimeline, endpoints /historico e /movimentacoes, filtro origem + busca por protocolo, tela (protocolo, chip Denúncia, drawer, nova movimentação, PDF interno). Migrations a rodar: 2026_09_30_100000/1/2. Próximo: Parte B (T8).
 - ACHADO (pré-existente, fora do escopo): AttendanceModuleTest::test_retorna_estado_do_painel_com_campos_esperados falha entre 00:00 e ~03:00 BRT (também na main) — limite de 'hoje' do painel público de atendimento provavelmente usa UTC. Avaliar depois.
