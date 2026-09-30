@@ -138,6 +138,15 @@ class RouteServiceProvider extends ServiceProvider
                 });
         });
 
+        // Denúncia pública: no máximo 5 por hora por IP.
+        RateLimiter::for('denuncia-create', function (Request $request) {
+            return Limit::perHour(5)
+                ->by('denuncia-create|'.$request->ip())
+                ->response(fn () => response()->json([
+                    'message' => 'Muitas denúncias enviadas deste local. Aguarde um pouco e tente novamente.',
+                ], 429));
+        });
+
         RateLimiter::for('forgot-password', function (Request $request) {
             $email = (string) $request->input('email', '');
             $key = sprintf('forgot-password|%s|%s', mb_strtolower(trim($email)), $request->ip());

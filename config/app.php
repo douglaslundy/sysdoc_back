@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Endereço público do frontend (usado no link de consulta da denúncia).
+    'frontend_url' => env('FRONTEND_URL', 'https://sysvendas.vercel.app'),
+
     'frontend_url' => env('FRONTEND_URL', 'https://sysdoc.vercel.app'),
 
     'asset_url' => env('ASSET_URL', null),
