@@ -58,10 +58,18 @@ class TripController extends Controller
             });
         }
 
-        $trips = $query
-            ->with(['driver', 'vehicle', 'route', 'clients'])
-            ->orderBy('departure_date', 'asc') // ou 'desc' se quiser ordem decrescente
-            ->get();
+        $query->with(['driver', 'vehicle', 'route', 'clients']);
+
+        if ($request->hasAny(['year', 'month', 'day', 'date_begin', 'date_end', 'client_id'])) {
+            $trips = $query->orderBy('departure_date', 'asc')->get();
+        } else {
+            // Sem período nem cidadão: só as viagens mais recentes (teto), ainda em ordem crescente.
+            $trips = $query->orderByDesc('departure_date')->orderByDesc('id')
+                ->limit((int) config('pagination.legacy_cap', 500))
+                ->get()
+                ->sortBy('departure_date')
+                ->values();
+        }
 
         // Adicionar o campo is_ok com base na confirmação dos clientes
         $trips->transform(function ($trip) {
