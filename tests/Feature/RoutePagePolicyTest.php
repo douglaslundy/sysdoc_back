@@ -123,11 +123,11 @@ class RoutePagePolicyTest extends TestCase
         $this->req($user, $method, $uri)->assertOk();
     }
 
-    public function test_rotas_legadas_de_chamadas_so_para_administrador(): void
+    public function test_rotas_legadas_de_setores_so_para_administrador(): void
     {
         $user = User::factory()->create(['profile' => 'user', 'active' => true]);
 
-        foreach (['/api/rooms', '/api/calls', '/api/services', '/api/endedcalls', '/api/sectors'] as $uri) {
+        foreach (['/api/sectors'] as $uri) {
             $this->req($user, 'GET', $uri)->assertForbidden();
         }
     }

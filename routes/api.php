@@ -13,8 +13,6 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BackupController;
-use App\Http\Controllers\CallController;
-use App\Http\Controllers\CallServiceController;
 use App\Http\Controllers\CampoReferenciaController;
 use App\Http\Controllers\CategoriaExameController;
 use App\Http\Controllers\ChatController;
@@ -31,7 +29,6 @@ use App\Http\Controllers\DocumentConfigController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\EmailConfigController;
-use App\Http\Controllers\EndedController;
 use App\Http\Controllers\ErrorLogController;
 use App\Http\Controllers\EstabelecimentoController;
 use App\Http\Controllers\ExameCampoController;
@@ -75,7 +72,6 @@ use App\Http\Controllers\QueueController;
 use App\Http\Controllers\QueueTreatmentPlanController;
 use App\Http\Controllers\QueueTreatmentSessionController;
 use App\Http\Controllers\ResultadoExameController;
-use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SpecialityController;
@@ -465,10 +461,6 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     // Models
     Route::apiResource('models', ModelController::class);
 
-    // Rooms
-    Route::get('/rooms/todaycalls', [RoomController::class, 'rooms_with_today_calls']);
-    Route::apiResource('rooms', RoomController::class);
-
     // Clients
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('/clients/buscar-cpf-cns', [ClientController::class, 'buscarPorCpfCns']);
@@ -481,22 +473,6 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::apiResource('clients', ClientController::class);
         Route::get('/detailed-client-report', [ClientController::class, 'detailedClientReport']);
     });
-
-    // Calls
-    Route::get('/calls/called', [CallController::class, 'called_call']);
-    Route::get('/calls/lasts', [CallController::class, 'lasts_calls']);
-    Route::get('/calls/today', [CallController::class, 'today_calls']);
-
-    Route::apiResource('calls', CallController::class);
-    Route::put('/calls/{id}/start', [CallController::class, 'start_time']);
-    Route::put('/calls/{id}/end', [CallController::class, 'end_time']);
-    Route::put('/calls/{id}/abandon', [CallController::class, 'abandon']);
-
-    // Call_service
-    Route::apiResource('services', CallServiceController::class);
-
-    // EndedCall
-    Route::apiResource('endedcalls', EndedController::class);
 
     // Speciality
     Route::apiResource('specialities', SpecialityController::class);

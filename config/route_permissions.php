@@ -67,11 +67,7 @@ return [
         // ---- cadastros de apoio: a lista é usada por vários módulos; só a escrita é restrita ----
         ['prefix' => 'specialities', 'methods' => ['POST', 'PUT', 'PATCH', 'DELETE'], 'pages' => ['/specialities']],
 
-        // ---- legado (tabelas removidas): somente administrador até a remoção definitiva ----
-        ['prefix' => 'calls', 'admin' => true],
-        ['prefix' => 'rooms', 'admin' => true],
-        ['prefix' => 'services', 'admin' => true],
-        ['prefix' => 'endedcalls', 'admin' => true],
+        // ---- legado (setores): somente administrador ----
         ['prefix' => 'sector', 'admin' => true],
         ['prefix' => 'sectors', 'admin' => true],
     ],

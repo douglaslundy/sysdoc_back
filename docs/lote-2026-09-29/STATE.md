@@ -58,7 +58,7 @@ nos números cadastrados na página de configuração da vigilância (criar cada
 | T12 | Painel de atendimento de madrugada (fuso do "hoje") | pendente | teste falha 00:00-03:00 BRT |
 | T13 | Auditoria: não gravar linha de operação revertida (afterCommit) | pendente | |
 | T14 | Paginação server-side das listagens sem limite (+ telas) | pendente | letters, ordinances, qrcode-logs, trips, kanban... |
-| T15 | Remover rotas/controllers legados (rooms/calls/services/endedcalls) | pendente | tabelas já dropadas |
+| T15 | Remover rotas/controllers/models legados (rooms, calls, services, endedcalls) | **CONCLUÍDA** (Sector mantido: tabela ainda existe; back 483) |
 | T16 | Validação inline -> FormRequest (padrão do projeto) nos controllers mais tocados | pendente | escopo limitado e declarado |
 | T17 | Infra 300 usuários: docs/checklist (cache, fila, FPM, Pusher) | pendente | itens de servidor viram checklist |
 | T18 | Botão para alternar tema Dark/Light no painel de transparência de farmácia (páginas públicas /transparency/medicines*) | BACKLOG (pedido 2026-09-30; fazer após T10-T17) | |
