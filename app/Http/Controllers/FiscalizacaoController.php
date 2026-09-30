@@ -32,9 +32,17 @@ class FiscalizacaoController extends Controller
             $query->where('resultado', $request->resultado);
         }
 
+        if ($request->filled('origem')) {
+            $query->where('origem', $request->origem);
+        }
+
         if ($request->filled('busca')) {
             $busca = $request->busca;
-            $query->whereHas('estabelecimento', fn ($e) => $e->where('nome_estabelecimento', 'LIKE', "%{$busca}%"));
+            $query->where(function ($q) use ($busca) {
+                $q->where('protocolo', 'LIKE', "%{$busca}%")
+                    ->orWhere('estabelecimento_nome_informado', 'LIKE', "%{$busca}%")
+                    ->orWhereHas('estabelecimento', fn ($e) => $e->where('nome_estabelecimento', 'LIKE', "%{$busca}%"));
+            });
         }
 
         $perPage = (int) $request->input('per_page', 15);
