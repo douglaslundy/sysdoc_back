@@ -557,7 +557,6 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['store', 'update', 'destroy'])
             ->parameters(['fiscalizacoes' => 'fiscalizacao']);
         Route::get('/fiscalizacoes/{fiscalizacao}/historico', [FiscalizacaoHistoricoController::class, 'index']);
-        Route::post('/fiscalizacoes/{fiscalizacao}/movimentacoes', [FiscalizacaoHistoricoController::class, 'store']);
         Route::get('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'index']);
         Route::get('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}/download', [FiscalizacaoAttachmentController::class, 'download']);
         Route::post('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'store']);

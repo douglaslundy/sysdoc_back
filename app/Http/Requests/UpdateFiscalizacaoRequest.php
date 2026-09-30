@@ -23,7 +23,6 @@ class UpdateFiscalizacaoRequest extends FormRequest
             'resultado' => ['sometimes', 'required', Rule::in(['Conforme', 'Não conforme', 'Notificação', 'Auto de infração', 'Pendente de apuração'])],
             'observacoes' => ['nullable', 'string', 'max:2000'],
             'visivel_ao_denunciante' => ['sometimes', 'boolean'],
-            'mensagem_publica' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

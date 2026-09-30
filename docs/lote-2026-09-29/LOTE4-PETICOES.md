@@ -15,7 +15,7 @@ Branch: `feat/lote-4` (back e front). Aprovado pelo usuário em 2026-09-30 após
 | P1 | /protocolo/estrutura: botão Voltar | **CONCLUÍDA** |
 | P2 | Listagem de protocolos: coluna "Criado em" | **CONCLUÍDA** |
 | P3 | Novo protocolo: select com toda a árvore de unidades + usuários lotados (estrito) | **CONCLUÍDA** |
-| P4 | Fiscalização: histórico automático + caixa "visível ao denunciante"; remove movimentação manual | pendente |
+| P4 | Fiscalização: histórico automático + caixa "visível ao denunciante"; remove movimentação manual | **CONCLUÍDA** |
 | P5 | Motivos de petição: tabela + CRUD + página /peticao-motivos (admin + permissão em Perfis) | pendente |
 | P6 | Página pública /petition (+ /petition/track, redirects, API /public/petitions, origem `peticao`, motivo_id) | pendente |
 | P7 | Kanban: card por petição na unidade do motivo (unit_id, fiscalizacao_id) | pendente |
@@ -26,3 +26,4 @@ Branch: `feat/lote-4` (back e front). Aprovado pelo usuário em 2026-09-30 após
 
 ## Rulings / log
 - P1-P3 concluídas: Voltar na estrutura, coluna Criado em (colSpan 7), modal com árvore completa + usuarios-elegiveis estrito por lotação ativa (unidade + descendentes). Teste antigo 'mesmo sem lotação' invertido conforme decisão. 'Encaminhar' não usa esse endpoint (não alterado). back 499, front 177.
+- P4 concluída: update da fiscalização registra 'observacao' (texto da obs alterada; público só com a caixa), situação continua automática; removidos POST /movimentacoes, StoreFiscalizacaoMovimentacaoRequest e o campo mensagem_publica (linhas antigas 'mensagem_publica' seguem legíveis no histórico). Regra: a caixa só publica quando a obs muda naquela gravação. back 501, front 180.

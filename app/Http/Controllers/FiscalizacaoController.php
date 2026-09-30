@@ -88,12 +88,15 @@ class FiscalizacaoController extends Controller
         }
 
         $dados = $request->validated();
-        $mensagemPublica = $request->boolean('visivel_ao_denunciante') ? trim((string) ($dados['mensagem_publica'] ?? '')) : '';
+        $visivelAoDenunciante = $request->boolean('visivel_ao_denunciante');
         $situacaoAnterior = $fiscalizacao->resultado;
-        unset($dados['visivel_ao_denunciante'], $dados['mensagem_publica']);
+        $observacaoAnterior = trim((string) $fiscalizacao->observacoes);
+        unset($dados['visivel_ao_denunciante']);
 
         $fiscalizacao->update($dados);
 
+        // O histórico é gerado a partir do que o fiscal edita na própria fiscalização:
+        // não há um segundo campo para descrever o mesmo trabalho.
         $userId = $request->user()?->id;
         if (($dados['resultado'] ?? $situacaoAnterior) !== $situacaoAnterior) {
             $this->timeline->registrar(
@@ -105,8 +108,11 @@ class FiscalizacaoController extends Controller
                 ['de' => $situacaoAnterior, 'para' => $dados['resultado']]
             );
         }
-        if ($mensagemPublica !== '') {
-            $this->timeline->registrar($fiscalizacao, 'mensagem_publica', $mensagemPublica, true, $userId);
+
+        $observacaoNova = trim((string) ($dados['observacoes'] ?? ''));
+        if (array_key_exists('observacoes', $dados) && $observacaoNova !== '' && $observacaoNova !== $observacaoAnterior) {
+            // A caixa "visível ao denunciante" publica exatamente esta observação.
+            $this->timeline->registrar($fiscalizacao, 'observacao', $observacaoNova, $visivelAoDenunciante, $userId);
         }
 
         $fiscalizacao->load(['estabelecimento', 'fiscal']);
