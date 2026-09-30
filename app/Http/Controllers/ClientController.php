@@ -182,7 +182,8 @@ class ClientController extends Controller
                 'error' => 'Client not found',
             ], 404);
         }
-        AuditService::record('VIEW', $client, null, [
+        // 1 registro a cada 10 min por usuario e cidadao (nao a cada abertura da tela).
+        AuditService::recordViewOncePer('VIEW', $client, [
             'nome' => $client->name,
             'cpf' => $client->cpf,
             'cns' => $client->cns,
