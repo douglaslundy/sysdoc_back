@@ -7,6 +7,7 @@ use App\Models\CategoriaExame;
 use App\Models\Client;
 use App\Models\Estabelecimento;
 use App\Models\Exame;
+use App\Models\Fiscalizacao;
 use App\Models\MedicoSolicitante;
 use App\Models\PedidoExame;
 use App\Models\ResultadoExame;
@@ -530,6 +531,35 @@ class DashboardService
                 ->whereDate('vencimento_alvara', '<=', $em30)
                 ->whereNotIn('status', $encerrados)
                 ->count(),
+        ];
+    }
+
+    /**
+     * Indicadores de fiscalizações (internas + denúncias) para o dashboard da Vigilância.
+     * A data de referência é a da visita; denúncia ainda sem visita usa a data de recebimento.
+     */
+    public function getFiscalizacoesKpis(): array
+    {
+        $agora = now();
+        $porPeriodo = function ($inicio, $fim) {
+            return Fiscalizacao::query()->where(function ($q) use ($inicio, $fim) {
+                $q->whereBetween('data_visita', [$inicio->toDateString(), $fim->toDateString()])
+                    ->orWhere(function ($sem) use ($inicio, $fim) {
+                        $sem->whereNull('data_visita')->whereBetween('created_at', [$inicio->copy()->startOfDay(), $fim->copy()->endOfDay()]);
+                    });
+            });
+        };
+        $anoInicio = $agora->copy()->startOfYear();
+        $anoFim = $agora->copy()->endOfYear();
+
+        return [
+            'no_ano' => $porPeriodo($anoInicio, $anoFim)->count(),
+            'no_mes' => $porPeriodo($agora->copy()->startOfMonth(), $agora->copy()->endOfMonth())->count(),
+            'denuncias_pendentes' => Fiscalizacao::query()
+                ->where('origem', 'denuncia')
+                ->where('resultado', 'Pendente de apuração')
+                ->count(),
+            'autos_infracao_ano' => $porPeriodo($anoInicio, $anoFim)->where('resultado', 'Auto de infração')->count(),
         ];
     }
 

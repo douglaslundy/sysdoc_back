@@ -1040,10 +1040,12 @@ class DashboardController extends MonitorApsBaseController
             'por_nivel_risco' => [],
             'por_mes' => [],
             'proximos_vencimentos' => [],
+            'fiscalizacoes' => ['no_ano' => 0, 'no_mes' => 0, 'denuncias_pendentes' => 0, 'autos_infracao_ano' => 0],
         ];
 
         try {
-            $data = Cache::remember('dashboard.vigilancia', 300, function () use ($empty) {
+            // v2: o payload ganhou "fiscalizacoes"; a chave nova evita servir o formato antigo do cache.
+            $data = Cache::remember('dashboard.vigilancia.v2', 300, function () use ($empty) {
                 try {
                     $totais = $this->service->getVigilanciaTotais();
                 } catch (\Throwable $e) {
@@ -1079,8 +1081,16 @@ class DashboardController extends MonitorApsBaseController
                     $proximosVencimentos = [];
                 }
 
+                try {
+                    $fiscalizacoes = $this->service->getFiscalizacoesKpis();
+                } catch (\Throwable $e) {
+                    Log::error('DashboardVigilancia fiscalizacoes: '.$e->getMessage());
+                    $fiscalizacoes = $empty['fiscalizacoes'];
+                }
+
                 return [
                     'totais' => $totais,
+                    'fiscalizacoes' => $fiscalizacoes,
                     'por_status' => $porStatus,
                     'por_nivel_risco' => $porNivelRisco,
                     'por_mes' => $porMes,

@@ -15,7 +15,7 @@ alterados + suíte completa antes de marcar como concluída.
 | T6 | Baixa da fila não sai da fila + mensagem de erro clara e persistente | **CONCLUÍDA** (back 433 / front 145) | modal de erro só fecha no botão |
 | T7 | Fiscalizações: nº de protocolo, histórico de movimentação, PDF interno | **CONCLUÍDA** (Parte A do plano; back 414 / front 110) | |
 | T8 | Denúncia pública + consulta por protocolo/senha + PDF do cidadão | **CONCLUÍDA** (back 431 / front 121) | depende de T7 |
-| T9 | Dashboard da Vigilância Sanitária: gráficos/cards de KPI sobre as fiscalizações | BACKLOG (pedido em 2026-09-29, executar depois de T7/T8) | usa dados de fiscalizações; aplicar skill `dataviz`; brainstorming se houver dúvida de desenho |
+| T9 | Dashboard da Vigilância Sanitária: gráficos/cards de KPI sobre as fiscalizações | **CONCLUÍDA** (back 437 / front 148) | usa dados de fiscalizações; aplicar skill `dataviz`; brainstorming se houver dúvida de desenho |
 
 ## Decisões / premissas
 - Item 1 do pedido veio truncado ("preciso que informe o / ver nome de quem deu baixa"): interpretado como
@@ -25,6 +25,7 @@ alterados + suíte completa antes de marcar como concluída.
 
 ## Log de execução
 (preencher abaixo, mais recente em cima)
+- LOTE CONCLUÍDO (T1-T9). T9: 4 cards (fiscalizações no ano/mês, denúncias pendentes, autos de infração no ano) em /dashboard/vigilancia (chave de cache v2). Teste sensível ao horário do painel de atendimento passou às 06:11 (falhava 00:00-03:00) — abrir tarefa separada. specialityPermissions.test.js ganhou jest.setTimeout(30000). MIGRATIONS A RODAR (ordem): 2026_09_29_100000, 2026_09_29_110000, 2026_09_30_000001, 2026_09_30_000002, 2026_09_30_000003, 2026_09_30_100000, 2026_09_30_100001, 2026_09_30_100002, 2026_09_30_120000 (e 2026_09_29_000001 do lote anterior, se ainda não rodou). Variável nova: FRONTEND_URL.
 - T6 concluída: migration 2026_09_30_120000 (queue.obs 1000), obs seguro no front (buildConclusionObs), diálogo bloqueante BlockingErrorDialog (só fecha no botão) no modal de baixa e na exclusão, mensagens de erro claras (queueErrors.js), recarga da lista após baixa (buildListParams/reloadQueues), botão Gravar desabilitado enquanto grava. Botão Excluir da fila segue desabilitado (decisão de produto existente).
 - Próximo: T9 (KPIs de fiscalizações no dashboard da vigilância) — explorar dashboard existente e apresentar desenho.
 - T6 investigação: R1 reducer editQueue mantém o item na lista (filtro Realizado=NÃO) -> refetch após baixa; R2 obs = obs+'
