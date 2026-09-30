@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RescheduleTreatmentSessionRequest;
 use App\Models\QueueTreatmentSession;
 use App\Services\Authorization\SpecialityPermissionService;
 use Carbon\Carbon;
@@ -10,12 +11,9 @@ use Illuminate\Support\Facades\DB;
 
 class QueueTreatmentSessionController extends Controller
 {
-    public function reschedule(Request $request, QueueTreatmentSession $session)
+    public function reschedule(RescheduleTreatmentSessionRequest $request, QueueTreatmentSession $session)
     {
-        $data = $request->validate([
-            'new_date' => ['required', 'date'],
-            'reason' => ['required', 'string', 'min:5'],
-        ]);
+        $data = $request->validated();
 
         $plan = $session->plan;
         $user = $request->user();

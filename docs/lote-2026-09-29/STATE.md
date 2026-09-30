@@ -59,7 +59,7 @@ nos números cadastrados na página de configuração da vigilância (criar cada
 | T13 | Auditoria sem linhas de operações revertidas | **CONCLUÍDA** (DB::afterCommit no AuditService; back 486) |
 | T14 | Paginação/teto das listagens | **CONCLUÍDA**: qrcode-logs paginado (API+tela); viagens (teto sem período); cartas/ofícios (teto 2000); logs:limpar-erros diário 03:00 (90 dias). Ruling: cartas/ofícios com teto (tela filtra por ano no cliente); kanban/modelos/agenda-coleta/planos já limitados por natureza (arquivados excluídos, data, status, modelos poucos) — sem mudança. back 494 |
 | T15 | Remover rotas/controllers/models legados (rooms, calls, services, endedcalls) | **CONCLUÍDA** (Sector mantido: tabela ainda existe; back 483) |
-| T16 | Validação inline -> FormRequest (padrão do projeto) nos controllers mais tocados | pendente (escopo escolhido: controllers do lote) | escopo limitado e declarado |
+| T16 | Validação inline -> FormRequest | **CONCLUÍDA** (planos/sessões de tratamento da fila: 4 requests novos; fiscalização/denúncia/contatos já usavam FormRequest; ProtocolController (12 inline) fora do escopo declarado; back 494) |
 | T17 | Infra 300 usuários: checklist | **CONCLUÍDA** (docs/lote-2026-09-29/INFRA-300-USUARIOS.md) |
 | T18 | Botão de tema Dark/Light nas páginas públicas de transparência da farmácia | **CONCLUÍDA** (PublicThemeToggle nas 3 páginas; front 167) |
 | T19 | Login: inputs por tema (escuro #121212/branco; claro branco/preto) | **CONCLUÍDA** (CSS vars --field-*; front 167) |

@@ -8,19 +8,17 @@ use App\Models\QueueTreatmentSession;
 use App\Services\AuditService;
 use App\Services\Authorization\SpecialityPermissionService;
 use App\Services\TreatmentPlanScheduler;
+use App\Http\Requests\CancelTreatmentPlanRequest;
+use App\Http\Requests\PreviewTreatmentPlanRequest;
+use App\Http\Requests\StoreTreatmentPlanRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class QueueTreatmentPlanController extends Controller
 {
-    public function preview(Request $request)
+    public function preview(PreviewTreatmentPlanRequest $request)
     {
-        $data = $request->validate([
-            'speciality_id' => ['required', 'integer', 'exists:specialities,id'],
-            'weekdays' => ['required', 'array', 'min:1'],
-            'weekdays.*' => ['integer', 'between:1,7'],
-            'total_sessions' => ['required', 'integer', 'min:1', 'max:200'],
-        ]);
+        $data = $request->validated();
         $data['weekdays'] = array_values(array_unique(array_map('intval', $data['weekdays'])));
 
         $user = $request->user();
@@ -39,14 +37,9 @@ class QueueTreatmentPlanController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreTreatmentPlanRequest $request)
     {
-        $data = $request->validate([
-            'queue_id' => ['required', 'integer', 'exists:queue,id'],
-            'weekdays' => ['required', 'array', 'min:1'],
-            'weekdays.*' => ['integer', 'between:1,7'],
-            'total_sessions' => ['required', 'integer', 'min:1', 'max:200'],
-        ]);
+        $data = $request->validated();
         $data['weekdays'] = array_values(array_unique(array_map('intval', $data['weekdays'])));
 
         $queue = Queue::with('speciality')->findOrFail($data['queue_id']);
@@ -119,11 +112,9 @@ class QueueTreatmentPlanController extends Controller
         return response()->json($this->formatPlan($plan), 201);
     }
 
-    public function cancel(Request $request, QueueTreatmentPlan $plan)
+    public function cancel(CancelTreatmentPlanRequest $request, QueueTreatmentPlan $plan)
     {
-        $data = $request->validate([
-            'reason' => ['required', 'string', 'min:10'],
-        ]);
+        $data = $request->validated();
 
         $user = $request->user();
 
