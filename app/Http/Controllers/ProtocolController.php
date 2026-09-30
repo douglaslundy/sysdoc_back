@@ -11,6 +11,7 @@ use App\Models\ProtocolMovement;
 use App\Models\ProtocolNotification;
 use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolUserUnit;
+use App\Services\Protocol\UnitTree;
 use App\Models\ProtocolView;
 use App\Models\User;
 use App\Services\AuditService;
@@ -671,7 +672,7 @@ class ProtocolController extends Controller
             ->where('active', true)
             ->where(fn ($q) => $q->whereIn('profile', $allowedProfiles)->orWhere('profile', 'admin'))
             ->when($request->filled('unit_id'), function ($q) use ($request) {
-                $unitIds = $this->unitWithDescendantIds((int) $request->input('unit_id'));
+                $unitIds = UnitTree::withDescendantIds((int) $request->input('unit_id'));
                 $q->whereIn('id', ProtocolUserUnit::query()
                     ->where('ativo', true)
                     ->whereIn('protocol_organizational_unit_id', $unitIds)
@@ -682,20 +683,6 @@ class ProtocolController extends Controller
             ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name]);
 
         return response()->json($eligible);
-    }
-
-    /** @return array<int, int> id da unidade e de todas as suas subunidades (qualquer nivel). */
-    private function unitWithDescendantIds(int $unitId): array
-    {
-        $ids = [$unitId];
-        $frontier = [$unitId];
-
-        while ($frontier !== []) {
-            $frontier = ProtocolOrganizationalUnit::query()->whereIn('parent_id', $frontier)->pluck('id')->all();
-            $ids = array_merge($ids, $frontier);
-        }
-
-        return $ids;
     }
 
     public function moveFromKanban(Request $request, int $id): JsonResponse

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\KanbanTask;
+use App\Services\Protocol\UnitTree;
 use App\Services\SystemAlertService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,8 +13,21 @@ class KanbanController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = KanbanTask::query()
-            ->with(['protocol:id,numero,assunto,status', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name'])
+            ->with([
+                'protocol:id,numero,assunto,status', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name',
+                'unit:id,nome,tipo', 'fiscalizacao:id,protocolo',
+            ])
             ->whereNull('arquivado_at')
+            ->where(function ($scope) use ($request) {
+                // Cards de unidade (petições): só quem é da unidade (ou de uma subunidade) e o admin.
+                $scope->whereNull('unit_id');
+                $user = $request->user();
+                if ($user?->profile === 'admin') {
+                    $scope->orWhereNotNull('unit_id');
+                } elseif ($user) {
+                    $scope->orWhereIn('unit_id', UnitTree::visibleUnitIdsForUser((int) $user->id));
+                }
+            })
             ->where(function ($builder) use ($request) {
                 $builder->where('visibility', 'public');
 
@@ -98,7 +112,7 @@ class KanbanController extends Controller
             return response()->json(['message' => 'Item do kanban não encontrado.'], 404);
         }
 
-        if ($this->isPrivateTaskFromAnotherUser($task, $request)) {
+        if ($this->isPrivateTaskFromAnotherUser($task, $request) || $this->isUnitTaskFromAnotherUnit($task, $request)) {
             return response()->json(['message' => 'Você não possui permissão para acessar este item.'], 403);
         }
 
@@ -158,13 +172,23 @@ class KanbanController extends Controller
             return response()->json(['message' => 'Item do kanban não encontrado.'], 404);
         }
 
-        if ($this->isPrivateTaskFromAnotherUser($task, $request)) {
+        if ($this->isPrivateTaskFromAnotherUser($task, $request) || $this->isUnitTaskFromAnotherUnit($task, $request)) {
             return response()->json(['message' => 'Você não possui permissão para acessar este item.'], 403);
         }
 
         $task->delete();
 
         return response()->json(['message' => 'Item do kanban removido com sucesso.']);
+    }
+
+    private function isUnitTaskFromAnotherUnit(KanbanTask $task, Request $request): bool
+    {
+        $user = $request->user();
+        if (! $task->unit_id || $user?->profile === 'admin') {
+            return false;
+        }
+
+        return ! in_array((int) $task->unit_id, UnitTree::visibleUnitIdsForUser((int) $user?->id), true);
     }
 
     private function isPrivateTaskFromAnotherUser(KanbanTask $task, Request $request): bool

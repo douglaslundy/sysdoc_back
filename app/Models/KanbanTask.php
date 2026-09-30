@@ -14,6 +14,8 @@ class KanbanTask extends Model
 
     protected $fillable = [
         'protocol_id',
+        'unit_id',
+        'fiscalizacao_id',
         'created_by_id',
         'updated_by_id',
         'responsavel_id',
@@ -37,6 +39,16 @@ class KanbanTask extends Model
     public function protocol(): BelongsTo
     {
         return $this->belongsTo(Protocol::class, 'protocol_id');
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'unit_id');
+    }
+
+    public function fiscalizacao(): BelongsTo
+    {
+        return $this->belongsTo(Fiscalizacao::class, 'fiscalizacao_id');
     }
 
     public function createdBy(): BelongsTo

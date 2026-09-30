@@ -6,6 +6,7 @@ use App\Http\Requests\ConsultaDenunciaRequest;
 use App\Http\Requests\StoreDenunciaRequest;
 use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoAttachment;
+use App\Models\KanbanTask;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
 use App\Services\Fiscalizacao\VigilanciaAvisoService;
@@ -87,6 +88,8 @@ class DenunciaPublicaController extends Controller
                 $anexos++;
             }
 
+            $this->criarCardNaUnidade($fiscalizacao);
+
             $this->timeline->registrar(
                 $fiscalizacao,
                 'denuncia_recebida',
@@ -160,6 +163,31 @@ class DenunciaPublicaController extends Controller
             'local_endereco' => $fiscalizacao->local_endereco,
             'registrada_em' => $fiscalizacao->created_at?->toISOString(),
             'movimentacoes' => $movimentacoes,
+        ]);
+    }
+
+    /**
+     * O motivo aponta a unidade responsável: a petição vira um card no kanban dela. O card não
+     * leva nenhum dado do denunciante (nome/contato), só o que a equipe precisa para agir.
+     */
+    private function criarCardNaUnidade(Fiscalizacao $fiscalizacao): void
+    {
+        $fiscalizacao->loadMissing('motivo');
+        $motivo = $fiscalizacao->motivo;
+
+        if (! $motivo?->unit_id) {
+            return;
+        }
+
+        KanbanTask::create([
+            'unit_id' => $motivo->unit_id,
+            'fiscalizacao_id' => $fiscalizacao->id,
+            'titulo' => mb_substr("Petição {$fiscalizacao->protocolo} — {$motivo->nome}", 0, 200),
+            'descricao' => "Assunto: {$fiscalizacao->assunto}\nLocal: {$fiscalizacao->local_endereco}",
+            'status' => 'novo',
+            'prioridade' => 'normal',
+            'visibility' => 'public',
+            'ordem' => 0,
         ]);
     }
 
