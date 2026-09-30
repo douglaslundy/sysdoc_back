@@ -651,10 +651,10 @@ class ProtocolController extends Controller
      * abrir a tela para ve-lo/recebe-lo. Basta uma pagina /protocolo* porque a
      * navegacao do frontend resolve o acesso ao modulo por prefixo de rota.
      *
-     * A lotacao em unidade (protocol_user_units) NAO e exigida: muitos municipios
-     * liberam o Protocolo por perfil sem cadastrar a lotacao de cada usuario, e
-     * isso deixava a lista praticamente vazia. O parametro unit_id e aceito por
-     * compatibilidade mas nao filtra.
+     * Com unit_id, so entram usuarios COM LOTACAO ATIVA (protocol_user_units) nessa
+     * unidade ou em qualquer subunidade dela (decisao do usuario: lista estrita;
+     * quem nao esta lotado precisa ser cadastrado em /protocolo/estrutura). Sem
+     * unit_id lista todos os elegiveis.
      */
     public function eligibleDestinationUsers(Request $request): JsonResponse
     {
@@ -670,11 +670,32 @@ class ProtocolController extends Controller
         $eligible = User::query()
             ->where('active', true)
             ->where(fn ($q) => $q->whereIn('profile', $allowedProfiles)->orWhere('profile', 'admin'))
+            ->when($request->filled('unit_id'), function ($q) use ($request) {
+                $unitIds = $this->unitWithDescendantIds((int) $request->input('unit_id'));
+                $q->whereIn('id', ProtocolUserUnit::query()
+                    ->where('ativo', true)
+                    ->whereIn('protocol_organizational_unit_id', $unitIds)
+                    ->select('user_id'));
+            })
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name]);
 
         return response()->json($eligible);
+    }
+
+    /** @return array<int, int> id da unidade e de todas as suas subunidades (qualquer nivel). */
+    private function unitWithDescendantIds(int $unitId): array
+    {
+        $ids = [$unitId];
+        $frontier = [$unitId];
+
+        while ($frontier !== []) {
+            $frontier = ProtocolOrganizationalUnit::query()->whereIn('parent_id', $frontier)->pluck('id')->all();
+            $ids = array_merge($ids, $frontier);
+        }
+
+        return $ids;
     }
 
     public function moveFromKanban(Request $request, int $id): JsonResponse
