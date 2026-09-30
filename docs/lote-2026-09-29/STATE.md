@@ -61,3 +61,5 @@ nos números cadastrados na página de configuração da vigilância (criar cada
 | T15 | Remover rotas/controllers legados (rooms/calls/services/endedcalls) | pendente | tabelas já dropadas |
 | T16 | Validação inline -> FormRequest (padrão do projeto) nos controllers mais tocados | pendente | escopo limitado e declarado |
 | T17 | Infra 300 usuários: docs/checklist (cache, fila, FPM, Pusher) | pendente | itens de servidor viram checklist |
+| T18 | Botão para alternar tema Dark/Light no painel de transparência de farmácia (páginas públicas /transparency/medicines*) | BACKLOG (pedido 2026-09-30; fazer após T10-T17) | |
+| T19 | Login: cor de fundo dos inputs de login e senha — dark: cinza quase escuro (bem escurinho) com fonte branca; light: fundo branco com fonte preta | BACKLOG (pedido 2026-09-30; fazer após T10-T17) | |
