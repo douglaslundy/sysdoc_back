@@ -15,7 +15,7 @@ class AuditService
 {
     private static array $sensitive = [
         'password', 'remember_token', 'token', 'secret', 'api_key', 'apikey', 'authorization',
-        'smtp_password', 'app_secret', 'whatsapp_api_key',
+        'smtp_password', 'app_secret', 'whatsapp_api_key', 'senha_consulta_hash', 'senha_hash',
     ];
 
     private static array $buffer = [];

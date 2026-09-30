@@ -20,7 +20,7 @@ class StoreFiscalizacaoRequest extends FormRequest
         return [
             'estabelecimento_id' => ['required', 'integer', 'exists:estabelecimentos,id'],
             'data_visita' => ['required', 'date'],
-            'resultado' => ['required', Rule::in(['Conforme', 'Não conforme', 'Notificação', 'Auto de infração'])],
+            'resultado' => ['required', Rule::in(['Conforme', 'Não conforme', 'Notificação', 'Auto de infração', 'Pendente de apuração'])],
             'observacoes' => ['nullable', 'string', 'max:2000'],
         ];
     }

@@ -20,8 +20,10 @@ class UpdateFiscalizacaoRequest extends FormRequest
         return [
             'estabelecimento_id' => ['sometimes', 'required', 'integer', 'exists:estabelecimentos,id'],
             'data_visita' => ['sometimes', 'required', 'date'],
-            'resultado' => ['sometimes', 'required', Rule::in(['Conforme', 'Não conforme', 'Notificação', 'Auto de infração'])],
+            'resultado' => ['sometimes', 'required', Rule::in(['Conforme', 'Não conforme', 'Notificação', 'Auto de infração', 'Pendente de apuração'])],
             'observacoes' => ['nullable', 'string', 'max:2000'],
+            'visivel_ao_denunciante' => ['sometimes', 'boolean'],
+            'mensagem_publica' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

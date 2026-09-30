@@ -18,7 +18,18 @@ class Fiscalizacao extends Model
         'data_visita',
         'resultado',
         'observacoes',
+        'protocolo',
+        'origem',
+        'assunto',
+        'descricao_denuncia',
+        'local_endereco',
+        'estabelecimento_nome_informado',
+        'denunciante_nome',
+        'denunciante_contato',
     ];
+
+    // O hash da senha de consulta da denúncia nunca sai em JSON/array.
+    protected $hidden = ['senha_consulta_hash'];
 
     protected $casts = [
         'data_visita' => 'date',
@@ -32,6 +43,11 @@ class Fiscalizacao extends Model
     public function fiscal()
     {
         return $this->belongsTo(User::class, 'fiscal_id');
+    }
+
+    public function movimentacoes()
+    {
+        return $this->hasMany(FiscalizacaoMovimentacao::class, 'fiscalizacao_id')->orderBy('id');
     }
 
     public function attachments()

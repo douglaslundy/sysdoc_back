@@ -6,12 +6,18 @@ use App\Http\Requests\StoreFiscalizacaoRequest;
 use App\Http\Requests\UpdateFiscalizacaoRequest;
 use App\Http\Resources\FiscalizacaoResource;
 use App\Models\Fiscalizacao;
+use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
+use App\Services\Fiscalizacao\FiscalizacaoTimeline;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FiscalizacaoController extends Controller
 {
+    public function __construct(private FiscalizacaoTimeline $timeline)
+    {
+    }
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Fiscalizacao::with(['estabelecimento', 'fiscal'])
@@ -53,6 +59,11 @@ class FiscalizacaoController extends Controller
         $dados['fiscal_id'] = $request->user()->id;
 
         $fiscalizacao = Fiscalizacao::create($dados);
+        $fiscalizacao->forceFill([
+            'protocolo' => FiscalizacaoProtocolo::for($fiscalizacao->id, $fiscalizacao->created_at),
+        ])->saveQuietly();
+        $fiscalizacao->refresh(); // traz os padrões do banco (ex.: origem = interna)
+        $this->timeline->registrar($fiscalizacao, 'criada', 'Fiscalização criada', false, $request->user()->id);
         $fiscalizacao->load(['estabelecimento', 'fiscal']);
 
         return response()->json(new FiscalizacaoResource($fiscalizacao), 201);
@@ -66,7 +77,28 @@ class FiscalizacaoController extends Controller
             return response()->json(['error' => 'Fiscalização não encontrada'], 404);
         }
 
-        $fiscalizacao->update($request->validated());
+        $dados = $request->validated();
+        $mensagemPublica = $request->boolean('visivel_ao_denunciante') ? trim((string) ($dados['mensagem_publica'] ?? '')) : '';
+        $situacaoAnterior = $fiscalizacao->resultado;
+        unset($dados['visivel_ao_denunciante'], $dados['mensagem_publica']);
+
+        $fiscalizacao->update($dados);
+
+        $userId = $request->user()?->id;
+        if (($dados['resultado'] ?? $situacaoAnterior) !== $situacaoAnterior) {
+            $this->timeline->registrar(
+                $fiscalizacao,
+                'situacao_alterada',
+                "Situação: {$situacaoAnterior} → {$dados['resultado']}",
+                false,
+                $userId,
+                ['de' => $situacaoAnterior, 'para' => $dados['resultado']]
+            );
+        }
+        if ($mensagemPublica !== '') {
+            $this->timeline->registrar($fiscalizacao, 'mensagem_publica', $mensagemPublica, true, $userId);
+        }
+
         $fiscalizacao->load(['estabelecimento', 'fiscal']);
 
         return response()->json(new FiscalizacaoResource($fiscalizacao));

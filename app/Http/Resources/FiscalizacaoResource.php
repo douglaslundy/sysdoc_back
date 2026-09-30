@@ -14,8 +14,16 @@ class FiscalizacaoResource extends JsonResource
             'estabelecimento_id' => $this->estabelecimento_id,
             'estabelecimento' => [
                 'id' => $this->estabelecimento?->id,
-                'nome_estabelecimento' => $this->estabelecimento?->nome_estabelecimento,
+                'nome_estabelecimento' => $this->estabelecimento?->nome_estabelecimento ?? $this->estabelecimento_nome_informado,
             ],
+            'protocolo' => $this->protocolo,
+            'origem' => $this->origem,
+            'assunto' => $this->assunto,
+            'descricao_denuncia' => $this->descricao_denuncia,
+            'local_endereco' => $this->local_endereco,
+            'estabelecimento_nome_informado' => $this->estabelecimento_nome_informado,
+            'denunciante_nome' => $this->denunciante_nome,
+            'denunciante_contato' => $this->denunciante_contato,
             'fiscal_id' => $this->fiscal_id,
             'fiscal' => [
                 'id' => $this->fiscal?->id,

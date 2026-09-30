@@ -12,6 +12,7 @@ class FiscalizacaoAttachment extends Model
     protected $fillable = [
         'fiscalizacao_id',
         'uploaded_by',
+        'origem',
         'disk',
         'path',
         'original_name',
