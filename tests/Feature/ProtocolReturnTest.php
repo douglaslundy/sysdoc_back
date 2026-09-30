@@ -8,11 +8,19 @@ use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolUserUnit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\GrantsPages;
 use Tests\TestCase;
 
 class ProtocolReturnTest extends TestCase
 {
+    use GrantsPages;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->grantPages('user', ['/protocolo']);
+    }
 
     private function makeUser(string $profile = 'user'): User
     {

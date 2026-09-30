@@ -9,10 +9,12 @@ use App\Models\UserSpecialityPermission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Concerns\GrantsPages;
 use Tests\TestCase;
 
 class QueueTreatmentPlanCreateTest extends TestCase
 {
+    use GrantsPages;
     use RefreshDatabase;
 
     private User $admin;
@@ -26,6 +28,7 @@ class QueueTreatmentPlanCreateTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->grantPages('user', ['/queue']);
 
         $this->admin = User::factory()->create(['profile' => 'admin', 'active' => true]);
         $this->fisio = Speciality::create([

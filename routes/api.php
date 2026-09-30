@@ -132,7 +132,7 @@ Route::middleware('throttle:30,1')->group(function () {
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
 Route::middleware('throttle:5,1')->post('/reset-password', [PasswordResetController::class, 'reset']);
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate', [AuthController::class, 'validateToken']);

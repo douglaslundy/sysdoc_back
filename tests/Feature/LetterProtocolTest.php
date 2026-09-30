@@ -10,11 +10,19 @@ use App\Models\ProtocolUserUnit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\GrantsPages;
 use Tests\TestCase;
 
 class LetterProtocolTest extends TestCase
 {
+    use GrantsPages;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->grantPages('user', ['/letters', '/protocolo']);
+    }
 
     public function test_usuario_cria_protocolo_com_pdf_do_oficio_anexado(): void
     {

@@ -9,11 +9,19 @@ use App\Models\ProtocolOrganizationalUnit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Tests\Concerns\GrantsPages;
 use Tests\TestCase;
 
 class ProtocolVisibilityTest extends TestCase
 {
+    use GrantsPages;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->grantPages('user', ['/protocolo']);
+    }
 
     private function makeProtocol(User $creator, ?User $responsavel): Protocol
     {

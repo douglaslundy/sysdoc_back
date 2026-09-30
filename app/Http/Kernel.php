@@ -71,5 +71,6 @@ class Kernel extends HttpKernel
         'chat.access' => \App\Http\Middleware\EnsureChatAccess::class,
         'almoxarifado.permission' => \App\Http\Middleware\EnsureAlmoxarifadoPermission::class,
         'page.permission' => \App\Http\Middleware\EnsurePagePermission::class,
+        'route.pages' => \App\Http\Middleware\EnforceRoutePagePolicy::class,
     ];
 }

@@ -4,11 +4,19 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\GrantsPages;
 use Tests\TestCase;
 
 class TripDriversOptionsTest extends TestCase
 {
+    use GrantsPages;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->grantPages('tfd', ['/trips']);
+    }
 
     public function test_perfil_tfd_ve_a_lista_de_motoristas(): void
     {

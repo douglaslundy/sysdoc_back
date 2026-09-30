@@ -7,11 +7,19 @@ use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolUserUnit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\GrantsPages;
 use Tests\TestCase;
 
 class ProtocolReceiveAuthorizationTest extends TestCase
 {
+    use GrantsPages;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->grantPages('user', ['/protocolo']);
+    }
 
     public function test_remetente_nao_pode_receber_o_proprio_protocolo_enviado_a_outro_usuario(): void
     {
