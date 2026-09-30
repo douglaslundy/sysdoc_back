@@ -43,3 +43,21 @@ undefined' e passar de 200 chars (UpdateQueueRequest obs max:200 => 422, baixa n
 - T4 concluída: attachments_count (anexos ativos) em /protocolos e caixa-entrada; ícone paperclip; botão Voltar (history.back, fallback caixa-entrada). Testes: ProtocolVisibilityTest, tests/protocolo.
 - T2 concluída: AuditService::recordOncePerVisitor (1 log/IP/tipo/hora) nos 3 pontos do painel público. Teste: PublicMedicinesAuditThrottleTest.
 - T1 concluída: migration `2026_09_29_110000_add_done_by_to_queue_table` (done_by), filtro date_from/date_to em done_at, resource com done_by_user, tela com Baixa por/hora/datepickers (padrão dia 1 do mês → hoje). Testes: QueueDoneByAndRangeTest, tests/queue/*.
+
+
+---
+# Lote 3 (2026-09-30) — correções pendentes + aviso WhatsApp à Vigilância
+
+Branch: `feat/lote-2` (continua). Pedido do usuário: "iniciar todas as correções"; aviso ao denunciante NÃO agora; aviso aos PROFISSIONAIS da vigilância por WhatsApp,
+nos números cadastrados na página de configuração da vigilância (criar cadastro nome+telefone se não existir).
+
+| # | Tarefa | Status | Notas |
+|---|--------|--------|-------|
+| T10 | Aviso WhatsApp aos profissionais da Vigilância (denúncia nova) + cadastro nome/telefone na config | EM BRAINSTORMING | usa WhatsappEvolutionService + AfterResponse |
+| T11 | Fechar rotas só-login (305) por módulo com page.permission | pendente | mapear rota→página; testar perfil com/sem página |
+| T12 | Painel de atendimento de madrugada (fuso do "hoje") | pendente | teste falha 00:00-03:00 BRT |
+| T13 | Auditoria: não gravar linha de operação revertida (afterCommit) | pendente | |
+| T14 | Paginação server-side das listagens sem limite (+ telas) | pendente | letters, ordinances, qrcode-logs, trips, kanban... |
+| T15 | Remover rotas/controllers legados (rooms/calls/services/endedcalls) | pendente | tabelas já dropadas |
+| T16 | Validação inline -> FormRequest (padrão do projeto) nos controllers mais tocados | pendente | escopo limitado e declarado |
+| T17 | Infra 300 usuários: docs/checklist (cache, fila, FPM, Pusher) | pendente | itens de servidor viram checklist |
