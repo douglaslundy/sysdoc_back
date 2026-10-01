@@ -78,8 +78,20 @@ class UserController extends Controller
         $array = ['status' => 'created'];
         $data = $request->except(['password2', 'protocol_unit_ids']);
         $data['password'] = Hash::make($data['password']);
-        $user = DB::transaction(function () use ($data, $request) {
-            $user = User::create($data);
+        $existing = $request->reactivatableUser();
+        if ($existing) {
+            // CPF já cadastrado e inativado: reativa o registro antigo com os dados novos.
+            $data['active'] = true;
+            $data['inactive_date'] = null;
+            $array['status'] = 'reactivated';
+        }
+        $user = DB::transaction(function () use ($data, $request, $existing) {
+            if ($existing) {
+                $existing->update($data);
+                $user = $existing;
+            } else {
+                $user = User::create($data);
+            }
             $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
             return $user;
         });

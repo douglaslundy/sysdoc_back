@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\AccessProfile;
+use App\Models\User;
 use App\Rules\PhoneValidation;
 use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
@@ -57,6 +58,10 @@ class UserRequest extends FormRequest
         $routeUser = $this->route('user');
         $userId = is_object($routeUser) ? $routeUser->id : $routeUser;
 
+        // Cadastro de CPF que já existiu e foi inativado: o registro antigo é reaproveitado
+        // (reativado no controller), então não pode barrar a unicidade de CPF/e-mail.
+        $userId ??= $this->reactivatableUser()?->id;
+
         return [
             'profile' => ['required', 'string', 'max:50', Rule::in($validSlugs)],
             'name' => 'required|string|max:50',
@@ -73,6 +78,18 @@ class UserRequest extends FormRequest
             'protocol_unit_ids' => ['nullable', 'array'],
             'protocol_unit_ids.*' => ['integer', 'distinct', 'exists:protocol_organizational_units,id'],
         ];
+    }
+
+    /**
+     * Usuário inativo (soft delete via `active`) com o mesmo CPF, apenas em criação.
+     */
+    public function reactivatableUser(): ?User
+    {
+        if ($this->route('user') !== null || ! $this->filled('cpf')) {
+            return null;
+        }
+
+        return User::where('cpf', $this->input('cpf'))->where('active', false)->first();
     }
 
     public function messages()
