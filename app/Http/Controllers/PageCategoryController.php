@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdatePageCategoryRequest;
 use App\Http\Requests\StorePageCategoryRequest;
 use App\Models\PageCategory;
 use Illuminate\Http\Request;
@@ -38,21 +39,14 @@ class PageCategoryController extends Controller
         return response()->json($category, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdatePageCategoryRequest $request, $id)
     {
         $category = PageCategory::find($id);
         if (! $category) {
             return response()->json(['error' => 'Categoria não encontrada'], 404);
         }
 
-        $request->validate([
-            'nome' => 'sometimes|string|max:60|unique:page_categories,nome,'.$id,
-            'icone' => 'nullable|string|max:40',
-            'ordem' => 'nullable|integer|min:0',
-            'ativo' => 'nullable|boolean',
-        ]);
-
-        DB::transaction(function () use ($request, $category) {
+                DB::transaction(function () use ($request, $category) {
             $payload = $request->only(['nome', 'icone', 'ativo']);
 
             if ($request->filled('ordem')) {

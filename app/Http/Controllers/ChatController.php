@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PresenceChatRequest;
+use App\Http\Requests\StartConversationChatRequest;
 use App\Http\Requests\DeleteMessagesChatRequest;
 use App\Models\AccessProfile;
 use App\Models\ChatAttachment;
@@ -112,11 +114,9 @@ class ChatController extends Controller
         return response()->json($items);
     }
 
-    public function startConversation(Request $request): JsonResponse
+    public function startConversation(StartConversationChatRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'user_id' => ['required', 'integer', Rule::exists('users', 'id')->where('active', true)],
-        ]);
+                $data = $request->validated();
 
         $userId = (int) $request->user()->id;
         $otherId = (int) $data['user_id'];
@@ -452,13 +452,9 @@ class ChatController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function presence(Request $request): JsonResponse
+    public function presence(PresenceChatRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'state' => ['required', Rule::in(['online', 'away', 'offline'])],
-            'path' => ['nullable', 'string', 'max:255'],
-            'connection_id' => ['required', 'uuid'],
-        ]);
+                $data = $request->validated();
         $userId = (int) $request->user()->id;
         $this->removeStaleConnections();
         $presence = UserPresence::firstOrNew(['user_id' => $userId]);

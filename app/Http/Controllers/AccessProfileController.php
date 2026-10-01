@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateAccessProfileRequest;
 use App\Http\Requests\StoreAccessProfileRequest;
 use App\Models\AccessProfile;
 use App\Models\DocumentApproval;
@@ -50,30 +51,14 @@ class AccessProfileController extends Controller
         return response()->json($profile);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateAccessProfileRequest $request, $id)
     {
         $profile = AccessProfile::find($id);
         if (! $profile) {
             return response()->json(['error' => 'Perfil não encontrado'], 404);
         }
 
-        $request->validate([
-            'nome' => 'sometimes|string|max:60|unique:access_profiles,nome,'.$id,
-            'slug' => 'sometimes|string|max:60|unique:access_profiles,slug,'.$id.'|alpha_dash',
-            'descricao' => 'nullable|string|max:200',
-            'ativo' => 'sometimes|boolean',
-            'chat_enabled' => 'sometimes|boolean',
-            'almoxarifado_create_enabled' => 'sometimes|boolean',
-            'almoxarifado_approve_enabled' => 'sometimes|boolean',
-            'almoxarifado_deliver_enabled' => 'sometimes|boolean',
-            'client_trips_view_enabled' => 'sometimes|boolean',
-            'client_report_view_enabled' => 'sometimes|boolean',
-            'client_history_view_enabled' => 'sometimes|boolean',
-            'page_ids' => 'nullable|array',
-            'page_ids.*' => 'integer|exists:system_pages,id',
-        ]);
-
-        $profile->update($request->only([
+                $profile->update($request->only([
             'nome',
             'slug',
             'descricao',

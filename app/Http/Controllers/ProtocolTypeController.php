@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateProtocolTypeRequest;
 use App\Http\Requests\StoreProtocolTypeRequest;
 use App\Models\ProtocolType;
 use Illuminate\Http\JsonResponse;
@@ -33,26 +34,14 @@ class ProtocolTypeController extends Controller
         return response()->json($type, 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateProtocolTypeRequest $request, int $id): JsonResponse
     {
         $type = ProtocolType::find($id);
         if (! $type) {
             return response()->json(['message' => 'Tipo de protocolo não encontrado.'], 404);
         }
 
-        $validated = $request->validate([
-            'codigo' => [
-                'sometimes',
-                'required',
-                'string',
-                'max:40',
-                Rule::unique('protocol_types', 'codigo')->ignore($type->id),
-            ],
-            'nome' => 'sometimes|required|string|max:120',
-            'descricao' => 'nullable|string',
-            'ordem' => 'nullable|integer|min:0|max:65535',
-            'ativo' => 'nullable|boolean',
-        ]);
+                $validated = $request->validated();
 
         $type->update($validated);
 

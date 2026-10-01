@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateSystemPageRequest;
 use App\Http\Requests\StoreSystemPageRequest;
 use App\Models\PageCategory;
 use App\Models\SystemPage;
@@ -55,24 +56,14 @@ class SystemPageController extends Controller
         return response()->json($page->load('category:id,nome,icone,ordem,ativo'), 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateSystemPageRequest $request, $id)
     {
         $page = SystemPage::find($id);
         if (! $page) {
             return response()->json(['error' => 'Página não encontrada'], 404);
         }
 
-        $request->validate([
-            'titulo' => 'sometimes|string|max:80',
-            'path' => 'sometimes|string|max:120|unique:system_pages,path,'.$id,
-            'icone' => 'nullable|string|max:40',
-            'categoria' => 'nullable|string|max:60',
-            'category_id' => 'nullable|integer|exists:page_categories,id',
-            'ordem' => 'nullable|integer|min:1',
-            'ativo' => 'sometimes|boolean',
-        ]);
-
-        DB::transaction(function () use ($request, $page) {
+                DB::transaction(function () use ($request, $page) {
             $data = $request->only(['titulo', 'path', 'icone', 'categoria', 'category_id', 'ativo']);
 
             $newCategoryId = array_key_exists('category_id', $data) ? $data['category_id'] : $page->category_id;
