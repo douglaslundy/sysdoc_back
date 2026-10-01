@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreKanbanRequest;
 use App\Models\KanbanTask;
 use App\Services\Protocol\UnitTree;
 use App\Services\SystemAlertService;
@@ -67,18 +68,9 @@ class KanbanController extends Controller
         return response()->json($query->get());
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreKanbanRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'titulo' => 'required|string|max:200',
-            'descricao' => 'nullable|string',
-            'status' => 'nullable|string|max:40',
-            'prioridade' => 'nullable|string|max:20',
-            'vencimento' => 'nullable|date',
-            'responsavel_id' => 'nullable|integer|exists:users,id',
-            'visibility' => 'nullable|string|in:public,private',
-            'ordem' => 'nullable|integer|min:0',
-        ]);
+        $validated = $request->validated();
 
         $statusInicial = $validated['status'] ?? 'novo';
 

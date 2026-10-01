@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ConsultarConsultaPublicaRequest;
 use App\Models\ResultadoExame;
 use App\Services\Laboratorio\LaudoPdfService;
 use App\Services\Laboratorio\ResultadoExameService;
@@ -15,13 +16,8 @@ class ConsultaPublicaController extends Controller
     {
     }
 
-    public function consultar(Request $request)
+    public function consultar(ConsultarConsultaPublicaRequest $request)
     {
-        $request->validate([
-            'protocolo' => 'required|string',
-            'senha' => 'required|string',
-        ]);
-
         $resultado = $this->service->consultarPublico(
             $request->input('protocolo'),
             $request->input('senha')

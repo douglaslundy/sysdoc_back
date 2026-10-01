@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateProtocolLetterRequest;
+use App\Http\Requests\CreateProtocolV2LetterRequest;
 use App\Models\Letter;
 use App\Models\LetterAttachment;
 use App\Models\Models;
@@ -220,12 +222,9 @@ class LetterController extends Controller
         }
     }
 
-    public function createProtocol(Request $request, Letter $letter): JsonResponse
+    public function createProtocol(CreateProtocolLetterRequest $request, Letter $letter): JsonResponse
     {
-        $validated = $request->validate([
-            'destino_unit_id' => ['required', 'integer', 'exists:protocol_organizational_units,id'],
-            'destino_user_id' => ['nullable', 'integer', 'exists:users,id'],
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
         $destinationUser = User::query()
@@ -394,12 +393,9 @@ class LetterController extends Controller
         ], 201);
     }
 
-    public function createProtocolV2(Request $request, Letter $letter): JsonResponse
+    public function createProtocolV2(CreateProtocolV2LetterRequest $request, Letter $letter): JsonResponse
     {
-        $validated = $request->validate([
-            'destino_unit_id' => ['required', 'integer', 'exists:protocol_organizational_units,id'],
-            'destino_user_id' => ['nullable', 'integer', 'exists:users,id'],
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
         $destinationUnit = ProtocolOrganizationalUnit::query()->find($validated['destino_unit_id']);

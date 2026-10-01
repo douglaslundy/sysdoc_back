@@ -2,19 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\IndexAgendaColetaRequest;
 use App\Models\PedidoExame;
 use Illuminate\Http\Request;
 
 class AgendaColetaController extends Controller
 {
-    public function index(Request $request)
+    public function index(IndexAgendaColetaRequest $request)
     {
-        $request->validate([
-            'data' => 'nullable|date',
-            'inicio' => 'nullable|date',
-            'fim' => 'nullable|date',
-        ]);
-
         $data = $request->input('data');
         $inicio = $request->input('inicio');
         $fim = $request->input('fim');

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AgentesCidadaoAcsRequest;
+use App\Http\Requests\IndexCidadaoAcsRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -78,22 +80,8 @@ class CidadaoAcsController extends MonitorApsBaseController
     /**
      * GET /monitor-aps/cidadaos?ine=&profissional_id=&agente_cns=&busca=&page=&per_page=
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexCidadaoAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ine'              => 'nullable|string',
-            'profissional_id'  => 'nullable|integer',
-            'agente'           => 'nullable|string|max:255',
-            'agente_cns'       => 'nullable|string|max:255',
-            'condicao'         => 'nullable|string|in:gestante,has,dm,idoso,obito',
-            'busca'            => 'nullable|string|min:3|max:100',
-            'multi_domicilio'  => 'nullable|boolean',
-            'sort'             => 'nullable|string|in:nome,idade',
-            'dir'              => 'nullable|string|in:asc,desc',
-            'page'             => 'nullable|integer|min:1',
-            'per_page'         => 'nullable|integer|min:10|max:200',
-        ]);
-
         $ine            = $request->query('ine') ?: null;
         $this->assertIneAllowed($request, $ine);
         $allowedInes    = $this->resolveAllowedInes($request);
@@ -464,11 +452,8 @@ class CidadaoAcsController extends MonitorApsBaseController
     /**
      * GET /monitor-aps/cidadaos/agentes?ine=X
      */
-    public function agentes(Request $request): JsonResponse
+    public function agentes(AgentesCidadaoAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ine' => 'nullable|string',
-        ]);
         $ine = $request->query('ine') ?: null;
         $this->assertIneAllowed($request, $ine);
         $allowedInes = $this->resolveAllowedInes($request);

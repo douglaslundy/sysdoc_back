@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AtualizarStatusPedidoExameRequest;
 use App\Http\Requests\StorePedidoExameRequest;
 use App\Http\Requests\UpdatePedidoExameRequest;
 use App\Models\PedidoExame;
@@ -117,12 +118,8 @@ class PedidoExameController extends Controller
         return response()->json($pedido);
     }
 
-    public function atualizarStatus(Request $request, $id)
+    public function atualizarStatus(AtualizarStatusPedidoExameRequest $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:solicitado,coletado,em_analise,liberado,cancelado',
-        ]);
-
         $pedido = PedidoExame::find($id);
         if (! $pedido) {
             return response()->json(['error' => 'Pedido não encontrado'], 404);

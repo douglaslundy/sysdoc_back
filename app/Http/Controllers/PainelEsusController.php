@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FilaPainelEsusRequest;
+use App\Http\Requests\FiltrosPainelEsusRequest;
 use App\Models\PainelEsusPresence;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -499,18 +501,8 @@ class PainelEsusController extends MonitorApsBaseController
      * GET /painel-esus/fila?cnes=X&equipe=Y&profissional=Z
      * Autenticado. Retorna contadores e lista de aguardando para a gestão de fila.
      */
-    public function fila(Request $request): JsonResponse
+    public function fila(FilaPainelEsusRequest $request): JsonResponse
     {
-        $request->validate([
-            'cnes'         => 'required|string|max:20',
-            'equipe'       => 'nullable|integer',
-            'profissional' => 'nullable|integer',
-            'data'         => 'nullable|date_format:Y-m-d',
-            'data_inicio'  => 'nullable|date_format:Y-m-d',
-            'data_fim'     => 'nullable|date_format:Y-m-d',
-            'situacao'     => 'nullable|in:aguardando,atendidos,nao_aguardaram',
-        ]);
-
         $cnes     = trim($request->input('cnes'));
         $equipeId = $request->input('equipe');
         $profId   = $request->input('profissional');
@@ -678,15 +670,8 @@ class PainelEsusController extends MonitorApsBaseController
      * Autenticado. Retorna equipes e profissionais com registros no período
      * selecionado para popular os dropdowns.
      */
-    public function filtros(Request $request): JsonResponse
+    public function filtros(FiltrosPainelEsusRequest $request): JsonResponse
     {
-        $request->validate([
-            'cnes'        => 'required|string|max:20',
-            'data'        => 'nullable|date_format:Y-m-d',
-            'data_inicio' => 'nullable|date_format:Y-m-d',
-            'data_fim'    => 'nullable|date_format:Y-m-d',
-            'equipe'      => 'nullable|integer',
-        ]);
         $cnes     = trim($request->input('cnes'));
         $equipeId = $request->input('equipe');
 

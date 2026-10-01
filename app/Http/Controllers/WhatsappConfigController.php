@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SendTestWhatsappConfigRequest;
+use App\Http\Requests\UpdateWhatsappConfigRequest;
 use App\Models\NotificationChannelConfig;
 use App\Services\WhatsappEvolutionService;
 use Illuminate\Http\JsonResponse;
@@ -19,16 +21,8 @@ class WhatsappConfigController extends Controller
         return response()->json($this->payload($this->currentConfig()));
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateWhatsappConfigRequest $request): JsonResponse
     {
-        $request->validate([
-            'whatsapp_base_url' => 'nullable|string|max:255',
-            'whatsapp_api_key' => 'nullable|string',
-            'whatsapp_instance_name' => 'nullable|string|max:120',
-            'whatsapp_instance_token' => 'nullable|string',
-            'whatsapp_ativo' => 'boolean',
-        ]);
-
         $config = $this->currentConfig();
         $currentSettings = $config->configuracao ?? [];
         $incomingApiKey = trim((string) $request->input('whatsapp_api_key', ''));
@@ -169,12 +163,8 @@ class WhatsappConfigController extends Controller
         ], 422);
     }
 
-    public function sendTest(Request $request): JsonResponse
+    public function sendTest(SendTestWhatsappConfigRequest $request): JsonResponse
     {
-        $request->validate([
-            'telefone' => 'required|string',
-        ]);
-
         $config = $this->currentConfig();
         $instance = $this->resolveInstance($config);
         if (! $instance || ! $this->baseUrl($config)) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAccessProfileRequest;
 use App\Models\AccessProfile;
 use App\Models\DocumentApproval;
 use App\Models\SystemPage;
@@ -16,23 +17,8 @@ class AccessProfileController extends Controller
         );
     }
 
-    public function store(Request $request)
+    public function store(StoreAccessProfileRequest $request)
     {
-        $request->validate([
-            'nome' => 'required|string|max:60|unique:access_profiles,nome',
-            'slug' => 'required|string|max:60|unique:access_profiles,slug|alpha_dash',
-            'descricao' => 'nullable|string|max:200',
-            'chat_enabled' => 'nullable|boolean',
-            'almoxarifado_create_enabled' => 'nullable|boolean',
-            'almoxarifado_approve_enabled' => 'nullable|boolean',
-            'almoxarifado_deliver_enabled' => 'nullable|boolean',
-            'client_trips_view_enabled' => 'nullable|boolean',
-            'client_report_view_enabled' => 'nullable|boolean',
-            'client_history_view_enabled' => 'nullable|boolean',
-            'page_ids' => 'nullable|array',
-            'page_ids.*' => 'integer|exists:system_pages,id',
-        ]);
-
         $profile = AccessProfile::create([
             'nome' => $request->nome,
             'slug' => $request->slug,

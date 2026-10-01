@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateOrdinanceAiOrdinanceRequest;
 use App\Http\Requests\StoreOrdinanceRequest;
 use App\Http\Requests\UpdateOrdinanceRequest;
 use App\Models\Models;
@@ -143,20 +144,8 @@ class OrdinanceController extends Controller
         }
     }
 
-    public function createOrdinanceAi(Request $request)
+    public function createOrdinanceAi(CreateOrdinanceAiOrdinanceRequest $request)
     {
-        $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'type' => ['required', 'in:normativa,ordinatoria'],
-            'title' => ['required', 'string', 'max:255'],
-            'subject' => ['required', 'string', 'max:255'],
-            'summary' => ['required', 'string'],
-            'legal_basis' => ['nullable', 'string'],
-            'signatory_name' => ['required', 'string', 'max:150'],
-            'signatory_role' => ['nullable', 'string', 'max:150'],
-            'additional_instructions' => ['nullable', 'string'],
-        ]);
-
         $prompt = [[
             'role' => 'user',
             'content' => "
