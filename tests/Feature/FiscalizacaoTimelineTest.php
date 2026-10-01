@@ -66,27 +66,59 @@ class FiscalizacaoTimelineTest extends TestCase
         $this->assertSame(1, $f->movimentacoes()->where('acao', 'situacao_alterada')->count());
     }
 
-    public function test_mensagem_ao_denunciante_gera_movimentacao_publica(): void
+    public function test_editar_a_observacao_registra_no_historico_como_interna(): void
     {
         $f = $this->criar();
 
-        $this->atualizar($f, [
-            'resultado' => 'Notificação', 'visivel_ao_denunciante' => true, 'mensagem_publica' => 'Estabelecimento notificado.',
-        ]);
+        $this->atualizar($f, ['observacoes' => 'Vistoria feita, extintores vencidos.']);
+
+        $mov = $f->movimentacoes()->where('acao', 'observacao')->get();
+        $this->assertCount(1, $mov);
+        $this->assertSame('Vistoria feita, extintores vencidos.', $mov[0]->descricao);
+        $this->assertFalse($mov[0]->publico);
+        $this->assertSame($this->admin->id, $mov[0]->user_id);
+    }
+
+    public function test_caixa_visivel_ao_denunciante_publica_a_observacao_editada(): void
+    {
+        $f = $this->criar();
+
+        $this->atualizar($f, ['observacoes' => 'Estabelecimento notificado.', 'visivel_ao_denunciante' => true]);
 
         $publicas = $f->movimentacoes()->where('publico', true)->get();
         $this->assertCount(1, $publicas);
-        $this->assertSame('mensagem_publica', $publicas[0]->acao);
+        $this->assertSame('observacao', $publicas[0]->acao);
         $this->assertSame('Estabelecimento notificado.', $publicas[0]->descricao);
     }
 
-    public function test_sem_a_flag_nada_fica_publico(): void
+    public function test_observacao_inalterada_ou_vazia_nao_gera_historico(): void
+    {
+        $f = $this->criar(['observacoes' => 'Texto inicial']);
+        $antes = $f->movimentacoes()->count();
+
+        $this->atualizar($f, ['observacoes' => 'Texto inicial', 'visivel_ao_denunciante' => true]);
+        $this->atualizar($f, ['resultado' => 'Conforme']);
+
+        $this->assertSame($antes + 1, $f->movimentacoes()->count(), 'só a mudança de situação entra');
+        $this->assertSame(0, $f->movimentacoes()->where('publico', true)->count());
+    }
+
+    public function test_sem_a_caixa_nada_fica_publico(): void
     {
         $f = $this->criar();
 
-        $this->atualizar($f, ['resultado' => 'Auto de infração', 'mensagem_publica' => 'texto sem flag']);
+        $this->atualizar($f, ['resultado' => 'Auto de infração', 'observacoes' => 'Texto interno']);
 
         $this->assertSame(0, $f->movimentacoes()->where('publico', true)->count());
+    }
+
+    public function test_campo_mensagem_publica_antigo_e_ignorado(): void
+    {
+        $f = $this->criar();
+
+        $this->atualizar($f, ['mensagem_publica' => 'nao deve virar historico', 'visivel_ao_denunciante' => true]);
+
+        $this->assertSame(0, $f->movimentacoes()->where('acao', 'mensagem_publica')->count());
     }
 
     public function test_excluir_nao_quebra(): void

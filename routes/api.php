@@ -84,6 +84,7 @@ use App\Http\Controllers\UserEquipeApsController;
 use App\Http\Controllers\UserSpecialityPermissionController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VigilanciaConfigController;
+use App\Http\Controllers\PeticaoMotivoController;
 use App\Http\Controllers\VigilanciaContatoWhatsappController;
 use App\Http\Controllers\VisitaAcsController;
 use App\Http\Controllers\WhatsappConfigController;
@@ -108,9 +109,15 @@ Route::post('/queues/log-location', [QueueController::class, 'storeLocationLog']
 // Consulta pública de resultado de exame (throttle: 10 req/min por IP)
 Route::middleware('throttle:10,1')->post('/consulta-exame', [ConsultaPublicaController::class, 'consultar']);
 // Denúncia pública de vigilância sanitária (sem login)
+Route::middleware('throttle:denuncia-create')->post('/public/petitions', [DenunciaPublicaController::class, 'store']);
+Route::middleware('throttle:denuncia-consulta')->post('/public/petitions/consulta', [DenunciaPublicaController::class, 'consultar']);
+// Rotas antigas (links/clientes já em uso)
 Route::middleware('throttle:denuncia-create')->post('/public/denuncias', [DenunciaPublicaController::class, 'store']);
 Route::middleware('throttle:denuncia-consulta')->post('/public/denuncias/consulta', [DenunciaPublicaController::class, 'consultar']);
 Route::middleware('throttle:10,1')->post('/consulta-exame/pdf/{protocolo}', [ConsultaPublicaController::class, 'downloadPdf']);
+
+// Motivos de petição ativos (select do formulário público)
+Route::get('/public/petition/reasons', [PeticaoMotivoController::class, 'publicIndex']);
 
 // Transparência pública - Farmácia básica (Lei 2488)
 Route::get('/public/pharmacy/medicines/daily', [MedicineTransparencyPublicController::class, 'daily']);
@@ -557,12 +564,16 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['store', 'update', 'destroy'])
             ->parameters(['fiscalizacoes' => 'fiscalizacao']);
         Route::get('/fiscalizacoes/{fiscalizacao}/historico', [FiscalizacaoHistoricoController::class, 'index']);
-        Route::post('/fiscalizacoes/{fiscalizacao}/movimentacoes', [FiscalizacaoHistoricoController::class, 'store']);
         Route::get('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'index']);
         Route::get('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}/download', [FiscalizacaoAttachmentController::class, 'download']);
         Route::post('/fiscalizacoes/{fiscalizacao}/attachments', [FiscalizacaoAttachmentController::class, 'store']);
         Route::delete('/fiscalizacoes/{fiscalizacao}/attachments/{attachment}', [FiscalizacaoAttachmentController::class, 'destroy']);
     });
+
+    // Motivos de petição (admin ou quem tiver a página /peticao-motivos em Perfis)
+    Route::apiResource('peticao-motivos', PeticaoMotivoController::class)
+        ->except(['show'])
+        ->parameters(['peticao-motivos' => 'motivo']);
 
     // Configuração da Vigilância Sanitária (somente admin)
     Route::middleware('admin')->group(function () {

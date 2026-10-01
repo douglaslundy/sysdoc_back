@@ -6,6 +6,7 @@ use App\Http\Requests\ConsultaDenunciaRequest;
 use App\Http\Requests\StoreDenunciaRequest;
 use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoAttachment;
+use App\Models\KanbanTask;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
 use App\Services\Fiscalizacao\VigilanciaAvisoService;
@@ -56,7 +57,8 @@ class DenunciaPublicaController extends Controller
         $fiscalizacao = DB::transaction(function () use ($request, $senha) {
             $fiscalizacao = Fiscalizacao::create([
                 'resultado' => 'Pendente de apuração',
-                'origem' => 'denuncia',
+                'origem' => 'peticao',
+                'motivo_id' => $request->input('motivo_id'),
                 'assunto' => $request->input('assunto'),
                 'descricao_denuncia' => $request->input('descricao_denuncia'),
                 'local_endereco' => $request->input('local_endereco'),
@@ -85,6 +87,8 @@ class DenunciaPublicaController extends Controller
                 ]);
                 $anexos++;
             }
+
+            $this->criarCardNaUnidade($fiscalizacao);
 
             $this->timeline->registrar(
                 $fiscalizacao,
@@ -121,8 +125,9 @@ class DenunciaPublicaController extends Controller
         }
 
         $fiscalizacao = Fiscalizacao::query()
+            ->with('motivo:id,nome')
             ->where('protocolo', $protocolo)
-            ->where('origem', 'denuncia')
+            ->where('origem', 'peticao')
             ->whereNotNull('senha_consulta_hash')
             ->first();
 
@@ -153,10 +158,36 @@ class DenunciaPublicaController extends Controller
             'protocolo' => $fiscalizacao->protocolo,
             // Não expõe o resultado interno: só se já foi apurada ou não.
             'situacao' => $fiscalizacao->resultado === 'Pendente de apuração' ? 'Pendente de apuração' : 'Apurada',
+            'motivo' => $fiscalizacao->motivo?->nome,
             'assunto' => $fiscalizacao->assunto,
             'local_endereco' => $fiscalizacao->local_endereco,
             'registrada_em' => $fiscalizacao->created_at?->toISOString(),
             'movimentacoes' => $movimentacoes,
+        ]);
+    }
+
+    /**
+     * O motivo aponta a unidade responsável: a petição vira um card no kanban dela. O card não
+     * leva nenhum dado do denunciante (nome/contato), só o que a equipe precisa para agir.
+     */
+    private function criarCardNaUnidade(Fiscalizacao $fiscalizacao): void
+    {
+        $fiscalizacao->loadMissing('motivo');
+        $motivo = $fiscalizacao->motivo;
+
+        if (! $motivo?->unit_id) {
+            return;
+        }
+
+        KanbanTask::create([
+            'unit_id' => $motivo->unit_id,
+            'fiscalizacao_id' => $fiscalizacao->id,
+            'titulo' => mb_substr("Petição {$fiscalizacao->protocolo} — {$motivo->nome}", 0, 200),
+            'descricao' => "Assunto: {$fiscalizacao->assunto}\nLocal: {$fiscalizacao->local_endereco}",
+            'status' => 'novo',
+            'prioridade' => 'normal',
+            'visibility' => 'public',
+            'ordem' => 0,
         ]);
     }
 
@@ -165,7 +196,7 @@ class DenunciaPublicaController extends Controller
         return [
             'protocolo' => $protocolo,
             'senha' => $senha,
-            'url_consulta' => rtrim((string) config('app.frontend_url'), '/').'/denuncia/consulta?protocolo='.$protocolo,
+            'url_consulta' => rtrim((string) config('app.frontend_url'), '/').'/petition/track?protocolo='.$protocolo,
         ];
     }
 

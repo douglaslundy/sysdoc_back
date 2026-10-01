@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TestEmailConfigRequest;
+use App\Http\Requests\UpdateEmailConfigRequest;
 use App\Models\NotificationChannelConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,19 +17,8 @@ class EmailConfigController extends Controller
         return response()->json($this->payload($this->currentConfig()));
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateEmailConfigRequest $request): JsonResponse
     {
-        $request->validate([
-            'smtp_host' => 'nullable|string|max:255',
-            'smtp_port' => 'nullable|integer|min:1|max:65535',
-            'smtp_username' => 'nullable|string|max:255',
-            'smtp_password' => 'nullable|string',
-            'smtp_encryption' => 'nullable|string|max:20',
-            'from_address' => 'nullable|email|max:255',
-            'from_name' => 'nullable|string|max:255',
-            'email_ativo' => 'boolean',
-        ]);
-
         $config = $this->currentConfig();
         $config->update([
             'ativo' => (bool) $request->boolean('email_ativo'),
@@ -45,12 +36,8 @@ class EmailConfigController extends Controller
         return response()->json($this->payload($config->fresh()));
     }
 
-    public function test(Request $request): JsonResponse
+    public function test(TestEmailConfigRequest $request): JsonResponse
     {
-        $request->validate([
-            'destinatario' => 'required|email',
-        ]);
-
         $config = $this->currentConfig();
         if (! $config->ativo) {
             return response()->json(['ok' => false, 'error' => 'Configuração de e-mail desativada.'], 422);

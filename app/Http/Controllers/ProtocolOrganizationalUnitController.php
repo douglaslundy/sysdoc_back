@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProtocolOrganizationalUnitRequest;
 use App\Models\ProtocolOrganizationalUnit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,16 +30,9 @@ class ProtocolOrganizationalUnitController extends Controller
         return response()->json($attach($byParent->get(0, collect()))->values());
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreProtocolOrganizationalUnitRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'parent_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-            'tipo' => 'required|string|max:40',
-            'codigo' => 'nullable|string|max:60',
-            'nome' => 'required|string|max:150',
-            'descricao' => 'nullable|string',
-            'ativo' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         return response()->json(
             ProtocolOrganizationalUnit::create([

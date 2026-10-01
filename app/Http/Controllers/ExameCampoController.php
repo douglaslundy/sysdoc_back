@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReordenarExameCampoRequest;
 use App\Http\Requests\StoreExameCampoRequest;
 use App\Models\Exame;
 use App\Models\ExameCampo;
@@ -87,13 +88,8 @@ class ExameCampoController extends Controller
         return response()->json(['message' => 'Campo removido com sucesso!']);
     }
 
-    public function reordenar(Request $request, $exameId)
+    public function reordenar(ReordenarExameCampoRequest $request, $exameId)
     {
-        $request->validate([
-            'ordem' => 'required|array',
-            'ordem.*' => 'integer|exists:exame_campos,id',
-        ]);
-
         foreach ($request->ordem as $posicao => $campoId) {
             ExameCampo::where('id', $campoId)
                 ->where('exame_id', $exameId)

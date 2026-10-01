@@ -43,6 +43,7 @@ class AccessProfileSeeder extends Seeder
             ['titulo' => 'Estabelecimentos', 'path' => '/estabelecimentos', 'icone' => 'home', 'categoria' => 'Vigilância Sanitária'],
             ['titulo' => 'Alvarás', 'path' => '/alvaras', 'icone' => 'award', 'categoria' => 'Vigilância Sanitária'],
             ['titulo' => 'Vigilância - Config', 'path' => '/vigilancia/configuracoes', 'icone' => 'settings', 'categoria' => 'Vigilância Sanitária'],
+            ['titulo' => 'Motivos de Petição', 'path' => '/peticao-motivos', 'icone' => 'list', 'categoria' => 'Vigilância Sanitária'],
             ['titulo' => 'Fiscalizações', 'path' => '/fiscalizacoes', 'icone' => 'clipboard', 'categoria' => 'Vigilância Sanitária'],
             ['titulo' => 'Farmácia - Consulta de Medicamentos', 'path' => '/pharmacy/consulta-medicamentos', 'icone' => 'search', 'categoria' => 'Farmácia'],
             ['titulo' => 'Farmácia - Medicamentos', 'path' => '/pharmacy/medicines', 'icone' => 'archive', 'categoria' => 'Farmácia'],

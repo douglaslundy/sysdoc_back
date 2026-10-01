@@ -556,7 +556,7 @@ class DashboardService
             'no_ano' => $porPeriodo($anoInicio, $anoFim)->count(),
             'no_mes' => $porPeriodo($agora->copy()->startOfMonth(), $agora->copy()->endOfMonth())->count(),
             'denuncias_pendentes' => Fiscalizacao::query()
-                ->where('origem', 'denuncia')
+                ->where('origem', 'peticao')
                 ->where('resultado', 'Pendente de apuração')
                 ->count(),
             'autos_infracao_ano' => $porPeriodo($anoInicio, $anoFim)->where('resultado', 'Auto de infração')->count(),

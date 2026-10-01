@@ -40,7 +40,7 @@ class DashboardVigilanciaFiscalizacoesTest extends TestCase
 
     private function denuncia(string $resultado, string $recebidaEm): Fiscalizacao
     {
-        $f = Fiscalizacao::create(['resultado' => $resultado, 'origem' => 'denuncia']);
+        $f = Fiscalizacao::create(['resultado' => $resultado, 'origem' => 'peticao']);
         $f->forceFill(['created_at' => $recebidaEm])->saveQuietly();
 
         return $f;

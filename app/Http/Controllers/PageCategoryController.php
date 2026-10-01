@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePageCategoryRequest;
 use App\Models\PageCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,15 +16,8 @@ class PageCategoryController extends Controller
         );
     }
 
-    public function store(Request $request)
+    public function store(StorePageCategoryRequest $request)
     {
-        $request->validate([
-            'nome' => 'required|string|max:60|unique:page_categories,nome',
-            'icone' => 'nullable|string|max:40',
-            'ordem' => 'nullable|integer|min:0',
-            'ativo' => 'nullable|boolean',
-        ]);
-
         $category = DB::transaction(function () use ($request) {
             $targetOrder = $request->filled('ordem')
                 ? (int) $request->ordem

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreAlmoxarifadoRequisicaoRequest;
+use App\Http\Requests\UpdateStatusAlmoxarifadoRequisicaoRequest;
 use App\Models\AlmoxarifadoEstoque;
 use App\Models\AlmoxarifadoMovimentacao;
 use App\Models\AlmoxarifadoProduto;
@@ -64,17 +66,9 @@ class AlmoxarifadoRequisicaoController extends Controller
         return response()->json($requisicao);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreAlmoxarifadoRequisicaoRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'almoxarifado_secretaria_id' => ['required', 'integer', 'exists:almoxarifado_secretarias,id'],
-            'justificativa' => ['nullable', 'string'],
-            'observacoes' => ['nullable', 'string'],
-            'itens' => ['required', 'array', 'min:1'],
-            'itens.*.almoxarifado_produto_id' => ['required', 'integer', 'exists:almoxarifado_produtos,id'],
-            'itens.*.quantidade_solicitada' => ['required', 'numeric', 'min:0.001'],
-            'itens.*.observacao' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
 
         $requisicao = DB::transaction(function () use ($validated, $request) {
             $user = $request->user();
@@ -121,12 +115,9 @@ class AlmoxarifadoRequisicaoController extends Controller
         return response()->json($requisicao, 201);
     }
 
-    public function updateStatus(Request $request, int $id): JsonResponse
+    public function updateStatus(UpdateStatusAlmoxarifadoRequisicaoRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'status' => ['required', 'in:recebida,em_analise,aprovada,recusada,em_separacao,em_processo_de_entrega,entregue,cancelada'],
-            'observacao' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validated();
 
         $requisicao = AlmoxarifadoRequisicao::with('itens.produto:id,nome')->find($id);
         if (! $requisicao) {

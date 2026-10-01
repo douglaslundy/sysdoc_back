@@ -70,29 +70,12 @@ class FiscalizacaoHistoricoTest extends TestCase
             ->assertJsonPath('0.usuario', 'Denunciante');
     }
 
-    public function test_adiciona_movimentacao_manual_interna_ou_publica(): void
+    public function test_nao_existe_mais_lancamento_manual_de_movimentacao(): void
     {
         $this->app['auth']->forgetGuards();
         $this->actingAs($this->admin, 'sanctum')
-            ->postJson("/api/fiscalizacoes/{$this->fiscalizacao->id}/movimentacoes", ['descricao' => 'Ligar para o responsável.', 'publico' => false])
-            ->assertCreated();
-        $this->app['auth']->forgetGuards();
-        $this->actingAs($this->admin, 'sanctum')
-            ->postJson("/api/fiscalizacoes/{$this->fiscalizacao->id}/movimentacoes", ['descricao' => 'Visita agendada.', 'publico' => true])
-            ->assertCreated();
-
-        $mov = $this->fiscalizacao->movimentacoes()->get();
-        $this->assertSame(['observacao', 'observacao'], $mov->pluck('acao')->all());
-        $this->assertSame([false, true], $mov->pluck('publico')->all());
-        $this->assertSame($this->admin->id, $mov[0]->user_id);
-    }
-
-    public function test_descricao_e_obrigatoria(): void
-    {
-        $this->app['auth']->forgetGuards();
-        $this->actingAs($this->admin, 'sanctum')
-            ->postJson("/api/fiscalizacoes/{$this->fiscalizacao->id}/movimentacoes", ['descricao' => ''])
-            ->assertStatus(422);
+            ->postJson("/api/fiscalizacoes/{$this->fiscalizacao->id}/movimentacoes", ['descricao' => 'x'])
+            ->assertNotFound();
     }
 
     public function test_exige_a_pagina_fiscalizacoes(): void
@@ -100,10 +83,6 @@ class FiscalizacaoHistoricoTest extends TestCase
         $user = User::factory()->create(['profile' => 'user', 'active' => true]);
 
         $this->historico($user)->assertForbidden();
-        $this->app['auth']->forgetGuards();
-        $this->actingAs($user, 'sanctum')
-            ->postJson("/api/fiscalizacoes/{$this->fiscalizacao->id}/movimentacoes", ['descricao' => 'x'])
-            ->assertForbidden();
     }
 
     public function test_fiscalizacao_inexistente_devolve_404(): void

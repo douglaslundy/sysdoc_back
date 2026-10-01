@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreFiscalizacaoMovimentacaoRequest;
 use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoMovimentacao;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
@@ -34,19 +33,6 @@ class FiscalizacaoHistoricoController extends Controller
             ->values();
 
         return response()->json($itens);
-    }
-
-    public function store(StoreFiscalizacaoMovimentacaoRequest $request, Fiscalizacao $fiscalizacao): JsonResponse
-    {
-        $movimentacao = $this->timeline->registrar(
-            $fiscalizacao,
-            'observacao',
-            $request->validated('descricao'),
-            (bool) $request->validated('publico', false),
-            $request->user()?->id
-        );
-
-        return response()->json($this->present($movimentacao->load('user:id,name')), 201);
     }
 
     private function present(FiscalizacaoMovimentacao $mov): array

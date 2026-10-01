@@ -20,6 +20,7 @@ class Fiscalizacao extends Model
         'observacoes',
         'protocolo',
         'origem',
+        'motivo_id',
         'assunto',
         'descricao_denuncia',
         'local_endereco',
@@ -34,6 +35,11 @@ class Fiscalizacao extends Model
     protected $casts = [
         'data_visita' => 'date',
     ];
+
+    public function motivo()
+    {
+        return $this->belongsTo(PeticaoMotivo::class, 'motivo_id');
+    }
 
     public function estabelecimento()
     {

@@ -2,6 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AttachProtocolRequest;
+use App\Http\Requests\CloseProtocolRequest;
+use App\Http\Requests\CommentProtocolRequest;
+use App\Http\Requests\EligibleProtocolUsersRequest;
+use App\Http\Requests\ForwardProtocolRequest;
+use App\Http\Requests\MoveProtocolKanbanRequest;
+use App\Http\Requests\ReturnProtocolRequest;
+use App\Http\Requests\StoreProtocolRequest;
+use App\Http\Requests\UpdateProtocolRequest;
 use App\Models\AccessProfile;
 use App\Models\Protocol;
 use App\Models\ProtocolAttachment;
@@ -11,6 +20,7 @@ use App\Models\ProtocolMovement;
 use App\Models\ProtocolNotification;
 use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolUserUnit;
+use App\Services\Protocol\UnitTree;
 use App\Models\ProtocolView;
 use App\Models\User;
 use App\Services\AuditService;
@@ -222,28 +232,9 @@ class ProtocolController extends Controller
         return response()->json($historico);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreProtocolRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'assunto' => 'required|string|max:200',
-            'descricao' => 'nullable|string',
-            'tipo' => 'required|string|max:40|exists:protocol_types,codigo',
-            'prioridade' => 'nullable|string|max:20',
-            'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-            'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-            'destino_user_id' => 'nullable|integer|exists:users,id',
-            'prazo_atendimento' => 'nullable|date',
-            'kanban' => 'nullable|array',
-            'kanban.ativar' => 'nullable|boolean',
-            'kanban.id' => 'nullable|integer|exists:kanban_tasks,id',
-            'kanban.titulo' => 'nullable|string|max:200',
-            'kanban.descricao' => 'nullable|string',
-            'kanban.status' => 'nullable|string|max:40',
-            'kanban.prioridade' => 'nullable|string|max:20',
-            'kanban.vencimento' => 'nullable|date',
-            'kanban.responsavel_id' => 'nullable|integer|exists:users,id',
-            'kanban.ordem' => 'nullable|integer|min:0',
-        ]);
+        $validated = $request->validated();
 
         $config = ProtocolConfig::current();
         $user = $request->user();
@@ -321,32 +312,14 @@ class ProtocolController extends Controller
         return response()->json($protocol, 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateProtocolRequest $request, int $id): JsonResponse
     {
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
-        $validated = $request->validate([
-            'assunto' => 'sometimes|required|string|max:200',
-            'descricao' => 'nullable|string',
-            'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo',
-            'prioridade' => 'nullable|string|max:20',
-            'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-            'destino_user_id' => 'nullable|integer|exists:users,id',
-            'prazo_atendimento' => 'nullable|date',
-            'kanban' => 'nullable|array',
-            'kanban.ativar' => 'nullable|boolean',
-            'kanban.id' => 'nullable|integer|exists:kanban_tasks,id',
-            'kanban.titulo' => 'nullable|string|max:200',
-            'kanban.descricao' => 'nullable|string',
-            'kanban.status' => 'nullable|string|max:40',
-            'kanban.prioridade' => 'nullable|string|max:20',
-            'kanban.vencimento' => 'nullable|date',
-            'kanban.responsavel_id' => 'nullable|integer|exists:users,id',
-            'kanban.ordem' => 'nullable|integer|min:0',
-        ]);
+        $validated = $request->validated();
 
         $old = $protocol->toArray();
         $protocolData = collect($validated)->except(['destino_user_id', 'kanban'])->all();
@@ -387,13 +360,9 @@ class ProtocolController extends Controller
         });
     }
 
-    public function forward(Request $request, int $id): JsonResponse
+    public function forward(ForwardProtocolRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-            'destino_user_id' => 'nullable|integer|exists:users,id',
-            'observacao' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         return $this->applyAction($request, $id, 'encaminhado', function (Protocol $protocol) use ($request, $validated) {
             $protocol->update([
@@ -408,13 +377,9 @@ class ProtocolController extends Controller
         });
     }
 
-    public function comment(Request $request, int $id): JsonResponse
+    public function comment(CommentProtocolRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'conteudo' => 'required|string',
-            'privado' => 'nullable|boolean',
-            'tipo' => 'nullable|string|max:30',
-        ]);
+        $validated = $request->validated();
 
         return $this->applyAction($request, $id, 'comentado', function (Protocol $protocol) use ($request, $validated) {
             ProtocolComment::create([
@@ -429,11 +394,9 @@ class ProtocolController extends Controller
         });
     }
 
-    public function close(Request $request, int $id): JsonResponse
+    public function close(CloseProtocolRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'justificativa_encerramento' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         return $this->applyAction($request, $id, 'encerrado', function (Protocol $protocol) use ($request, $validated) {
             $protocol->update([
@@ -463,11 +426,9 @@ class ProtocolController extends Controller
         });
     }
 
-    public function returnToSender(Request $request, int $id): JsonResponse
+    public function returnToSender(ReturnProtocolRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'motivo' => 'required|string|min:5',
-        ]);
+        $validated = $request->validated();
 
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
@@ -556,12 +517,9 @@ class ProtocolController extends Controller
         ];
     }
 
-    public function attach(Request $request, int $id): JsonResponse
+    public function attach(AttachProtocolRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'arquivo' => 'required|file|max:30720|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx',
-            'descricao' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $protocol = Protocol::find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
@@ -651,18 +609,14 @@ class ProtocolController extends Controller
      * abrir a tela para ve-lo/recebe-lo. Basta uma pagina /protocolo* porque a
      * navegacao do frontend resolve o acesso ao modulo por prefixo de rota.
      *
-     * A lotacao em unidade (protocol_user_units) NAO e exigida: muitos municipios
-     * liberam o Protocolo por perfil sem cadastrar a lotacao de cada usuario, e
-     * isso deixava a lista praticamente vazia. O parametro unit_id e aceito por
-     * compatibilidade mas nao filtra.
+     * Com unit_id, so entram usuarios COM LOTACAO ATIVA (protocol_user_units) nessa
+     * unidade ou em qualquer subunidade dela (decisao do usuario: lista estrita;
+     * quem nao esta lotado precisa ser cadastrado em /protocolo/estrutura). Sem
+     * unit_id lista todos os elegiveis.
      */
-    public function eligibleDestinationUsers(Request $request): JsonResponse
+    public function eligibleDestinationUsers(EligibleProtocolUsersRequest $request): JsonResponse
     {
-        $request->validate([
-            'unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-        ]);
-
-        $allowedProfiles = AccessProfile::query()
+                $allowedProfiles = AccessProfile::query()
             ->where('ativo', true)
             ->whereHas('pages', fn ($q) => $q->where('path', 'like', '/protocolo%')->where('ativo', true))
             ->pluck('slug');
@@ -670,6 +624,13 @@ class ProtocolController extends Controller
         $eligible = User::query()
             ->where('active', true)
             ->where(fn ($q) => $q->whereIn('profile', $allowedProfiles)->orWhere('profile', 'admin'))
+            ->when($request->filled('unit_id'), function ($q) use ($request) {
+                $unitIds = UnitTree::withDescendantIds((int) $request->input('unit_id'));
+                $q->whereIn('id', ProtocolUserUnit::query()
+                    ->where('ativo', true)
+                    ->whereIn('protocol_organizational_unit_id', $unitIds)
+                    ->select('user_id'));
+            })
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name]);
@@ -677,12 +638,9 @@ class ProtocolController extends Controller
         return response()->json($eligible);
     }
 
-    public function moveFromKanban(Request $request, int $id): JsonResponse
+    public function moveFromKanban(MoveProtocolKanbanRequest $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-            'kanban_status' => 'required|in:novo,em_andamento,aguardando_resposta,bloqueado,concluido',
-            'observacao' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $protocol = Protocol::with('kanbanTask')->find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {

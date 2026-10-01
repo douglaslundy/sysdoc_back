@@ -2,6 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AgentesVisitaAcsRequest;
+use App\Http\Requests\EvolucaoVisitaAcsRequest;
+use App\Http\Requests\IndexVisitaAcsRequest;
+use App\Http\Requests\ListaVisitaAcsRequest;
+use App\Http\Requests\MapaVisitaAcsRequest;
+use App\Http\Requests\ResumoVisitaAcsRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -877,18 +883,8 @@ class VisitaAcsController extends MonitorApsBaseController
     /**
      * GET /visitas?ano=X&mes=Y[&ine=Z&agente_cns=W&page=N&per_page=N]
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexVisitaAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ano' => 'required|integer|min:2020|max:2030',
-            'mes' => 'required|integer|min:1|max:12',
-            'ine' => 'nullable|string',
-            'agente' => 'nullable|string',
-            'agente_cns' => 'nullable|string|max:255',
-            'page' => 'nullable|integer|min:1',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
         $perPage = (int) ($request->per_page ?? 20);
@@ -953,18 +949,8 @@ class VisitaAcsController extends MonitorApsBaseController
      * GET /visitas/resumo?ano=X&mes=Y[&ine=Z]
      * Cards de totais + grÃƒÂ¡fico de barras (VisitasAcs.js).
      */
-    public function resumo(Request $request): JsonResponse
+    public function resumo(ResumoVisitaAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ano' => 'required|integer|min:2020|max:2030',
-            'mes' => 'required|integer|min:1|max:12',
-            'ine' => 'nullable|string',
-            'agente' => 'nullable|string',
-            'agente_cns' => 'nullable|string|max:255',
-            'desfecho' => 'nullable|integer|in:1,2,3',
-            'has_geo' => 'nullable|string|in:sim,nao',
-        ]);
-
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
@@ -1084,20 +1070,8 @@ class VisitaAcsController extends MonitorApsBaseController
      * Lista paginada Ã¢â‚¬â€ aba Tabela do VisitasAcs.js.
      * Inclui instrumento e has_geo para exibir na tabela e habilitar o botÃƒÂ£o Ver.
      */
-    public function lista(Request $request): JsonResponse
+    public function lista(ListaVisitaAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ano' => 'required|integer|min:2020|max:2030',
-            'mes' => 'required|integer|min:1|max:12',
-            'ine' => 'nullable|string',
-            'agente' => 'nullable|string',
-            'agente_cns' => 'nullable|string|max:255',
-            'desfecho' => 'nullable|integer',
-            'has_geo' => 'nullable|in:sim,nao',
-            'page' => 'nullable|integer|min:1',
-            'per_page' => 'nullable|integer|min:1|max:100',
-        ]);
-
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
         $perPage = (int) ($request->per_page ?? 50);
@@ -1440,17 +1414,8 @@ class VisitaAcsController extends MonitorApsBaseController
      * Pins georreferenciados Ã¢â‚¬â€ aba Mapa do VisitasAcs.js.
      * Inclui equipe_ine para coloraÃƒÂ§ÃƒÂ£o por equipe no modo "Todos".
      */
-    public function mapa(Request $request): JsonResponse
+    public function mapa(MapaVisitaAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ano' => 'required|integer|min:2020|max:2030',
-            'mes' => 'required|integer|min:1|max:12',
-            'ine' => 'nullable|string',
-            'agente' => 'nullable|string',
-            'agente_cns' => 'nullable|string|max:255',
-            'busca' => 'nullable|string|max:200',
-        ]);
-
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
@@ -1714,18 +1679,8 @@ class VisitaAcsController extends MonitorApsBaseController
      * GET /visitas/agentes?ano=X&mes=Y[&ine=Z]
      * EstatÃƒÂ­sticas agregadas por agente Ã¢â‚¬â€ aba Por Agente.
      */
-    public function agentes(Request $request): JsonResponse
+    public function agentes(AgentesVisitaAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ano' => 'required|integer|min:2020|max:2030',
-            'mes' => 'required|integer|min:1|max:12',
-            'ine' => 'nullable|string',
-            'agente' => 'nullable|string',
-            'agente_cns' => 'nullable|string|max:255',
-            'desfecho' => 'nullable|integer|in:1,2,3',
-            'has_geo' => 'nullable|string|in:sim,nao',
-        ]);
-
         $ano = (int) $request->ano;
         $mes = (int) $request->mes;
 
@@ -1915,17 +1870,8 @@ class VisitaAcsController extends MonitorApsBaseController
      * Sem ?ano: retorna 3 séries (ano atual e 2 anteriores).
      * Com ?ano=YYYY: retorna 1 série para o ano informado.
      */
-    public function evolucao(Request $request): JsonResponse
+    public function evolucao(EvolucaoVisitaAcsRequest $request): JsonResponse
     {
-        $request->validate([
-            'ine' => 'nullable|string',
-            'agente' => 'nullable|string',
-            'agente_cns' => 'nullable|string|max:255',
-            'desfecho' => 'nullable|integer|in:1,2,3',
-            'has_geo' => 'nullable|string|in:sim,nao',
-            'ano' => 'nullable|integer|min:2000|max:2099',
-        ]);
-
         $anoAtual = (int) date('Y');
         $anos = $request->ano
             ? [(int) $request->ano]

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateProtocolConfigRequest;
 use App\Models\ProtocolConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,16 +14,9 @@ class ProtocolConfigController extends Controller
         return response()->json($this->payload(ProtocolConfig::current()));
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateProtocolConfigRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'allow_external_protocols' => 'boolean',
-            'allow_reopen' => 'boolean',
-            'notify_whatsapp' => 'boolean',
-            'default_priority' => 'nullable|string|max:20',
-            'default_due_days' => 'nullable|integer|min:1|max:365',
-            'observacoes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $config = ProtocolConfig::current();
         $config->update([

@@ -27,7 +27,7 @@ class FiscalizacaoListagemTest extends TestCase
             'data_visita' => '2026-09-06', 'resultado' => 'Conforme', 'origem' => 'interna', 'protocolo' => 'FIS-2026-000001',
         ]);
         $this->denuncia = Fiscalizacao::create([
-            'resultado' => 'Pendente de apuração', 'origem' => 'denuncia', 'protocolo' => 'FIS-2026-000002',
+            'resultado' => 'Pendente de apuração', 'origem' => 'peticao', 'protocolo' => 'FIS-2026-000002',
             'estabelecimento_nome_informado' => 'Bar do Zé', 'assunto' => 'Higiene',
         ]);
     }

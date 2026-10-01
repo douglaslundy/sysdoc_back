@@ -84,17 +84,60 @@ class ProtocolEligibleDestinationUsersTest extends TestCase
         $response->assertJsonFragment(['id' => $usuarioComAcesso->id, 'name' => $usuarioComAcesso->name]);
     }
 
-    public function test_inclui_usuario_com_acesso_a_pagina_mesmo_sem_lotacao_em_unidade(): void
+    public function test_com_unidade_escolhida_exclui_usuario_sem_lotacao_nela(): void
     {
         $usuarioSemLotacao = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => true]);
         $this->grantProtocolPageAccess('user_com_protocolo');
-        // Nenhum ProtocolUserUnit criado para este usuario.
 
         $response = $this->actingAs($this->admin, 'sanctum')
             ->getJson("/api/protocolos/usuarios-elegiveis?unit_id={$this->secretaria->id}");
 
         $response->assertOk();
-        $response->assertJsonFragment(['id' => $usuarioSemLotacao->id, 'name' => $usuarioSemLotacao->name]);
+        $response->assertJsonMissing(['id' => $usuarioSemLotacao->id]);
+    }
+
+    public function test_exclui_usuario_lotado_em_outra_unidade_ou_com_lotacao_inativa(): void
+    {
+        $outra = ProtocolOrganizationalUnit::create(['tipo' => 'secretaria', 'codigo' => 'SEC-OUTRA', 'nome' => 'Outra', 'ativo' => true]);
+        $lotadoEmOutra = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => true]);
+        $this->linkUserToUnit($lotadoEmOutra, $outra);
+
+        $lotacaoInativa = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => true]);
+        $this->linkUserToUnit($lotacaoInativa, $this->secretaria);
+        ProtocolUserUnit::where('user_id', $lotacaoInativa->id)->update(['ativo' => false]);
+        $this->grantProtocolPageAccess('user_com_protocolo');
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/protocolos/usuarios-elegiveis?unit_id={$this->secretaria->id}");
+
+        $response->assertOk();
+        $response->assertJsonMissing(['id' => $lotadoEmOutra->id]);
+        $response->assertJsonMissing(['id' => $lotacaoInativa->id]);
+    }
+
+    public function test_sem_unidade_informada_lista_todos_os_elegiveis(): void
+    {
+        $usuario = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => true]);
+        $this->grantProtocolPageAccess('user_com_protocolo');
+
+        $response = $this->actingAs($this->admin, 'sanctum')->getJson('/api/protocolos/usuarios-elegiveis');
+
+        $response->assertOk();
+        $response->assertJsonFragment(['id' => $usuario->id]);
+    }
+
+    public function test_lotado_em_neto_da_unidade_tambem_entra(): void
+    {
+        $depto = ProtocolOrganizationalUnit::create(['parent_id' => $this->secretaria->id, 'tipo' => 'departamento', 'codigo' => 'D1', 'nome' => 'Depto', 'ativo' => true]);
+        $setor = ProtocolOrganizationalUnit::create(['parent_id' => $depto->id, 'tipo' => 'setor', 'codigo' => 'S1', 'nome' => 'Setor', 'ativo' => true]);
+        $usuario = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => true]);
+        $this->linkUserToUnit($usuario, $setor);
+        $this->grantProtocolPageAccess('user_com_protocolo');
+
+        $response = $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/protocolos/usuarios-elegiveis?unit_id={$this->secretaria->id}");
+
+        $response->assertJsonFragment(['id' => $usuario->id]);
     }
 
     public function test_inclui_usuario_cujo_perfil_so_tem_uma_subpagina_do_protocolo(): void
@@ -102,6 +145,7 @@ class ProtocolEligibleDestinationUsersTest extends TestCase
         // Perfil tem "Caixa de Entrada" mas NAO a pagina raiz "/protocolo".
         $usuario = User::factory()->create(['profile' => 'atendente_protocolo', 'active' => true]);
         $this->grantProtocolPageAccess('atendente_protocolo', '/protocolo/caixa-entrada');
+        $this->linkUserToUnit($usuario, $this->secretaria);
 
         $response = $this->actingAs($this->admin, 'sanctum')
             ->getJson("/api/protocolos/usuarios-elegiveis?unit_id={$this->secretaria->id}");
@@ -113,6 +157,7 @@ class ProtocolEligibleDestinationUsersTest extends TestCase
     public function test_exclui_usuario_inativo_mesmo_com_acesso_a_pagina(): void
     {
         $usuarioInativo = User::factory()->create(['profile' => 'user_com_protocolo', 'active' => false]);
+        $this->linkUserToUnit($usuarioInativo, $this->secretaria);
         $this->grantProtocolPageAccess('user_com_protocolo');
 
         $response = $this->actingAs($this->admin, 'sanctum')

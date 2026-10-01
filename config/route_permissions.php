@@ -54,6 +54,9 @@ return [
         ['prefix' => 'cnaes', 'methods' => ['GET'], 'pages' => ['/estabelecimentos', '/alvaras', '/fiscalizacoes']],
         ['prefix' => 'alvaras', 'methods' => ['GET'], 'pages' => ['/alvaras', '/auditoria']],
 
+        // ---- motivos de petição ----
+        ['prefix' => 'peticao-motivos', 'pages' => ['/peticao-motivos']],
+
         // ---- viagens (TFD) ----
         ['prefix' => 'trips', 'pages' => ['/trips', '/clients']],
         ['prefix' => 'trip-clients', 'pages' => ['/trips']],

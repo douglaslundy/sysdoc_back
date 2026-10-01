@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSystemPageRequest;
 use App\Models\PageCategory;
 use App\Models\SystemPage;
 use Illuminate\Http\Request;
@@ -20,17 +21,8 @@ class SystemPageController extends Controller
         );
     }
 
-    public function store(Request $request)
+    public function store(StoreSystemPageRequest $request)
     {
-        $request->validate([
-            'titulo' => 'required|string|max:80',
-            'path' => 'required|string|max:120|unique:system_pages,path',
-            'icone' => 'nullable|string|max:40',
-            'categoria' => 'nullable|string|max:60',
-            'category_id' => 'nullable|integer|exists:page_categories,id',
-            'ordem' => 'nullable|integer|min:1',
-        ]);
-
         $page = DB::transaction(function () use ($request) {
             $data = $request->only(['titulo', 'path', 'icone', 'categoria', 'category_id']);
             $targetCategoryId = $data['category_id'] ?? null;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProtocolTypeRequest;
 use App\Models\ProtocolType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,15 +20,9 @@ class ProtocolTypeController extends Controller
         );
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreProtocolTypeRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'codigo' => 'required|string|max:40|unique:protocol_types,codigo',
-            'nome' => 'required|string|max:120',
-            'descricao' => 'nullable|string',
-            'ordem' => 'nullable|integer|min:0|max:65535',
-            'ativo' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         $type = ProtocolType::create([
             ...$validated,

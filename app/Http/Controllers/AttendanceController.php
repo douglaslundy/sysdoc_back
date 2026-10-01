@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CallNextAttendanceRequest;
+use App\Http\Requests\CreateTicketAttendanceRequest;
+use App\Http\Requests\ListTicketsAttendanceRequest;
+use App\Http\Requests\QueueAttendanceRequest;
+use App\Http\Requests\RoomsStoreAttendanceRequest;
 use App\Models\User;
 use App\Services\Attendance\AttendancePanelService;
 use App\Services\Attendance\AttendancePendingSummaryService;
@@ -25,13 +30,9 @@ class AttendanceController extends Controller
     ) {
     }
 
-    public function createTicket(Request $request): JsonResponse
+    public function createTicket(CreateTicketAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'clientId' => 'required|integer|exists:clients,id',
-            'prefix' => 'nullable|string|max:3',
-            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
-        ]);
+        $validated = $request->validated();
 
         $ticket = $this->ticketService->issueTicket(
             (int) $validated['clientId'],
@@ -43,18 +44,9 @@ class AttendanceController extends Controller
         return response()->json($ticket, 201);
     }
 
-    public function listTickets(Request $request): JsonResponse
+    public function listTickets(ListTicketsAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'status' => 'nullable|in:aguardando,chamada,em_atendimento,finalizada,cancelada,nao_compareceu',
-            'clientId' => 'nullable|integer|exists:clients,id',
-            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
-            'assignedUserId' => 'nullable|integer|exists:users,id',
-            'issuedFrom' => 'nullable|date',
-            'issuedTo' => 'nullable|date',
-            'serviceFrom' => 'nullable|date',
-            'serviceTo' => 'nullable|date',
-        ]);
+        $validated = $request->validated();
 
         return response()->json($this->ticketService->listTickets($validated));
     }
@@ -100,11 +92,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function queue(Request $request): JsonResponse
+    public function queue(QueueAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
-        ]);
+        $validated = $request->validated();
 
         $queue = $this->queueService->getQueue(
             isset($validated['roomId']) ? (int) $validated['roomId'] : null
@@ -117,11 +107,9 @@ class AttendanceController extends Controller
         return response()->json($queue);
     }
 
-    public function callNext(Request $request): JsonResponse
+    public function callNext(CallNextAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'roomId' => 'required|integer|exists:attendance_rooms,id',
-        ]);
+        $validated = $request->validated();
 
         try {
             $ticket = $this->queueService->callNext((int) auth()->id(), (int) $validated['roomId']);
@@ -230,13 +218,9 @@ class AttendanceController extends Controller
         );
     }
 
-    public function roomsStore(Request $request): JsonResponse
+    public function roomsStore(RoomsStoreAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100|unique:attendance_rooms,name',
-            'description' => 'nullable|string|max:255',
-            'active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         $room = \App\Models\AttendanceRoom::query()->create([
             'name' => $validated['name'],

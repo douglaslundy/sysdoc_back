@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MovimentarAlmoxarifadoEstoqueRequest;
 use App\Models\AlmoxarifadoConfig;
 use App\Models\AlmoxarifadoEstoque;
 use App\Models\AlmoxarifadoMovimentacao;
@@ -52,17 +53,9 @@ class AlmoxarifadoEstoqueController extends Controller
         return response()->json($query->paginate($perPage, ['*'], 'page', $page));
     }
 
-    public function movimentar(Request $request): JsonResponse
+    public function movimentar(MovimentarAlmoxarifadoEstoqueRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'almoxarifado_produto_id' => ['required', 'integer', 'exists:almoxarifado_produtos,id'],
-            'almoxarifado_secretaria_id' => ['nullable', 'integer', 'exists:almoxarifado_secretarias,id'],
-            'tipo' => ['required', 'in:entrada,saida,ajuste,transferencia'],
-            'quantidade' => ['required', 'numeric', 'min:0.001'],
-            'motivo' => ['required', 'string', 'max:150'],
-            'observacao' => ['nullable', 'string'],
-            'secretaria_destino_id' => ['nullable', 'integer', 'exists:almoxarifado_secretarias,id'],
-        ]);
+        $validated = $request->validated();
 
         $resultado = DB::transaction(function () use ($validated, $request) {
             $produto = AlmoxarifadoProduto::findOrFail($validated['almoxarifado_produto_id']);

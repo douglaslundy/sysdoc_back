@@ -45,7 +45,7 @@ class DenunciaPublicaTest extends TestCase
         $this->assertMatchesRegularExpression('/^[A-HJ-NP-Z2-9]{8}$/', $response->json('senha'));
 
         $f = Fiscalizacao::where('protocolo', $response->json('protocolo'))->firstOrFail();
-        $this->assertSame('denuncia', $f->origem);
+        $this->assertSame('peticao', $f->origem);
         $this->assertSame('Pendente de apuração', $f->resultado);
         $this->assertNull($f->fiscal_id);
         $this->assertNull($f->estabelecimento_id);
@@ -66,7 +66,7 @@ class DenunciaPublicaTest extends TestCase
         $response = $this->enviar($this->payload())->assertCreated();
 
         $this->assertSame(
-            'https://sistema.exemplo.gov.br/denuncia/consulta?protocolo='.$response->json('protocolo'),
+            'https://sistema.exemplo.gov.br/petition/track?protocolo='.$response->json('protocolo'),
             $response->json('url_consulta')
         );
         $this->assertStringNotContainsString($response->json('senha'), $response->json('url_consulta'));
