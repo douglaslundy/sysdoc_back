@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLocationLogQueueRequest;
 use App\Http\Requests\ListQueuesRequest;
 use App\Http\Requests\StoreQueueRequest;
 use App\Http\Requests\UpdateQueueRequest;
@@ -207,13 +208,9 @@ class QueueController extends Controller
         ]);
     }
 
-    public function storeLocationLog(Request $request)
+    public function storeLocationLog(StoreLocationLogQueueRequest $request)
     {
-        $data = $request->validate([
-            'uuid' => 'required|uuid',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-        ]);
+                $data = $request->validated();
 
         QRCodeLog::where('uuid', $data['uuid'])
             ->latest()

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DeleteMessagesChatRequest;
 use App\Models\AccessProfile;
 use App\Models\ChatAttachment;
 use App\Models\ChatConversation;
@@ -378,12 +379,9 @@ class ChatController extends Controller
         return response()->json(['message' => 'Mensagem apagada.']);
     }
 
-    public function deleteMessages(Request $request): JsonResponse
+    public function deleteMessages(DeleteMessagesChatRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'message_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'message_ids.*' => ['required', 'integer', 'distinct', 'exists:chat_messages,id'],
-        ]);
+                $data = $request->validated();
         $userId = (int) $request->user()->id;
         $isAdmin = $request->user()->profile === 'admin';
         $messages = ChatMessage::query()

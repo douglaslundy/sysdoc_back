@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateProtocolOrganizationalUnitRequest;
 use App\Http\Requests\StoreProtocolOrganizationalUnitRequest;
 use App\Models\ProtocolOrganizationalUnit;
 use Illuminate\Http\JsonResponse;
@@ -43,21 +44,14 @@ class ProtocolOrganizationalUnitController extends Controller
         );
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateProtocolOrganizationalUnitRequest $request, int $id): JsonResponse
     {
         $unit = ProtocolOrganizationalUnit::find($id);
         if (! $unit) {
             return response()->json(['message' => 'Unidade não encontrada.'], 404);
         }
 
-        $validated = $request->validate([
-            'parent_id' => 'nullable|integer|exists:protocol_organizational_units,id',
-            'tipo' => 'sometimes|string|max:40',
-            'codigo' => 'nullable|string|max:60',
-            'nome' => 'sometimes|required|string|max:150',
-            'descricao' => 'nullable|string',
-            'ativo' => 'nullable|boolean',
-        ]);
+                $validated = $request->validated();
 
         if (! empty($validated['parent_id']) && $this->isSelfOrDescendant($unit, (int) $validated['parent_id'])) {
             return response()->json(['message' => 'A unidade pai não pode ser a própria unidade ou uma de suas subunidades.'], 422);

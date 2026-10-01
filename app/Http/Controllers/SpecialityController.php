@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSpecialityRequest;
+use App\Http\Requests\UpdateSpecialityRequest;
 use App\Models\Speciality;
 use Illuminate\Http\Request;
 
@@ -26,14 +28,10 @@ class SpecialityController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request)
+    public function store(StoreSpecialityRequest $request)
     {
         // Valida os dados de entrada
-        $validatedData = $request->validate([
-            'id_user' => 'required|exists:users,id',
-            'name' => 'required|string|max:50',
-            'allows_session_scheduling' => 'sometimes|boolean',
-        ]);
+                $validatedData = $request->validated();
 
         // Cria uma nova especialidade
         $speciality = Speciality::create($validatedData);
@@ -58,14 +56,10 @@ class SpecialityController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $request, Speciality $speciality)
+    public function update(UpdateSpecialityRequest $request, Speciality $speciality)
     {
         // Valida os dados de entrada
-        $validatedData = $request->validate([
-            'id_user' => 'required|exists:users,id',
-            'name' => 'required|string|max:50',
-            'allows_session_scheduling' => 'sometimes|boolean',
-        ]);
+                $validatedData = $request->validated();
 
         // Atualiza a especialidade com os dados validados
         $speciality->update($validatedData);

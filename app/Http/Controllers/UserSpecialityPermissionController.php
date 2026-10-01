@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateUserSpecialityPermissionRequest;
 use App\Models\Speciality;
 use App\Models\User;
 use App\Models\UserSpecialityPermission;
@@ -15,15 +16,9 @@ class UserSpecialityPermissionController extends Controller
         return response()->json($this->currentPermissions($user));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserSpecialityPermissionRequest $request, User $user)
     {
-        $data = $request->validate([
-            'permissions' => ['present', 'array'],
-            'permissions.*.speciality_id' => ['required', 'integer', 'distinct', 'exists:specialities,id'],
-            'permissions.*.can_view' => ['boolean'],
-            'permissions.*.can_edit' => ['boolean'],
-            'permissions.*.can_insert' => ['boolean'],
-        ]);
+                $data = $request->validated();
 
         DB::transaction(function () use ($data, $user) {
             UserSpecialityPermission::where('user_id', $user->id)->delete();

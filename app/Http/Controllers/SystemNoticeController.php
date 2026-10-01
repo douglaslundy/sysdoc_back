@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSystemNoticeRequest;
 use App\Models\SystemNotice;
 use App\Models\SystemNoticeView;
 use Illuminate\Http\JsonResponse;
@@ -64,19 +65,9 @@ class SystemNoticeController extends Controller
         return response()->json($result);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreSystemNoticeRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:160'],
-            'subtitle' => ['nullable', 'string', 'max:180'],
-            'body' => ['required', 'string'],
-            'image_data' => ['nullable', 'string'],
-            'times_per_day' => ['required', 'integer', 'min:1', 'max:24'],
-            'interval_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
-            'target_user_id' => ['nullable', 'integer', 'exists:users,id'],
-            'valid_until' => ['nullable', 'date'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+                $data = $request->validated();
 
         $data['created_by_user_id'] = $request->user()?->id;
         $data['is_active'] = $request->boolean('is_active', true);

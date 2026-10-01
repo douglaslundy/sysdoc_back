@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SaveMonitorApsConfigRequest;
 use App\Services\AuditService;
 use Illuminate\Encryption\MissingAppKeyException;
 use Illuminate\Http\Request;
@@ -192,18 +193,9 @@ class MonitorApsConfigController extends MonitorApsBaseController
     }
 
     // POST /monitor-aps/config/save  (admin)
-    public function save(Request $request)
+    public function save(SaveMonitorApsConfigRequest $request)
     {
-        $data = $request->validate([
-            'host'           => 'required|string',
-            'database'       => 'required|string',
-            'user'           => 'required|string',
-            'port'           => 'nullable|integer',
-            'password'       => 'nullable|string',
-            'municipio_ibge' => 'nullable|string',
-            'municipio_nome' => 'nullable|string',
-            'estrato_ied'    => 'nullable|integer|min:1|max:4',
-        ]);
+                $data = $request->validated();
 
         $payload = [
             'aps_db_host'     => $data['host'],

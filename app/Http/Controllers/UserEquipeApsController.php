@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateUserEquipeApsRequest;
 use App\Models\User;
 use App\Models\UserEquipeAps;
 use Illuminate\Http\Request;
@@ -28,15 +29,9 @@ class UserEquipeApsController extends Controller
      * PUT /users/{user}/equipe-aps
      * Salva is_rt_psf, rt_all_teams e sincroniza equipes (admin).
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserEquipeApsRequest $request, User $user)
     {
-        $data = $request->validate([
-            'is_rt_psf'           => 'required|boolean',
-            'rt_all_teams'        => 'required|boolean',
-            'equipes'             => 'nullable|array',
-            'equipes.*.nu_ine'    => 'required_with:equipes|string|max:10',
-            'equipes.*.no_equipe' => 'required_with:equipes|string|max:100',
-        ]);
+                $data = $request->validated();
 
         $user->update([
             'is_rt_psf'    => $data['is_rt_psf'],
