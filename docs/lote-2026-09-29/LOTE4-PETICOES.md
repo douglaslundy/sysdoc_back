@@ -33,3 +33,6 @@ Branch: `feat/lote-4` (back e front). Aprovado pelo usuário em 2026-09-30 após
 
 ## Deploy do Lote 4
 Migrations novas (ordem): 2026_10_01_100000_create_peticao_motivos_table, 2026_10_01_110000_add_motivo_id_to_fiscalizacoes, 2026_10_01_120000_add_unit_and_fiscalizacao_to_kanban_tasks. Depois: `php artisan migrate --force`, `config:cache`; liberar a página 'Motivos de Petição' (/peticao-motivos) em Perfis a quem for cadastrar; cadastrar os motivos (Denúncia, Solicitar vistoria...) com a unidade responsável; cadastrar a lotação dos usuários em /protocolo/estrutura (usuários de destino e cards do kanban dependem dela).
+
+## Origem gravada como `peticao` (2026-10-01)
+Decisão do usuário: gravar `peticao` de fato. Migration `2026_10_01_130000_rename_origem_denuncia_to_peticao` converte as linhas antigas (`denuncia` -> `peticao`; `down` reverte). Código, rótulos ("Petição") e testes atualizados; o filtro `?origem=denuncia` ainda é aceito e tratado como `peticao` (compatibilidade). back 520 / front: testes de fiscalizações 18 ok. Deploy: rodar a migration depois das três do Lote 4.

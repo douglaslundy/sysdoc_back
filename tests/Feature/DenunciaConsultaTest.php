@@ -25,7 +25,7 @@ class DenunciaConsultaTest extends TestCase
         Cache::flush();
 
         $this->denuncia = Fiscalizacao::create([
-            'resultado' => 'Pendente de apuração', 'origem' => 'denuncia', 'assunto' => 'Falta de higiene',
+            'resultado' => 'Pendente de apuração', 'origem' => 'peticao', 'assunto' => 'Falta de higiene',
             'local_endereco' => 'Rua das Flores, 100', 'descricao_denuncia' => 'Descrição só do denunciante',
         ]);
         $this->denuncia->forceFill([
@@ -126,7 +126,7 @@ class DenunciaConsultaTest extends TestCase
     {
         $interna = Fiscalizacao::create(['resultado' => 'Conforme', 'origem' => 'interna']);
         $interna->forceFill(['protocolo' => 'FIS-2026-000043', 'senha_consulta_hash' => Hash::make(self::SENHA)])->saveQuietly();
-        $semSenha = Fiscalizacao::create(['resultado' => 'Pendente de apuração', 'origem' => 'denuncia']);
+        $semSenha = Fiscalizacao::create(['resultado' => 'Pendente de apuração', 'origem' => 'peticao']);
         $semSenha->forceFill(['protocolo' => 'FIS-2026-000044'])->saveQuietly();
 
         $this->consultar('FIS-2026-000043', self::SENHA)->assertNotFound();

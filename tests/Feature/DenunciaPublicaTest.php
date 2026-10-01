@@ -45,7 +45,7 @@ class DenunciaPublicaTest extends TestCase
         $this->assertMatchesRegularExpression('/^[A-HJ-NP-Z2-9]{8}$/', $response->json('senha'));
 
         $f = Fiscalizacao::where('protocolo', $response->json('protocolo'))->firstOrFail();
-        $this->assertSame('denuncia', $f->origem);
+        $this->assertSame('peticao', $f->origem);
         $this->assertSame('Pendente de apuração', $f->resultado);
         $this->assertNull($f->fiscal_id);
         $this->assertNull($f->estabelecimento_id);

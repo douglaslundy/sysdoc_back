@@ -34,7 +34,7 @@ class FiscalizacaoController extends Controller
         }
 
         if ($request->filled('origem')) {
-            $query->where('origem', $request->origem);
+            $query->where('origem', $request->origem === 'denuncia' ? 'peticao' : $request->origem);
         }
 
         if ($request->filled('busca')) {

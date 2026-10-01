@@ -57,7 +57,7 @@ class DenunciaPublicaController extends Controller
         $fiscalizacao = DB::transaction(function () use ($request, $senha) {
             $fiscalizacao = Fiscalizacao::create([
                 'resultado' => 'Pendente de apuração',
-                'origem' => 'denuncia',
+                'origem' => 'peticao',
                 'motivo_id' => $request->input('motivo_id'),
                 'assunto' => $request->input('assunto'),
                 'descricao_denuncia' => $request->input('descricao_denuncia'),
@@ -127,7 +127,7 @@ class DenunciaPublicaController extends Controller
         $fiscalizacao = Fiscalizacao::query()
             ->with('motivo:id,nome')
             ->where('protocolo', $protocolo)
-            ->where('origem', 'denuncia')
+            ->where('origem', 'peticao')
             ->whereNotNull('senha_consulta_hash')
             ->first();
 

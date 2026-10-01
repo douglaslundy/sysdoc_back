@@ -38,7 +38,7 @@ class FiscalizacaoProtocoloTest extends TestCase
     public function test_banco_aceita_fiscalizacao_sem_estabelecimento_e_sem_data_de_visita(): void
     {
         $id = DB::table('fiscalizacoes')->insertGetId([
-            'resultado' => 'Pendente de apuração', 'origem' => 'denuncia', 'created_at' => now(), 'updated_at' => now(),
+            'resultado' => 'Pendente de apuração', 'origem' => 'peticao', 'created_at' => now(), 'updated_at' => now(),
         ]);
 
         $this->assertNull(DB::table('fiscalizacoes')->where('id', $id)->value('estabelecimento_id'));
@@ -62,7 +62,7 @@ class FiscalizacaoProtocoloTest extends TestCase
 
     public function test_hash_da_senha_de_consulta_nunca_sai_no_json(): void
     {
-        $fiscalizacao = Fiscalizacao::create(['resultado' => 'Pendente de apuração', 'origem' => 'denuncia']);
+        $fiscalizacao = Fiscalizacao::create(['resultado' => 'Pendente de apuração', 'origem' => 'peticao']);
         $fiscalizacao->forceFill(['senha_consulta_hash' => 'hash-secreto'])->save();
 
         $this->assertArrayNotHasKey('senha_consulta_hash', $fiscalizacao->fresh()->toArray());
@@ -73,14 +73,14 @@ class FiscalizacaoProtocoloTest extends TestCase
     {
         $admin = User::factory()->create(['profile' => 'admin', 'active' => true]);
         $fiscalizacao = Fiscalizacao::create([
-            'resultado' => 'Pendente de apuração', 'origem' => 'denuncia',
+            'resultado' => 'Pendente de apuração', 'origem' => 'peticao',
             'estabelecimento_nome_informado' => 'Bar do Zé', 'assunto' => 'Higiene',
         ]);
 
         $this->actingAs($admin, 'sanctum')->getJson("/api/fiscalizacoes/{$fiscalizacao->id}")
             ->assertOk()
             ->assertJsonPath('estabelecimento.nome_estabelecimento', 'Bar do Zé')
-            ->assertJsonPath('origem', 'denuncia')
+            ->assertJsonPath('origem', 'peticao')
             ->assertJsonPath('assunto', 'Higiene');
     }
 }

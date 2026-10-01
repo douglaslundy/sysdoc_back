@@ -62,7 +62,7 @@ class PeticaoPublicaTest extends TestCase
 
         $f = Fiscalizacao::where('protocolo', $resposta->json('protocolo'))->firstOrFail();
         $this->assertSame($motivo->id, $f->motivo_id);
-        $this->assertSame('denuncia', $f->origem);
+        $this->assertSame('peticao', $f->origem);
     }
 
     public function test_com_motivos_ativos_o_motivo_e_obrigatorio_e_inativo_e_recusado(): void
