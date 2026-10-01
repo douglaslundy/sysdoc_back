@@ -255,6 +255,21 @@
         .contact-list a { font-weight: 700; color: var(--blue); text-decoration: none; }
         .contact-list a:hover { text-decoration: underline; }
 
+        .contact-form { text-align: left; display: flex; flex-direction: column; gap: .5rem; }
+        .contact-form label { font-size: .85rem; font-weight: 700; color: var(--gray-700); margin-top: .5rem; }
+        .contact-form label small { font-weight: 400; color: var(--gray-500); margin-left: .5rem; }
+        .contact-form input, .contact-form textarea {
+            width: 100%; padding: .7rem .85rem; border: 1px solid var(--gray-200);
+            border-radius: 8px; font: inherit; background: var(--white);
+        }
+        .contact-form textarea { resize: vertical; }
+        .contact-form button { margin-top: 1rem; border: 0; cursor: pointer; font: inherit; }
+        .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        .form-alert { text-align: left; padding: .9rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
+        .form-alert ul { margin-left: 1.1rem; }
+        .form-alert-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .form-alert-erro { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
         /* ── FOOTER ── */
         footer {
             background: var(--gray-900); color: var(--gray-200);
@@ -722,9 +737,45 @@
             <li>✉️ <a href="mailto:douglaslundy@gmail.com">douglaslundy@gmail.com</a></li>
             <li>📱 <a href="https://web.whatsapp.com/send?phone=5535984297193&amp;text=Ol%C3%A1!%20Vi%20o%20site%20do%20Sysdoc%20e%20quero%20saber%20mais%20sobre%20o%20sistema%20para%20a%20minha%20secretaria%20de%20sa%C3%BAde." target="_blank" rel="noopener">WhatsApp: (35) 98429-7193</a></li>
         </ul>
-        <a href="/public/manual/manual.html" class="btn-primary" style="display:inline-block;">
-            📖 Baixar manual de uso
-        </a>
+        @if (session('contato_ok'))
+            <div class="form-alert form-alert-ok" role="status">Mensagem enviada com sucesso! Entraremos em contato em breve.</div>
+        @else
+            @if (session('contato_erro'))
+                <div class="form-alert form-alert-erro" role="alert">{{ session('contato_erro') }}</div>
+            @endif
+            @if ($errors->any())
+                <div class="form-alert form-alert-erro" role="alert">
+                    <ul>
+                        @foreach ($errors->all() as $erro)
+                            <li>{{ $erro }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form class="contact-form" method="POST" action="{{ route('contato.enviar') }}">
+                @csrf
+                <div class="hp-field" aria-hidden="true">
+                    <label for="website">Não preencha este campo</label>
+                    <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                </div>
+                <label for="c-nome">Nome</label>
+                <input type="text" id="c-nome" name="nome" value="{{ old('nome') }}" maxlength="100" required>
+                <label for="c-email">E-mail</label>
+                <input type="email" id="c-email" name="email" value="{{ old('email') }}" maxlength="100" required>
+                <label for="c-telefone">Telefone</label>
+                <input type="tel" id="c-telefone" name="telefone" value="{{ old('telefone') }}" maxlength="20" placeholder="(00) 00000-0000" required>
+                <label for="c-mensagem">Mensagem <small id="c-contador">0/500</small></label>
+                <textarea id="c-mensagem" name="mensagem" rows="4" maxlength="500" required>{{ old('mensagem') }}</textarea>
+                <button type="submit" class="btn-primary">Enviar mensagem</button>
+            </form>
+            <script>
+                (function () {
+                    var t = document.getElementById('c-mensagem'), c = document.getElementById('c-contador');
+                    function u() { c.textContent = t.value.length + '/500'; }
+                    t.addEventListener('input', u); u();
+                })();
+            </script>
+        @endif
     </div>
 </section>
 

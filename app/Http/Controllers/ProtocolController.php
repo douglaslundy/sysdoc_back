@@ -47,7 +47,7 @@ class ProtocolController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount());
+        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount())->withMax('movements as ultima_movimentacao_em', 'created_at');
 
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
@@ -89,7 +89,7 @@ class ProtocolController extends Controller
 
     public function inbox(Request $request): JsonResponse
     {
-        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount())->where(function ($q) use ($request) {
+        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount())->withMax('movements as ultima_movimentacao_em', 'created_at')->where(function ($q) use ($request) {
             $q->where('responsavel_atual_id', $request->user()?->id)
                 ->orWhere('criado_por_id', $request->user()?->id);
 

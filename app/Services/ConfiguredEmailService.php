@@ -19,6 +19,11 @@ class ConfiguredEmailService
             ];
         }
 
+        return $this->sendText($email, $subject, $message);
+    }
+
+    public function sendText(string $to, string $subject, string $message, ?string $replyTo = null, ?string $replyToName = null): array
+    {
         $config = NotificationChannelConfig::current('email');
         if (! $config->ativo) {
             return [
@@ -30,12 +35,15 @@ class ConfiguredEmailService
         $this->applyMailConfig($config);
 
         try {
-            Mail::raw($message, function ($mail) use ($email, $subject, $config) {
+            Mail::raw($message, function ($mail) use ($to, $subject, $config, $replyTo, $replyToName) {
                 $fromAddress = data_get($config->configuracao, 'from_address', config('mail.from.address'));
                 $fromName = data_get($config->configuracao, 'from_name', config('mail.from.name'));
-                $mail->to($email);
+                $mail->to($to);
                 if ($fromAddress) {
                     $mail->from($fromAddress, $fromName ?: null);
+                }
+                if ($replyTo) {
+                    $mail->replyTo($replyTo, $replyToName ?: null);
                 }
                 $mail->subject($subject);
             });

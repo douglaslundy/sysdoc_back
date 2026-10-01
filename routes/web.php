@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\QueueController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/contato', fn () => redirect('/#contato'));
+Route::post('/contato', [ContactController::class, 'store'])->middleware('throttle:5,10')->name('contato.enviar');
 
 Route::get('/showPublicQueue', [QueueController::class, 'showPublicQueue'])->name('showPublicQueue');
 Route::get('/showqueue/{uuid}', [QueueController::class, 'showByUuid'])->name('showByUuid');
