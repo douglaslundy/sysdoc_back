@@ -39,7 +39,7 @@ class ProtocolController extends Controller
     // Movimentações de desfecho: quem já encaminhou/criou continua acompanhando o resultado.
     private const OUTCOME_ACTIONS = ['encerrado', 'reaberto', 'cancelado'];
 
-    // "Concluído" na caixa de entrada: encerrado (ação Encerrar) e concluido (coluna do Kanban).
+    // "Concluído" na caixa de entrada. 'concluido' só permanece por segurança com dados legados.
     private const CONCLUDED_STATUSES = ['encerrado', 'concluido'];
 
     public function __construct(
@@ -438,6 +438,12 @@ class ProtocolController extends Controller
                 'novo' => true,
             ]);
             $this->movimentar($protocol, 'reaberto', null, 'reaberto', $request->user()?->id);
+
+            // Protocolo reaberto não pode continuar na coluna Concluído do Kanban.
+            $task = $protocol->kanbanTask;
+            if ($task && $task->status === 'concluido') {
+                $this->kanbanService->sync($protocol, ['ativar' => true, 'id' => $task->id, 'status' => 'novo'], $request->user());
+            }
         });
     }
 
@@ -665,11 +671,12 @@ class ProtocolController extends Controller
         DB::transaction(function () use ($protocol, $validated, $request) {
             $old = $protocol->toArray();
             $previousStatus = $protocol->status;
-            $protocolStatus = $validated['kanban_status'];
+            // A coluna "Concluído" do Kanban corresponde ao status único "encerrado" do protocolo.
+            $protocolStatus = $validated['kanban_status'] === 'concluido' ? 'encerrado' : $validated['kanban_status'];
 
             $protocol->update([
                 'status' => $protocolStatus,
-                'encerrado_em' => $protocolStatus === 'concluido' ? now() : null,
+                'encerrado_em' => $protocolStatus === 'encerrado' ? now() : null,
                 'novo' => $protocolStatus === 'novo',
             ]);
 
