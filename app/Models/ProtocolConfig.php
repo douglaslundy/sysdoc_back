@@ -37,7 +37,7 @@ class ProtocolConfig extends Model
             'notify_email' => false,
             'notify_whatsapp' => false,
             'default_priority' => 'normal',
-            'default_due_days' => 5,
+            'default_due_days' => 10,
         ]);
     }
 }

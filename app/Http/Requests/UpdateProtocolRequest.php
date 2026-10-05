@@ -20,7 +20,7 @@ class UpdateProtocolRequest extends FormRequest
             'prioridade' => 'nullable|string|max:20',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_user_id' => 'nullable|integer|exists:users,id',
-            'prazo_atendimento' => 'nullable|date',
+            'prazo_dias' => 'nullable|integer|min:1|max:365',
             'kanban' => 'nullable|array',
             'kanban.ativar' => 'nullable|boolean',
             'kanban.id' => 'nullable|integer|exists:kanban_tasks,id',

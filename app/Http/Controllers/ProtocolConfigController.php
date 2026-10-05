@@ -38,7 +38,7 @@ class ProtocolConfigController extends Controller
             'allow_reopen' => (bool) $config->allow_reopen,
             'notify_whatsapp' => (bool) $config->notify_whatsapp,
             'default_priority' => (string) ($config->default_priority ?? 'normal'),
-            'default_due_days' => (int) ($config->default_due_days ?? 5),
+            'default_due_days' => (int) ($config->default_due_days ?? 10),
             'observacoes' => (string) ($config->observacoes ?? ''),
         ];
     }

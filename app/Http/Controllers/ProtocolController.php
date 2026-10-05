@@ -104,6 +104,14 @@ class ProtocolController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        // Situação: abertos (padrão) = todos exceto concluído (encerrado); concluidos; todos.
+        $situacao = $request->input('situacao', 'abertos');
+        if ($situacao === 'concluidos') {
+            $query->where('status', 'encerrado');
+        } elseif ($situacao !== 'todos') {
+            $query->where('status', '!=', 'encerrado');
+        }
+
         if ($request->filled('prioridade')) {
             $query->where('prioridade', $request->input('prioridade'));
         }
@@ -287,7 +295,7 @@ class ProtocolController extends Controller
                 'destino_unit_id' => $destinationUnit->id,
                 'responsavel_atual_id' => $destinationUser?->id,
                 'criado_por_id' => $request->user()?->id,
-                'prazo_atendimento' => $validated['prazo_atendimento'] ?? now()->addDays((int) $config->default_due_days)->toDateString(),
+                'prazo_atendimento' => now()->addDays((int) ($validated['prazo_dias'] ?? $config->default_due_days ?: 10))->toDateString(),
                 'novo' => true,
                 'vencido' => false,
             ]);
@@ -322,7 +330,11 @@ class ProtocolController extends Controller
         $validated = $request->validated();
 
         $old = $protocol->toArray();
-        $protocolData = collect($validated)->except(['destino_user_id', 'kanban'])->all();
+        $protocolData = collect($validated)->except(['destino_user_id', 'kanban', 'prazo_dias'])->all();
+        if (! empty($validated['prazo_dias'])) {
+            // Prazo em dias a partir de hoje; o banco guarda a data resultante.
+            $protocolData['prazo_atendimento'] = now()->addDays((int) $validated['prazo_dias'])->toDateString();
+        }
         if (array_key_exists('destino_user_id', $validated)) {
             $protocolData['responsavel_atual_id'] = $validated['destino_user_id'];
         }
