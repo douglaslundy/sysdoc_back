@@ -39,6 +39,9 @@ class ProtocolController extends Controller
     // Movimentações de desfecho: quem já encaminhou/criou continua acompanhando o resultado.
     private const OUTCOME_ACTIONS = ['encerrado', 'reaberto', 'cancelado'];
 
+    // "Concluído" na caixa de entrada: encerrado (ação Encerrar) e concluido (coluna do Kanban).
+    private const CONCLUDED_STATUSES = ['encerrado', 'concluido'];
+
     public function __construct(
         private readonly ProtocolKanbanService $kanbanService,
         private readonly WhatsappEvolutionService $whatsapp
@@ -104,12 +107,12 @@ class ProtocolController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // Situação: abertos (padrão) = todos exceto concluído (encerrado); concluidos; todos.
+        // Situação: abertos (padrão) = todos exceto concluídos; concluidos; todos.
         $situacao = $request->input('situacao', 'abertos');
         if ($situacao === 'concluidos') {
-            $query->where('status', 'encerrado');
+            $query->whereIn('status', self::CONCLUDED_STATUSES);
         } elseif ($situacao !== 'todos') {
-            $query->where('status', '!=', 'encerrado');
+            $query->whereNotIn('status', self::CONCLUDED_STATUSES);
         }
 
         if ($request->filled('prioridade')) {
