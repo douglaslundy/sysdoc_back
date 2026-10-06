@@ -42,14 +42,16 @@ class SystemAlertService
             $message = $this->renderTemplate($alert->template, $module, $trigger, $context);
             $subject = $this->subjectLine($alert->nome, $module, $trigger, $context);
 
+            $meta = ['origem' => "{$module}:{$trigger}"];
+
             foreach ($recipients as $recipient) {
                 foreach ((array) $alert->canais as $channel) {
                     if ($channel === 'whatsapp') {
-                        $this->whatsapp->sendTextToUser($recipient, $message);
+                        $this->whatsapp->sendTextToUser($recipient, $message, $meta);
                     }
 
                     if ($channel === 'email') {
-                        $this->email->sendTextToUser($recipient, $subject, $message);
+                        $this->email->sendTextToUser($recipient, $subject, $message, $meta);
                     }
                 }
             }

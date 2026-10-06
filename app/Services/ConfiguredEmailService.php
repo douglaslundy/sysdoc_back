@@ -9,20 +9,32 @@ use Illuminate\Support\Facades\Mail;
 
 class ConfiguredEmailService
 {
-    public function sendTextToUser(User $user, string $subject, string $message): array
+    public function sendTextToUser(User $user, string $subject, string $message, array $meta = []): array
     {
+        $meta['user_id'] = $user->id;
         $email = trim((string) ($user->email ?? ''));
         if ($email === '') {
-            return [
+            $result = [
                 'ok' => false,
                 'error' => 'Usuario destinatario sem e-mail cadastrado.',
             ];
+            MessageLogger::log('email', '—', $subject, $message, $result, $meta);
+
+            return $result;
         }
 
-        return $this->sendText($email, $subject, $message);
+        return $this->sendText($email, $subject, $message, null, null, $meta);
     }
 
-    public function sendText(string $to, string $subject, string $message, ?string $replyTo = null, ?string $replyToName = null): array
+    public function sendText(string $to, string $subject, string $message, ?string $replyTo = null, ?string $replyToName = null, array $meta = []): array
+    {
+        $result = $this->deliverText($to, $subject, $message, $replyTo, $replyToName);
+        MessageLogger::log('email', $to, $subject, $message, $result, $meta);
+
+        return $result;
+    }
+
+    private function deliverText(string $to, string $subject, string $message, ?string $replyTo, ?string $replyToName): array
     {
         $config = NotificationChannelConfig::current('email');
         if (! $config->ativo) {

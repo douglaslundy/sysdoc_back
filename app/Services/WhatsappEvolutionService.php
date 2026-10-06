@@ -13,21 +13,33 @@ class WhatsappEvolutionService
     {
     }
 
-    public function sendTextToUser(User $user, string $message): array
+    public function sendTextToUser(User $user, string $message, array $meta = []): array
     {
+        $meta['user_id'] = $user->id;
         $number = $user->whatsappPhoneNumber();
 
         if (! $number) {
-            return [
+            $result = [
                 'ok' => false,
                 'error' => 'Usuário destinatário sem telefone cadastrado.',
             ];
+            MessageLogger::log('whatsapp', trim((string) ($user->phone ?? '')) ?: '—', null, $message, $result, $meta);
+
+            return $result;
         }
 
-        return $this->sendTextToNumber($number, $message);
+        return $this->sendTextToNumber($number, $message, $meta);
     }
 
-    public function sendTextToNumber(string $number, string $message): array
+    public function sendTextToNumber(string $number, string $message, array $meta = []): array
+    {
+        $result = $this->deliverText($number, $message);
+        MessageLogger::log('whatsapp', $number, null, $message, $result, $meta);
+
+        return $result;
+    }
+
+    private function deliverText(string $number, string $message): array
     {
         $config = NotificationChannelConfig::current('whatsapp');
         $instance = $this->resolveInstance($config);
@@ -48,11 +60,18 @@ class WhatsappEvolutionService
             ];
         }
 
-        $response = $this->request($config)->post("/message/sendText/{$instance}", [
-            'number' => $normalized,
-            'text' => $message,
-            'textMessage' => ['text' => $message],
-        ]);
+        try {
+            $response = $this->request($config)->post("/message/sendText/{$instance}", [
+                'number' => $normalized,
+                'text' => $message,
+                'textMessage' => ['text' => $message],
+            ]);
+        } catch (\Throwable $e) {
+            return [
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
 
         if ($response->successful()) {
             return [

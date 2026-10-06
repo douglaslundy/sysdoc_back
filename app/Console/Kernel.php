@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('kanban:arquivar-concluidas')->dailyAt('02:00');
         $schedule->command('logs:limpar-erros')->dailyAt('03:00');
+        $schedule->command('mensagens:limpar-logs')->dailyAt('03:30');
     }
 
     /**

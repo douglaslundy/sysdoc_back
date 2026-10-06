@@ -970,21 +970,70 @@ class ProtocolController extends Controller
             ]);
         }
 
-        if (ProtocolConfig::current()->notify_whatsapp && $protocol->responsavelAtual) {
+        if (ProtocolConfig::current()->notify_whatsapp) {
+            $this->notifyWhatsapp($protocol, $acao, $userId, $dados);
+        }
+    }
+
+    private const WHATSAPP_ACTION_LABELS = [
+        'criado' => 'criado',
+        'encaminhado' => 'encaminhado',
+        'comentario' => 'recebeu um comentário',
+        'encerrado' => 'encerrado',
+        'reaberto' => 'reaberto',
+        'devolvido' => 'devolvido',
+        'anexo' => 'recebeu um anexo',
+        'movido_no_kanban' => 'movido no kanban',
+    ];
+
+    /**
+     * Avisa por WhatsApp o responsável atual e o criador do protocolo. Se forem a mesma
+     * pessoa (ex.: devolução ao criador), sai uma única mensagem.
+     */
+    private function notifyWhatsapp(Protocol $protocol, string $acao, ?int $actorId, ?array $dados): void
+    {
+        $recipientIds = collect([$protocol->responsavel_atual_id, $protocol->criado_por_id])
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($recipientIds->isEmpty()) {
+            return;
+        }
+
+        $actorName = $actorId ? User::query()->whereKey($actorId)->value('name') : null;
+        $texto = sprintf(
+            'Protocolo %s (%s): %s%s.',
+            $protocol->numero,
+            $protocol->assunto,
+            self::WHATSAPP_ACTION_LABELS[$acao] ?? $acao,
+            $actorName ? " por {$actorName}" : ''
+        );
+
+        // Usuário inativo não recebe alerta.
+        $users = User::query()->whereIn('id', $recipientIds)->where('active', true)->get()->keyBy('id');
+
+        foreach ($recipientIds as $recipientId) {
+            $recipient = $users->get($recipientId);
+            if (! $recipient) {
+                continue;
+            }
+
             $notification = ProtocolNotification::create([
                 'protocol_id' => $protocol->id,
-                'user_id' => $protocol->responsavel_atual_id,
+                'user_id' => $recipient->id,
                 'canal' => 'whatsapp',
                 'titulo' => 'Protocolo atualizado',
-                'mensagem' => "Protocolo {$protocol->numero} foi {$acao}.",
+                'mensagem' => $texto,
                 'status_envio' => 'pendente',
                 'dados' => $dados,
             ]);
 
+            $meta = ['origem' => "protocolo:{$acao}", 'protocol_id' => $protocol->id];
+
             // Envio pelo WhatsApp (timeout de ate 25 s) fora da requisicao e da transacao.
-            $recipient = $protocol->responsavelAtual;
-            \App\Support\AfterResponse::run(function () use ($recipient, $notification) {
-                $result = $this->whatsapp->sendTextToUser($recipient, $notification->mensagem);
+            \App\Support\AfterResponse::run(function () use ($recipient, $notification, $texto, $meta) {
+                $result = $this->whatsapp->sendTextToUser($recipient, $texto, $meta);
 
                 $notification->update([
                     'status_envio' => $result['ok'] ? 'enviado' : 'erro',

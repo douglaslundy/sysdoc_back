@@ -26,7 +26,8 @@ class ContactController extends Controller
             'Contato Sysdoc - '.$data['nome'],
             $corpo,
             $data['email'],
-            $data['nome']
+            $data['nome'],
+            ['origem' => 'site:contato']
         );
 
         if (! ($result['ok'] ?? false)) {

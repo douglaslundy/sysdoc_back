@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\MessageLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -49,7 +50,16 @@ class PasswordResetController extends Controller
                 $message->to($user->email, $user->name)
                     ->subject('Redefinicao de Senha - SysDoc');
             });
+
+            // O corpo leva o token de redefinição: nunca vai para o log.
+            MessageLogger::log('email', $user->email, 'Redefinicao de Senha - SysDoc',
+                'Link de redefinição de senha enviado (conteúdo omitido por segurança).',
+                ['ok' => true], ['origem' => 'autenticacao:reset_senha', 'user_id' => $user->id]);
         } catch (Throwable $e) {
+            MessageLogger::log('email', $user->email, 'Redefinicao de Senha - SysDoc',
+                'Link de redefinição de senha (conteúdo omitido por segurança).',
+                ['ok' => false, 'error' => $e->getMessage()], ['origem' => 'autenticacao:reset_senha', 'user_id' => $user->id]);
+
             Log::error('Falha ao enviar e-mail de redefinição de senha', [
                 'email' => $user->email,
                 'error' => $e->getMessage(),

@@ -113,6 +113,11 @@ class ResultadoExameService
             if ($config->email_habilitado && $clienteEmail) {
                 Mail::to($clienteEmail)
                     ->queue(new ResultadoLiberadoMail($resultado, $senha ?? ''));
+
+                // O e-mail leva a senha de acesso ao resultado: o conteúdo nunca vai para o log.
+                \App\Services\MessageLogger::log('email', $clienteEmail, 'Resultado de exame liberado',
+                    'E-mail de resultado liberado enviado à fila (conteúdo omitido por conter senha de acesso).',
+                    ['ok' => true], ['origem' => 'laboratorio:resultado_liberado']);
             }
 
             DB::commit();

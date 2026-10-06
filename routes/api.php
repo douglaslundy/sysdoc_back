@@ -366,6 +366,9 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::get('/anexos/{attachment}/download', [ProtocolController::class, 'downloadAttachment'])->whereNumber('attachment');
     });
 
+    Route::get('/mensagens-enviadas', [\App\Http\Controllers\MessageLogController::class, 'index'])
+        ->middleware('page.permission:/sistema/mensagens-enviadas');
+
     Route::prefix('kanban')->group(function () {
         Route::get('/', [KanbanController::class, 'index']);
         Route::post('/', [KanbanController::class, 'store']);

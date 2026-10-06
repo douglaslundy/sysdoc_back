@@ -37,7 +37,7 @@ class VigilanciaAvisoService
 
             foreach ($contatos as $contato) {
                 try {
-                    $resultado = $this->whatsapp->sendTextToNumber($contato->telefone, $mensagem);
+                    $resultado = $this->whatsapp->sendTextToNumber($contato->telefone, $mensagem, ['origem' => 'vigilancia:aviso']);
                     ($resultado['ok'] ?? false) ? $enviados++ : $falhas++;
                 } catch (\Throwable $e) {
                     $falhas++;
