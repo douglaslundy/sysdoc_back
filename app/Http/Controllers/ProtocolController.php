@@ -421,6 +421,13 @@ class ProtocolController extends Controller
                 'novo' => false,
             ]);
             $this->movimentar($protocol, 'encerrado', null, 'encerrado', $request->user()?->id, $validated);
+
+            // Encerrar leva o card para a coluna Concluído do Kanban (criando-o se o protocolo ainda não tinha).
+            $this->kanbanService->sync($protocol, [
+                'ativar' => true,
+                'id' => $protocol->kanbanTask?->id,
+                'status' => 'concluido',
+            ], $request->user());
         });
     }
 
