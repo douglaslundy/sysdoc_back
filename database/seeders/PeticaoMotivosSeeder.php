@@ -8,8 +8,9 @@ use Illuminate\Database\Seeder;
 
 /**
  * Motivos de petição pública, todos sob a unidade Vigilância Sanitária (a que recebe o card no
- * Kanban). Idempotente: pode ser rodado várias vezes; só preenche a unidade de motivo que ainda
- * não tem uma, sem sobrescrever o que foi ajustado na tela /peticao-motivos.
+ * Kanban). A unidade é localizada pelo nome (ativa ou não); se não existir, é criada. Idempotente:
+ * pode ser rodado várias vezes; só preenche a unidade de motivo que ainda não tem uma, sem
+ * sobrescrever o que foi ajustado na tela /peticao-motivos.
  *
  *   php artisan db:seed --class=PeticaoMotivosSeeder
  */
@@ -17,15 +18,7 @@ class PeticaoMotivosSeeder extends Seeder
 {
     public function run(): void
     {
-        $unit = ProtocolOrganizationalUnit::query()
-            ->where('ativo', true)
-            ->where('nome', 'like', '%Vigil%Sanit%')
-            ->orderBy('id')
-            ->first();
-
-        if (! $unit) {
-            $this->command?->warn('Unidade "Vigilância Sanitária" não encontrada em /protocolo/estrutura: motivos criados sem unidade. Cadastre a unidade e rode este seeder de novo.');
-        }
+        $unit = $this->unidadeVigilancia();
 
         $motivos = [
             'Denúncia de estabelecimento irregular',
@@ -43,5 +36,40 @@ class PeticaoMotivosSeeder extends Seeder
                 $motivo->update(['unit_id' => $unit->id]);
             }
         }
+    }
+
+    private function unidadeVigilancia(): ProtocolOrganizationalUnit
+    {
+        $unit = ProtocolOrganizationalUnit::query()
+            ->where('nome', 'like', '%vigil%')
+            ->where('nome', 'like', '%sanit%')
+            ->orderByDesc('ativo')
+            ->orderBy('id')
+            ->first();
+
+        if ($unit) {
+            if (! $unit->ativo) {
+                $this->command?->warn("Unidade \"{$unit->nome}\" (id {$unit->id}) está inativa; usada mesmo assim. Reative-a em /protocolo/estrutura.");
+            }
+
+            return $unit;
+        }
+
+        $secretaria = ProtocolOrganizationalUnit::query()
+            ->where('tipo', 'secretaria')
+            ->whereNull('parent_id')
+            ->where('ativo', true)
+            ->orderBy('id')
+            ->first();
+
+        $this->command?->info('Unidade "Vigilância Sanitária" não existia: criada em /protocolo/estrutura.');
+
+        return ProtocolOrganizationalUnit::create([
+            'parent_id' => $secretaria?->id,
+            'tipo' => 'departamento',
+            'codigo' => 'VISA',
+            'nome' => 'Vigilância Sanitária',
+            'ativo' => true,
+        ]);
     }
 }
