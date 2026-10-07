@@ -154,6 +154,8 @@ class SystemAlertService
         $letter = $context['letter'] ?? null;
         $conversation = $context['conversation'] ?? null;
         $requester = $context['requester'] ?? null;
+        $protocol = $context['protocol'] ?? null;
+        $actor = $context['actor'] ?? null;
 
         $replacements = [
             '{{modulo}}' => $module,
@@ -176,6 +178,11 @@ class SystemAlertService
             '{{chat_conversa_id}}' => (string) ($conversation?->id ?? ''),
             '{{chat_mensagem}}' => (string) (($context['message']?->body ?? '') ?: ''),
             '{{link_chat}}' => '/dashboard',
+            '{{protocolo_numero}}' => (string) ($protocol?->numero ?? ''),
+            '{{protocolo_assunto}}' => (string) ($protocol?->assunto ?? ''),
+            '{{protocolo_status}}' => (string) ($protocol?->status ?? ''),
+            '{{protocolo_autor}}' => (string) ($actor?->name ?? ''),
+            '{{link_protocolos}}' => '/protocolo',
         ];
 
         $fallback = match ($trigger) {
@@ -262,6 +269,18 @@ class SystemAlertService
                 'Foi criado um protocolo a partir do oficio %s.',
                 (string) ($letter?->number ?? '')
             ),
+            'protocolo_criado' => sprintf(
+                'Novo protocolo %s (%s)%s.',
+                (string) ($protocol?->numero ?? ''),
+                (string) ($protocol?->assunto ?? ''),
+                $actor?->name ? ' criado por '.$actor->name : ' criado'
+            ),
+            'protocolo_status_alterado' => sprintf(
+                'O protocolo %s (%s) mudou para o status %s.',
+                (string) ($protocol?->numero ?? ''),
+                (string) ($protocol?->assunto ?? ''),
+                (string) ($protocol?->status ?? '')
+            ),
             'chat_conversa_iniciada' => 'Uma nova conversa de chat foi iniciada.',
             'chat_mensagem_enviada' => 'Uma nova mensagem de chat foi enviada.',
             default => sprintf('Alerta %s disparado para o modulo %s.', $trigger, $module),
@@ -278,6 +297,11 @@ class SystemAlertService
         $requisicao = $context['almoxarifado_requisicao'] ?? null;
         $kanbanTask = $context['kanban_task'] ?? null;
         $letter = $context['letter'] ?? null;
+        $protocol = $context['protocol'] ?? null;
+
+        if ($module === 'protocolo' && $protocol?->numero) {
+            return sprintf('%s: %s', $name, $protocol->numero);
+        }
 
         if ($module === 'documentos' && $document?->titulo) {
             return sprintf('%s: %s', $name, $document->titulo);

@@ -25,6 +25,7 @@ use App\Models\ProtocolView;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
+use App\Services\SystemAlertService;
 use App\Services\WhatsappEvolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -681,13 +682,18 @@ class ProtocolController extends Controller
             // A coluna "Concluído" do Kanban corresponde ao status único "encerrado" do protocolo.
             $protocolStatus = $validated['kanban_status'] === 'concluido' ? 'encerrado' : $validated['kanban_status'];
 
+            // Concluir pelo Kanban é um encerramento: não exige justificativa (o botão Encerrar da
+            // tela também manda um texto fixo), então registra uma padrão e alerta como "encerrado".
+            $encerrando = $protocolStatus === 'encerrado' && $previousStatus !== 'encerrado';
+
             $protocol->update([
                 'status' => $protocolStatus,
-                'encerrado_em' => $protocolStatus === 'encerrado' ? now() : null,
+                'encerrado_em' => $protocolStatus === 'encerrado' ? ($encerrando ? now() : $protocol->encerrado_em) : null,
                 'novo' => $protocolStatus === 'novo',
+                ...($encerrando ? ['justificativa_encerramento' => 'Encerrado pelo Kanban.'] : []),
             ]);
 
-            $this->movimentar($protocol, 'movido_no_kanban', $protocol->origem_unit_id, $protocolStatus, $request->user()?->id, [
+            $this->movimentar($protocol, $encerrando ? 'encerrado' : 'movido_no_kanban', $protocol->origem_unit_id, $protocolStatus, $request->user()?->id, [
                 'observacao' => $validated['observacao'] ?? null,
                 'status_anterior' => $previousStatus,
                 'origem' => 'kanban',
@@ -958,6 +964,11 @@ class ProtocolController extends Controller
             'user_id' => $userId,
         ]);
 
+        // Alerta só na criação e em mudança de status; comentário e anexo (um por arquivo) não alertam.
+        if (! $this->shouldAlert($acao, $dados['status_anterior'] ?? null, $statusNovo)) {
+            return;
+        }
+
         if (ProtocolConfig::current()->notify_internal) {
             ProtocolNotification::create([
                 'protocol_id' => $protocol->id,
@@ -973,6 +984,30 @@ class ProtocolController extends Controller
         if (ProtocolConfig::current()->notify_whatsapp) {
             $this->notifyWhatsapp($protocol, $acao, $userId, $dados);
         }
+
+        // Alertas configurados em Alertas (módulo "protocolo"), ex.: aviso ao administrador.
+        app(SystemAlertService::class)->dispatch(
+            'protocolo',
+            $acao === 'criado' ? 'protocolo_criado' : 'protocolo_status_alterado',
+            ['protocol' => $protocol, 'actor' => $userId ? User::find($userId) : null]
+        );
+    }
+
+    // Ações que mudam o status do protocolo (ou o criam) e, por isso, geram alerta.
+    private const ALERT_ACTIONS = ['criado', 'encaminhado', 'encerrado', 'reaberto', 'devolvido', 'movido_no_kanban'];
+
+    private function shouldAlert(string $acao, ?string $statusAnterior, ?string $statusNovo): bool
+    {
+        if (! in_array($acao, self::ALERT_ACTIONS, true)) {
+            return false;
+        }
+
+        // Arrastar o card dentro da mesma coluna não muda o status.
+        if ($acao === 'movido_no_kanban') {
+            return $statusAnterior !== $statusNovo;
+        }
+
+        return true;
     }
 
     private const WHATSAPP_ACTION_LABELS = [

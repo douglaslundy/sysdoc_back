@@ -381,6 +381,11 @@ class LetterController extends Controller
             'requester' => $user,
         ]);
 
+        app(SystemAlertService::class)->dispatch('protocolo', 'protocolo_criado', [
+            'protocol' => $protocol,
+            'actor' => $user,
+        ]);
+
         return response()->json([
             'message' => 'Protocolo criado com sucesso.',
             'protocol' => $protocol,
@@ -555,6 +560,11 @@ class LetterController extends Controller
             'protocol' => $protocol,
             'destination_user' => $destinationUser,
             'requester' => $user,
+        ]);
+
+        app(SystemAlertService::class)->dispatch('protocolo', 'protocolo_criado', [
+            'protocol' => $protocol,
+            'actor' => $user,
         ]);
 
         return response()->json([
