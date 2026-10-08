@@ -153,7 +153,57 @@ class Handler extends ExceptionHandler
             'wordpress/*',
             '.env',
             '.git/*',
+            // Varreduras de bots atrás de arquivos esquecidos (.env.save, .env.bak, .DS_Store...).
+            // Só 404: nada disso existe, e gravar cada tentativa só enche o banco de ruído.
+            '.*',
+            '*/.*',
+            '*.php',
+            '*.asp',
+            '*.aspx',
+            '*.jsp',
+            '*.cgi',
+            '*.sql',
+            '*.bak',
+            '*.old',
+            '*.save',
+            '*.swp',
+            '*.zip',
+            '*.rar',
+            '*.7z',
+            '*.tar',
+            '*.tar.gz',
+            '*.tgz',
+            '*.ini',
+            '*.yml',
+            '*.yaml',
+            '*.log',
+            'vendor/*',
+            'phpmyadmin*',
+            'pma*',
+            'admin',
+            'admin/*',
+            'cgi-bin/*',
+            'actuator/*',
+            'storage/*',
+            'config/*',
+            'backup*',
+            'xmlrpc*',
+            // Painéis de debug/administração do Laravel que bots testam (não instalados aqui).
+            'telescope*',
+            'horizon*',
+            'nova*',
+            '_ignition/*',
+            '_debugbar/*',
+            'debug*',
+            'server-status*',
+            'swagger*',
+            'api-docs*',
         ];
+
+        // /.well-known/ (verificação de domínio/SSL) não é scanner.
+        if (str_starts_with($path, '.well-known/')) {
+            return false;
+        }
 
         foreach ($ignorePatterns as $pattern) {
             if (fnmatch($pattern, $path, FNM_CASEFOLD)) {
