@@ -516,6 +516,13 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     // Logs de Erro
     Route::apiResource('errorlogs', ErrorLogController::class)->middleware('page.permission:/errorlogs');
 
+    // IPs banidos (varredura de rotas)
+    Route::middleware('admin')->prefix('banned-ips')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BannedIpController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\BannedIpController::class, 'store']);
+        Route::delete('/{bannedIp}', [\App\Http\Controllers\BannedIpController::class, 'destroy'])->whereNumber('bannedIp');
+    });
+
     //Trip
     Route::get('/trips/drivers-options', [TripController::class, 'drivers']);
     Route::apiResource('trips', TripController::class);

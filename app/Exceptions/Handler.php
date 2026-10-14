@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Models\ErrorLog;
+use App\Services\BannedIpService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -41,6 +42,8 @@ class Handler extends ExceptionHandler
     public function report(Throwable $exception)
     {
         parent::report($exception);
+
+        $this->trackScanner($exception);
 
         // Evita poluir error_logs com tentativas sem credencial em rotas protegidas.
         if ($exception instanceof AuthenticationException) {
@@ -93,6 +96,16 @@ class Handler extends ExceptionHandler
             // O logger de erro nunca deve derrubar/mascarar a excecao original.
             Log::error('Erro ao salvar log de excecao: '.$e->getMessage());
         }
+    }
+
+    // Conta 404 anônimo (sem token) por IP; ao passar do limite o IP é banido.
+    protected function trackScanner(Throwable $exception): void
+    {
+        if (! $exception instanceof NotFoundHttpException || ! request() || request()->bearerToken()) {
+            return;
+        }
+
+        app(BannedIpService::class)->registerNotFound(request()->ip(), request()->path());
     }
 
     protected function isThrottleException(Throwable $exception): bool

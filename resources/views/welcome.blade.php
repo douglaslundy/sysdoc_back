@@ -766,6 +766,8 @@
                 <input type="tel" id="c-telefone" name="telefone" value="{{ old('telefone') }}" maxlength="20" placeholder="(00) 00000-0000" required>
                 <label for="c-mensagem">Mensagem <small id="c-contador">0/500</small></label>
                 <textarea id="c-mensagem" name="mensagem" rows="4" maxlength="500" required>{{ old('mensagem') }}</textarea>
+                <label for="c-captcha">Quanto é {{ $captchaPergunta ?? '' }}?</label>
+                <input type="text" id="c-captcha" name="captcha" inputmode="numeric" autocomplete="off" maxlength="3" required>
                 <button type="submit" class="btn-primary">Enviar mensagem</button>
             </form>
             <script>

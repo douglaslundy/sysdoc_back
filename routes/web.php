@@ -16,7 +16,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    // Anti-robô do formulário de contato: soma simples, resposta guardada na sessão.
+    $a = random_int(1, 9);
+    $b = random_int(1, 9);
+    session(['contato_captcha' => $a + $b]);
+
+    return view('welcome', ['captchaPergunta' => "{$a} + {$b}"]);
 });
 
 Route::get('/contato', fn () => redirect('/#contato'));

@@ -26,7 +26,7 @@ class SistemaPageSeeder extends Seeder
             ->whereIn('system_page_id', function ($query) {
                 $query->select('id')
                     ->from('system_pages')
-                    ->whereIn('path', ['/configuracoes/whatsapp', '/configuracoes/email', '/configuracoes/chat', '/protocolo/alertas', '/sistema/alertas', '/sistema/mensagens-enviadas']);
+                    ->whereIn('path', ['/configuracoes/whatsapp', '/configuracoes/email', '/configuracoes/chat', '/protocolo/alertas', '/sistema/alertas', '/sistema/mensagens-enviadas', '/sistema/ips-banidos']);
             })
             ->delete();
 
@@ -40,6 +40,7 @@ class SistemaPageSeeder extends Seeder
             ['titulo' => 'Configurações do Chat', 'path' => '/configuracoes/chat', 'icone' => 'message-square', 'ordem' => 3],
             ['titulo' => 'Alertas', 'path' => '/sistema/alertas', 'icone' => 'bell', 'ordem' => 4],
             ['titulo' => 'Mensagens enviadas', 'path' => '/sistema/mensagens-enviadas', 'icone' => 'send', 'ordem' => 5],
+            ['titulo' => 'IPs banidos', 'path' => '/sistema/ips-banidos', 'icone' => 'slash', 'ordem' => 6],
         ];
 
         foreach ($pages as $page) {

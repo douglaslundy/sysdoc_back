@@ -30,6 +30,13 @@ class ContactRequest extends FormRequest
             'mensagem' => ['required', 'string', 'max:500'],
             // Honeypot: humanos não preenchem; bots sim.
             'website' => ['nullable', 'max:0'],
+            // Resposta de uso único: pull() descarta a pergunta mesmo se errar.
+            'captcha' => ['bail', 'required', 'integer', function ($attr, $value, $fail) {
+                $esperado = session()->pull('contato_captcha');
+                if ($esperado === null || (int) $value !== (int) $esperado) {
+                    $fail('Resposta da conta incorreta. Tente novamente.');
+                }
+            }],
         ];
     }
 
@@ -41,6 +48,8 @@ class ContactRequest extends FormRequest
             'email.email' => 'Informe um e-mail válido.',
             'telefone.required' => 'Informe seu telefone.',
             'telefone.regex' => 'Informe um telefone válido, com DDD.',
+            'captcha.required' => 'Responda a conta para provar que você não é um robô.',
+            'captcha.integer' => 'A resposta da conta deve ser um número.',
             'mensagem.required' => 'Escreva sua mensagem.',
             'mensagem.max' => 'A mensagem deve ter no máximo 500 caracteres.',
         ];
