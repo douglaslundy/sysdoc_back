@@ -21,6 +21,8 @@ class IndexCidadaoAcsRequest extends FormRequest
             'condicao'         => 'nullable|string|in:gestante,has,dm,idoso,obito',
             'busca'            => 'nullable|string|min:3|max:100',
             'multi_domicilio'  => 'nullable|boolean',
+            'idade_min'        => 'nullable|integer|min:0|max:130',
+            'idade_max'        => 'nullable|integer|min:0|max:130',
             'sort'             => 'nullable|string|in:nome,idade',
             'dir'              => 'nullable|string|in:asc,desc',
             'page'             => 'nullable|integer|min:1',

@@ -335,6 +335,17 @@ class CidadaoAcsController extends MonitorApsBaseController
             if ($multiDomicilio && $multiDomicilioFilter) {
                 $outerWhere .= " AND {$multiDomicilioFilter}";
             }
+            // Faixa etária (inclusiva); cidadão sem data de nascimento fica fora quando o filtro está ativo
+            $idadeMin = $request->query('idade_min');
+            $idadeMax = $request->query('idade_max');
+            if ($idadeMin !== null && $idadeMin !== '') {
+                $outerWhere   .= ' AND base.idade >= ?';
+                $outerParams[] = (int) $idadeMin;
+            }
+            if ($idadeMax !== null && $idadeMax !== '') {
+                $outerWhere   .= ' AND base.idade <= ?';
+                $outerParams[] = (int) $idadeMax;
+            }
             if ($busca) {
                 $b        = trim($busca);
                 $digits   = preg_replace('/\D/', '', $b);
