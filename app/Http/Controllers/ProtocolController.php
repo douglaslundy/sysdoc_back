@@ -264,12 +264,8 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Selecione a secretaria de destino do protocolo.'], 422);
         }
 
-        if ($destinationUnit->tipo !== 'secretaria') {
-            return response()->json(['message' => 'O destino do protocolo deve ser uma secretaria.'], 422);
-        }
-
         if (! $destinationUnit->ativo) {
-            return response()->json(['message' => 'Selecione uma secretaria de destino ativa.'], 422);
+            return response()->json(['message' => 'Selecione uma unidade de destino ativa.'], 422);
         }
 
         if (! empty($validated['destino_user_id']) && ! $destinationUser) {
@@ -280,7 +276,7 @@ class ProtocolController extends Controller
         // Usuário sem lotação nenhuma pode ser escolhido: o protocolo fica na
         // secretaria informada e ele passa a ser o responsável.
         $destinationUserUnit = $destinationUser ? $this->linkedOriginUnit($destinationUser) : null;
-        if ($destinationUserUnit && $destinationUserUnit->id !== $destinationUnit->id) {
+        if ($destinationUserUnit && ! in_array($destinationUserUnit->id, $this->ancestorOrSelfIds($destinationUnit), true)) {
             return response()->json(['message' => 'O usuário de destino pertence a outra secretaria.'], 422);
         }
 
@@ -790,6 +786,18 @@ class ProtocolController extends Controller
         }
 
         return $links->first()?->unit;
+    }
+
+    /** @return array<int, int> id da unidade e de todas as unidades acima dela. */
+    private function ancestorOrSelfIds(ProtocolOrganizationalUnit $unit): array
+    {
+        $ids = [];
+        while ($unit && ! in_array($unit->id, $ids, true)) {
+            $ids[] = $unit->id;
+            $unit = $unit->parent_id ? ProtocolOrganizationalUnit::find($unit->parent_id) : null;
+        }
+
+        return $ids;
     }
 
     private function resolveDestinationUnit(array $validated, ?User $destinationUser): ?ProtocolOrganizationalUnit
