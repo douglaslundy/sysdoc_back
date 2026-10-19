@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BannedIp;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -13,10 +14,30 @@ use Throwable;
  */
 class BannedIpService
 {
-    public const STRIKE_LIMIT = 15;      // 404s no intervalo abaixo => ban
+    public const STRIKE_LIMIT = 5;       // padrão: 404s no intervalo abaixo => ban (configurável)
     public const STRIKE_WINDOW = 600;    // segundos
     public const AUTO_BAN_DAYS = 30;
     private const CACHE_TTL = 300;
+    private const LIMIT_KEY = 'banned_ip_strike_limit';
+
+    public function strikeLimit(): int
+    {
+        try {
+            $value = DB::table('system_settings')->where('key', self::LIMIT_KEY)->value('value');
+        } catch (Throwable $e) {
+            $value = null; // tabela ausente/banco fora: usa o padrão
+        }
+
+        return $value !== null && (int) $value >= 1 ? (int) $value : self::STRIKE_LIMIT;
+    }
+
+    public function setStrikeLimit(int $limit): void
+    {
+        DB::table('system_settings')->updateOrInsert(
+            ['key' => self::LIMIT_KEY],
+            ['value' => (string) $limit, 'updated_at' => now()]
+        );
+    }
 
     public function isBanned(?string $ip): bool
     {
@@ -71,7 +92,7 @@ class BannedIpService
             Cache::add($key, 0, self::STRIKE_WINDOW);
             $count = Cache::increment($key);
 
-            if ($count >= self::STRIKE_LIMIT && ! $this->isBanned($ip)) {
+            if ($count >= $this->strikeLimit() && ! $this->isBanned($ip)) {
                 $this->ban($ip, "Varredura de rotas inexistentes ({$count} x 404 em ".(self::STRIKE_WINDOW / 60)." min; última: /{$path})", 'auto', self::AUTO_BAN_DAYS, $count);
                 Log::warning('IP banido por varredura de rotas', ['ip' => $ip, 'hits' => $count]);
             }

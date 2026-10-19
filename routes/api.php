@@ -520,6 +520,8 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     Route::middleware('admin')->prefix('banned-ips')->group(function () {
         Route::get('/', [\App\Http\Controllers\BannedIpController::class, 'index']);
         Route::post('/', [\App\Http\Controllers\BannedIpController::class, 'store']);
+        Route::get('/settings', [\App\Http\Controllers\BannedIpController::class, 'settings']);
+        Route::put('/settings', [\App\Http\Controllers\BannedIpController::class, 'updateSettings']);
         Route::delete('/{bannedIp}', [\App\Http\Controllers\BannedIpController::class, 'destroy'])->whereNumber('bannedIp');
     });
 
