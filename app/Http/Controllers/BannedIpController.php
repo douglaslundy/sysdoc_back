@@ -16,7 +16,26 @@ class BannedIpController extends Controller
 
     public function index(Request $request)
     {
-        return BannedIp::orderByDesc('id')->paginate($request->integer('per_page', 50));
+        $request->validate([
+            'per_page' => ['nullable', 'integer', 'in:10,25,50,100'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $page = BannedIp::query()
+            ->when($request->date_from, fn ($q, $d) => $q->whereDate('created_at', '>=', $d))
+            ->when($request->date_to, fn ($q, $d) => $q->whereDate('created_at', '<=', $d))
+            ->orderByDesc('id')
+            ->paginate($request->integer('per_page', 10));
+
+        // Preenche a origem de registros antigos (anteriores a este recurso), no máx. 5 por carga.
+        $page->getCollection()->whereNull('origin')->take(5)->each(function (BannedIp $row) {
+            if ($origin = $this->bans->lookupOrigin($row->ip)) {
+                $row->update(['origin' => $origin]);
+            }
+        });
+
+        return $page;
     }
 
     public function store(Request $request): JsonResponse
