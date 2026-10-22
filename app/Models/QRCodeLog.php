@@ -18,7 +18,11 @@ class QRCodeLog extends Model
         'location',
         'referer',
         'accessed_at',
+        'ip_origin',
+        'client_info',
     ];
+
+    protected $casts = ['client_info' => 'array'];
 
     public function queue()
     {

@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\BannedIp;
+use App\Support\ClientInfo;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -58,28 +58,9 @@ class BannedIpService
         }
     }
 
-    /** Localização/provedor do IP via ipwho.is (best-effort: null se privado ou serviço indisponível). */
     public function lookupOrigin(string $ip): ?string
     {
-        if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
-            || Cache::has('ipgeo_down')) {
-            return null;
-        }
-
-        try {
-            $data = Http::timeout(2)->get('https://ipwho.is/'.$ip)->json();
-            if (! ($data['success'] ?? false)) {
-                return null;
-            }
-
-            $place = collect([$data['city'] ?? null, $data['region'] ?? null, $data['country'] ?? null])->filter()->implode(', ');
-            $provider = $data['connection']['isp'] ?? $data['connection']['org'] ?? null;
-
-            return mb_substr(trim($place.($provider ? ' — '.$provider : '')), 0, 255) ?: null;
-        } catch (Throwable $e) {
-            Cache::put('ipgeo_down', true, 300); // evita travar a tela se o serviço cair
-            return null;
-        }
+        return app(IpOriginService::class)->lookup($ip);
     }
 
     public function ban(string $ip, string $reason, string $source = 'manual', ?int $days = null, int $hits = 0): BannedIp
@@ -93,6 +74,8 @@ class BannedIpService
                 'hits' => $hits,
                 'expires_at' => $days ? now()->addDays($days) : null,
             ] + ($origin ? ['origin' => $origin] : [])
+              // Banimento automático: a requisição atual é a do robô (no manual seria a do admin).
+              + ($source === 'auto' ? ['client_info' => ClientInfo::capture()] : [])
         );
         Cache::forget('banned_ip:'.$ip);
 

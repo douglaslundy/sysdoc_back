@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\User;
 use App\Services\Audit\AuditContext;
+use App\Support\ClientInfo;
 use App\Support\AfterResponse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -71,6 +72,8 @@ class AuditService
                 'method' => request()->method(),
                 'ip_address' => request()->ip() ?? '0.0.0.0',
                 'user_agent' => substr(request()->userAgent() ?? '', 0, 255),
+                'ip_origin' => null, // preenchido no flush, depois da resposta (consulta externa com cache)
+                'client_info' => ($info = ClientInfo::capture()) ? json_encode($info, JSON_UNESCAPED_UNICODE) : null,
                 'old_values' => $old ? json_encode(self::sanitize($old)) : null,
                 'new_values' => $new ? json_encode(self::sanitize($new)) : null,
                 'created_at' => now(),
@@ -111,6 +114,15 @@ class AuditService
         }
 
         try {
+            // Localização do IP: 1 consulta por IP distinto (cache de 30 dias), já após a resposta.
+            $origins = [];
+            foreach ($rows as &$row) {
+                $ip = $row['ip_address'];
+                $origins[$ip] ??= app(IpOriginService::class)->lookup($ip);
+                $row['ip_origin'] = $origins[$ip];
+            }
+            unset($row);
+
             AuditLog::insert($rows);
         } catch (\Throwable $e) {
             Log::error('Falha ao gravar auditoria em lote.', ['linhas' => count($rows), 'error' => $e->getMessage()]);

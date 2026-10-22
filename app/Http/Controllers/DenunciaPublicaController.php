@@ -7,6 +7,7 @@ use App\Http\Requests\StoreDenunciaRequest;
 use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoAttachment;
 use App\Models\KanbanTask;
+use App\Services\AuditService;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
 use App\Services\Fiscalizacao\VigilanciaAvisoService;
@@ -105,6 +106,8 @@ class DenunciaPublicaController extends Controller
         // Avisa os profissionais da Vigilância (WhatsApp) depois da resposta; nunca leva dados do denunciante.
         $this->aviso->notificarNova($fiscalizacao);
 
+        AuditService::record('PUBLIC_PETITION_CREATE', null, null, ['protocolo' => $fiscalizacao->protocolo]);
+
         return response()->json($this->recibo($fiscalizacao->protocolo, $senha), 201);
     }
 
@@ -133,6 +136,11 @@ class DenunciaPublicaController extends Controller
 
         // O hash fica oculto no model; lê o valor bruto para conferir a senha.
         $confere = $fiscalizacao && Hash::check($senha, (string) $fiscalizacao->getRawOriginal('senha_consulta_hash'));
+
+        AuditService::record('PUBLIC_PETITION_LOOKUP', null, null, [
+            'protocolo' => $protocolo,
+            'resultado' => $confere ? 'autenticado' : 'falha',
+        ]);
 
         if (! $confere) {
             Cache::add($chaveFalhas, 0, self::BLOQUEIO_SEGUNDOS);

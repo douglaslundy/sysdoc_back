@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ConsultarConsultaPublicaRequest;
 use App\Models\ResultadoExame;
+use App\Services\AuditService;
 use App\Services\Laboratorio\LaudoPdfService;
 use App\Services\Laboratorio\ResultadoExameService;
 use Illuminate\Http\Request;
@@ -22,6 +23,12 @@ class ConsultaPublicaController extends Controller
             $request->input('protocolo'),
             $request->input('senha')
         );
+
+        // Consulta pública de dado de saúde: fica registrada com IP/dispositivo (nunca a senha).
+        AuditService::record('PUBLIC_EXAM_LOOKUP', null, null, [
+            'protocolo' => strtoupper((string) $request->input('protocolo')),
+            'resultado' => $resultado ? 'encontrado' : 'nao_encontrado',
+        ]);
 
         if (! $resultado) {
             return response()->json([
@@ -62,7 +69,13 @@ class ConsultaPublicaController extends Controller
     {
         $resultado = ResultadoExame::where('protocolo', strtoupper($protocolo))->first();
 
-        if (! $resultado || ! Hash::check($request->input('senha', ''), $resultado->senha_hash)) {
+        $autorizado = $resultado && Hash::check($request->input('senha', ''), $resultado->senha_hash);
+        AuditService::record('PUBLIC_EXAM_PDF', null, null, [
+            'protocolo' => strtoupper($protocolo),
+            'resultado' => $autorizado ? 'autorizado' : 'negado',
+        ]);
+
+        if (! $autorizado) {
             return response()->json(['error' => 'Protocolo ou senha inválidos.'], 401);
         }
 

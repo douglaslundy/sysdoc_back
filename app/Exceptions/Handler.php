@@ -4,6 +4,8 @@ namespace App\Exceptions;
 
 use App\Models\ErrorLog;
 use App\Services\BannedIpService;
+use App\Services\IpOriginService;
+use App\Support\ClientInfo;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -91,6 +93,9 @@ class Handler extends ExceptionHandler
                 'message' => $exception->getMessage(),
                 'trace' => $exception->getTraceAsString(),
                 'context' => $this->context($requestUserId, $requestUserName, $requestUserEmail),
+                'client_info' => request() ? ClientInfo::capture() : null,
+                // Só cache: o log de erro não pode esperar por uma consulta externa.
+                'ip_origin' => app(IpOriginService::class)->cached(request()?->ip()),
             ]);
         } catch (Throwable $e) {
             // O logger de erro nunca deve derrubar/mascarar a excecao original.

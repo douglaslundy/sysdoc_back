@@ -12,10 +12,12 @@ class AuditLog extends Model
         'user_id', 'user_name', 'action',
         'model_type', 'model_id', 'client_id',
         'endpoint', 'method', 'ip_address', 'user_agent',
+        'ip_origin', 'client_info',
         'old_values', 'new_values', 'created_at',
     ];
 
     protected $casts = [
+        'client_info' => 'array',
         'old_values' => 'array',
         'new_values' => 'array',
         'created_at' => 'datetime',

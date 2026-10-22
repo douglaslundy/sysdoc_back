@@ -13,6 +13,8 @@ use App\Models\Queue;
 use App\Services\AuditService;
 use App\Services\Authorization\PagePermissionService;
 use App\Services\Authorization\SpecialityPermissionService;
+use App\Services\IpOriginService;
+use App\Support\ClientInfo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -99,6 +101,8 @@ class QueueController extends Controller
             'user_agent' => substr(request()->header('User-Agent'), 0, 255),
             'host_name' => gethostbyaddr(request()->ip()),
             'referer' => request()->header('referer'),
+            'ip_origin' => app(IpOriginService::class)->lookup(request()->ip()),
+            'client_info' => ClientInfo::capture(),
             'accessed_at' => now(),
         ]);
 
@@ -200,6 +204,8 @@ class QueueController extends Controller
             'user_agent' => substr($userAgent, 0, 255),
             'location' => $location ? json_encode($location) : null,
             'referer' => $request->headers->get('referer'),
+            'ip_origin' => app(IpOriginService::class)->lookup($ip),
+            'client_info' => ClientInfo::capture($request),
             'accessed_at' => now(),
         ]);
 

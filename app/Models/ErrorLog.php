@@ -17,9 +17,12 @@ class ErrorLog extends Model
         'message',
         'trace',
         'context',
+        'ip_origin',
+        'client_info',
     ];
 
     protected $casts = [
+        'client_info' => 'array',
         'context' => 'array',
     ];
 

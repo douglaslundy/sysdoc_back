@@ -14,5 +14,9 @@ class PublicQueueLog extends Model
         'host_name',
         'referer',
         'accessed_at',
+        'ip_origin',
+        'client_info',
     ];
+
+    protected $casts = ['client_info' => 'array'];
 }
