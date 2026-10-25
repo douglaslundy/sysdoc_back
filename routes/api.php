@@ -572,6 +572,14 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
 
     // Iluminação pública (acesso por route_permissions.php)
     Route::get('/iluminacao/postes', [IluminacaoPosteController::class, 'index']);
+    Route::get('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'show']);
+    Route::get('/iluminacao/postes/{poste}/historico', [IluminacaoPosteController::class, 'historico']);
+    Route::middleware(['page.permission:/iluminacao/cadastro', 'throttle:60,1'])->group(function () {
+        Route::post('/iluminacao/postes', [IluminacaoPosteController::class, 'store']);
+        Route::put('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'update']);
+    });
+    // Exclusão: a checagem de admin é feita no controller.
+    Route::delete('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'destroy'])->middleware('throttle:60,1');
 
     // Fiscalizações (Vigilância Sanitária)
     Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['index', 'show'])

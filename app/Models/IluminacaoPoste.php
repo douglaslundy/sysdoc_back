@@ -35,6 +35,38 @@ class IluminacaoPoste extends Model
         'concluido_em' => 'datetime',
     ];
 
+    // Inativo some (404) para quem não é admin.
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $query = $this->where($field ?? $this->getRouteKeyName(), $value);
+
+        if (request()->user()?->profile !== 'admin') {
+            $query->where('active', true);
+        }
+
+        return $query->firstOrFail();
+    }
+
+    public function temDesfecho(): bool
+    {
+        // tem_desfecho vem de withExists() nas listas; no detalhe consulta uma vez.
+        return array_key_exists('tem_desfecho', $this->attributes)
+            ? (bool) $this->attributes['tem_desfecho']
+            : $this->movimentacoes()->where('acao', 'desfecho')->exists();
+    }
+
+    /** Cadastrador só mexe no que ainda está pendente e sem desfecho; admin sempre. */
+    public function editavelPor(User $user): bool
+    {
+        if ($user->profile === 'admin') {
+            return true;
+        }
+
+        return $this->cadastrado_por === $user->id
+            && $this->status === self::PENDENTE
+            && ! $this->temDesfecho();
+    }
+
     public function cadastrador()
     {
         return $this->belongsTo(User::class, 'cadastrado_por');

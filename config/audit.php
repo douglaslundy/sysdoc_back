@@ -30,5 +30,6 @@ return [
         \App\Models\AlmoxarifadoUnidadeMedida::class,
         \App\Models\AlmoxarifadoConfig::class,
         \App\Models\AlmoxarifadoRequisicao::class,
+        \App\Models\IluminacaoPoste::class,
     ],
 ];
