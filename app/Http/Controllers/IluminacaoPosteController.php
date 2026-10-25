@@ -10,6 +10,7 @@ use App\Models\IluminacaoPoste;
 use App\Models\IluminacaoPosteMovimentacao;
 use App\Services\Iluminacao\IluminacaoFotoStorage;
 use App\Services\Iluminacao\IluminacaoProtocolo;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -60,19 +61,42 @@ class IluminacaoPosteController extends Controller
     {
         $user = $request->user();
 
-        if ($uuid = $request->input('client_uuid')) {
-            $existente = IluminacaoPoste::where('client_uuid', $uuid)->first();
-            if ($existente) {
-                // Reenvio após falha de rede: devolve o mesmo poste, sem duplicar.
-                if ($existente->cadastrado_por !== $user->id) {
-                    return response()->json(['message' => 'Identificador de envio já utilizado.'], 409);
-                }
+        $uuid = $request->input('client_uuid');
 
-                return (new IluminacaoPosteResource($this->completo($existente)))->response()->setStatusCode(200);
+        // Reenvio após falha de rede: devolve o mesmo poste, sem duplicar.
+        $reenvio = function () use ($uuid, $user) {
+            $existente = $uuid ? IluminacaoPoste::where('client_uuid', $uuid)->first() : null;
+            if (! $existente) {
+                return null;
             }
+            if ($existente->cadastrado_por !== $user->id) {
+                return response()->json(['message' => 'Identificador de envio já utilizado.'], 409);
+            }
+
+            return (new IluminacaoPosteResource($this->completo($existente)))->response()->setStatusCode(200);
+        };
+
+        if ($resposta = $reenvio()) {
+            return $resposta;
         }
 
-        $poste = DB::transaction(function () use ($request, $user) {
+        try {
+            $poste = $this->gravar($request, $user);
+        } catch (QueryException $e) {
+            // Duas requisições com o mesmo client_uuid chegaram juntas: vale a que gravou primeiro.
+            $duplicado = (int) ($e->errorInfo[1] ?? 0) === 1062;
+            if ($duplicado && $uuid && $resposta = $reenvio()) {
+                return $resposta;
+            }
+            throw $e;
+        }
+
+        return (new IluminacaoPosteResource($this->completo($poste)))->response()->setStatusCode(201);
+    }
+
+    private function gravar(StoreIluminacaoPosteRequest $request, $user): IluminacaoPoste
+    {
+        return DB::transaction(function () use ($request, $user) {
             $poste = new IluminacaoPoste($request->validated());
             $poste->cadastrado_por = $user->id;
             $poste->save();
@@ -88,8 +112,6 @@ class IluminacaoPosteController extends Controller
 
             return $poste;
         });
-
-        return (new IluminacaoPosteResource($this->completo($poste)))->response()->setStatusCode(201);
     }
 
     public function update(UpdateIluminacaoPosteRequest $request, IluminacaoPoste $poste)
