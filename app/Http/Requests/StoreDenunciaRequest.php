@@ -11,7 +11,7 @@ class StoreDenunciaRequest extends FormRequest
 {
     public const MAX_FILES = 5;
 
-    public const MAX_FILE_KB = 8192;
+    public const MAX_FILE_KB = 10240;
 
     public function authorize(): bool
     {
