@@ -37,6 +37,7 @@ use App\Http\Controllers\FiscalizacaoAttachmentController;
 use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\FiscalizacaoHistoricoController;
 use App\Http\Controllers\IluminacaoPosteController;
+use App\Http\Controllers\IluminacaoPosteFotoController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\LetterAttachmentController;
@@ -574,9 +575,12 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     Route::get('/iluminacao/postes', [IluminacaoPosteController::class, 'index']);
     Route::get('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'show']);
     Route::get('/iluminacao/postes/{poste}/historico', [IluminacaoPosteController::class, 'historico']);
+    Route::get('/iluminacao/postes/{poste}/fotos/{foto}/download', [IluminacaoPosteFotoController::class, 'download']);
     Route::middleware(['page.permission:/iluminacao/cadastro', 'throttle:60,1'])->group(function () {
         Route::post('/iluminacao/postes', [IluminacaoPosteController::class, 'store']);
         Route::put('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'update']);
+        Route::post('/iluminacao/postes/{poste}/fotos', [IluminacaoPosteFotoController::class, 'store']);
+        Route::delete('/iluminacao/postes/{poste}/fotos/{foto}', [IluminacaoPosteFotoController::class, 'destroy']);
     });
     // Exclusão: a checagem de admin é feita no controller.
     Route::delete('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'destroy'])->middleware('throttle:60,1');

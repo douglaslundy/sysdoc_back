@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateIluminacaoPosteRequest;
 use App\Http\Resources\IluminacaoPosteResource;
 use App\Models\IluminacaoPoste;
 use App\Models\IluminacaoPosteMovimentacao;
+use App\Services\Iluminacao\IluminacaoFotoStorage;
 use App\Services\Iluminacao\IluminacaoProtocolo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class IluminacaoPosteController extends Controller
 {
+    public function __construct(private IluminacaoFotoStorage $fotos)
+    {
+    }
+
     public function index(ListIluminacaoPostesRequest $request)
     {
         $ate = $request->input('ate', now()->toDateString());
@@ -76,6 +81,10 @@ class IluminacaoPosteController extends Controller
             $poste->save();
 
             IluminacaoPosteMovimentacao::create(['poste_id' => $poste->id, 'user_id' => $user->id, 'acao' => 'cadastro']);
+
+            if ($request->hasFile('fotos')) {
+                $this->fotos->guardar($poste, $request->file('fotos'), 'cadastro', $user->id);
+            }
 
             return $poste;
         });
