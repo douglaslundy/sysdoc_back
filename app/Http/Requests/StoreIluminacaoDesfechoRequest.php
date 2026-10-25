@@ -20,7 +20,7 @@ class StoreIluminacaoDesfechoRequest extends FormRequest
             'resultado' => ['required', 'in:concluido,nao_concluido,aguardando'],
             'motivo' => ['required_if:resultado,nao_concluido,aguardando', 'nullable', 'string', 'min:3', 'max:1000'],
             'fotos' => ['sometimes', 'array', 'max:4'],
-            'fotos.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'fotos.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
         ];
     }
 }

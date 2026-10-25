@@ -18,7 +18,7 @@ class StoreIluminacaoPosteFotoRequest extends FormRequest
     {
         return [
             'fotos' => ['required', 'array', 'min:1', 'max:4'],
-            'fotos.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'fotos.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
         ];
     }
 }

@@ -26,7 +26,7 @@ class StoreIluminacaoPosteRequest extends FormRequest
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'precisao_m' => ['nullable', 'numeric', 'min:0', 'max:100000'],
             'fotos' => ['sometimes', 'array', 'max:4'],
-            'fotos.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'fotos.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
         ];
     }
 
