@@ -10,8 +10,11 @@ class IluminacaoPoste extends Model
     use HasFactory;
 
     public const PENDENTE = 'pendente';
+
     public const AGUARDANDO = 'aguardando';
+
     public const NAO_CONCLUIDO = 'nao_concluido';
+
     public const CONCLUIDO = 'concluido';
 
     protected $table = 'iluminacao_postes';
