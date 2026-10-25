@@ -53,6 +53,8 @@ return [
 
         // ---- vigilância sanitária (leituras; escritas já têm grupo próprio) ----
         ['prefix' => 'fiscalizacoes', 'methods' => ['GET'], 'pages' => ['/fiscalizacoes']],
+        // Iluminação pública: cadastro e serviço são páginas irmãs; qualquer uma libera a leitura.
+        ['prefix' => 'iluminacao/postes', 'pages' => ['/iluminacao/cadastro', '/iluminacao/servico']],
         ['prefix' => 'estabelecimentos', 'methods' => ['GET'], 'pages' => ['/estabelecimentos', '/alvaras', '/fiscalizacoes', '/auditoria']],
         ['prefix' => 'cnaes', 'methods' => ['GET'], 'pages' => ['/estabelecimentos', '/alvaras', '/fiscalizacoes']],
         ['prefix' => 'alvaras', 'methods' => ['GET'], 'pages' => ['/alvaras', '/auditoria']],

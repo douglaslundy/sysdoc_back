@@ -36,6 +36,7 @@ use App\Http\Controllers\ExameController;
 use App\Http\Controllers\FiscalizacaoAttachmentController;
 use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\FiscalizacaoHistoricoController;
+use App\Http\Controllers\IluminacaoPosteController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\LetterAttachmentController;
@@ -568,6 +569,9 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     Route::middleware('page.permission:/alvaras')->group(function () {
         Route::apiResource('alvaras', AlvaraController::class)->only(['store', 'update', 'destroy']);
     });
+
+    // Iluminação pública (acesso por route_permissions.php)
+    Route::get('/iluminacao/postes', [IluminacaoPosteController::class, 'index']);
 
     // Fiscalizações (Vigilância Sanitária)
     Route::apiResource('fiscalizacoes', FiscalizacaoController::class)->only(['index', 'show'])
