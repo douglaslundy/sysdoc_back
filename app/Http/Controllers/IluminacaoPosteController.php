@@ -135,7 +135,7 @@ class IluminacaoPosteController extends Controller
     public function historico(IluminacaoPoste $poste)
     {
         return response()->json(
-            $poste->movimentacoes()->with('user:id,name')->orderBy('id')->get()->map(fn ($m) => [
+            $poste->movimentacoes()->with(['user:id,name', 'fotos'])->orderBy('id')->get()->map(fn ($m) => [
                 'id' => $m->id,
                 'acao' => $m->acao,
                 'status_anterior' => $m->status_anterior,
@@ -144,6 +144,9 @@ class IluminacaoPosteController extends Controller
                 'dados' => $m->dados,
                 'created_at' => $m->created_at,
                 'user' => $m->user ? ['id' => $m->user->id, 'name' => $m->user->name] : null,
+                'fotos' => $m->fotos->map(fn ($f) => [
+                    'id' => $f->id, 'momento' => $f->momento, 'mime_type' => $f->mime_type, 'size_bytes' => $f->size_bytes,
+                ])->values(),
             ])->values()
         );
     }

@@ -36,6 +36,7 @@ use App\Http\Controllers\ExameController;
 use App\Http\Controllers\FiscalizacaoAttachmentController;
 use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\FiscalizacaoHistoricoController;
+use App\Http\Controllers\IluminacaoDesfechoController;
 use App\Http\Controllers\IluminacaoPosteController;
 use App\Http\Controllers\IluminacaoPosteFotoController;
 use App\Http\Controllers\KanbanController;
@@ -582,7 +583,10 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::post('/iluminacao/postes/{poste}/fotos', [IluminacaoPosteFotoController::class, 'store']);
         Route::delete('/iluminacao/postes/{poste}/fotos/{foto}', [IluminacaoPosteFotoController::class, 'destroy']);
     });
-    // Exclusão: a checagem de admin é feita no controller.
+    Route::post('/iluminacao/postes/{poste}/desfecho', [IluminacaoDesfechoController::class, 'store'])
+        ->middleware(['page.permission:/iluminacao/servico', 'throttle:60,1']);
+    // Reabrir e excluir: a checagem de admin é feita no Request/controller.
+    Route::post('/iluminacao/postes/{poste}/reabrir', [IluminacaoDesfechoController::class, 'reabrir'])->middleware('throttle:60,1');
     Route::delete('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'destroy'])->middleware('throttle:60,1');
 
     // Fiscalizações (Vigilância Sanitária)
