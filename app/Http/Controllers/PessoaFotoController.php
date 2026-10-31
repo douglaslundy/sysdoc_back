@@ -66,7 +66,7 @@ class PessoaFotoController extends Controller
 
     private function exibir(Client|User $pessoa)
     {
-        $foto = PessoaFoto::where('chave', PessoaFoto::chaveDe($pessoa))->first();
+        $foto = PessoaFoto::daPessoa($pessoa);
 
         abort_unless($foto && Storage::disk($foto->disk)->exists($foto->path), 404);
 
@@ -82,7 +82,7 @@ class PessoaFotoController extends Controller
     {
         $arquivo = $request->file('photo');
         $chave = PessoaFoto::chaveDe($pessoa);
-        $anterior = PessoaFoto::where('chave', $chave)->first();
+        $anterior = PessoaFoto::daPessoa($pessoa);
 
         $path = $arquivo->store('pessoas', self::DISK);
 
@@ -103,7 +103,7 @@ class PessoaFotoController extends Controller
 
     private function remover(Request $request, Client|User $pessoa)
     {
-        $foto = PessoaFoto::where('chave', PessoaFoto::chaveDe($pessoa))->first();
+        $foto = PessoaFoto::daPessoa($pessoa);
 
         if ($foto) {
             Storage::disk($foto->disk)->delete($foto->path);
