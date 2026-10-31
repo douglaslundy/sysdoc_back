@@ -39,6 +39,7 @@ use App\Http\Controllers\FiscalizacaoHistoricoController;
 use App\Http\Controllers\IluminacaoDesfechoController;
 use App\Http\Controllers\IluminacaoPosteController;
 use App\Http\Controllers\IluminacaoPosteFotoController;
+use App\Http\Controllers\PessoaFotoController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\LabConfigController;
 use App\Http\Controllers\LetterAttachmentController;
@@ -459,6 +460,11 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     });
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
+    // Foto de usuário (cada um troca a própria; admin troca de qualquer um). Compartilhada com o cidadão de mesmo CPF.
+    Route::get('/users/{user}/photo', [PessoaFotoController::class, 'showUser'])->whereNumber('user');
+    Route::post('/users/{user}/photo', [PessoaFotoController::class, 'storeUser'])->whereNumber('user');
+    Route::delete('/users/{user}/photo', [PessoaFotoController::class, 'destroyUser'])->whereNumber('user');
+
     // Equipes APS por usuário (admin)
     Route::middleware('admin')->group(function () {
         Route::get('/users/{user}/equipe-aps', [UserEquipeApsController::class, 'show']);
@@ -483,6 +489,9 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
             Route::get('/clients/duplicates', [ClientController::class, 'duplicateCandidates']);
             Route::delete('/clients/duplicates', [ClientController::class, 'destroyDuplicateCandidates']);
         });
+        Route::get('/clients/{client}/photo', [PessoaFotoController::class, 'showClient'])->whereNumber('client');
+        Route::post('/clients/{client}/photo', [PessoaFotoController::class, 'storeClient'])->whereNumber('client');
+        Route::delete('/clients/{client}/photo', [PessoaFotoController::class, 'destroyClient'])->whereNumber('client');
         Route::apiResource('clients', ClientController::class);
         Route::get('/detailed-client-report', [ClientController::class, 'detailedClientReport']);
     });
