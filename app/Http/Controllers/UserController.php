@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\UserPresence;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
+use App\Services\Secretarias\GestorAlert;
 use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,14 +14,69 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        // Gestão de usuários: admin ou gestor (o gestor fica restrito às suas secretarias, ver scopedTo).
+        $this->middleware(function (Request $request, $next) {
+            if (! in_array($request->user()?->profile, ['admin', 'gestor'], true)) {
+                return response()->json(['message' => 'Acesso restrito a administradores e gestores.'], 403);
+            }
+
+            return $next($request);
+        })->except('presence');
+    }
+
+    /** Admin vê todos; gestor só quem divide secretaria com ele, nunca administradores. */
+    private function scopedTo(User $actor)
+    {
+        $query = User::query();
+
+        if ($actor->profile === 'admin') {
+            return $query;
+        }
+
+        return $query->where('profile', '!=', 'admin')
+            ->whereHas('secretarias', fn ($q) => $q->whereIn('secretarias.id', $this->actorSecretariaIds($actor)));
+    }
+
+    private function actorSecretariaIds(User $actor): array
+    {
+        return $actor->secretarias()->pluck('secretarias.id')->all();
+    }
+
+    private function authorizeTarget(Request $request, User $user): void
+    {
+        abort_unless($this->scopedTo($request->user())->whereKey($user->id)->exists(), 403, 'Usuário fora das suas secretarias.');
+    }
+
+    /** Gestor mexe só nos vínculos das próprias secretarias: os demais vínculos do alvo ficam intactos. */
+    private function syncSecretarias(User $actor, User $user, array $ids): void
+    {
+        if ($actor->profile === 'admin') {
+            $user->secretarias()->sync($ids);
+
+            return;
+        }
+
+        $user->secretarias()->detach($this->actorSecretariaIds($actor));
+        $user->secretarias()->syncWithoutDetaching($ids);
+    }
+
+    private function alertIfGestorAssigned(Request $request, User $user, ?string $previousProfile): void
+    {
+        if ($request->user()->profile === 'gestor' && $user->profile === 'gestor' && $previousProfile !== 'gestor') {
+            GestorAlert::perfilGestorAtribuido($request->user(), $user);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')
+        $users = $this->scopedTo($request->user())->with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')
             ->where('active', true)
             ->orderBy('id', 'desc')
             ->get();
@@ -76,7 +132,7 @@ class UserController extends Controller
     {
 
         $array = ['status' => 'created'];
-        $data = $request->except(['password2', 'protocol_unit_ids']);
+        $data = $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids']);
         $data['password'] = Hash::make($data['password']);
         $existing = $request->reactivatableUser();
         if ($existing) {
@@ -93,8 +149,12 @@ class UserController extends Controller
                 $user = User::create($data);
             }
             $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            // Conta nova ou reativada: vínculos antigos não valem, fica só o que foi informado.
+            $user->secretarias()->sync($request->input('secretaria_ids', []));
+
             return $user;
         });
+        $this->alertIfGestorAssigned($request, $user, null);
         $array['user'] = $this->userPayload($user);
 
         return $array;
@@ -106,10 +166,9 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        // return User::where('active', true)->find($id) ? User::find($id) : ['error' => '404'];
-        $user = User::with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')->find($id);
+        $user = $this->scopedTo($request->user())->with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')->find($id);
         return $user ? $this->userPayload($user) : ['error' => '404'];
     }
 
@@ -121,8 +180,10 @@ class UserController extends Controller
      */
     public function update(UserRequest $request, User $user)
     {
+        $this->authorizeTarget($request, $user);
+        $previousProfile = $user->profile;
         $array = ['status' => 'updated'];
-        $data = $request->except(['password2', 'protocol_unit_ids']);
+        $data = $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids']);
 
         if ($request->input('password')) {
 
@@ -134,7 +195,11 @@ class UserController extends Controller
         DB::transaction(function () use ($user, $data, $request) {
             $user->update($data);
             $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            if ($request->has('secretaria_ids')) {
+                $this->syncSecretarias($request->user(), $user, $request->input('secretaria_ids'));
+            }
         });
+        $this->alertIfGestorAssigned($request, $user, $previousProfile);
         $array['user'] = $this->userPayload($user->fresh());
 
         return $array;
@@ -145,8 +210,11 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
+        // Inativar é global (vale em todas as secretarias): só admin.
+        abort_unless($request->user()->profile === 'admin', 403, 'Somente administrador inativa usuário.');
+
         $array = ['status' => 'inactivated'];
 
         // User::where('id', $user)->update(['active' => 0, 'inactive_date' => new DateTime()]);

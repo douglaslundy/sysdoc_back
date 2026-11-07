@@ -41,10 +41,9 @@ class UserRequest extends FormRequest
     {
         $user = $this->user();
 
-        // Reforço: a rota já exige o middleware 'admin', mas a autorização não deve
-        // depender só do roteamento — gestão de usuários (inclusive campo `profile`,
-        // que define permissões) é restrita a administradores.
-        return $user !== null && $user->profile === 'admin';
+        // Gestão de usuários (inclusive o campo `profile`, que define permissões) é restrita a
+        // administradores e gestores; o escopo do gestor é aplicado no controller e nas regras abaixo.
+        return $user !== null && in_array($user->profile, ['admin', 'gestor'], true);
     }
 
     /**
@@ -62,8 +61,14 @@ class UserRequest extends FormRequest
         // (reativado no controller), então não pode barrar a unicidade de CPF/e-mail.
         $userId ??= $this->reactivatableUser()?->id;
 
+        $isGestor = $this->user()?->profile === 'gestor';
+        $profileRules = ['required', 'string', 'max:50', Rule::in($validSlugs)];
+        if ($isGestor) {
+            $profileRules[] = Rule::notIn(['admin']);
+        }
+
         return [
-            'profile' => ['required', 'string', 'max:50', Rule::in($validSlugs)],
+            'profile' => $profileRules,
             'name' => 'required|string|max:50',
             'preferred_name' => ['nullable', 'string', 'max:50'],
             'phone' => ['nullable', new PhoneValidation],
@@ -75,6 +80,12 @@ class UserRequest extends FormRequest
             'is_rt_psf' => ['nullable', 'boolean'],
             'rt_all_teams' => ['nullable', 'boolean'],
             'chat_access_override' => ['nullable', 'boolean'],
+            'secretaria_ids' => [$this->route('user') === null ? 'required' : 'sometimes', 'array', 'min:1'],
+            'secretaria_ids.*' => array_values(array_filter([
+                'integer', 'distinct', 'exists:secretarias,id',
+                // Gestor só vincula a secretarias das quais ele mesmo faz parte.
+                $isGestor ? Rule::in($this->user()->secretarias()->pluck('secretarias.id')->all()) : null,
+            ])),
             'protocol_unit_ids' => ['nullable', 'array'],
             'protocol_unit_ids.*' => ['integer', 'distinct', 'exists:protocol_organizational_units,id'],
         ];
@@ -103,6 +114,10 @@ class UserRequest extends FormRequest
             'cpf.required' => 'O campo CPF é obrigatório',
             'email.unique' => 'Já existe um usuário cadastrado com este e-mail',
             'email.required' => 'O campo E-mail é obrigatório',
+            'secretaria_ids.required' => 'Informe ao menos uma secretaria',
+            'secretaria_ids.min' => 'Informe ao menos uma secretaria',
+            'secretaria_ids.*.in' => 'Você só pode vincular secretarias das quais faz parte',
+            'profile.not_in' => 'Gestor não pode atribuir o perfil de administrador',
             'profile.in' => 'Tipo de perfil selecionado não existe ou está inativo',
         ];
     }

@@ -75,6 +75,9 @@ return [
         // ---- cadastros de apoio: a lista é usada por vários módulos; só a escrita é restrita ----
         ['prefix' => 'specialities', 'methods' => ['POST', 'PUT', 'PATCH', 'DELETE'], 'pages' => ['/specialities']],
 
+        // ---- usuários: admin e gestor (a página /users é de gestão); ping de presença e foto seguem só com login ----
+        ['prefix' => 'users', 'except' => ['users/presence/ping', 'users/{user}/photo'], 'pages' => ['/users']],
+
         // ---- cadastro de secretarias (não confundir com almoxarifado/secretarias) ----
         ['prefix' => 'secretarias-admin', 'admin' => true],
 

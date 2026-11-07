@@ -461,11 +461,9 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     Route::get('/letters/{letter}/attachments/{attachment}/download', [LetterAttachmentController::class, 'download']);
     Route::delete('/letters/{letter}/attachments/{attachment}', [LetterAttachmentController::class, 'destroy']);
 
-    // users — gestão de usuários é restrita a administradores (evita que qualquer usuário
-    // autenticado se autopromova a admin ou edite/exclua a conta de outro usuário).
-    Route::middleware('admin')->group(function () {
-        Route::apiResource('users', UserController::class);
-    });
+    // users — gestão restrita a admin e gestor (UserController::__construct); o gestor só alcança
+    // usuários das suas secretarias e a rota é liberada pela página /users (config/route_permissions.php).
+    Route::apiResource('users', UserController::class);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     // Foto de usuário (cada um troca a própria; admin troca de qualquer um). Compartilhada com o cidadão de mesmo CPF.

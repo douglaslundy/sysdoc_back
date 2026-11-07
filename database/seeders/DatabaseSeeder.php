@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             RtAccessFixSeeder::class,             // Backfill de permissoes da RT
             AlmoxarifadoPageSeeder::class,        // Almoxarifado - categorias, paginas e permissoes
             SecretariaSeeder::class,              // Secretarias e vinculo dos usuarios a Saude
+            GestorProfileSeeder::class,           // Perfil Gestor (usuarios da propria secretaria)
         ]);
     }
 }
