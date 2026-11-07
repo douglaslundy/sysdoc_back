@@ -373,6 +373,13 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     Route::get('/mensagens-enviadas', [\App\Http\Controllers\MessageLogController::class, 'index'])
         ->middleware('page.permission:/sistema/mensagens-enviadas');
 
+    Route::prefix('secretarias-admin')->controller(\App\Http\Controllers\SecretariaAdminController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::put('/{id}', 'update')->whereNumber('id');
+        Route::delete('/{id}', 'destroy')->whereNumber('id');
+    });
+
     Route::prefix('kanban')->group(function () {
         Route::get('/', [KanbanController::class, 'index']);
         Route::post('/', [KanbanController::class, 'store']);

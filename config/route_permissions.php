@@ -75,6 +75,9 @@ return [
         // ---- cadastros de apoio: a lista é usada por vários módulos; só a escrita é restrita ----
         ['prefix' => 'specialities', 'methods' => ['POST', 'PUT', 'PATCH', 'DELETE'], 'pages' => ['/specialities']],
 
+        // ---- cadastro de secretarias (não confundir com almoxarifado/secretarias) ----
+        ['prefix' => 'secretarias-admin', 'admin' => true],
+
         // ---- legado (setores): somente administrador ----
         ['prefix' => 'sector', 'admin' => true],
         ['prefix' => 'sectors', 'admin' => true],
