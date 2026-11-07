@@ -12,12 +12,21 @@ class ActiveSecretaria
     /** @var int[] */
     private array $allowed = [];
 
+    private bool $resolved = false;
+
     /** @param int[] $allowed */
     public function set(?int $id, bool $all, array $allowed): void
     {
+        $this->resolved = true;
         $this->id = $id;
         $this->all = $all;
         $this->allowed = array_values(array_map('intval', $allowed));
+    }
+
+    /** false = nenhuma requisição autenticada definiu a secretaria (console, fila, seeder). */
+    public function resolved(): bool
+    {
+        return $this->resolved;
     }
 
     public function id(): ?int
