@@ -101,7 +101,7 @@ class CadastroSolicitacaoService
 
         $user = DB::transaction(function () use ($s, $por, $perfilSlug, $ids) {
             $s = $this->pedidoTravado($s, $por);
-            $this->validarEscolhas($por, $perfilSlug, $ids);
+            $perfilSlug = $this->validarEscolhas($por, $perfilSlug, $ids);
 
             $contas = User::whereCpfIgual((string) $s->cpf)->lockForUpdate()->get();
             if ($contas->contains('active', true)) {
@@ -138,19 +138,17 @@ class CadastroSolicitacaoService
                 ])->save();
                 $existente->protocolUnits()->update(['ativo' => false]);
                 $existente->tokens()->delete();
+                // Permissões clínicas e equipes APS da conta antiga não valem para o novo pedido.
+                DB::table('user_speciality_permissions')->where('user_id', $existente->id)->delete();
+                DB::table('user_equipe_aps')->where('user_id', $existente->id)->delete();
                 $user = $existente;
             } else {
                 $user = new User();
                 $user->forceFill($dados + ['cpf' => $s->cpf])->save();
             }
 
-            if ($por->profile === 'admin') {
-                $user->secretarias()->sync($ids);
-            } else {
-                // Gestor mexe só nos vínculos das próprias secretarias; os de fora ficam.
-                $user->secretarias()->detach($por->secretarias()->pluck('secretarias.id')->all());
-                $user->secretarias()->syncWithoutDetaching($ids);
-            }
+            // Substitui TODOS os vínculos (inclusive os de fora do alcance do gestor): sem herdar acesso de outra secretaria.
+            $user->secretarias()->sync($ids);
 
             $this->encerrarRegistros($s, $por, $ids[0], 'Cadastro aprovado por '.$por->name.'.');
             $s->forceFill([
@@ -165,7 +163,7 @@ class CadastroSolicitacaoService
             return $user;
         });
 
-        if ($por->profile === 'gestor' && $perfilSlug === 'gestor') {
+        if ($por->profile === 'gestor' && $user->profile === 'gestor') {
             GestorAlert::perfilGestorAtribuido($por, $user);
         }
         $this->notificarAprovado($s, $user);
@@ -208,10 +206,12 @@ class CadastroSolicitacaoService
         return $s;
     }
 
-    private function validarEscolhas(User $por, string $perfilSlug, array $ids): void
+    /** Devolve o slug canônico do perfil (a coluna é case-insensitive: 'Admin' casaria com 'admin'). */
+    private function validarEscolhas(User $por, string $perfilSlug, array $ids): string
     {
         $erros = [];
-        if (! AccessProfile::where('slug', $perfilSlug)->where('ativo', true)->exists()) {
+        $perfilSlug = AccessProfile::where('slug', trim($perfilSlug))->where('ativo', true)->value('slug');
+        if ($perfilSlug === null) {
             $erros['perfil_slug'] = 'Perfil inexistente ou inativo.';
         } elseif ($por->profile !== 'admin' && $perfilSlug === 'admin') {
             $erros['perfil_slug'] = 'Somente administrador atribui o perfil de administrador.';
@@ -229,6 +229,8 @@ class CadastroSolicitacaoService
         if ($erros) {
             throw ValidationException::withMessages($erros);
         }
+
+        return $perfilSlug;
     }
 
     /** Fecha protocolo (encerrado, com movimentação) e card (concluído) e move ambos para a secretaria final. */

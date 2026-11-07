@@ -331,14 +331,8 @@ class ProtocolController extends Controller
 
         $validated = $request->validated();
 
-        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
-            // Responsável de pedido de cadastro: só quem pode abrir o pedido (admin ou gestor da secretaria).
-            $campos = ['destino_user_id' => $validated['destino_user_id'] ?? null, 'kanban.responsavel_id' => $validated['kanban']['responsavel_id'] ?? null];
-            foreach (array_filter($campos) as $campo => $alvoId) {
-                if (! CadastroProtocoloScope::pode(User::find($alvoId), $protocol->secretaria_id)) {
-                    return response()->json(['message' => 'Esse usuário não pode acessar o pedido de cadastro.', 'errors' => [$campo => ['Usuário sem acesso ao pedido.']]], 422);
-                }
-            }
+        if ($recusa = $this->responsavelInvalidoDeCadastro($protocol, $validated)) {
+            return $recusa;
         }
 
         $old = $protocol->toArray();
@@ -360,6 +354,22 @@ class ProtocolController extends Controller
         AuditService::record('UPDATE', $protocol, $old, $protocol->fresh()->toArray());
 
         return response()->json($protocol->fresh()->load(['kanbanTask.createdBy', 'kanbanTask.updatedBy', 'kanbanTask.responsavel']));
+    }
+
+    /** Responsável de pedido de cadastro: só quem pode abrir o pedido (admin ou gestor da secretaria). */
+    private function responsavelInvalidoDeCadastro(Protocol $protocol, array $validated): ?JsonResponse
+    {
+        if ($protocol->tipo !== CadastroProtocoloScope::TIPO) {
+            return null;
+        }
+        $campos = ['destino_user_id' => $validated['destino_user_id'] ?? null, 'kanban.responsavel_id' => $validated['kanban']['responsavel_id'] ?? null];
+        foreach (array_filter($campos) as $campo => $alvoId) {
+            if (! CadastroProtocoloScope::pode(User::find($alvoId), $protocol->secretaria_id)) {
+                return response()->json(['message' => 'Esse usuário não pode acessar o pedido de cadastro.', 'errors' => [$campo => ['Usuário sem acesso ao pedido.']]], 422);
+            }
+        }
+
+        return null;
     }
 
     public function receive(Request $request, int $id): JsonResponse
@@ -390,6 +400,11 @@ class ProtocolController extends Controller
     public function forward(ForwardProtocolRequest $request, int $id): JsonResponse
     {
         $validated = $request->validated();
+
+        $protocolo = Protocol::find($id);
+        if ($protocolo && $this->canAccess($protocolo, $request->user()) && ($recusa = $this->responsavelInvalidoDeCadastro($protocolo, $validated))) {
+            return $recusa;
+        }
 
         return $this->applyAction($request, $id, 'encaminhado', function (Protocol $protocol) use ($request, $validated) {
             $protocol->update([
