@@ -28,6 +28,8 @@ class SecretariaPageSeeder extends Seeder
             ]
         );
 
+        \App\Models\Secretaria::liberarPaginas([self::PATH]);
+
         $page = DB::table('system_pages')->where('path', self::PATH)->first();
         $admin = DB::table('access_profiles')->where('slug', 'admin')->first();
 

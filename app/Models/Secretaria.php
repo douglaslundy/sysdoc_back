@@ -16,6 +16,20 @@ class Secretaria extends Model
 
     protected $casts = ['ativa' => 'boolean'];
 
+    // REGRA: toda migration/seeder que cria uma system_page deve chamar liberarPaginas(), senão ninguém a vê.
+    public static function liberarPaginas(array $paths, ?array $slugs = null): void
+    {
+        // Migrations antigas chamam os seeders antes da tabela existir; a migration de backfill cobre esse caso.
+        if (! \Illuminate\Support\Facades\Schema::hasTable('secretaria_pages')) {
+            return;
+        }
+
+        $ids = SystemPage::whereIn('path', $paths)->pluck('id')->all();
+
+        static::whereIn('slug', $slugs ?? [self::SAUDE_SLUG])->get()
+            ->each(fn (self $s) => $s->pages()->syncWithoutDetaching($ids));
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_secretarias');
