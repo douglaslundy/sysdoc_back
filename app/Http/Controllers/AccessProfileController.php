@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateAccessProfileRequest;
 use App\Http\Requests\StoreAccessProfileRequest;
 use App\Models\AccessProfile;
 use App\Models\DocumentApproval;
+use App\Models\Secretaria;
 use App\Models\SystemPage;
 use Illuminate\Http\Request;
 
@@ -91,6 +92,19 @@ class AccessProfileController extends Controller
     }
 
     // Retorna páginas permitidas para o perfil do usuário logado
+    public function mySecretarias(Request $request)
+    {
+        $admin = $request->user()->profile === 'admin';
+        $query = $admin ? Secretaria::query() : $request->user()->secretarias();
+
+        return response()->json([
+            'secretarias' => $query->where('secretarias.ativa', true)->orderBy('secretarias.id')
+                ->get(['secretarias.id', 'secretarias.nome'])
+                ->map(fn ($s) => ['id' => $s->id, 'nome' => $s->nome])->values(),
+            'pode_todas' => $admin,
+        ]);
+    }
+
     public function myPermissions(Request $request)
     {
         $user = $request->user();
@@ -123,6 +137,17 @@ class AccessProfileController extends Controller
                     'client_history_view' => $user->canViewClientHistory(),
                 ],
             ]);
+        }
+
+        // Acesso final = páginas do perfil ∩ páginas liberadas na secretaria ativa (admin em "todas" não filtra).
+        $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
+        if (! $ativa->isAll()) {
+            $liberadas = $ativa->id()
+                ? Secretaria::find($ativa->id())->pages()->pluck('system_pages.id')->all()
+                : [];
+            $profile->setRelation('pages', $profile->pages->filter(
+                fn ($p) => in_array($p->id, $liberadas, true) || in_array($p->path, Secretaria::PAGINAS_GESTAO, true)
+            )->values());
         }
 
         $pages = $profile->pages->values()->map(function ($page) {

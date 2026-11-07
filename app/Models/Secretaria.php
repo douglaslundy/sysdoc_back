@@ -9,6 +9,9 @@ class Secretaria extends Model
 {
     public const SAUDE_SLUG = 'saude';
 
+    // Páginas de gestão (admin/gestor): não dependem da liberação da secretaria.
+    public const PAGINAS_GESTAO = ['/users', '/perfis', '/secretarias', '/usuarios/aprovacoes'];
+
     protected $fillable = ['nome', 'slug', 'ativa'];
 
     protected $casts = ['ativa' => 'boolean'];

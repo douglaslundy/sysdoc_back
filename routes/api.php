@@ -139,7 +139,7 @@ Route::middleware('throttle:30,1')->group(function () {
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
 Route::middleware('throttle:5,1')->post('/reset-password', [PasswordResetController::class, 'reset']);
 
-Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages']], function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate', [AuthController::class, 'validateToken']);
@@ -235,6 +235,7 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
 
     // Permissões do usuário logado
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
+    Route::get('/auth/secretarias', [AccessProfileController::class, 'mySecretarias']);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     Route::prefix('chat')->middleware(['chat.access'])->group(function () {
