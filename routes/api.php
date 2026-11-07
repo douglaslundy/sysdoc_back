@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccessProfileController;
+use App\Http\Controllers\CadastroPublicoController;
 use App\Http\Controllers\AgendaColetaController;
 use App\Http\Controllers\AlmoxarifadoCatalogController;
 use App\Http\Controllers\AlmoxarifadoConfigController;
@@ -134,6 +135,11 @@ Route::middleware('throttle:30,1')->group(function () {
     Route::get('/public/painel-esus/validar-cnes', [PainelEsusController::class, 'validarCnes']);
     Route::get('/public/painel-esus/estado', [PainelEsusController::class, 'estado']);
 });
+
+// Pedido público de cadastro (flag cadastro.publico_habilitado; desligado = 404)
+Route::middleware('throttle:cadastro-publico-leitura')->get('/public/cadastro/secretarias', [CadastroPublicoController::class, 'secretarias']);
+Route::middleware('throttle:cadastro-publico-leitura')->get('/public/cadastro/desafio', [CadastroPublicoController::class, 'desafio']);
+Route::middleware('throttle:cadastro-publico')->post('/public/cadastro', [CadastroPublicoController::class, 'store']);
 
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
