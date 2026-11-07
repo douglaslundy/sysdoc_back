@@ -148,9 +148,11 @@ class UserController extends Controller
             } else {
                 $user = User::create($data);
             }
-            $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
-            // Conta nova ou reativada: vínculos antigos não valem, fica só o que foi informado.
-            $user->secretarias()->sync($request->input('secretaria_ids', []));
+            if ($request->user()->profile === 'admin') {
+                $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            }
+            // Gestor só troca os vínculos das suas secretarias; os de fora ficam (reativação).
+            $this->syncSecretarias($request->user(), $user, $request->input('secretaria_ids', []));
 
             return $user;
         });
@@ -183,18 +185,19 @@ class UserController extends Controller
         $this->authorizeTarget($request, $user);
         $previousProfile = $user->profile;
         $array = ['status' => 'updated'];
-        $data = $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids']);
+        $isAdmin = $request->user()->profile === 'admin';
+        // Gestor altera apenas perfil e vínculos (R10): nada mais do request chega ao model.
+        $data = $isAdmin ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids']) : $request->only('profile');
 
-        if ($request->input('password')) {
-
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            $data['password'] = $user->password;
+        if ($isAdmin) {
+            $data['password'] = $request->input('password') ? Hash::make($data['password']) : $user->password;
         }
 
-        DB::transaction(function () use ($user, $data, $request) {
+        DB::transaction(function () use ($user, $data, $request, $isAdmin) {
             $user->update($data);
-            $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            if ($isAdmin) {
+                $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            }
             if ($request->has('secretaria_ids')) {
                 $this->syncSecretarias($request->user(), $user, $request->input('secretaria_ids'));
             }

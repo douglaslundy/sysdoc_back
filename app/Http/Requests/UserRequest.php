@@ -100,7 +100,20 @@ class UserRequest extends FormRequest
             return null;
         }
 
-        return User::where('cpf', $this->input('cpf'))->where('active', false)->first();
+        $existing = User::where('cpf', $this->input('cpf'))->where('active', false)->first();
+
+        // Gestor só reativa conta sem vínculos ou que divide secretaria com ele, nunca admin; caso
+        // contrário cai na validação de CPF duplicado (mesma mensagem, sem revelar a conta).
+        if ($existing && $this->user()?->profile === 'gestor') {
+            $linked = $existing->secretarias()->pluck('secretarias.id');
+            $shares = $linked->intersect($this->user()->secretarias()->pluck('secretarias.id'))->isNotEmpty();
+
+            if ($existing->profile === 'admin' || ($linked->isNotEmpty() && ! $shares)) {
+                return null;
+            }
+        }
+
+        return $existing;
     }
 
     public function messages()
