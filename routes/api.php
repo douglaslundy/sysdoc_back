@@ -424,11 +424,13 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::get('/admin/backup/download', [BackupController::class, 'download']);
     });
 
-    // Auditoria + perfis de acesso e páginas do sistema (somente admin)
+    // Perfis de acesso: admin e gestor (o controller restringe o gestor ao que ele mesmo tem)
+    Route::apiResource('access-profiles', AccessProfileController::class);
+
+    // Auditoria + páginas do sistema (somente admin)
     Route::middleware('admin')->group(function () {
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
         Route::get('/audit-logs/users', [AuditLogController::class, 'users']);
-        Route::apiResource('access-profiles', AccessProfileController::class);
         Route::get('/system-pages', [SystemPageController::class, 'index']);
         Route::post('/system-pages', [SystemPageController::class, 'store']);
         Route::put('/system-pages/{id}', [SystemPageController::class, 'update']);

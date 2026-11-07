@@ -78,6 +78,9 @@ return [
         // ---- usuários: admin e gestor (a página /users é de gestão); ping de presença e foto seguem só com login ----
         ['prefix' => 'users', 'except' => ['users/presence/ping', 'users/{user}/photo'], 'pages' => ['/users']],
 
+        // ---- perfis de acesso: admin e gestor (a página /users é de gestão); o controller limita o gestor ----
+        ['prefix' => 'access-profiles', 'pages' => ['/users']],
+
         // ---- cadastro de secretarias (não confundir com almoxarifado/secretarias) ----
         ['prefix' => 'secretarias-admin', 'admin' => true],
 

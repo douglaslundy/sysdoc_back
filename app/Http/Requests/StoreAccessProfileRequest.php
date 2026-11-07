@@ -2,10 +2,18 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ChecksGestorProfileScope;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAccessProfileRequest extends FormRequest
 {
+    use ChecksGestorProfileScope;
+
+    public function withValidator($validator): void
+    {
+        $validator->after(fn ($v) => $this->checkGestorScope($v));
+    }
+
     public function authorize(): bool
     {
         return true;
