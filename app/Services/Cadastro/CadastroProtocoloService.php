@@ -61,7 +61,6 @@ class CadastroProtocoloService
             "Nome: {$s->nome}",
             "Cargo: {$s->cargo}",
             "CPF: ***.***.***-{$cpf}",
-            "E-mail: {$s->email}",
             $s->observacao ? "Observação: {$s->observacao}" : null,
             "Pedido de cadastro #{$s->id}: aprovar ou recusar em Usuários > Pedidos de cadastro.",
         ]));

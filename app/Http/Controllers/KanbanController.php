@@ -123,6 +123,14 @@ class KanbanController extends Controller
             'ordem' => 'nullable|integer|min:0',
         ]);
 
+        if (! empty($validated['responsavel_id']) && $task->isCadastro()) {
+            // Só quem pode abrir o pedido pode ser responsável por ele.
+            $alvo = \App\Models\User::find($validated['responsavel_id']);
+            if (! CadastroProtocoloScope::pode($alvo, $task->protocol?->secretaria_id)) {
+                return response()->json(['message' => 'Esse usuário não pode acessar o pedido de cadastro.', 'errors' => ['responsavel_id' => ['Usuário sem acesso ao pedido.']]], 422);
+            }
+        }
+
         if ($task->protocol_id && array_key_exists('status', $validated) && $validated['status'] !== $task->status) {
             return response()->json([
                 'message' => 'Movimente protocolos pelo fluxo de protocolo do Kanban.',

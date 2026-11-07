@@ -21,6 +21,13 @@ class SystemAlertService
      */
     public function dispatch(string $module, string $trigger, array $context = []): void
     {
+        // Pedido de cadastro (dados pessoais no título/assunto): nenhum alerta, de nenhum módulo ou gatilho.
+        foreach (['protocol', 'kanban_task'] as $chave) {
+            if (($context[$chave] ?? null)?->isCadastro()) {
+                return;
+            }
+        }
+
         AfterResponse::run(fn () => $this->deliver($module, $trigger, $context));
     }
 

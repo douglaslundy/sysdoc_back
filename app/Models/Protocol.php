@@ -66,9 +66,14 @@ class Protocol extends Model
     {
         do {
             $numero = 'PRT-'.now()->format('Y').'-'.strtoupper(Str::random(8));
-        } while (self::where('numero', $numero)->exists());
+        } while (self::withoutGlobalScopes()->where('numero', $numero)->exists()); // sem escopo: número escondido não se repete
 
         return $numero;
+    }
+
+    public function isCadastro(): bool
+    {
+        return $this->tipo === \App\Models\Scopes\CadastroProtocoloScope::TIPO;
     }
 
     public function origemUnit(): BelongsTo

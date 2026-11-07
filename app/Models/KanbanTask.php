@@ -43,6 +43,13 @@ class KanbanTask extends Model
         'arquivado_at' => 'datetime',
     ];
 
+    /** Card de pedido de cadastro (consulta sem escopo: vale mesmo se o chamador não o enxergar). */
+    public function isCadastro(): bool
+    {
+        return $this->protocol_id !== null
+            && Protocol::withoutGlobalScopes()->whereKey($this->protocol_id)->where('tipo', \App\Models\Scopes\CadastroProtocoloScope::TIPO)->exists();
+    }
+
     public function protocol(): BelongsTo
     {
         return $this->belongsTo(Protocol::class, 'protocol_id');
