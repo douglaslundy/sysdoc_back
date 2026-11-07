@@ -55,7 +55,9 @@ class CadastroPublicoRequest extends FormRequest
             'phone' => ['nullable', new PhoneValidation],
             'email' => ['required', 'string', 'email', 'max:100'],
             'cpf' => ['required', 'string', 'max:18', new ValidCpf()],
-            'password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'confirmed',
+                // bcrypt ignora/estoura além de 72 BYTES (multibyte conta mais que caracteres).
+                fn ($attr, $valor, $fail) => strlen((string) $valor) > 72 ? $fail('A senha deve ter no máximo 72 bytes.') : null],
             'secretaria_id' => ['required', 'integer', Rule::exists('secretarias', 'id')->where('ativa', true)],
             'cargo' => ['required', 'string', 'max:80'],
             'observacao' => ['nullable', 'string', 'max:200'],

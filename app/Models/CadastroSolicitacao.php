@@ -17,4 +17,13 @@ class CadastroSolicitacao extends Model
     protected $hidden = ['password_hash'];
 
     protected $casts = ['decidido_em' => 'datetime'];
+
+    // Mesmo contrato de User::scopeWhereCpfIgual (a coluna já guarda só dígitos; o REPLACE cobre linhas antigas).
+    public function scopeWhereCpfIgual($query, string $cpf)
+    {
+        return $query->whereRaw(
+            "REPLACE(REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', ''), '/', '') = ?",
+            [\App\Support\Cpf::digits($cpf)]
+        );
+    }
 }

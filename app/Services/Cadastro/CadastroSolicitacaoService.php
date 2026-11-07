@@ -6,6 +6,9 @@ use App\Models\CadastroSolicitacao;
 use App\Models\User;
 use App\Services\ConfiguredEmailService;
 use App\Services\WhatsappEvolutionService;
+use App\Support\Cpf;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Throwable;
 
@@ -18,23 +21,39 @@ class CadastroSolicitacaoService
     public function registrar(array $dados): void
     {
         $hash = Hash::make((string) $dados['password']);
-        $digitos = preg_replace('/\D/', '', (string) $dados['cpf']);
-        $formatado = preg_replace('/^(\d{3})(\d{3})(\d{3})(\d{2})$/', '$1.$2.$3-$4', $digitos);
+        $digitos = Cpf::digits((string) $dados['cpf']);
         $email = (string) $dados['email'];
 
-        $porCpf = User::whereIn('cpf', [$digitos, $formatado])->first();
+        try {
+            // Trava por CPF: duas requisições simultâneas não criam dois pedidos pendentes.
+            Cache::lock('cadastro:cpf:'.$digitos, 10)->block(5, fn () => $this->criarSeCabivel($dados, $digitos, $email, $hash));
+        } catch (LockTimeoutException) {
+            // Trava ocupada: responde igual, sem criar (o outro pedido em andamento vale).
+        }
+    }
+
+    private function criarSeCabivel(array $dados, string $digitos, string $email, string $hash): void
+    {
+        $porCpf = User::whereCpfIgual($digitos)->first();
         $porEmail = User::where('email', $email)->first();
         $pendente = CadastroSolicitacao::where('status', 'pendente')
-            ->where(fn ($q) => $q->where('cpf', $digitos)->orWhere('email', $email))
+            ->where(fn ($q) => $q->whereCpfIgual($digitos)->orWhere('email', $email))
             ->exists();
 
         // Conta ativa com o CPF, ou e-mail de OUTRA conta: nada é criado. CPF de conta inativa segue (reativação).
         $bloqueado = ($porCpf && $porCpf->active) || ($porEmail && (! $porCpf || $porEmail->id !== $porCpf->id));
 
         if ($bloqueado) {
-            // Depois da resposta, para o envio do alerta não virar diferença de tempo.
-            $existente = $porCpf ?? $porEmail;
-            app()->terminating(fn () => $this->alertarAdmins($existente));
+            if (config('cadastro.alertar_tentativa_conta_ativa')) {
+                // Depois da resposta (FPM), para o envio do alerta não virar diferença de tempo.
+                $existente = $porCpf ?? $porEmail;
+                app()->terminating(function () use ($existente) {
+                    // Um aviso por hora por conta existente.
+                    if (Cache::add('cadastro-alerta:'.$existente->id, 1, 3600)) {
+                        $this->alertarAdmins($existente);
+                    }
+                });
+            }
 
             return;
         }

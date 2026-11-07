@@ -147,7 +147,7 @@ class Handler extends ExceptionHandler
             'ip' => $ip,
             'user' => auth()->check() ? auth()->user()->only(['id', 'email']) : null,
             'url' => request() ? request()->fullUrl() : null,
-            'input' => request() ? request()->except(['password', 'password_confirmation']) : [],
+            'input' => request() ? request()->except(['password', 'password_confirmation', 'captcha_token', 'captcha_resposta']) : [],
         ]);
     }
 
