@@ -12,6 +12,12 @@ class ProtocolAttachment extends Model
 
     protected $table = 'protocol_attachments';
 
+    // Protocolo de pedido de cadastro só para admin e gestor da secretaria (ver o escopo).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope('protocol_id'));
+    }
+
     protected $fillable = [
         'protocol_id',
         'user_id',

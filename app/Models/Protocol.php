@@ -15,6 +15,12 @@ class Protocol extends Model
 
     protected $table = 'protocols';
 
+    // Protocolo de pedido de cadastro só para admin e gestor da secretaria (ver o escopo).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope());
+    }
+
     protected $fillable = [
         'numero',
         'assunto',
@@ -29,6 +35,7 @@ class Protocol extends Model
         'destino_unit_id',
         'responsavel_atual_id',
         'criado_por_id',
+        'secretaria_id',
         'prazo_atendimento',
         'recebido_em',
         'encaminhado_em',

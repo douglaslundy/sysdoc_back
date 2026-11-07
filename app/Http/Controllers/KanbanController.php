@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreKanbanRequest;
 use App\Models\KanbanTask;
+use App\Models\Protocol;
+use App\Models\Scopes\CadastroProtocoloScope;
 use App\Services\Protocol\UnitTree;
 use App\Services\SystemAlertService;
 use Illuminate\Http\JsonResponse;
@@ -38,6 +40,8 @@ class KanbanController extends Controller
                             ->where('visibility', 'private')
                             ->where('created_by_id', $request->user()->id);
                     });
+                    // Cards de pedido de cadastro: o escopo global já deixa só admin/gestor da secretaria; o subselect também.
+                    $builder->orWhereIn('protocol_id', Protocol::query()->where('tipo', CadastroProtocoloScope::TIPO)->select('id'));
                 }
             })
             ->orderByDesc('ordem')
@@ -185,6 +189,11 @@ class KanbanController extends Controller
 
     private function isPrivateTaskFromAnotherUser(KanbanTask $task, Request $request): bool
     {
+        // Card de pedido de cadastro tem dono nulo: quem chegou até aqui passou pelo escopo (admin/gestor da secretaria).
+        if ($task->protocol?->tipo === CadastroProtocoloScope::TIPO) {
+            return false;
+        }
+
         return $task->visibility === 'private'
             && (int) $task->created_by_id !== (int) $request->user()?->id;
     }

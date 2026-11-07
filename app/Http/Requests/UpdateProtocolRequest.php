@@ -16,7 +16,7 @@ class UpdateProtocolRequest extends FormRequest
         return [
             'assunto' => 'sometimes|required|string|max:200',
             'descricao' => 'nullable|string',
-            'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo',
+            'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo|not_in:solicitacao_cadastro',
             'prioridade' => 'nullable|string|max:20',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_user_id' => 'nullable|integer|exists:users,id',

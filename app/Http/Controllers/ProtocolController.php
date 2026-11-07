@@ -18,6 +18,7 @@ use App\Models\ProtocolComment;
 use App\Models\ProtocolConfig;
 use App\Models\ProtocolMovement;
 use App\Models\ProtocolNotification;
+use App\Models\Scopes\CadastroProtocoloScope;
 use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolUserUnit;
 use App\Services\Protocol\UnitTree;
@@ -102,6 +103,7 @@ class ProtocolController extends Controller
                 $q->orWhereIn('destino_unit_id', $unitIds)
                     ->orWhereIn('origem_unit_id', $unitIds);
             }
+            $this->orPedidosCadastroDoGestor($q, $request->user());
         });
 
         if ($request->filled('status')) {
@@ -331,6 +333,9 @@ class ProtocolController extends Controller
 
         $old = $protocol->toArray();
         $protocolData = collect($validated)->except(['destino_user_id', 'kanban', 'prazo_dias'])->all();
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            unset($protocolData['tipo']); // o tipo do pedido de cadastro não muda (soltaria os dados pessoais do escopo)
+        }
         if (! empty($validated['prazo_dias'])) {
             // Prazo em dias a partir de hoje; o banco guarda a data resultante.
             $protocolData['prazo_atendimento'] = now()->addDays((int) $validated['prazo_dias'])->toDateString();
@@ -737,10 +742,20 @@ class ProtocolController extends Controller
                         $sub->orWhereIn('origem_unit_id', $unitIds)
                             ->orWhereIn('destino_unit_id', $unitIds);
                     }
+                    $this->orPedidosCadastroDoGestor($sub, $user);
                 });
             })
             ->orderByDesc('novo')
             ->orderByDesc('updated_at');
+    }
+
+    /** Gestor também enxerga os pedidos de cadastro das suas secretarias (o escopo global esconde dos demais). */
+    private function orPedidosCadastroDoGestor($q, ?User $user): void
+    {
+        if ($user?->profile === 'gestor') {
+            $q->orWhere(fn ($c) => $c->where('tipo', CadastroProtocoloScope::TIPO)
+                ->whereIn('secretaria_id', CadastroProtocoloScope::secretariasDe($user)));
+        }
     }
 
     private function visibleUnitIds(?User $user): array
@@ -822,6 +837,11 @@ class ProtocolController extends Controller
     {
         if ($this->isAdmin($user)) {
             return true;
+        }
+
+        // Pedido de cadastro: só gestor da secretaria do pedido (responsável/criador/unidade não bastam).
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            return CadastroProtocoloScope::pode($user, $protocol->secretaria_id);
         }
 
         $unitIds = $this->visibleUnitIds($user);
@@ -994,6 +1014,11 @@ class ProtocolController extends Controller
         }
 
         // Alertas configurados em Alertas (módulo "protocolo"), ex.: aviso ao administrador.
+        // Pedido de cadastro não dispara: o alerta pode ter destinatários que não podem ver o pedido.
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            return;
+        }
+
         app(SystemAlertService::class)->dispatch(
             'protocolo',
             $acao === 'criado' ? 'protocolo_criado' : 'protocolo_status_alterado',
@@ -1055,6 +1080,10 @@ class ProtocolController extends Controller
 
         // Usuário inativo não recebe alerta.
         $users = User::query()->whereIn('id', $recipientIds)->where('active', true)->get()->keyBy('id');
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            // Só quem pode ver o pedido recebe o aviso (o texto leva o assunto, com o nome do solicitante).
+            $users = $users->filter(fn ($u) => CadastroProtocoloScope::pode($u, $protocol->secretaria_id));
+        }
 
         foreach ($recipientIds as $recipientId) {
             $recipient = $users->get($recipientId);

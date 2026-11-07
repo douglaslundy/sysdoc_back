@@ -12,11 +12,18 @@ class KanbanTask extends Model
 
     protected $table = 'kanban_tasks';
 
+    // Protocolo de pedido de cadastro só para admin e gestor da secretaria (ver o escopo).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope('protocol_id'));
+    }
+
     protected $fillable = [
         'protocol_id',
         'unit_id',
         'fiscalizacao_id',
         'created_by_id',
+        'secretaria_id',
         'updated_by_id',
         'responsavel_id',
         'visibility',

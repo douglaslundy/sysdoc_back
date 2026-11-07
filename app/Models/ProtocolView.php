@@ -12,6 +12,12 @@ class ProtocolView extends Model
 
     protected $table = 'protocol_views';
 
+    // Protocolo de pedido de cadastro só para admin e gestor da secretaria (ver o escopo).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope('protocol_id'));
+    }
+
     protected $fillable = [
         'protocol_id',
         'user_id',

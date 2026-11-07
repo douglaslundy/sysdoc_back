@@ -16,7 +16,7 @@ class StoreProtocolRequest extends FormRequest
         return [
             'assunto' => 'required|string|max:200',
             'descricao' => 'nullable|string',
-            'tipo' => 'required|string|max:40|exists:protocol_types,codigo',
+            'tipo' => 'required|string|max:40|exists:protocol_types,codigo|not_in:solicitacao_cadastro',
             'prioridade' => 'nullable|string|max:20',
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',

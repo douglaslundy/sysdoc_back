@@ -9,6 +9,7 @@ use App\Services\WhatsappEvolutionService;
 use App\Support\Cpf;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Throwable;
 
@@ -61,17 +62,21 @@ class CadastroSolicitacaoService
             return;
         }
 
-        CadastroSolicitacao::create([
-            'nome' => $dados['name'],
-            'preferred_name' => $dados['preferred_name'] ?? null,
-            'email' => $email,
-            'cpf' => $digitos,
-            'phone' => $dados['phone'] ?? null,
-            'password_hash' => $hash,
-            'secretaria_id' => $dados['secretaria_id'],
-            'cargo' => $dados['cargo'],
-            'observacao' => $dados['observacao'] ?? null,
-        ]);
+        // Pedido + protocolo + card juntos: se algo falhar, nada fica pela metade (a resposta pública não muda em caso de sucesso).
+        DB::transaction(function () use ($dados, $digitos, $email, $hash) {
+            $pedido = CadastroSolicitacao::create([
+                'nome' => $dados['name'],
+                'preferred_name' => $dados['preferred_name'] ?? null,
+                'email' => $email,
+                'cpf' => $digitos,
+                'phone' => $dados['phone'] ?? null,
+                'password_hash' => $hash,
+                'secretaria_id' => $dados['secretaria_id'],
+                'cargo' => $dados['cargo'],
+                'observacao' => $dados['observacao'] ?? null,
+            ]);
+            app(CadastroProtocoloService::class)->abrir($pedido);
+        });
     }
 
     /** Nunca lança. Não inclui dados digitados pelo solicitante. */
