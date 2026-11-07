@@ -13,9 +13,9 @@ class SecretariaScope implements Scope
     {
         $active = app(ActiveSecretaria::class);
 
-        // Sem requisição autenticada resolvida (console, fila, seeder): não filtra.
-        // Requisição resolvida sem secretaria: bloqueia tudo (fail closed).
-        if (! $active->resolved() || $active->isAll()) {
+        // Fora de requisição HTTP (console, fila, seeder): não filtra.
+        // Requisição HTTP sem secretaria (não resolvida ou zero vínculos): bloqueia tudo (fail closed).
+        if (! $active->inRequest() || $active->isAll()) {
             return;
         }
 

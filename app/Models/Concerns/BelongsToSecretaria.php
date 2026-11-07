@@ -7,7 +7,12 @@ use App\Services\Secretarias\ActiveSecretaria;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\ValidationException;
 
-/** Isola o model por secretaria ativa (coluna secretaria_id). */
+/**
+ * Isola o model por secretaria ativa (coluna secretaria_id).
+ *
+ * Limite: DB::table(), SQL cru, join(), insert() e upsert() NÃO passam pelo escopo nem pelo
+ * evento creating. Tabelas dos módulos devem ter secretaria_id NOT NULL + FK.
+ */
 trait BelongsToSecretaria
 {
     public static function bootBelongsToSecretaria(): void
@@ -17,12 +22,16 @@ trait BelongsToSecretaria
         static::creating(function ($model) {
             $active = app(ActiveSecretaria::class);
 
-            // Fora de requisição resolvida (console/fila/seeder) não mexe no valor.
-            if (! $active->resolved()) {
+            // Fora de requisição HTTP (console/fila/seeder) não mexe no valor.
+            if (! $active->inRequest()) {
                 return;
             }
 
             if (! $active->isAll()) {
+                if ($active->id() === null) {
+                    throw ValidationException::withMessages(['secretaria_id' => 'secretaria nao resolvida']);
+                }
+
                 // Quem não está em "todas" nunca grava em outra secretaria (ignora mass assignment).
                 $model->secretaria_id = $active->id();
 
