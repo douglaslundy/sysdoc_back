@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             ConformidadeCidadaoPageSeeder::class, // Conformidade de Cidadãos - pagina e permissoes
             RtAccessFixSeeder::class,             // Backfill de permissoes da RT
             AlmoxarifadoPageSeeder::class,        // Almoxarifado - categorias, paginas e permissoes
+            SecretariaSeeder::class,              // Secretarias e vinculo dos usuarios a Saude
         ]);
     }
 }
