@@ -51,6 +51,9 @@ return [
             'pages' => ['/protocolo*', '/kanban'],
         ],
 
+        // ---- pedidos de cadastro: a tela fica em Usuários/Protocolo; o controller limita a admin e gestor da secretaria ----
+        ['prefix' => 'cadastro-solicitacoes', 'pages' => ['/users', '/protocolo*', '/kanban']],
+
         // ---- vigilância sanitária (leituras; escritas já têm grupo próprio) ----
         ['prefix' => 'fiscalizacoes', 'methods' => ['GET'], 'pages' => ['/fiscalizacoes']],
         // Iluminação pública: cadastro e serviço são páginas irmãs; qualquer uma libera a leitura.

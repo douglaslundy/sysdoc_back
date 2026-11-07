@@ -338,6 +338,13 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::post('/testar', [EmailConfigController::class, 'test']);
     });
 
+    // Decisão sobre pedidos de cadastro: o controller limita a admin e gestor da secretaria do pedido (demais: 404).
+    Route::prefix('cadastro-solicitacoes')->whereNumber('id')->group(function () {
+        Route::get('/{id}', [\App\Http\Controllers\CadastroSolicitacaoController::class, 'show']);
+        Route::post('/{id}/autorizar', [\App\Http\Controllers\CadastroSolicitacaoController::class, 'autorizar']);
+        Route::post('/{id}/recusar', [\App\Http\Controllers\CadastroSolicitacaoController::class, 'recusar']);
+    });
+
     Route::prefix('protocolos')->group(function () {
         Route::get('/', [ProtocolController::class, 'index']);
         Route::get('/caixa-entrada', [ProtocolController::class, 'inbox']);

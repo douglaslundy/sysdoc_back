@@ -18,6 +18,16 @@ class CadastroSolicitacao extends Model
 
     protected $casts = ['decidido_em' => 'datetime'];
 
+    public function secretaria()
+    {
+        return $this->belongsTo(Secretaria::class);
+    }
+
+    public function decididoPor()
+    {
+        return $this->belongsTo(User::class, 'decidido_por_id');
+    }
+
     // Mesmo contrato de User::scopeWhereCpfIgual (a coluna já guarda só dígitos; o REPLACE cobre linhas antigas).
     public function scopeWhereCpfIgual($query, string $cpf)
     {

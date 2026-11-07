@@ -331,6 +331,16 @@ class ProtocolController extends Controller
 
         $validated = $request->validated();
 
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            // Responsável de pedido de cadastro: só quem pode abrir o pedido (admin ou gestor da secretaria).
+            $campos = ['destino_user_id' => $validated['destino_user_id'] ?? null, 'kanban.responsavel_id' => $validated['kanban']['responsavel_id'] ?? null];
+            foreach (array_filter($campos) as $campo => $alvoId) {
+                if (! CadastroProtocoloScope::pode(User::find($alvoId), $protocol->secretaria_id)) {
+                    return response()->json(['message' => 'Esse usuário não pode acessar o pedido de cadastro.', 'errors' => [$campo => ['Usuário sem acesso ao pedido.']]], 422);
+                }
+            }
+        }
+
         $old = $protocol->toArray();
         $protocolData = collect($validated)->except(['destino_user_id', 'kanban', 'prazo_dias'])->all();
         if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
