@@ -41,9 +41,10 @@ class CadastroSolicitacaoService
         }
 
         // Piso de tempo igual para todos os ramos (criar pedido+protocolo+card é mais lento que recusar).
-        $restanteUs = (int) config('cadastro.tempo_minimo_ms', 600) * 1000 - intdiv(hrtime(true) - $inicio, 1000);
-        if ($restanteUs > 0) {
-            usleep($restanteUs);
+        // Laço: usleep pode acordar antes do pedido (Windows).
+        $pisoNs = (int) config('cadastro.tempo_minimo_ms', 600) * 1_000_000;
+        while (($restanteNs = $pisoNs - (hrtime(true) - $inicio)) > 0) {
+            usleep(max(1, intdiv($restanteNs, 1000)));
         }
 
         // Depois da resposta: a confirmação ao solicitante sai nos 3 ramos (criado, pendente, conta existente), idêntica.
