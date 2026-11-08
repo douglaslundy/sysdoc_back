@@ -110,7 +110,6 @@ class OrdinanceController extends Controller
             $ordinance->summary = $data['summary'] ?? null;
             $ordinance->content = $data['content'] ?? null;
             $ordinance->legal_basis = $data['legal_basis'] ?? null;
-            $ordinance->department = 'Secretaria Municipal de Saúde';
             $ordinance->signatory_name = $data['signatory_name'];
             $ordinance->signatory_role = $data['signatory_role'] ?? null;
             $ordinance->notes = $data['notes'] ?? null;

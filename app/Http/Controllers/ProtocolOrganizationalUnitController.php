@@ -19,6 +19,7 @@ class ProtocolOrganizationalUnitController extends Controller
         $byParent = ($request->boolean('todas') ? ProtocolOrganizationalUnit::withoutSecretaria() : ProtocolOrganizationalUnit::query())
             ->orderBy('tipo')
             ->orderBy('nome')
+            ->when($request->boolean('todas'), fn ($q) => $q->select(['id', 'parent_id', 'tipo', 'nome']))
             ->get()
             ->groupBy(fn (ProtocolOrganizationalUnit $unit) => $unit->parent_id ?? 0);
 

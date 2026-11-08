@@ -14,10 +14,21 @@ class ProtocolKanbanService
             return null;
         }
 
-        // Participante de outra secretaria não cria nem mexe no card da secretaria de origem.
+        // Participante de outra secretaria não cria card; só acompanha o status do card da origem (ex.: encerrar).
         $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
         if ($protocol->secretaria_id && ! $ativa->isAll() && $ativa->inRequest() && (int) $protocol->secretaria_id !== (int) $ativa->id()) {
-            return null;
+            $card = KanbanTask::withoutSecretaria()->where('protocol_id', $protocol->id)->first();
+            if (! $card || ! isset($kanbanData['status'])) {
+                return null;
+            }
+            $status = (string) $kanbanData['status'];
+            $card->forceFill([
+                'status' => $status,
+                'concluido_at' => $status === 'concluido' ? ($card->concluido_at ?? now()) : null,
+                'updated_by_id' => $user?->id,
+            ])->save();
+
+            return $card;
         }
 
         $enabled = (bool) ($kanbanData['ativar'] ?? $kanbanData['enabled'] ?? false);

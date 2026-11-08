@@ -341,6 +341,9 @@ class ProtocolController extends Controller
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
+        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user())) {
+            return $negado;
+        }
 
         $validated = $request->validated();
 
@@ -621,6 +624,9 @@ class ProtocolController extends Controller
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
+        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user())) {
+            return $negado;
+        }
 
         $file = $validated['arquivo'];
         $path = $file->store('protocolos', 'private');
@@ -745,6 +751,9 @@ class ProtocolController extends Controller
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
+        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user())) {
+            return $negado;
+        }
 
         DB::transaction(function () use ($protocol, $validated, $request) {
             $old = $protocol->toArray();
@@ -833,12 +842,8 @@ class ProtocolController extends Controller
             return [];
         }
 
-        // Sem escopo: a lotação do próprio usuário vale mesmo numa unidade de outra secretaria (protocolo entre secretarias).
-        return ProtocolUserUnit::withoutGlobalScopes()
-            ->where('user_id', $user->id)
-            ->where('ativo', true)
-            ->pluck('protocol_organizational_unit_id')
-            ->all();
+        // Lotação só vale em unidade de secretaria do próprio usuário (ex-membro com lotação ativa não conta).
+        return \App\Support\LotacaoPorSecretaria::unidadesValidas($user);
     }
 
     /** $secretariaId: só lotações de unidades dessa secretaria (admin em "Todas" pode ter lotação em várias). */
@@ -961,11 +966,48 @@ class ProtocolController extends Controller
         return in_array($protocol->destino_unit_id, $unitIds, true);
     }
 
+    /** Membro = a secretaria ativa é a do protocolo (ou admin em "Todas"). Os demais só participam por encaminhamento. */
+    private function ehMembro(Protocol $protocol): bool
+    {
+        $ativa = app(ActiveSecretaria::class);
+
+        return $ativa->isAll() || (int) $protocol->secretaria_id === (int) $ativa->id();
+    }
+
+    /** Destinatário ATUAL: usuário destino, ou (sem usuário) membro da unidade destino de uma secretaria dele. */
+    private function destinatarioAtual(Protocol $protocol, ?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+        if ($protocol->responsavel_atual_id) {
+            return (int) $protocol->responsavel_atual_id === (int) $user->id;
+        }
+
+        return $protocol->destino_unit_id && in_array((int) $protocol->destino_unit_id, \App\Support\LotacaoPorSecretaria::unidadesValidas($user), true);
+    }
+
+    /** Não-membro: só o destinatário atual age, e só em comentar/receber/encaminhar/encerrar. Passado ou outra ação: só leitura. */
+    private function negarEscritaDeNaoMembro(Protocol $protocol, ?User $user, ?string $acao = null): ?JsonResponse
+    {
+        if ($this->ehMembro($protocol)) {
+            return null;
+        }
+        if ($acao !== null && in_array($acao, ['recebido', 'encaminhado', 'comentado', 'encerrado'], true) && $this->destinatarioAtual($protocol, $user)) {
+            return null;
+        }
+
+        return response()->json(['message' => 'Você só pode visualizar este protocolo.'], 403);
+    }
+
     private function applyAction(Request $request, int $id, string $acao, \Closure $callback): JsonResponse
     {
         $protocol = Protocol::visiveis(request()->user())->find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user(), $acao)) {
+            return $negado;
         }
 
         DB::transaction(function () use ($protocol, $acao, $callback) {

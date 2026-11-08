@@ -64,12 +64,13 @@ class UserController extends Controller
     {
         if ($actor->profile === 'admin') {
             $user->secretarias()->sync($ids);
-
-            return;
+        } else {
+            $user->secretarias()->detach($this->actorSecretariaIds($actor));
+            $user->secretarias()->syncWithoutDetaching($ids);
         }
 
-        $user->secretarias()->detach($this->actorSecretariaIds($actor));
-        $user->secretarias()->syncWithoutDetaching($ids);
+        // Perdeu o vínculo com uma secretaria: as lotações nas unidades dela deixam de valer.
+        \App\Support\LotacaoPorSecretaria::inativarForaDosVinculos($user);
     }
 
     private function alertIfGestorAssigned(Request $request, User $user, ?string $previousProfile): void

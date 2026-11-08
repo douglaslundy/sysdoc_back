@@ -154,6 +154,7 @@ class CadastroSolicitacaoService
 
             // Substitui TODOS os vínculos (inclusive os de fora do alcance do gestor): sem herdar acesso de outra secretaria.
             $user->secretarias()->sync($ids);
+            \App\Support\LotacaoPorSecretaria::inativarForaDosVinculos($user);
 
             $this->encerrarRegistros($s, $por, $ids[0], 'Cadastro aprovado por '.$por->name.'.');
             $s->forceFill([
