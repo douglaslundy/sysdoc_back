@@ -17,6 +17,12 @@ class UserObserver
         $dirty = $user->getDirty();
         $original = array_intersect_key($user->getOriginal(), $dirty);
         AuditService::record('UPDATE', $user, $original, $dirty);
+
+        // Inativar ou reativar invalida as sessões: o token antigo não vale para a conta inativa
+        // nem para quem assume o registro reativado (mesmo CPF).
+        if ((bool) $user->getOriginal('active') !== (bool) $user->active) {
+            $user->tokens()->delete();
+        }
     }
 
     public function deleted(User $user): void
