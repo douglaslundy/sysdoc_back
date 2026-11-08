@@ -9,6 +9,12 @@ class LetterAttachment extends Model
 {
     use HasFactory;
 
+    // Herda a secretaria do registro pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('letter_id', 'letters'));
+    }
+
     protected $fillable = [
         'letter_id',
         'uploaded_by',

@@ -18,7 +18,7 @@ class CadastroProtocoloService
     public function abrir(CadastroSolicitacao $s): Protocol
     {
         if ($s->protocol_id) {
-            return Protocol::withoutGlobalScope(CadastroProtocoloScope::class)->findOrFail($s->protocol_id);
+            return Protocol::withoutGlobalScopes()->findOrFail($s->protocol_id);
         }
 
         $assunto = 'Solicitação de cadastro: '.$s->nome;

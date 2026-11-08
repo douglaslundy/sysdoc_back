@@ -57,6 +57,18 @@ class ActiveSecretaria
         return $this->all;
     }
 
+    /** Secretaria de um registro novo: a ativa, ou (admin em "Todas") a informada, que pode vir nula. */
+    public function forCreate(mixed $explicit): ?int
+    {
+        return $this->isAll() ? ($explicit ? (int) $explicit : null) : $this->id();
+    }
+
+    /** Chave de cache que separa as secretarias (nunca reaproveitar contagem de outra). */
+    public function cacheKey(): string
+    {
+        return $this->isAll() ? 'all' : (string) ($this->id() ?? 'none');
+    }
+
     /** @return int[] */
     public function allowedIds(): array
     {

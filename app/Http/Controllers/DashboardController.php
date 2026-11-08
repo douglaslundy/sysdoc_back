@@ -717,7 +717,7 @@ class DashboardController extends MonitorApsBaseController
 
         $setoresComAlerta = ['farmacia', 'vigilancia', 'almoxarifado', 'protocolo'];
 
-        $cacheKey = 'dashboard.inicio.v3.'.$user->id.'.'.now()->format('Y-m-d-H');
+        $cacheKey = 'dashboard.inicio.v4.'.$user->id.'.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey().'.'.now()->format('Y-m-d-H');
         try {
             $setores = Cache::remember($cacheKey, 120, function () use ($definicoes, $user, $permissionService, $setoresComAlerta) {
                 $resultado = [];
@@ -1146,35 +1146,28 @@ class DashboardController extends MonitorApsBaseController
 
     public function arquivo()
     {
-        $data = Cache::remember('dashboard.arquivo', 60, fn () => [
+        // Eloquent (escopo de secretaria) e chave de cache por secretaria: nada de contagem de outra secretaria.
+        $data = Cache::remember('dashboard.arquivo.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 60, fn () => [
             'totais' => [
-                'documentos' => DB::table('documents')->whereNull('deleted_at')->count(),
-                'versoes' => DB::table('document_versions')->whereNull('deleted_at')->count(),
-                'tamanho_bytes' => (int) DB::table('document_versions')->whereNull('deleted_at')->sum('size_bytes'),
-                'aprovacoes_registradas' => DB::table('document_approvals')->count(),
-                'documentos_mes' => DB::table('documents')
-                    ->whereNull('deleted_at')
-                    ->whereBetween('created_at', [now()->startOfMonth(), now()])
-                    ->count(),
+                'documentos' => \App\Models\Document::count(),
+                'versoes' => \App\Models\DocumentVersion::count(),
+                'tamanho_bytes' => (int) \App\Models\DocumentVersion::sum('size_bytes'),
+                'aprovacoes_registradas' => \App\Models\DocumentApproval::count(),
+                'documentos_mes' => \App\Models\Document::whereBetween('created_at', [now()->startOfMonth(), now()])->count(),
             ],
-            'por_status' => DB::table('documents')
-                ->whereNull('deleted_at')
-                ->select('status', DB::raw('COUNT(*) as total'))
+            'por_status' => \App\Models\Document::select('status', DB::raw('COUNT(*) as total'))
                 ->groupBy('status')
                 ->orderByDesc('total')
                 ->get(),
-            'por_sigilo' => DB::table('documents')
-                ->whereNull('deleted_at')
-                ->select('sigilo', DB::raw('COUNT(*) as total'))
+            'por_sigilo' => \App\Models\Document::select('sigilo', DB::raw('COUNT(*) as total'))
                 ->groupBy('sigilo')
                 ->orderByDesc('total')
                 ->get(),
-            'recentes' => DB::table('documents as d')
-                ->leftJoin('document_types as t', 't.id', '=', 'd.document_type_id')
-                ->whereNull('d.deleted_at')
-                ->orderByDesc('d.updated_at')
+            'recentes' => \App\Models\Document::query()
+                ->leftJoin('document_types as t', 't.id', '=', 'documents.document_type_id')
+                ->orderByDesc('documents.updated_at')
                 ->limit(8)
-                ->get(['d.id', 'd.titulo', 'd.status', 'd.sigilo', 'd.current_version_number', 'd.updated_at', 't.nome as tipo']),
+                ->get(['documents.id', 'documents.titulo', 'documents.status', 'documents.sigilo', 'documents.current_version_number', 'documents.updated_at', 't.nome as tipo']),
         ]);
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=120');

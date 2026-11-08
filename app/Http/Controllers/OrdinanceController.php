@@ -7,6 +7,8 @@ use App\Http\Requests\StoreOrdinanceRequest;
 use App\Http\Requests\UpdateOrdinanceRequest;
 use App\Models\Models;
 use App\Models\Ordinance;
+use App\Models\Secretaria;
+use App\Services\Secretarias\ActiveSecretaria;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,14 +40,21 @@ class OrdinanceController extends Controller
             $currentYear = (int) date('Y');
             $today = date('Y-m-d');
 
+            // Admin em "Todas" informa a secretaria (sem ela: 422); os demais usam a ativa. Numeração por secretaria.
+            $secretariaId = app(ActiveSecretaria::class)->forCreate($data['secretaria_id'] ?? null);
+            if (! $secretariaId) {
+                return response()->json(['errors' => 'Escolha a secretaria.', 'message' => 'Escolha a secretaria.'], 422);
+            }
+
             $ordinance = new Ordinance();
+            $ordinance->secretaria_id = $secretariaId;
             $ordinance->user_id = $data['user_id'];
 
             $ordinance->number = (
-                DB::table('ordinances')
+                Ordinance::withoutSecretaria()
+                    ->where('secretaria_id', $secretariaId)
                     ->where('year', $currentYear)
-                    ->orderBy('number', 'desc')
-                    ->value('number')
+                    ->max('number')
             ) + 1;
 
             $ordinance->year = $currentYear;
@@ -55,7 +64,7 @@ class OrdinanceController extends Controller
             $ordinance->summary = $data['summary'] ?? null;
             $ordinance->content = $data['content'] ?? null;
             $ordinance->legal_basis = $data['legal_basis'] ?? null;
-            $ordinance->department = 'Secretaria Municipal de Saúde';
+            $ordinance->department = 'Secretaria Municipal de '.Secretaria::whereKey($secretariaId)->value('nome');
             $ordinance->signatory_name = $data['signatory_name'];
             $ordinance->signatory_role = $data['signatory_role'] ?? null;
             $ordinance->publication_date = $today;
@@ -124,7 +133,7 @@ class OrdinanceController extends Controller
         $array = ['errors' => ''];
 
         try {
-            $lastOrdinance = Ordinance::latest()->first();
+            $lastOrdinance = Ordinance::withoutSecretaria()->where('secretaria_id', $ordinance->secretaria_id)->latest()->first();
 
             if (! $lastOrdinance || $ordinance->id !== $lastOrdinance->id) {
                 throw new Exception('É permitido excluir somente a última portaria');

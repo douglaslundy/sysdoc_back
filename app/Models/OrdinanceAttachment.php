@@ -9,6 +9,12 @@ class OrdinanceAttachment extends Model
 {
     use HasFactory;
 
+    // Herda a secretaria do registro pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('ordinance_id', 'ordinances'));
+    }
+
     protected $fillable = [
         'ordinance_id',
         'uploaded_by',

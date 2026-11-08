@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateProtocolOrganizationalUnitRequest;
 use App\Http\Requests\StoreProtocolOrganizationalUnitRequest;
 use App\Models\ProtocolOrganizationalUnit;
+use App\Services\Secretarias\ActiveSecretaria;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -35,6 +36,12 @@ class ProtocolOrganizationalUnitController extends Controller
     {
         $validated = $request->validated();
 
+        // Unidade pai precisa ser da mesma secretaria da nova unidade (admin em "Todas" informa secretaria_id).
+        $secretariaId = app(ActiveSecretaria::class)->forCreate($validated['secretaria_id'] ?? null);
+        if ($secretariaId && ! empty($validated['parent_id']) && ! $this->mesmaSecretaria((int) $validated['parent_id'], $secretariaId)) {
+            return response()->json(['message' => 'A unidade pai é de outra secretaria.'], 422);
+        }
+
         return response()->json(
             ProtocolOrganizationalUnit::create([
                 ...$validated,
@@ -57,9 +64,19 @@ class ProtocolOrganizationalUnitController extends Controller
             return response()->json(['message' => 'A unidade pai não pode ser a própria unidade ou uma de suas subunidades.'], 422);
         }
 
-        $unit->update($validated);
+        if (! empty($validated['parent_id']) && ! $this->mesmaSecretaria((int) $validated['parent_id'], (int) $unit->secretaria_id)) {
+            return response()->json(['message' => 'A unidade pai é de outra secretaria.'], 422);
+        }
+
+        // A secretaria de uma unidade nunca muda por aqui.
+        $unit->update(collect($validated)->except('secretaria_id')->all());
 
         return response()->json($unit->fresh());
+    }
+
+    private function mesmaSecretaria(int $unitId, int $secretariaId): bool
+    {
+        return (int) ProtocolOrganizationalUnit::withoutSecretaria()->whereKey($unitId)->value('secretaria_id') === $secretariaId;
     }
 
     private function isSelfOrDescendant(ProtocolOrganizationalUnit $unit, int $candidateId): bool

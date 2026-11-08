@@ -7,6 +7,7 @@ use App\Http\Requests\StoreDenunciaRequest;
 use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoAttachment;
 use App\Models\KanbanTask;
+use App\Models\ProtocolOrganizationalUnit;
 use App\Services\AuditService;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
@@ -187,7 +188,14 @@ class DenunciaPublicaController extends Controller
             return;
         }
 
+        // Rota pública: a secretaria do card é a da unidade responsável pelo motivo.
+        $secretariaId = ProtocolOrganizationalUnit::withoutSecretaria()->whereKey($motivo->unit_id)->value('secretaria_id');
+        if (! $secretariaId) {
+            return;
+        }
+
         KanbanTask::create([
+            'secretaria_id' => $secretariaId,
             'unit_id' => $motivo->unit_id,
             'fiscalizacao_id' => $fiscalizacao->id,
             'titulo' => mb_substr("Petição {$fiscalizacao->protocolo} — {$motivo->nome}", 0, 200),

@@ -30,6 +30,12 @@ class Secretaria extends Model
             ->each(fn (self $s) => $s->pages()->syncWithoutDetaching($ids));
     }
 
+    /** Regra de validação do campo secretaria_id (admin em "Todas" escolhe; os demais têm o valor ignorado). */
+    public static function regraId(): array
+    {
+        return ['nullable', 'integer', \Illuminate\Validation\Rule::exists('secretarias', 'id')->where('ativa', true)];
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_secretarias');

@@ -27,6 +27,16 @@ trait BelongsToSecretaria
                 return;
             }
 
+            // Rota pública (sem usuário/secretaria resolvida): só grava se o código do servidor já informou
+            // a secretaria (ex.: pedido de cadastro). Sem valor, falha fechado.
+            if (! $active->resolved()) {
+                if (empty($model->secretaria_id)) {
+                    throw ValidationException::withMessages(['secretaria_id' => 'secretaria nao resolvida']);
+                }
+
+                return;
+            }
+
             if (! $active->isAll()) {
                 if ($active->id() === null) {
                     throw ValidationException::withMessages(['secretaria_id' => 'secretaria nao resolvida']);

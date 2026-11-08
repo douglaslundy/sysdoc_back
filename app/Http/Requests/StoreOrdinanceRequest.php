@@ -19,6 +19,7 @@ class StoreOrdinanceRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => \App\Models\Secretaria::regraId(),
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'type' => ['required', Rule::in(['normativa', 'ordinatoria'])],
             'title' => ['required', 'string', 'max:255'],

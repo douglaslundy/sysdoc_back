@@ -10,6 +10,12 @@ class DocumentApproval extends Model
 {
     use HasFactory;
 
+    // Herda a secretaria do registro pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('document_id', 'documents'));
+    }
+
     protected $fillable = [
         'document_id',
         'action',

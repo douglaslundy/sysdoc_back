@@ -22,6 +22,8 @@ use App\Models\Scopes\CadastroProtocoloScope;
 use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolUserUnit;
 use App\Services\Protocol\UnitTree;
+use App\Services\Secretarias\ActiveSecretaria;
+use App\Services\Secretarias\SecretariaMembership;
 use App\Models\ProtocolView;
 use App\Models\User;
 use App\Services\AuditService;
@@ -250,6 +252,16 @@ class ProtocolController extends Controller
     {
         $validated = $request->validated();
 
+        // Admin em "Todas" informa a secretaria; os demais criam na ativa (nunca silencioso).
+        $secretariaId = app(ActiveSecretaria::class)->forCreate($validated['secretaria_id'] ?? null);
+        if (! $secretariaId) {
+            return response()->json(['message' => 'Escolha a secretaria do protocolo.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
+        }
+
+        if ($recusa = $this->referenciasDeOutraSecretaria($secretariaId, $validated)) {
+            return $recusa;
+        }
+
         $config = ProtocolConfig::current();
         $user = $request->user();
         $linkedOrigin = $this->linkedOriginUnit($user);
@@ -282,8 +294,9 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'O usuário de destino pertence a outra secretaria.'], 422);
         }
 
-        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser) {
+        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser, $secretariaId) {
             $protocol = Protocol::create([
+                'secretaria_id' => $secretariaId,
                 'numero' => Protocol::gerarNumero(),
                 'assunto' => $validated['assunto'],
                 'descricao' => $validated['descricao'] ?? null,
@@ -331,6 +344,10 @@ class ProtocolController extends Controller
 
         $validated = $request->validated();
 
+        if ($recusa = $this->referenciasDeOutraSecretaria((int) $protocol->secretaria_id, $validated)) {
+            return $recusa;
+        }
+
         if ($recusa = $this->responsavelInvalidoDeCadastro($protocol, $validated)) {
             return $recusa;
         }
@@ -354,6 +371,29 @@ class ProtocolController extends Controller
         AuditService::record('UPDATE', $protocol, $old, $protocol->fresh()->toArray());
 
         return response()->json($protocol->fresh()->load(['kanbanTask.createdBy', 'kanbanTask.updatedBy', 'kanbanTask.responsavel']));
+    }
+
+    /**
+     * Unidades e usuários citados no corpo (o exists: do validador ignora o escopo) precisam ser da
+     * secretaria do protocolo: nada de apontar o protocolo para unidade/pessoa de outra secretaria.
+     */
+    private function referenciasDeOutraSecretaria(int $secretariaId, array $validated): ?JsonResponse
+    {
+        foreach (['origem_unit_id', 'destino_unit_id'] as $campo) {
+            if (! empty($validated[$campo])
+                && (int) ProtocolOrganizationalUnit::withoutSecretaria()->whereKey($validated[$campo])->value('secretaria_id') !== $secretariaId) {
+                return response()->json(['message' => 'Unidade de outra secretaria.', 'errors' => [$campo => ['Unidade não encontrada nesta secretaria.']]], 422);
+            }
+        }
+
+        $usuarios = ['destino_user_id' => $validated['destino_user_id'] ?? null, 'kanban.responsavel_id' => $validated['kanban']['responsavel_id'] ?? null];
+        foreach (array_filter($usuarios) as $campo => $userId) {
+            if (! SecretariaMembership::atende((int) $userId, $secretariaId)) {
+                return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => [$campo => ['Usuário não pertence a esta secretaria.']]], 422);
+            }
+        }
+
+        return null;
     }
 
     /** Responsável de pedido de cadastro: só quem pode abrir o pedido (admin ou gestor da secretaria). */
@@ -402,8 +442,13 @@ class ProtocolController extends Controller
         $validated = $request->validated();
 
         $protocolo = Protocol::find($id);
-        if ($protocolo && $this->canAccess($protocolo, $request->user()) && ($recusa = $this->responsavelInvalidoDeCadastro($protocolo, $validated))) {
-            return $recusa;
+        if ($protocolo && $this->canAccess($protocolo, $request->user())) {
+            if ($recusa = $this->referenciasDeOutraSecretaria((int) $protocolo->secretaria_id, $validated)) {
+                return $recusa;
+            }
+            if ($recusa = $this->responsavelInvalidoDeCadastro($protocolo, $validated)) {
+                return $recusa;
+            }
         }
 
         return $this->applyAction($request, $id, 'encaminhado', function (Protocol $protocol) use ($request, $validated) {
@@ -676,9 +721,11 @@ class ProtocolController extends Controller
             ->whereHas('pages', fn ($q) => $q->where('path', 'like', '/protocolo%')->where('ativo', true))
             ->pluck('slug');
 
+        $ativa = app(ActiveSecretaria::class);
         $eligible = User::query()
             ->where('active', true)
             ->where(fn ($q) => $q->whereIn('profile', $allowedProfiles)->orWhere('profile', 'admin'))
+            ->when(! $ativa->isAll(), fn ($q) => SecretariaMembership::filtrar($q, (int) $ativa->id()))
             ->when($request->filled('unit_id'), function ($q) use ($request) {
                 $unitIds = UnitTree::withDescendantIds((int) $request->input('unit_id'));
                 $q->whereIn('id', ProtocolUserUnit::query()

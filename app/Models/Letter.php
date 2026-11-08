@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Letter extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     protected $fillable = [
+        'secretaria_id',
         'id_user',
         'number',
         'subject_matter',

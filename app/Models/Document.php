@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Document extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [
+        'secretaria_id',
         'document_type_id',
         'titulo',
         'resumo',

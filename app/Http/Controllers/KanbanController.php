@@ -8,6 +8,8 @@ use App\Models\KanbanTask;
 use App\Models\Protocol;
 use App\Models\Scopes\CadastroProtocoloScope;
 use App\Services\Protocol\UnitTree;
+use App\Services\Secretarias\ActiveSecretaria;
+use App\Services\Secretarias\SecretariaMembership;
 use App\Services\SystemAlertService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,7 +90,14 @@ class KanbanController extends Controller
 
         $statusInicial = $validated['status'] ?? 'novo';
 
+        // Admin em "Todas" informa a secretaria (o trait devolve 422 se faltar); os demais usam a ativa.
+        $secretariaId = app(ActiveSecretaria::class)->forCreate($validated['secretaria_id'] ?? null);
+        if (! empty($validated['responsavel_id']) && $secretariaId && ! SecretariaMembership::atende((int) $validated['responsavel_id'], $secretariaId)) {
+            return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => ['responsavel_id' => ['Usuário não pertence a esta secretaria.']]], 422);
+        }
+
         $task = KanbanTask::create([
+            'secretaria_id' => $secretariaId,
             'titulo' => $validated['titulo'],
             'descricao' => $validated['descricao'] ?? null,
             'status' => $statusInicial,
@@ -132,6 +141,10 @@ class KanbanController extends Controller
             'visibility' => 'nullable|string|in:public,private',
             'ordem' => 'nullable|integer|min:0',
         ]);
+
+        if (! empty($validated['responsavel_id']) && ! SecretariaMembership::atende((int) $validated['responsavel_id'], (int) $task->secretaria_id)) {
+            return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => ['responsavel_id' => ['Usuário não pertence a esta secretaria.']]], 422);
+        }
 
         if (! empty($validated['responsavel_id']) && $task->isCadastro()) {
             // Só quem pode abrir o pedido pode ser responsável por ele.

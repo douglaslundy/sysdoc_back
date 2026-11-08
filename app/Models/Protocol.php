@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 
 class Protocol extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     protected $table = 'protocols';

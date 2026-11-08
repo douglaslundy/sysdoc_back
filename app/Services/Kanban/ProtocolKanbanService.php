@@ -43,6 +43,7 @@ class ProtocolKanbanService
 
         $task->fill([
             'protocol_id' => $protocol->id,
+            'secretaria_id' => $protocol->secretaria_id, // o card é sempre da secretaria do protocolo
             'titulo' => $kanbanData['titulo'] ?? $protocol->assunto,
             'descricao' => $kanbanData['descricao'] ?? $protocol->descricao,
             'status' => $novoStatus,

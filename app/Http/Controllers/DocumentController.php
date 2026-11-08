@@ -161,10 +161,18 @@ class DocumentController extends Controller
             'sigilo' => ['required', 'string', Rule::in(self::SIGILOS)],
             'status' => ['nullable', 'string', 'max:30'],
             'arquivo' => ['required', 'file', 'max:51200'],
+            'secretaria_id' => \App\Models\Secretaria::regraId(),
         ]);
 
-        $document = DB::transaction(function () use ($request, $validated) {
+        // Admin em "Todas" informa a secretaria (sem ela: 422); os demais gravam na ativa.
+        $secretariaId = app(\App\Services\Secretarias\ActiveSecretaria::class)->forCreate($validated['secretaria_id'] ?? null);
+        if (! $secretariaId) {
+            return response()->json(['message' => 'Escolha a secretaria.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
+        }
+
+        $document = DB::transaction(function () use ($request, $validated, $secretariaId) {
             $document = Document::create([
+                'secretaria_id' => $secretariaId,
                 'document_type_id' => $validated['document_type_id'] ?? null,
                 'titulo' => $validated['titulo'],
                 'resumo' => $validated['resumo'] ?? null,
