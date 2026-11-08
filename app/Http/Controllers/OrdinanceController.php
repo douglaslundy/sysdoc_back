@@ -69,8 +69,6 @@ class OrdinanceController extends Controller
 
             if ($request->hasFile('file')) {
                 $ordinance->file_path = $request->file('file')->store('ordinances', 'public');
-            } elseif (! empty($data['file_path'])) {
-                $ordinance->file_path = $data['file_path'];
             }
 
             // Número no momento de gravar; corrida na unique (secretaria, número, ano) refaz o número (até 5 vezes).
@@ -119,9 +117,8 @@ class OrdinanceController extends Controller
                     Storage::disk('public')->delete($ordinance->file_path);
                 }
 
+                // Caminho do arquivo nunca vem do cliente: apontaria para arquivo alheio e o apagaria na troca/exclusão.
                 $ordinance->file_path = $request->file('file')->store('ordinances', 'public');
-            } elseif (array_key_exists('file_path', $data) && ! empty($data['file_path'])) {
-                $ordinance->file_path = $data['file_path'];
             }
 
             $ordinance->save();

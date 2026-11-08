@@ -30,7 +30,6 @@ class StoreOrdinanceRequest extends FormRequest
             'signatory_name' => ['required', 'string', 'max:150'],
             'signatory_role' => ['nullable', 'string', 'max:150'],
             'file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:30720'],
-            'file_path' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ];
     }
