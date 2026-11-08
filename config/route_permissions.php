@@ -36,8 +36,8 @@ return [
         // ---- avisos do sistema: todo usuário lê os ativos e registra a visualização ----
         ['prefix' => 'system-notices', 'except' => ['system-notices/active', 'system-notices/{id}/views'], 'pages' => ['/avisos']],
 
-        // ---- mensagens enviadas pelo sistema (log de WhatsApp/e-mail) ----
-        ['prefix' => 'mensagens-enviadas', 'pages' => ['/sistema/mensagens-enviadas']],
+        // ---- mensagens enviadas pelo sistema (log de WhatsApp/e-mail de todas as secretarias): somente administrador ----
+        ['prefix' => 'mensagens-enviadas', 'admin' => true],
 
         // ---- protocolo: núcleo protegido; listas de apoio dos formulários seguem abertas ----
         [

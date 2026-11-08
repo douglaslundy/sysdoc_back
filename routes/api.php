@@ -384,8 +384,9 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::get('/anexos/{attachment}/download', [ProtocolController::class, 'downloadAttachment'])->whereNumber('attachment');
     });
 
+    // message_logs não têm secretaria: a lista é global, por isso só o administrador a vê.
     Route::get('/mensagens-enviadas', [\App\Http\Controllers\MessageLogController::class, 'index'])
-        ->middleware('page.permission:/sistema/mensagens-enviadas');
+        ->middleware('admin');
 
     Route::prefix('secretarias-admin')->controller(\App\Http\Controllers\SecretariaAdminController::class)->group(function () {
         Route::get('/', 'index');
