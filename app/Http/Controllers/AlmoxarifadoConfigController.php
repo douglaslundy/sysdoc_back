@@ -12,7 +12,9 @@ class AlmoxarifadoConfigController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        // Admin em "Todas" escolhe a secretaria (?secretaria_id=); os demais usam a ativa.
+        // Admin em "Todas" escolhe a secretaria (?secretaria_id=), validada (inexistente/inativa = 422, sem gravar); os demais usam a ativa.
+        $request->validate(['secretaria_id' => EscopoAlmoxarifado::regraCampo()]);
+
         return response()->json(AlmoxarifadoConfig::current(EscopoAlmoxarifado::id($request->input('secretaria_id'))));
     }
 

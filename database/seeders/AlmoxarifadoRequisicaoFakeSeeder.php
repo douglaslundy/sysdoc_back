@@ -22,6 +22,7 @@ class AlmoxarifadoRequisicaoFakeSeeder extends Seeder
             if ($secretarias->isEmpty()) {
                 $this->call(AlmoxarifadoCatalogSeeder::class);
                 $secretarias = DB::table('almoxarifado_secretarias')
+                    ->where('secretaria_id', $sec)
                     ->where('ativo', true)
                     ->orderBy('id')
                     ->get();
