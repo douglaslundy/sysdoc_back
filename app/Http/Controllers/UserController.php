@@ -146,7 +146,10 @@ class UserController extends Controller
     {
 
         $array = ['status' => 'created'];
-        $data = $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids']);
+        // Gestor só preenche dados cadastrais e perfil: flags de chat/RT/inativação são do admin.
+        $data = $request->user()->profile === 'admin'
+            ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids'])
+            : $request->only(['profile', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'password', 'is_driver']);
         $data['password'] = Hash::make($data['password']);
         $existing = $request->reactivatableUser();
         if ($existing) {
