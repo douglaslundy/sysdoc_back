@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class StoreMedicineItemRequest extends BaseApiFormRequest
@@ -17,14 +18,17 @@ class StoreMedicineItemRequest extends BaseApiFormRequest
 
     public function rules(): array
     {
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\MedicineItem::class, null, $this->input('secretaria_id'));
+
         return [
-            'internal_code' => ['required', 'string', 'max:80', 'unique:medicine_items,internal_code'],
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
+            'internal_code' => ['required', 'string', 'max:80', EscopoAlmoxarifado::unico('medicine_items', 'internal_code', $sid)],
             'brand_name' => ['nullable', 'string', 'max:255'],
             'active_ingredient' => ['required', 'string', 'max:255'],
             'concentration' => ['required', 'string', 'max:100'],
-            'pharmaceutical_form' => ['required', 'string', 'max:120', Rule::exists('pharmacy_pharmaceutical_forms', 'name')->where('active', true)],
-            'presentation' => ['required', 'string', 'max:120', Rule::exists('pharmacy_presentations', 'name')->where('active', true)],
-            'unit_measure' => ['required', 'string', 'max:20', Rule::exists('pharmacy_units', 'code')->where('active', true)],
+            'pharmaceutical_form' => ['required', 'string', 'max:120', Rule::exists('pharmacy_pharmaceutical_forms', 'name')->where('active', true)->where('secretaria_id', $sid)],
+            'presentation' => ['required', 'string', 'max:120', Rule::exists('pharmacy_presentations', 'name')->where('active', true)->where('secretaria_id', $sid)],
+            'unit_measure' => ['required', 'string', 'max:20', Rule::exists('pharmacy_units', 'code')->where('active', true)->where('secretaria_id', $sid)],
             'ean_code' => ['nullable', 'string', 'max:50'],
             'is_free_distribution' => ['required', 'boolean'],
             'is_controlled' => ['sometimes', 'boolean'],

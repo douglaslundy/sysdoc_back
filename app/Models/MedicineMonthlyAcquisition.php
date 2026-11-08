@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MedicineMonthlyAcquisition extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory;
 
     protected $table = 'medicine_monthly_acquisitions';
 
     protected $fillable = [
+        'secretaria_id',
         'medicine_item_id',
         'reference_month',
         'acquired_quantity',

@@ -97,11 +97,13 @@ class SusMgMedicinesSeeder extends Seeder
         $items = array_merge($items, $this->loadExternalItems());
         $items = $this->normalizeAndValidateItems($items);
 
+        $sec = \App\Models\Secretaria::saudeId(); // seeder fora de requisição: grava explicitamente na Saúde
+
         foreach ($items as $item) {
             $component = $item['component'];
 
             MedicineItem::updateOrCreate(
-                ['internal_code' => $item['code']],
+                ['secretaria_id' => $sec, 'internal_code' => $item['code']],
                 [
                     'brand_name' => null,
                     'active_ingredient' => $item['ingredient'],

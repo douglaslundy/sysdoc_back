@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExameRequest;
 use App\Models\Exame;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Http\Request;
 
 class ExameController extends Controller
@@ -36,6 +37,7 @@ class ExameController extends Controller
     public function store(StoreExameRequest $request)
     {
         $exame = Exame::create([
+            'secretaria_id' => EscopoAlmoxarifado::id($request->input('secretaria_id')), // admin em "Todas" sem escolher = 422
             'nome' => strtoupper($request->input('nome')),
             'codigo' => strtoupper($request->input('codigo')),
             'categoria_exame_id' => $request->input('categoria_exame_id'),

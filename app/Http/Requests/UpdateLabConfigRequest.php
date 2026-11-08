@@ -14,6 +14,7 @@ class UpdateLabConfigRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo(),
             'email_habilitado' => 'boolean',
             'nome_estabelecimento' => 'nullable|string|max:255',
             'razao_social' => 'nullable|string|max:255',

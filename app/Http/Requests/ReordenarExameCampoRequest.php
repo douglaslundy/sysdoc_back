@@ -13,9 +13,11 @@ class ReordenarExameCampoRequest extends FormRequest
 
     public function rules(): array
     {
+        $sid = (int) (\App\Models\Exame::find($this->route('exame'))?->secretaria_id ?? abort(404, 'Exame não encontrado.'));
+
         return [
             'ordem' => 'required|array',
-            'ordem.*' => 'integer|exists:exame_campos,id',
+            'ordem.*' => ['integer', \App\Support\EscopoAlmoxarifado::existeCampoDeExame($sid)],
         ];
     }
 }

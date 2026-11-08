@@ -9,6 +9,7 @@ use App\Models\PedidoExame;
 use App\Models\ResultadoCampo;
 use App\Models\ResultadoExame;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -67,6 +68,7 @@ class PedidoExameController extends Controller
         DB::beginTransaction();
         try {
             $pedido = new PedidoExame;
+            $pedido->secretaria_id = EscopoAlmoxarifado::id($request->input('secretaria_id')); // admin em "Todas" sem escolher = 422
             $pedido->client_id = $request->input('client_id');
             $pedido->criado_por = Auth::id();
             $pedido->medico_solicitante_id = $request->input('medico_solicitante_id');

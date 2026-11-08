@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class MedicoSolicitante extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory;
 
     protected $table = 'medicos_solicitantes';
 
     protected $fillable = [
+        'secretaria_id',
         'nome', 'crm', 'uf_crm', 'especialidade', 'telefone', 'ativo',
     ];
 

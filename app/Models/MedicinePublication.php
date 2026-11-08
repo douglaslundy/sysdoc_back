@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MedicinePublication extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory;
 
     protected $table = 'medicine_publications';
 
     protected $fillable = [
+        'secretaria_id',
         'reference_type',
         'reference_id',
         'channel',

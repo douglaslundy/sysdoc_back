@@ -41,6 +41,7 @@ class MedicinePublicationService
         $publication = DB::transaction(function () use ($data, $target, $userId) {
             $publication = MedicinePublication::create([
                 ...$data,
+                'secretaria_id' => $target->secretaria_id, // a da referência (vale também para o admin em "Todas")
                 'published_by_user_id' => $userId,
             ]);
 

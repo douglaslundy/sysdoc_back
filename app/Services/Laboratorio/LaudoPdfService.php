@@ -21,7 +21,7 @@ class LaudoPdfService
 
         $camposPorExame = $resultado->campos->groupBy('exame_id');
 
-        $config = LabConfig::get();
+        $config = LabConfig::get($resultado->pedido->secretaria_id);
 
         $brasaoPath = public_path('files/brasao.png');
         $logoSusPath = public_path('files/logosus.png');

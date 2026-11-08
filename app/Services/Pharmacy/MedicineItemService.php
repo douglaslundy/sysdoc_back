@@ -4,6 +4,7 @@ namespace App\Services\Pharmacy;
 
 use App\Models\MedicineItem;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -109,6 +110,7 @@ class MedicineItemService
 
     public function create(array $data): MedicineItem
     {
+        $data['secretaria_id'] = EscopoAlmoxarifado::id($data['secretaria_id'] ?? null); // admin em "Todas" sem escolher = 422
         $medicine = MedicineItem::create($data);
         AuditService::record('CREATE', $medicine, null, $medicine->toArray());
 

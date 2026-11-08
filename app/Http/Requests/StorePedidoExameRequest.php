@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePedidoExameRequest extends FormRequest
@@ -17,14 +18,17 @@ class StorePedidoExameRequest extends FormRequest
 
     public function rules(): array
     {
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\PedidoExame::class, null, $this->input('secretaria_id'));
+
         return [
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
             'client_id' => 'required|exists:clients,id',
-            'medico_solicitante_id' => 'nullable|exists:medicos_solicitantes,id',
+            'medico_solicitante_id' => ['nullable', EscopoAlmoxarifado::existe('medicos_solicitantes', $sid)],
             'data_pedido' => 'required|date',
             'data_coleta' => 'nullable|date',
             'observacoes' => 'nullable|string',
             'exames' => 'required|array|min:1',
-            'exames.*' => 'required|integer|distinct|exists:exames,id',
+            'exames.*' => ['required', 'integer', 'distinct', EscopoAlmoxarifado::existe('exames', $sid)],
         ];
     }
 

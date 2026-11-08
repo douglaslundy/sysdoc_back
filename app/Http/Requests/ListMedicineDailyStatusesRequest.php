@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class ListMedicineDailyStatusesRequest extends BaseApiFormRequest
@@ -20,7 +21,7 @@ class ListMedicineDailyStatusesRequest extends BaseApiFormRequest
         return [
             'reference_date' => ['nullable', 'date'],
             'availability_status' => ['nullable', Rule::in(['available', 'unavailable', 'no_record'])],
-            'medicine_item_id' => ['nullable', 'integer', 'exists:medicine_items,id'],
+            'medicine_item_id' => ['nullable', 'integer', EscopoAlmoxarifado::existeNaAtiva('medicine_items')],
             'search' => ['nullable', 'string', 'max:120'],
             'include_all' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],

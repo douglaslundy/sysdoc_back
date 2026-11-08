@@ -20,7 +20,7 @@ class DashboardController extends MonitorApsBaseController
     public function laboratorio()
     {
         try {
-            $data = Cache::remember('dashboard.laboratorio', 300, function () {
+            $data = Cache::remember('dashboard.laboratorio.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 300, function () {
                 try {
                     $totais = $this->service->getTotais();
                 } catch (\Throwable $e) {
@@ -329,15 +329,15 @@ class DashboardController extends MonitorApsBaseController
         $currentMonth = now()->format('Y-m');
 
         try {
-            $cacheKey = 'dashboard.farmacia.v2.'.$janelaDias.'.'.$janelaMeses.'.'.now()->format('Y-m-d');
+            $cacheKey = 'dashboard.farmacia.v3.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey().'.'.$janelaDias.'.'.$janelaMeses.'.'.now()->format('Y-m-d');
             $data = Cache::remember($cacheKey, 180, function () use ($currentMonth, $janelaDias, $janelaMeses) {
                 try {
-                    $medicamentosAtivos = (int) DB::table('medicine_items')
+                    $medicamentosAtivos = (int) \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items'), 'secretaria_id')
                         ->whereNull('deleted_at')
                         ->where('active', true)
                         ->count();
 
-                    $statusAtual = DB::table('medicine_items as m')
+                    $statusAtual = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items as m'), 'm.secretaria_id')
                         ->leftJoin('medicine_daily_statuses as s', function ($join) {
                             $join->on('s.medicine_item_id', '=', 'm.id')
                                 ->whereRaw('s.id = (
@@ -361,7 +361,7 @@ class DashboardController extends MonitorApsBaseController
                         ? round(($disponiveisHoje / $registrosStatusHoje) * 100, 1)
                         : 0;
 
-                    $aquisicoesMesAtualQuery = DB::table('medicine_monthly_acquisitions')
+                    $aquisicoesMesAtualQuery = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->where('reference_month', $currentMonth);
 
                     $aquisicoesMesAtual = (int) (clone $aquisicoesMesAtualQuery)->count();
@@ -378,7 +378,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $statusPorDia = DB::table('medicine_daily_statuses')
+                    $statusPorDia = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_daily_statuses'), 'secretaria_id')
                         ->select(
                             'reference_date as dia',
                             DB::raw("SUM(CASE WHEN availability_status = 'available' AND COALESCE(available_quantity, 0) > 0 THEN 1 ELSE 0 END) as disponiveis"),
@@ -395,7 +395,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $aquisicoesPorMes = DB::table('medicine_monthly_acquisitions')
+                    $aquisicoesPorMes = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->select(
                             'reference_month as mes',
                             DB::raw('COUNT(*) as registros'),
@@ -411,7 +411,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $topIndisponiveis = DB::table('medicine_daily_statuses as s')
+                    $topIndisponiveis = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_daily_statuses as s'), 's.secretaria_id')
                         ->join('medicine_items as m', 'm.id', '=', 's.medicine_item_id')
                         ->select(
                             'm.id',
@@ -436,7 +436,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $fontesAquisicaoMes = DB::table('medicine_monthly_acquisitions')
+                    $fontesAquisicaoMes = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->select('source_document', DB::raw('COUNT(*) as total'))
                         ->where('reference_month', $currentMonth)
                         ->groupBy('source_document')
@@ -460,7 +460,7 @@ class DashboardController extends MonitorApsBaseController
                         $mesesFechados[] = $mesInicial->copy()->subMonths($i)->format('Y-m');
                     }
 
-                    $statusDetalhado = DB::table('medicine_daily_statuses as s')
+                    $statusDetalhado = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_daily_statuses as s'), 's.secretaria_id')
                         ->join('medicine_items as m', 'm.id', '=', 's.medicine_item_id')
                         ->select(
                             's.medicine_item_id',
@@ -493,7 +493,7 @@ class DashboardController extends MonitorApsBaseController
                         }
                     }
 
-                    $aquisicoesPorMedicamentoMes = DB::table('medicine_monthly_acquisitions')
+                    $aquisicoesPorMedicamentoMes = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->select('medicine_item_id', 'reference_month', DB::raw('SUM(acquired_quantity) as total'))
                         ->whereIn('reference_month', $mesesFechados)
                         ->groupBy('medicine_item_id', 'reference_month')
@@ -520,7 +520,7 @@ class DashboardController extends MonitorApsBaseController
                         $consumoPorMedicamento[$idMedicamento]['consumo_total'] += $consumoMes;
                     }
 
-                    $estoqueAtualPorMedicamento = DB::table('medicine_items as m')
+                    $estoqueAtualPorMedicamento = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items as m'), 'm.secretaria_id')
                         ->leftJoin('medicine_daily_statuses as s', function ($join) {
                             $join->on('s.medicine_item_id', '=', 'm.id')
                                 ->whereRaw('s.id = (
@@ -616,9 +616,9 @@ class DashboardController extends MonitorApsBaseController
                 'permissao' => '/dashboard/farmacia',
                 'kpi' => 'Indisponíveis Hoje',
                 'calcular' => function () {
-                    $ativos = DB::table('medicine_items')->whereNull('deleted_at')->where('active', true);
+                    $ativos = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items'), 'secretaria_id')->whereNull('deleted_at')->where('active', true);
                     $registrosStatusHoje = (clone $ativos)->count();
-                    $statusAtual = DB::table('medicine_items as m')
+                    $statusAtual = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items as m'), 'm.secretaria_id')
                         ->leftJoin('medicine_daily_statuses as s', function ($join) {
                             $join->on('s.medicine_item_id', '=', 'm.id')
                                 ->whereRaw('s.id = (

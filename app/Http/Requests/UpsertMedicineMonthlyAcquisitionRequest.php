@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class UpsertMedicineMonthlyAcquisitionRequest extends BaseApiFormRequest
@@ -25,12 +26,16 @@ class UpsertMedicineMonthlyAcquisitionRequest extends BaseApiFormRequest
 
     public function rules(): array
     {
+        $id = $this->route('id');
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\MedicineMonthlyAcquisition::class, $id, $this->input('secretaria_id'));
+
         return [
-            'medicine_item_id' => ['required', 'integer', 'exists:medicine_items,id'],
+            ...($id === null ? ['secretaria_id' => EscopoAlmoxarifado::regraCampo()] : []),
+            'medicine_item_id' => ['required', 'integer', EscopoAlmoxarifado::existe('medicine_items', $sid)],
             'reference_month' => ['required', 'regex:/^\d{4}\-(0[1-9]|1[0-2])$/'],
             'acquired_quantity' => ['required', 'numeric', 'min:0'],
-            'unit_measure' => ['required', 'string', 'max:20', Rule::exists('pharmacy_units', 'code')->where('active', true)],
-            'source_document' => ['nullable', 'string', 'max:255', Rule::exists('pharmacy_acquisition_sources', 'name')->where('active', true)],
+            'unit_measure' => ['required', 'string', 'max:20', Rule::exists('pharmacy_units', 'code')->where('active', true)->where('secretaria_id', $sid)],
+            'source_document' => ['nullable', 'string', 'max:255', Rule::exists('pharmacy_acquisition_sources', 'name')->where('active', true)->where('secretaria_id', $sid)],
             'note' => ['nullable', 'string', 'max:1000'],
         ];
     }

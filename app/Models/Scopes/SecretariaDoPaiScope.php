@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 class SecretariaDoPaiScope implements Scope
 {
-    public function __construct(private string $fk, private string $tabelaPai, private bool $participacao = false)
+    /** @param  array{0: string, 1: string}|null  $avo [fk do pai para o avô, tabela do avô]: o pai também não tem coluna, a secretaria vem do avô. */
+    public function __construct(private string $fk, private string $tabelaPai, private bool $participacao = false, private ?array $avo = null)
     {
     }
 
@@ -35,7 +36,11 @@ class SecretariaDoPaiScope implements Scope
         }
 
         $pai = DB::table($this->tabelaPai)->select('id')->where(function ($q) use ($active) {
-            $q->where($this->tabelaPai.'.secretaria_id', $active->id());
+            if ($this->avo) {
+                $q->whereIn($this->tabelaPai.'.'.$this->avo[0], DB::table($this->avo[1])->select('id')->where('secretaria_id', $active->id()));
+            } else {
+                $q->where($this->tabelaPai.'.secretaria_id', $active->id());
+            }
             // Protocolo entre secretarias: o destinatário vê o histórico do protocolo que recebeu.
             if ($this->participacao && ($uid = Auth::id())) {
                 ParticipacaoProtocolo::aplicar($q, (int) $uid);

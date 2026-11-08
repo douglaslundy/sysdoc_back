@@ -54,12 +54,13 @@ class ExamesCompletosSeeder extends Seeder
             'MICROBIOLOGIA / BACTERIOLOGIA', 'PARASITOLOGIA', 'GASOMETRIA',
             'IMUNOLOGIA', 'VITAMINAS E MICRONUTRIENTES', 'MINERAIS E ELETRÓLITOS',
         ];
+        $sec = \App\Models\Secretaria::saudeId(); // seeder fora de requisição: grava explicitamente na Saúde
         foreach ($nomes as $nome) {
             DB::table('categoria_exames')->insertOrIgnore([
-                'nome' => $nome, 'ativo' => true,
+                'secretaria_id' => $sec, 'nome' => $nome, 'ativo' => true,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
-            $this->categoriaIds[$nome] = DB::table('categoria_exames')->where('nome', $nome)->value('id');
+            $this->categoriaIds[$nome] = DB::table('categoria_exames')->where('secretaria_id', $sec)->where('nome', $nome)->value('id');
         }
     }
 
@@ -71,13 +72,14 @@ class ExamesCompletosSeeder extends Seeder
     private function exame(string $nome, string $codigo, string $cat, string $desc = ''): int
     {
         $catId = $this->cat($cat);
+        $sec = \App\Models\Secretaria::saudeId();
         DB::table('exames')->insertOrIgnore([
-            'nome' => $nome, 'codigo' => $codigo,
+            'secretaria_id' => $sec, 'nome' => $nome, 'codigo' => $codigo,
             'categoria_exame_id' => $catId, 'descricao' => $desc ?: null,
             'ativo' => true, 'created_at' => now(), 'updated_at' => now(),
         ]);
 
-        return DB::table('exames')->where('codigo', $codigo)->value('id');
+        return DB::table('exames')->where('secretaria_id', $sec)->where('codigo', $codigo)->value('id');
     }
 
     private function campo(int $exId, string $nome, string $tipo, ?string $unidade, int $ordem, bool $obrigatorio = true): int

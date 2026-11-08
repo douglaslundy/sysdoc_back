@@ -5,6 +5,7 @@ namespace App\Services\Pharmacy;
 use App\Models\MedicineDailyStatus;
 use App\Models\MedicineItem;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -126,6 +127,7 @@ class MedicineDailyStatusService
     public function upsert(array $data, ?int $userId): MedicineDailyStatus
     {
         $data['updated_by_user_id'] = $userId;
+        $data['secretaria_id'] = EscopoAlmoxarifado::id($data['secretaria_id'] ?? null); // admin em "Todas" sem escolher = 422
 
         $status = MedicineDailyStatus::updateOrCreate(
             [

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class UpsertMedicineDailyStatusRequest extends BaseApiFormRequest
@@ -17,8 +18,13 @@ class UpsertMedicineDailyStatusRequest extends BaseApiFormRequest
 
     public function rules(): array
     {
+        // PUT: a secretaria é a do registro (outra secretaria = 404); POST: a ativa, ou a informada pelo admin em "Todas".
+        $id = $this->route('id');
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\MedicineDailyStatus::class, $id, $this->input('secretaria_id'));
+
         return [
-            'medicine_item_id' => ['required', 'integer', 'exists:medicine_items,id'],
+            ...($id === null ? ['secretaria_id' => EscopoAlmoxarifado::regraCampo()] : []),
+            'medicine_item_id' => ['required', 'integer', EscopoAlmoxarifado::existe('medicine_items', $sid)],
             'reference_date' => ['required', 'date'],
             'availability_status' => ['required', Rule::in(['available', 'unavailable'])],
             'available_quantity' => ['nullable', 'numeric', 'min:0'],

@@ -13,10 +13,14 @@ class SalvarCamposResultadoRequest extends FormRequest
 
     public function rules(): array
     {
+        // Resultado de outra secretaria = 404 antes de validar; campos e exames só da secretaria do pedido.
+        $resultado = \App\Models\ResultadoExame::find($this->route('resultado')) ?? abort(404, 'Resultado não encontrado.');
+        $sid = (int) $resultado->pedido?->secretaria_id;
+
         return [
             'campos' => 'required|array|min:1',
-            'campos.*.exame_campo_id' => 'required|exists:exame_campos,id',
-            'campos.*.exame_id' => 'required|exists:exames,id',
+            'campos.*.exame_campo_id' => ['required', \App\Support\EscopoAlmoxarifado::existeCampoDeExame($sid)],
+            'campos.*.exame_id' => ['required', \App\Support\EscopoAlmoxarifado::existe('exames', $sid)],
             'campos.*.valor_numerico' => 'nullable|numeric|max:99999999999',
             'campos.*.valor_texto' => 'nullable|string',
             'campos.*.observacao' => 'nullable|string',

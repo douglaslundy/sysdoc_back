@@ -17,6 +17,7 @@ class UpdateMedicinePanelSettingRequest extends BaseApiFormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo(),
             'filter_is_free_distribution' => ['required', 'boolean'],
             'filter_is_controlled' => ['required', 'boolean'],
             'filter_is_judicial_order' => ['required', 'boolean'],

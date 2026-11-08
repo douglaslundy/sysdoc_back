@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class PharmacyMedicinePanelSetting extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory;
 
     protected $table = 'pharmacy_medicine_panel_settings';
 
     protected $fillable = [
+        'secretaria_id',
         'filter_is_free_distribution',
         'filter_is_controlled',
         'filter_is_judicial_order',
@@ -29,9 +32,10 @@ class PharmacyMedicinePanelSetting extends Model
         'filter_show_all' => 'boolean',
     ];
 
-    public static function current(): self
+    /** Painel da secretaria ativa (ou da informada: admin em "Todas", rota pública da Saúde). */
+    public static function current(?int $secretariaId = null): self
     {
-        return self::query()->firstOrCreate([], [
+        return self::withoutSecretaria()->firstOrCreate(['secretaria_id' => $secretariaId ?? \App\Support\EscopoAlmoxarifado::id()], [
             'filter_is_free_distribution' => false,
             'filter_is_controlled' => false,
             'filter_is_judicial_order' => false,

@@ -10,14 +10,17 @@ use Illuminate\Support\Facades\Schema;
 
 class LabConfigController extends Controller
 {
-    public function show()
+    public function show(\Illuminate\Http\Request $request)
     {
-        return response()->json(LabConfig::get());
+        // Admin em "Todas" escolhe a secretaria (?secretaria_id=), validada; os demais usam a ativa.
+        $request->validate(['secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo()]);
+
+        return response()->json(LabConfig::get(\App\Support\EscopoAlmoxarifado::id($request->input('secretaria_id'))));
     }
 
     public function update(UpdateLabConfigRequest $request)
     {
-        $config = LabConfig::get();
+        $config = LabConfig::get(\App\Support\EscopoAlmoxarifado::id($request->input('secretaria_id')));
         $old = $config->toArray();
 
         $fields = [

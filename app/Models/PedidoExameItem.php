@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class PedidoExameItem extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('pedido_exame_id', 'pedidos_exame'));
+    }
+
     use HasFactory;
 
     protected $table = 'pedido_exame_itens';

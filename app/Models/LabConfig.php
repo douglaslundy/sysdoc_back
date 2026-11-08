@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\Schema;
 
 class LabConfig extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     protected $fillable = [
+        'secretaria_id',
         'email_habilitado',
         'nome_estabelecimento',
         'razao_social',
@@ -28,8 +31,8 @@ class LabConfig extends Model
         'imprimir_rascunho_exame' => 'boolean',
     ];
 
-    // Retorna a única config existente (singleton)
-    public static function get(): self
+    /** Config da secretaria ativa (ou da informada: admin em "Todas", laudo/e-mail do pedido). */
+    public static function get(?int $secretariaId = null): self
     {
         $defaults = ['email_habilitado' => false];
 
@@ -37,6 +40,6 @@ class LabConfig extends Model
             $defaults['imprimir_rascunho_exame'] = false;
         }
 
-        return static::firstOrCreate([], $defaults);
+        return static::withoutSecretaria()->firstOrCreate(['secretaria_id' => $secretariaId ?? \App\Support\EscopoAlmoxarifado::id()], $defaults);
     }
 }

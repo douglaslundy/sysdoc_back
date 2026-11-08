@@ -61,7 +61,7 @@ class DashboardService
 
     public function getTopExames(): \Illuminate\Support\Collection
     {
-        return DB::table('pedido_exame_itens')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('pedido_exame_itens'), 'exames.secretaria_id')
             ->join('exames', 'pedido_exame_itens.exame_id', '=', 'exames.id')
             ->select('exames.nome', 'exames.codigo', DB::raw('count(*) as total'))
             ->groupBy('exames.id', 'exames.nome', 'exames.codigo')
@@ -72,7 +72,7 @@ class DashboardService
 
     public function getPedidosPorCategoria(): \Illuminate\Support\Collection
     {
-        return DB::table('pedido_exame_itens')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('pedido_exame_itens'), 'exames.secretaria_id')
             ->join('exames', 'pedido_exame_itens.exame_id', '=', 'exames.id')
             ->join('categoria_exames', 'exames.categoria_exame_id', '=', 'categoria_exames.id')
             ->select('categoria_exames.nome', DB::raw('count(*) as total'))
@@ -109,7 +109,7 @@ class DashboardService
 
     public function getTopMedicos(): \Illuminate\Support\Collection
     {
-        return DB::table('pedidos_exame')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('pedidos_exame'), 'pedidos_exame.secretaria_id')
             ->join('medicos_solicitantes', 'pedidos_exame.medico_solicitante_id', '=', 'medicos_solicitantes.id')
             ->whereNull('pedidos_exame.deleted_at')
             ->select('medicos_solicitantes.nome', DB::raw('count(*) as total'))
@@ -123,7 +123,7 @@ class DashboardService
     {
         $desde = now()->subMonths(11)->startOfMonth();
 
-        $dados = DB::table('pedidos_exame')
+        $dados = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('pedidos_exame'), 'secretaria_id')
             ->whereNull('deleted_at')
             ->where('status', 'liberado')
             ->where('updated_at', '>=', $desde)
@@ -145,7 +145,7 @@ class DashboardService
     {
         $desde = now()->subYears(4)->startOfYear();
 
-        return DB::table('pedidos_exame')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('pedidos_exame'), 'secretaria_id')
             ->whereNull('deleted_at')
             ->where('status', 'liberado')
             ->where('updated_at', '>=', $desde)

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 
 class ListMedicineMonthlyAcquisitionsRequest extends BaseApiFormRequest
 {
@@ -18,7 +19,7 @@ class ListMedicineMonthlyAcquisitionsRequest extends BaseApiFormRequest
     {
         return [
             'reference_month' => ['nullable', 'regex:/^\d{4}\-(0[1-9]|1[0-2])$/'],
-            'medicine_item_id' => ['nullable', 'integer', 'exists:medicine_items,id'],
+            'medicine_item_id' => ['nullable', 'integer', EscopoAlmoxarifado::existeNaAtiva('medicine_items')],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ];
     }

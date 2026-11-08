@@ -19,6 +19,7 @@ class StoreCampoReferenciaRequest extends FormRequest
     public function rules(): array
     {
         $campoId = $this->route('campo');
+        \App\Models\ExameCampo::find($campoId) ?? abort(404, 'Campo não encontrado.'); // campo de outra secretaria = 404
         $ignorId = $this->route('referencia');
 
         return [

@@ -12,7 +12,7 @@ class AttendancePendingSummaryService
         $summary = [];
 
         if (Schema::hasTable('pedidos_exame')) {
-            $pendingExams = DB::table('pedidos_exame')
+            $pendingExams = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('pedidos_exame'), 'secretaria_id')
                 ->where('client_id', $clientId)
                 ->whereNotIn('status', ['liberado', 'cancelado'])
                 ->count();
