@@ -15,7 +15,7 @@ class ProtocolNotification extends Model
     // Protocolo de pedido de cadastro só para admin e gestor da secretaria (ver o escopo).
     protected static function booted(): void
     {
-        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('protocol_id', 'protocols'));
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('protocol_id', 'protocols', true));
         static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope('protocol_id'));
     }
 

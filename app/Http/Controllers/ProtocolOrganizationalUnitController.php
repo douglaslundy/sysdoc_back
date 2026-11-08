@@ -11,11 +11,12 @@ use Illuminate\Http\Request;
 
 class ProtocolOrganizationalUnitController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         // Árvore completa (todos os níveis): carregar só `children` de 1 nível deixava
         // de fora qualquer unidade cadastrada abaixo do segundo nível.
-        $byParent = ProtocolOrganizationalUnit::query()
+        // ?todas=1: árvore de todas as secretarias (só nomes), para escolher o destino de um protocolo entre secretarias.
+        $byParent = ($request->boolean('todas') ? ProtocolOrganizationalUnit::withoutSecretaria() : ProtocolOrganizationalUnit::query())
             ->orderBy('tipo')
             ->orderBy('nome')
             ->get()

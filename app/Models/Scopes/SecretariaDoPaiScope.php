@@ -3,6 +3,8 @@
 namespace App\Models\Scopes;
 
 use App\Services\Secretarias\ActiveSecretaria;
+use App\Support\ParticipacaoProtocolo;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
@@ -14,7 +16,7 @@ use Illuminate\Support\Facades\DB;
  */
 class SecretariaDoPaiScope implements Scope
 {
-    public function __construct(private string $fk, private string $tabelaPai)
+    public function __construct(private string $fk, private string $tabelaPai, private bool $participacao = false)
     {
     }
 
@@ -32,9 +34,13 @@ class SecretariaDoPaiScope implements Scope
             return;
         }
 
-        $builder->whereIn(
-            $model->qualifyColumn($this->fk),
-            DB::table($this->tabelaPai)->select('id')->where('secretaria_id', $active->id())
-        );
+        $pai = DB::table($this->tabelaPai)->select('id')->where(function ($q) use ($active) {
+            $q->where($this->tabelaPai.'.secretaria_id', $active->id());
+            // Protocolo entre secretarias: o destinatário vê o histórico do protocolo que recebeu.
+            if ($this->participacao && ($uid = Auth::id())) {
+                ParticipacaoProtocolo::aplicar($q, (int) $uid);
+            }
+        });
+        $builder->whereIn($model->qualifyColumn($this->fk), $pai);
     }
 }

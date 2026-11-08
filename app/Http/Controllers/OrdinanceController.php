@@ -43,19 +43,16 @@ class OrdinanceController extends Controller
             // Admin em "Todas" informa a secretaria (sem ela: 422); os demais usam a ativa. Numeração por secretaria.
             $secretariaId = app(ActiveSecretaria::class)->forCreate($data['secretaria_id'] ?? null);
             if (! $secretariaId) {
-                return response()->json(['errors' => 'Escolha a secretaria.', 'message' => 'Escolha a secretaria.'], 422);
+                return response()->json(['message' => 'Escolha a secretaria.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
+            }
+
+            if (! \App\Services\Secretarias\SecretariaMembership::atende((int) $data['user_id'], $secretariaId)) {
+                return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => ['user_id' => ['Usuário não pertence a esta secretaria.']]], 422);
             }
 
             $ordinance = new Ordinance();
             $ordinance->secretaria_id = $secretariaId;
             $ordinance->user_id = $data['user_id'];
-
-            $ordinance->number = (
-                Ordinance::withoutSecretaria()
-                    ->where('secretaria_id', $secretariaId)
-                    ->where('year', $currentYear)
-                    ->max('number')
-            ) + 1;
 
             $ordinance->year = $currentYear;
             $ordinance->type = $data['type'];
@@ -76,7 +73,19 @@ class OrdinanceController extends Controller
                 $ordinance->file_path = $data['file_path'];
             }
 
-            $ordinance->save();
+            // Número no momento de gravar; corrida na unique (secretaria, número, ano) refaz o número (até 5 vezes).
+            for ($tentativa = 1; ; $tentativa++) {
+                $ordinance->number = (Ordinance::withoutSecretaria()
+                    ->where('secretaria_id', $secretariaId)->where('year', $currentYear)->max('number')) + 1;
+                try {
+                    $ordinance->save();
+                    break;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($e->getCode() !== '23000' || $tentativa >= 5) {
+                        throw $e;
+                    }
+                }
+            }
 
             $array['ordinance'] = $ordinance->load('user')->loadCount('attachments');
 

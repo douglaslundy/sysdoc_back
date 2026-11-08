@@ -7,6 +7,7 @@ use App\Http\Requests\RecusarCadastroRequest;
 use App\Models\CadastroSolicitacao;
 use App\Models\Scopes\CadastroProtocoloScope;
 use App\Services\Cadastro\CadastroSolicitacaoService;
+use App\Services\Secretarias\ActiveSecretaria;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -52,6 +53,10 @@ class CadastroSolicitacaoController extends Controller
     {
         $s = CadastroSolicitacao::find($id);
         abort_unless($s && CadastroProtocoloScope::pode($request->user(), $s->secretaria_id), 404, 'Pedido não encontrado.');
+
+        // Segue a secretaria ativa (Ruling 13): gestor com A ativa não abre pedido da B; admin em "Todas" abre todos.
+        $ativa = app(ActiveSecretaria::class);
+        abort_unless($ativa->isAll() || $ativa->id() === (int) $s->secretaria_id, 404, 'Pedido não encontrado.');
 
         return $s;
     }

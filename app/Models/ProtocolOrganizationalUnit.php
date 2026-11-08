@@ -30,7 +30,7 @@ class ProtocolOrganizationalUnit extends Model
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(self::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id')->withoutGlobalScope(\App\Models\Scopes\SecretariaScope::class);
     }
 
     public function children(): HasMany

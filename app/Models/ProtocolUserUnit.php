@@ -36,6 +36,6 @@ class ProtocolUserUnit extends Model
 
     public function unit(): BelongsTo
     {
-        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'protocol_organizational_unit_id');
+        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'protocol_organizational_unit_id')->withoutGlobalScope(\App\Models\Scopes\SecretariaScope::class);
     }
 }

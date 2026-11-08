@@ -30,6 +30,12 @@ class Secretaria extends Model
             ->each(fn (self $s) => $s->pages()->syncWithoutDetaching($ids));
     }
 
+    /** Id da Saúde (cria se faltar): destino explícito de seeders e dados antigos. */
+    public static function saudeId(): int
+    {
+        return static::firstOrCreate(['slug' => self::SAUDE_SLUG], ['nome' => 'Saúde', 'ativa' => true])->id;
+    }
+
     /** Regra de validação do campo secretaria_id (admin em "Todas" escolhe; os demais têm o valor ignorado). */
     public static function regraId(): array
     {

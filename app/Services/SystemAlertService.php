@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ProtocolAlert;
 use App\Models\User;
+use App\Services\Secretarias\SecretariaMembership;
 use App\Support\AfterResponse;
 use Illuminate\Support\Collection;
 
@@ -42,6 +43,13 @@ class SystemAlertService
 
         foreach ($alerts as $alert) {
             $recipients = $this->resolveRecipients((array) $alert->destinatarios, $context);
+            // O alerta carrega título/assunto do registro: só vai a quem atende a secretaria dele.
+            if ($secretariaId = $this->contextSecretariaId($context)) {
+                $protocolo = $context['protocol'] ?? null;
+                // Quem recebeu o protocolo (de outra secretaria) também é avisado: já pode vê-lo.
+                $recipients = $recipients->filter(fn (User $u) => SecretariaMembership::atende((int) $u->id, $secretariaId)
+                    || ($protocolo instanceof \App\Models\Protocol && \App\Support\ParticipacaoProtocolo::participa($protocolo, (int) $u->id)))->values();
+            }
             if ($recipients->isEmpty()) {
                 continue;
             }
@@ -63,6 +71,18 @@ class SystemAlertService
                 }
             }
         }
+    }
+
+    private function contextSecretariaId(array $context): ?int
+    {
+        foreach (['document', 'letter', 'protocol', 'kanban_task', 'ordinance'] as $chave) {
+            $id = $context[$chave]->secretaria_id ?? null;
+            if ($id) {
+                return (int) $id;
+            }
+        }
+
+        return null;
     }
 
     private function resolveRecipients(array $recipientKeys, array $context): Collection

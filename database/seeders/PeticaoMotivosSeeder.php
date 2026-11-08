@@ -65,6 +65,7 @@ class PeticaoMotivosSeeder extends Seeder
         $this->command?->info('Unidade "Vigilância Sanitária" não existia: criada em /protocolo/estrutura.');
 
         return ProtocolOrganizationalUnit::create([
+            'secretaria_id' => \App\Models\Secretaria::saudeId(),
             'parent_id' => $secretaria?->id,
             'tipo' => 'departamento',
             'codigo' => 'VISA',

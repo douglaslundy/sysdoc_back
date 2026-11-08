@@ -157,6 +157,8 @@ class UserController extends Controller
         $user = DB::transaction(function () use ($data, $request, $existing) {
             if ($existing) {
                 $existing->update($data);
+                // Reativação não herda lotações antigas (de qualquer secretaria, sem o escopo do aprovador).
+                \App\Models\ProtocolUserUnit::withoutGlobalScopes()->where('user_id', $existing->id)->update(['ativo' => false]);
                 $user = $existing;
             } else {
                 $user = User::create($data);
@@ -247,8 +249,9 @@ class UserController extends Controller
         $user->protocolUnits()->whereNotIn('protocol_organizational_unit_id', $unitIds)->update(['ativo' => false]);
 
         foreach ($unitIds as $unitId) {
-            $user->protocolUnits()->updateOrCreate(
-                ['protocol_organizational_unit_id' => $unitId],
+            // Sem escopo: lotação existente em outra secretaria seria duplicada (unique user+unidade).
+            \App\Models\ProtocolUserUnit::withoutGlobalScopes()->updateOrCreate(
+                ['user_id' => $user->id, 'protocol_organizational_unit_id' => $unitId],
                 ['papel' => 'lotacao', 'ativo' => true]
             );
         }

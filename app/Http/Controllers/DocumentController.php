@@ -283,7 +283,7 @@ class DocumentController extends Controller
         try {
             $signers = [];
             if ($this->currentConfig()->requiresTripleSignatureFor((string) $document->sigilo)) {
-                $signers = $this->resolveTripleSignatureSigners($request->user()?->id);
+                $signers = $this->resolveTripleSignatureSigners($request->user()?->id, (int) $document->secretaria_id);
             }
         } catch (ValidationException $e) {
             return response()->json([
@@ -610,7 +610,7 @@ class DocumentController extends Controller
             || app(PagePermissionService::class)->canAccess($user, '/documentos/aprovacoes');
     }
 
-    private function resolveTripleSignatureSigners(?int $requesterId = null): array
+    private function resolveTripleSignatureSigners(?int $requesterId = null, ?int $secretariaId = null): array
     {
         $signers = $this->currentConfig()->signerUserIds();
         if (count($signers) !== 3) {
@@ -624,6 +624,15 @@ class DocumentController extends Controller
             throw ValidationException::withMessages([
                 'triple_signature' => 'A configuração da tripla assinatura possui usuários inválidos.',
             ]);
+        }
+
+        // Todos os 3 precisam atender a secretaria do documento: senão a solicitação ficaria sem quem assine.
+        foreach ($signers as $signerId) {
+            if ($secretariaId && ! \App\Services\Secretarias\SecretariaMembership::atende((int) $signerId, $secretariaId)) {
+                throw ValidationException::withMessages([
+                    'triple_signature' => 'Há responsáveis da tripla assinatura que não pertencem à secretaria deste documento.',
+                ]);
+            }
         }
 
         if ($requesterId && in_array((int) $requesterId, array_map('intval', $signers), true)) {

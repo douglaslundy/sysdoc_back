@@ -14,6 +14,12 @@ class ProtocolKanbanService
             return null;
         }
 
+        // Participante de outra secretaria não cria nem mexe no card da secretaria de origem.
+        $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
+        if ($protocol->secretaria_id && ! $ativa->isAll() && $ativa->inRequest() && (int) $protocol->secretaria_id !== (int) $ativa->id()) {
+            return null;
+        }
+
         $enabled = (bool) ($kanbanData['ativar'] ?? $kanbanData['enabled'] ?? false);
         $taskId = $kanbanData['id'] ?? null;
 
@@ -25,6 +31,10 @@ class ProtocolKanbanService
 
         if ($taskId) {
             $task = KanbanTask::query()->find($taskId);
+            // Admin em "Todas" enxerga cards de qualquer secretaria: nunca reaproveita o de outra.
+            if ($task && (int) $task->secretaria_id !== (int) $protocol->secretaria_id) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['kanban.id' => 'Card de outra secretaria.']);
+            }
         }
 
         if (! $task) {

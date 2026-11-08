@@ -140,7 +140,8 @@ class CadastroSolicitacaoService
                 $existente->forceFill($dados + [
                     'is_driver' => false, 'is_rt_psf' => false, 'rt_all_teams' => false, 'chat_access_override' => null,
                 ])->save();
-                $existente->protocolUnits()->update(['ativo' => false]);
+                // Todas as lotações, de qualquer secretaria (a relação escopada só alcançaria a ativa do aprovador).
+                \App\Models\ProtocolUserUnit::withoutGlobalScopes()->where('user_id', $existente->id)->update(['ativo' => false]);
                 $existente->tokens()->delete();
                 // Permissões clínicas e equipes APS da conta antiga não valem para o novo pedido.
                 DB::table('user_speciality_permissions')->where('user_id', $existente->id)->delete();
