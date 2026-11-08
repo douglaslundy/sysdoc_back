@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserPresence;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
+use App\Models\UserPresence;
 use App\Services\Secretarias\GestorAlert;
 use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -42,6 +42,16 @@ class UserController extends Controller
     private function actorSecretariaIds(User $actor): array
     {
         return $actor->secretarias()->pluck('secretarias.id')->all();
+    }
+
+    /** Só id e nome; gestor vê apenas as secretarias que também são dele. Exige `secretarias` carregada. */
+    private function secretariasPayload(User $actor, User $user, ?array $actorIds): array
+    {
+        return $user->secretarias
+            ->when($actor->profile !== 'admin', fn ($c) => $c->whereIn('id', $actorIds))
+            ->map(fn ($s) => ['id' => $s->id, 'nome' => $s->nome])
+            ->values()
+            ->all();
     }
 
     private function authorizeTarget(Request $request, User $user): void
@@ -76,7 +86,9 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $users = $this->scopedTo($request->user())->with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')
+        $actor = $request->user();
+        $actorIds = $actor->profile === 'admin' ? null : $this->actorSecretariaIds($actor);
+        $users = $this->scopedTo($actor)->with(['protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo', 'secretarias:secretarias.id,secretarias.nome'])
             ->where('active', true)
             ->orderBy('id', 'desc')
             ->get();
@@ -84,7 +96,7 @@ class UserController extends Controller
         // Um mapa perfil => chat_enabled em vez de uma consulta por usuario (canUseChat()).
         $chatEnabledByProfile = \App\Models\AccessProfile::query()->pluck('chat_enabled', 'slug');
 
-        return $users->map(function (User $user) use ($presences, $chatEnabledByProfile) {
+        return $users->map(function (User $user) use ($presences, $chatEnabledByProfile, $actor, $actorIds) {
             $presence = $presences->get($user->id);
             $lastSeenAt = $presence?->last_seen_at;
             $isOnline = $lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subMinutes(5));
@@ -95,6 +107,7 @@ class UserController extends Controller
                 'last_seen_at' => $lastSeenAt?->toDateTimeString(),
                 'last_path' => $presence?->last_path,
                 'can_chat' => $user->canUseChatWith($chatEnabledByProfile),
+                'secretarias' => $this->secretariasPayload($actor, $user, $actorIds),
                 'protocol_unit_ids' => $user->protocolUnits
                     ->where('ativo', true)
                     ->pluck('protocol_organizational_unit_id')
@@ -157,7 +170,7 @@ class UserController extends Controller
             return $user;
         });
         $this->alertIfGestorAssigned($request, $user, null);
-        $array['user'] = $this->userPayload($user);
+        $array['user'] = $this->userPayload($user, $request->user());
 
         return $array;
     }
@@ -171,7 +184,8 @@ class UserController extends Controller
     public function show(Request $request, $id)
     {
         $user = $this->scopedTo($request->user())->with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')->find($id);
-        return $user ? $this->userPayload($user) : ['error' => '404'];
+
+        return $user ? $this->userPayload($user, $request->user()) : ['error' => '404'];
     }
 
     /**
@@ -203,7 +217,7 @@ class UserController extends Controller
             }
         });
         $this->alertIfGestorAssigned($request, $user, $previousProfile);
-        $array['user'] = $this->userPayload($user->fresh());
+        $array['user'] = $this->userPayload($user->fresh(), $request->user());
 
         return $array;
     }
@@ -240,13 +254,14 @@ class UserController extends Controller
         }
     }
 
-    private function userPayload(User $user): array
+    private function userPayload(User $user, User $actor): array
     {
-        $user->loadMissing('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo');
+        $user->loadMissing(['protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo', 'secretarias:secretarias.id,secretarias.nome']);
 
         return [
             ...$user->toArray(),
             'can_chat' => $user->canUseChat(),
+            'secretarias' => $this->secretariasPayload($actor, $user, $actor->profile === 'admin' ? null : $this->actorSecretariaIds($actor)),
             'protocol_unit_ids' => $user->protocolUnits
                 ->where('ativo', true)
                 ->pluck('protocol_organizational_unit_id')
