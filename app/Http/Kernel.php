@@ -95,6 +95,7 @@ class Kernel extends HttpKernel
         'almoxarifado.permission' => \App\Http\Middleware\EnsureAlmoxarifadoPermission::class,
         'page.permission' => \App\Http\Middleware\EnsurePagePermission::class,
         'secretaria.active' => \App\Http\Middleware\ResolveActiveSecretaria::class,
+        'secretaria.only' => \App\Http\Middleware\OnlySecretaria::class,
         'route.pages' => \App\Http\Middleware\EnforceRoutePagePolicy::class,
     ];
 }

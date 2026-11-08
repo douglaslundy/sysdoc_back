@@ -176,7 +176,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     // Monitor APS — indicadores Portaria GM/MS 6.907/2025
     // audit.read removido: auditoria granular feita no frontend (1 VIEW por page load, 1 READ por filtro aplicado)
     // throttle 180/min: cada página dispara 4-7 consultas por troca de filtro (com retry no front)
-    Route::prefix('monitor-aps')->middleware(['throttle:180,1', 'equipe.aps'])->group(function () {
+    Route::prefix('monitor-aps')->middleware(['secretaria.only:saude', 'throttle:180,1', 'equipe.aps'])->group(function () {
         Route::get('/minhas-equipes', [MonitorApsController::class, 'minhasEquipes']);
         Route::prefix('indicadores')->group(function () {
             Route::get('/resumo', [MonitorApsController::class, 'resumo']);
@@ -215,7 +215,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     });
 
     // Painel de atendimento eSUS PEC — gestão de fila (autenticado)
-    Route::prefix('painel-esus')->group(function () {
+    Route::prefix('painel-esus')->middleware('secretaria.only:saude')->group(function () {
         Route::get('/fila', [PainelEsusController::class, 'fila'])->middleware('equipe.aps');
         Route::get('/filtros', [PainelEsusController::class, 'filtros'])->middleware('equipe.aps');
         Route::get('/unidades', [PainelEsusController::class, 'unidades'])->middleware('equipe.aps');
