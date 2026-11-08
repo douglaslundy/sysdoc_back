@@ -31,14 +31,22 @@ class ClientHistoryController extends Controller
         $filas = DB::table('queue')->select('id')->where('secretaria_id', $sid);
         $viagens = DB::table('trips')->select('id')->where('secretaria_id', $sid);
         $planos = DB::table('queue_treatment_plans')->select('id')->whereIn('queue_id', $filas);
+        $pedidos = DB::table('pedidos_exame')->select('id')->where('secretaria_id', $sid);
+        $senhas = DB::table('attendance_tickets')->select('id')->where('secretaria_id', $sid);
         $donos = [
+            // pedido/resultado de exame: dado clínico, nunca fora da secretaria do pedido
+            'PedidoExame' => $pedidos,
+            'PedidoExameItem' => DB::table((new \App\Models\PedidoExameItem())->getTable())->select('id')->whereIn('pedido_exame_id', $pedidos),
+            'ResultadoExame' => DB::table((new \App\Models\ResultadoExame())->getTable())->select('id')->whereIn('pedido_exame_id', $pedidos),
+            'AttendanceCall' => DB::table((new \App\Models\AttendanceCall())->getTable())->select('id')->whereIn('attendance_ticket_id', $senhas),
+            'AttendanceRecord' => DB::table((new \App\Models\AttendanceRecord())->getTable())->select('id')->whereIn('attendance_ticket_id', $senhas),
             'Queue' => $filas,
             'QueueAttachment' => DB::table('queue_attachments')->select('id')->whereIn('queue_id', $filas),
             'QueueTreatmentPlan' => $planos,
             'QueueTreatmentSession' => DB::table('queue_treatment_sessions')->select('id')->whereIn('treatment_plan_id', $planos),
             'Trip' => $viagens,
             'TripClient' => DB::table('trip_clients')->select('id')->whereIn('trip_id', $viagens),
-            'AttendanceTicket' => DB::table('attendance_tickets')->select('id')->where('secretaria_id', $sid),
+            'AttendanceTicket' => $senhas,
         ];
         $q->whereNull('model_type')->orWhereNotIn('model_type', array_keys($donos));
         foreach ($donos as $tipo => $ids) {
