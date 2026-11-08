@@ -93,7 +93,8 @@ class CadastroSolicitacaoService
     }
 
     /**
-     * Aprova o pedido: cria a conta (ou reativa a inativa do mesmo CPF) com o perfil e as secretarias escolhidos.
+     * Aprova o pedido: cria a conta com o perfil e as secretarias escolhidos. CPF de conta inativa: a antiga
+     * fica como histórico (CPF/e-mail liberados) e a conta nova nasce sem nenhum vínculo dela.
      * Tudo em uma transação com trava no pedido. A secretaria do pedido passa a ser a primeira de $secretariaIds
      * (protocolo e card acompanham, para os gestores certos enxergarem o registro encerrado).
      *
@@ -113,9 +114,7 @@ class CadastroSolicitacaoService
             }
             $existente = $contas->first();
 
-            $emailEmUso = User::where('email', $s->email)
-                ->when($existente, fn ($q) => $q->where('id', '<>', $existente->id))
-                ->exists();
+            $emailEmUso = User::where('email', $s->email)->whereNotIn('id', $contas->pluck('id'))->exists();
             if ($emailEmUso) {
                 throw ValidationException::withMessages(['email' => 'Já existe um usuário cadastrado com este e-mail.']);
             }
@@ -127,30 +126,28 @@ class CadastroSolicitacaoService
                 'active' => true, 'inactive_date' => null,
             ];
 
-            if ($existente) {
+            foreach ($contas as $antiga) {
                 if ($por->profile === 'gestor') {
                     // Mesma trava de UserRequest::reactivatableUser (Task 5).
-                    $vinculos = $existente->secretarias()->pluck('secretarias.id');
+                    $vinculos = $antiga->secretarias()->pluck('secretarias.id');
                     $divide = $vinculos->intersect($por->secretarias()->pluck('secretarias.id'))->isNotEmpty();
-                    if ($existente->profile === 'admin' || ($vinculos->isNotEmpty() && ! $divide)) {
+                    if ($antiga->profile === 'admin' || ($vinculos->isNotEmpty() && ! $divide)) {
                         abort(403, 'Esta conta só pode ser reativada por um administrador.');
                     }
                 }
-                // Reativação não herda nada da conta antiga além do registro.
-                $existente->forceFill($dados + [
-                    'is_driver' => false, 'is_rt_psf' => false, 'rt_all_teams' => false, 'chat_access_override' => null,
+                // A conta nova não herda nada da antiga: protocolos, chat, filas, cards e atendimentos ficam
+                // no registro antigo (inativo, histórico preservado). O CPF e o e-mail dele são liberados
+                // (os originais ficam no audit_logs pelo UserObserver) para a conta nova poder usá-los.
+                $antiga->forceFill([
+                    'cpf' => 'substituido-'.$antiga->id,
+                    'email' => 'substituido-'.$antiga->id.'@conta-substituida.invalid',
                 ])->save();
                 // Todas as lotações, de qualquer secretaria (a relação escopada só alcançaria a ativa do aprovador).
-                \App\Models\ProtocolUserUnit::withoutGlobalScopes()->where('user_id', $existente->id)->update(['ativo' => false]);
-                $existente->tokens()->delete();
-                // Permissões clínicas e equipes APS da conta antiga não valem para o novo pedido.
-                DB::table('user_speciality_permissions')->where('user_id', $existente->id)->delete();
-                DB::table('user_equipe_aps')->where('user_id', $existente->id)->delete();
-                $user = $existente;
-            } else {
-                $user = new User();
-                $user->forceFill($dados + ['cpf' => $s->cpf])->save();
+                \App\Models\ProtocolUserUnit::withoutGlobalScopes()->where('user_id', $antiga->id)->update(['ativo' => false]);
+                $antiga->tokens()->delete();
             }
+            $user = new User();
+            $user->forceFill($dados + ['cpf' => $s->cpf])->save();
 
             // Substitui TODOS os vínculos (inclusive os de fora do alcance do gestor): sem herdar acesso de outra secretaria.
             $user->secretarias()->sync($ids);
@@ -163,7 +160,7 @@ class CadastroSolicitacaoService
             ])->save();
             AuditService::record('CADASTRO_APROVADO', null, null, [
                 'solicitacao_id' => $s->id, 'user_id' => $user->id, 'perfil' => $perfilSlug,
-                'secretaria_ids' => $ids, 'reativado' => (bool) $existente,
+                'secretaria_ids' => $ids, 'reativado' => (bool) $existente, 'conta_anterior_id' => $existente?->id,
             ], $por);
 
             return $user;
