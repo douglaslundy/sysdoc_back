@@ -17,6 +17,19 @@ class ProtocolMovement extends Model
     {
         static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('protocol_id', 'protocols', true));
         static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope('protocol_id'));
+
+        // Marca o destinatário que NÃO era da secretaria do protocolo: só ele ganha participação (ParticipacaoProtocolo).
+        static::creating(function (self $m) {
+            if (! $m->to_user_id) {
+                return;
+            }
+            $membro = \Illuminate\Support\Facades\DB::table('protocols')->where('id', $m->protocol_id)
+                ->whereIn('secretaria_id', \Illuminate\Support\Facades\DB::table('user_secretarias')->select('secretaria_id')->where('user_id', $m->to_user_id))
+                ->exists();
+            if (! $membro) {
+                $m->dados = array_merge($m->dados ?? [], ['destinatario_externo' => true]);
+            }
+        });
     }
 
     protected $fillable = [

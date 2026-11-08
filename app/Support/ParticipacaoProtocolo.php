@@ -6,7 +6,7 @@ use App\Models\Protocol;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Protocolo entre secretarias: quem recebe (usuário destino, membro da unidade destino) ou já tramitou
+ * Protocolo entre secretarias: quem recebe (usuário destino, membro da unidade destino) ou já recebeu encaminhamento
  * enxerga SÓ esse protocolo, mesmo sendo de outra secretaria. Nada além dele é aberto.
  */
 class ParticipacaoProtocolo
@@ -28,7 +28,10 @@ class ParticipacaoProtocolo
                 )
                 ->orWhereExists(fn ($s) => $s->select(DB::raw(1))->from('protocol_movements as pm')
                     ->whereColumn('pm.protocol_id', 'protocols.id')
-                    ->where(fn ($m) => $m->where('pm.to_user_id', $userId)->orWhere('pm.from_user_id', $userId)->orWhere('pm.user_id', $userId)))));
+                    // Só quem recebeu de fora da secretaria (marca gravada em ProtocolMovement); criar/comentar ou ser
+                    // destinatário dentro da secretaria do protocolo (ex-membro) não conta.
+                    ->where('pm.dados->destinatario_externo', true)
+                    ->where('pm.to_user_id', $userId))));
     }
 
     /** Decisão pontual para um protocolo já carregado (usada nos alertas). */

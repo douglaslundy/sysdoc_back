@@ -919,9 +919,7 @@ class ProtocolController extends Controller
             return false;
         }
 
-        return ProtocolMovement::query()->where('protocol_id', $protocol->id)
-            ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('to_user_id', $user->id)->orWhere('from_user_id', $user->id))
-            ->exists();
+        return \App\Support\ParticipacaoProtocolo::participa($protocol, (int) $user->id);
     }
 
     private function canAccess(Protocol $protocol, ?User $user): bool
