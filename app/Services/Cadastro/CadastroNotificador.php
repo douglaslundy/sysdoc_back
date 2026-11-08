@@ -16,68 +16,74 @@ use Throwable;
  */
 class CadastroNotificador
 {
-    public function pedidoRecebido(CadastroSolicitacao $s): void
+    /**
+     * Confirmação ao solicitante: texto fixo e idêntico em todos os ramos da resposta pública
+     * (criado, pendente, conta existente), sem nome nem protocolo: não revela se o CPF já existe.
+     */
+    public function confirmarRecebimento(string $email, ?string $phone): void
     {
-        $texto = $this->texto('recebido', ['nome' => $s->nome, 'protocolo' => $this->numero($s)]);
-        $this->avisarSolicitante($s, 'Recebemos seu pedido de cadastro', $texto, 'cadastro_recebido');
+        $this->seguro(function () use ($email, $phone) {
+            $texto = $this->texto('recebido', []);
+            $meta = ['origem' => 'cadastro_recebido'];
+            $numero = (new User())->forceFill(['phone' => $phone])->whatsappPhoneNumber();
+            if ($numero) {
+                $this->seguro(fn () => app(WhatsappEvolutionService::class)->sendTextToNumber($numero, $texto, $meta));
+            }
+            if (trim($email) !== '') {
+                $this->seguro(fn () => app(ConfiguredEmailService::class)->sendText($email, 'Recebemos sua solicitação de cadastro', $texto, null, null, $meta));
+            }
+        });
     }
 
     /** Admins ativos + gestores ativos da secretaria do pedido. Sem CPF nem observação no texto. */
     public function novoPedido(CadastroSolicitacao $s): void
     {
-        $texto = $this->texto('novo-pedido', [
-            'nome' => $s->nome, 'cargo' => $s->cargo, 'protocolo' => $this->numero($s),
-            'secretaria' => $s->secretaria?->nome ?? '—',
-        ]);
-        try {
+        $this->seguro(function () use ($s) {
+            $texto = $this->texto('novo-pedido', [
+                'nome' => $s->nome, 'cargo' => $s->cargo, 'protocolo' => $this->numero($s),
+                'secretaria' => $s->secretaria?->nome ?? '—',
+            ]);
             $destinos = User::where('active', true)->where(function ($q) use ($s) {
                 $q->where('profile', 'admin')->orWhere(fn ($g) => $g->where('profile', 'gestor')
                     ->whereHas('secretarias', fn ($x) => $x->where('secretarias.id', $s->secretaria_id)));
             })->get();
-        } catch (Throwable $e) {
-            report($e);
-
-            return;
-        }
-        $this->avisarUsuarios($destinos, 'Novo pedido de cadastro', $texto, 'cadastro_novo_pedido');
+            $this->avisarUsuarios($destinos, 'Novo pedido de cadastro', $texto, 'cadastro_novo_pedido');
+        });
     }
 
     public function aprovado(CadastroSolicitacao $s, User $user): void
     {
-        $texto = $this->texto('aprovado', ['nome' => $s->nome]);
-        $this->avisarSolicitante($s, 'Seu cadastro foi aprovado', $texto, 'cadastro_aprovado');
+        $this->seguro(fn () => $this->avisarSolicitante($s, 'Seu cadastro foi aprovado', $this->texto('aprovado', []), 'cadastro_aprovado'));
     }
 
     public function recusado(CadastroSolicitacao $s): void
     {
-        $texto = $this->texto('recusado', ['nome' => $s->nome, 'motivo' => (string) $s->motivo_recusa]);
-        $this->avisarSolicitante($s, 'Seu pedido de cadastro não foi aprovado', $texto, 'cadastro_recusado');
+        $this->seguro(fn () => $this->avisarSolicitante(
+            $s, 'Seu pedido de cadastro não foi aprovado', $this->texto('recusado', ['motivo' => (string) $s->motivo_recusa]), 'cadastro_recusado'
+        ));
     }
 
     /** Tentativa pública com CPF/e-mail de conta existente (flag cadastro.alertar_tentativa_conta_ativa). Roda depois da resposta. */
     public function tentativaContaExistente(User $existente): void
     {
-        if (! config('cadastro.alertar_tentativa_conta_ativa')) {
-            return;
-        }
-        app()->terminating(function () use ($existente) {
-            // Um aviso por hora por conta existente.
-            if (! Cache::add('cadastro-alerta:'.$existente->id, 1, 3600)) {
+        $this->seguro(function () use ($existente) {
+            if (! config('cadastro.alertar_tentativa_conta_ativa')) {
                 return;
             }
-            try {
-                $admins = User::where('profile', 'admin')->where('active', true)->get();
-            } catch (Throwable $e) {
-                report($e);
-
-                return;
-            }
-            $this->avisarUsuarios(
-                $admins,
-                'Tentativa de cadastro com conta existente',
-                "Um pedido público de cadastro usou CPF ou e-mail de uma conta existente (usuário #{$existente->id}). Nenhum pedido foi criado.",
-                'cadastro_publico_conta_existente'
-            );
+            app()->terminating(function () use ($existente) {
+                $this->seguro(function () use ($existente) {
+                    // Um aviso por hora por conta existente.
+                    if (! Cache::add('cadastro-alerta:'.$existente->id, 1, 3600)) {
+                        return;
+                    }
+                    $this->avisarUsuarios(
+                        User::where('profile', 'admin')->where('active', true)->get(),
+                        'Tentativa de cadastro com conta existente',
+                        "Um pedido público de cadastro usou CPF ou e-mail de uma conta existente (usuário #{$existente->id}). Nenhum pedido foi criado.",
+                        'cadastro_publico_conta_existente'
+                    );
+                });
+            });
         });
     }
 
@@ -112,7 +118,7 @@ class CadastroNotificador
     private function avisarUsuarios(iterable $usuarios, string $assunto, string $texto, string $origem): void
     {
         $meta = ['origem' => $origem];
-        foreach ($usuarios as $u) {
+        foreach (collect($usuarios)->unique('id') as $u) {
             // Os serviços já registram "sem telefone/e-mail" no MessageLogger.
             $this->seguro(fn () => app(WhatsappEvolutionService::class)->sendTextToUser($u, $texto, $meta));
             $this->seguro(fn () => app(ConfiguredEmailService::class)->sendTextToUser($u, $assunto, $texto, $meta));

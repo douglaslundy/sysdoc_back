@@ -31,15 +31,24 @@ class CadastroSolicitacaoService
         $digitos = Cpf::digits((string) $dados['cpf']);
         $email = (string) $dados['email'];
 
+        $pedido = null;
         try {
             // Trava por CPF: duas requisições simultâneas não criam dois pedidos pendentes.
-            Cache::lock('cadastro:cpf:'.$digitos, 10)->block(5, fn () => $this->criarSeCabivel($dados, $digitos, $email, $hash));
+            $pedido = Cache::lock('cadastro:cpf:'.$digitos, 10)->block(5, fn () => $this->criarSeCabivel($dados, $digitos, $email, $hash));
         } catch (LockTimeoutException) {
             // Trava ocupada: responde igual, sem criar (o outro pedido em andamento vale).
         }
+
+        // Depois da resposta: a confirmação ao solicitante sai nos 3 ramos (criado, pendente, conta existente), idêntica.
+        app()->terminating(function () use ($pedido, $email, $dados) {
+            app(CadastroNotificador::class)->confirmarRecebimento($email, $dados['phone'] ?? null);
+            if ($pedido) {
+                app(CadastroNotificador::class)->novoPedido($pedido);
+            }
+        });
     }
 
-    private function criarSeCabivel(array $dados, string $digitos, string $email, string $hash): void
+    private function criarSeCabivel(array $dados, string $digitos, string $email, string $hash): ?CadastroSolicitacao
     {
         $porCpf = User::whereCpfIgual($digitos)->first();
         $porEmail = User::where('email', $email)->first();
@@ -53,10 +62,10 @@ class CadastroSolicitacaoService
         if ($bloqueado) {
             app(CadastroNotificador::class)->tentativaContaExistente($porCpf ?? $porEmail);
 
-            return;
+            return null;
         }
         if ($pendente) {
-            return;
+            return null;
         }
 
         // Pedido + protocolo + card juntos: se algo falhar, nada fica pela metade (a resposta pública não muda em caso de sucesso).
@@ -77,11 +86,7 @@ class CadastroSolicitacaoService
             return $pedido;
         });
 
-        // Depois da resposta (e da transação): sem diferença de tempo entre os ramos da resposta pública.
-        app()->terminating(function () use ($pedido) {
-            app(CadastroNotificador::class)->pedidoRecebido($pedido);
-            app(CadastroNotificador::class)->novoPedido($pedido);
-        });
+        return $pedido;
     }
 
     /**
@@ -185,14 +190,22 @@ class CadastroSolicitacaoService
     /** Roda depois do commit; nunca lança. */
     protected function notificarAprovado(CadastroSolicitacao $s, User $user): void
     {
-        app(CadastroNotificador::class)->aprovado($s, $user);
+        try {
+            app(CadastroNotificador::class)->aprovado($s, $user);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /** Roda depois do commit; nunca lança. */
     protected function notificarRecusado(CadastroSolicitacao $s, string $motivo): void
     {
-        $s->motivo_recusa = $motivo;
-        app(CadastroNotificador::class)->recusado($s);
+        try {
+            $s->motivo_recusa = $motivo;
+            app(CadastroNotificador::class)->recusado($s);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /** Relê o pedido com trava; só um pendente, e só para quem pode abrir o pedido (404 se não). */
