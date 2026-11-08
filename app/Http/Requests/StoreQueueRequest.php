@@ -32,7 +32,7 @@ class StoreQueueRequest extends BaseApiFormRequest
             'secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo(),
             'id_client' => ['required', 'exists:clients,id'],
             'id_specialities' => ['required', 'integer', \App\Support\EscopoAlmoxarifado::existe('specialities', $sid)],
-            'id_user' => ['required', 'exists:users,id'],
+            'id_user' => ['required', \App\Services\Secretarias\SecretariaMembership::regraUsuario($sid)],
             'done' => ['boolean'],
             'date_of_realized' => ['nullable', 'date'],
             'urgency' => ['required', 'boolean'],

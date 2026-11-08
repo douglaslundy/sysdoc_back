@@ -21,6 +21,17 @@ class SecretariaMembership
             || DB::table('user_secretarias')->where('user_id', $userId)->where('secretaria_id', $secretariaId)->exists());
     }
 
+    /** Regra exists de usuário que atende a secretaria (ativo; admin sempre entra). Sem secretaria (0): ninguém. */
+    public static function regraUsuario(int $secretariaId): \Illuminate\Validation\Rules\Exists
+    {
+        return \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($q) use ($secretariaId) {
+            $q->where('active', true);
+            $secretariaId > 0
+                ? $q->where(fn ($w) => $w->where('profile', 'admin')->orWhereIn('id', DB::table('user_secretarias')->select('user_id')->where('secretaria_id', $secretariaId)))
+                : $q->whereRaw('1=0');
+        });
+    }
+
     /** Filtra uma consulta de usuários para os que atendem a secretaria (admin sempre entra). */
     public static function filtrar($query, int $secretariaId)
     {

@@ -30,13 +30,13 @@ class TripRequest extends FormRequest
 
         return [
             'secretaria_id' => $trip instanceof \App\Models\Trip ? ['nullable'] : \App\Support\EscopoAlmoxarifado::regraCampo(),
-            'user_id' => 'nullable|exists:users,id',
+            'user_id' => ['nullable', \App\Services\Secretarias\SecretariaMembership::regraUsuario($sid)],
             'vehicle_id' => ['nullable', \App\Support\EscopoAlmoxarifado::existe('vehicles', $sid)],
             'route_id' => ['required', \App\Support\EscopoAlmoxarifado::existe('routes', $sid)],
             'departure_time' => 'nullable',
             'departure_date' => 'required|date',
             'obs' => 'nullable|string|max:300',
-            'driver_id' => 'nullable|exists:users,id',
+            'driver_id' => ['nullable', \App\Services\Secretarias\SecretariaMembership::regraUsuario($sid)],
         ];
     }
 

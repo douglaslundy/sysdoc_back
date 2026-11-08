@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\AuditService;
 use Carbon\Carbon;
 use DomainException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -43,6 +44,7 @@ class AttendanceQueueService
             $ticket = AttendanceTicket::query()
                 ->where('status', AttendanceTicket::STATUS_AGUARDANDO)
                 ->where('room_id', $room->id)
+                ->where('secretaria_id', $room->secretaria_id)
                 ->orderBy('issued_at')
                 ->orderBy('id')
                 ->lockForUpdate()
@@ -63,6 +65,10 @@ class AttendanceQueueService
             $room = AttendanceRoom::query()->where('active', true)->findOrFail($roomId);
 
             $ticket = AttendanceTicket::query()->lockForUpdate()->findOrFail($ticketId);
+            // Nunca chama senha de uma secretaria numa sala de outra.
+            if ((int) $ticket->secretaria_id !== (int) $room->secretaria_id) {
+                throw new ModelNotFoundException();
+            }
             $this->statusService->assertCanCall($ticket->status);
             if ((int) $ticket->room_id !== $room->id) {
                 throw new DomainException('Senha não pertence à sala selecionada.');

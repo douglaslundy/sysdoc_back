@@ -38,7 +38,8 @@ class AttendanceController extends Controller
             (int) $validated['clientId'],
             auth()->id(),
             $validated['prefix'] ?? 'A',
-            isset($validated['roomId']) ? (int) $validated['roomId'] : null
+            isset($validated['roomId']) ? (int) $validated['roomId'] : null,
+            isset($validated['secretaria_id']) ? (int) $validated['secretaria_id'] : null
         );
 
         return response()->json($ticket, 201);

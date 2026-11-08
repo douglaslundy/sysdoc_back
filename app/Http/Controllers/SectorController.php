@@ -22,6 +22,9 @@ class SectorController extends Controller
     {
         $array = ['errors' => ''];
 
+        // Admin em "Todas" informa a secretaria (existente e ativa); id inválido é 422, nunca 500.
+        Validator::make($request->all(), ['secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo()])->validate();
+
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             //'arquivo' => 'required|mimes:jpg, png, pdf
