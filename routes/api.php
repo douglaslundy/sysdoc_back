@@ -716,7 +716,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     });
 
     // Conformidade de Cidadãos — sync Sysdoc x e-SUS PEC
-    Route::prefix('conformidade-cidadao')->group(function () {
+    Route::prefix('conformidade-cidadao')->middleware('secretaria.only:saude')->group(function () {
         Route::post('analisar', [ConformidadeCidadaoController::class, 'analisar']);
         Route::get('status/{job_id}', [ConformidadeCidadaoController::class, 'status']);
         Route::post('aplicar/{job_id}', [ConformidadeCidadaoController::class, 'aplicar']);
