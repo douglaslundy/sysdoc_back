@@ -12,15 +12,12 @@ use App\Models\Secretaria;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Secretarias\GestorAlert;
-use App\Services\ConfiguredEmailService;
-use App\Services\WhatsappEvolutionService;
 use App\Support\Cpf;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Throwable;
 
 class CadastroSolicitacaoService
 {
@@ -54,16 +51,7 @@ class CadastroSolicitacaoService
         $bloqueado = ($porCpf && $porCpf->active) || ($porEmail && (! $porCpf || $porEmail->id !== $porCpf->id));
 
         if ($bloqueado) {
-            if (config('cadastro.alertar_tentativa_conta_ativa')) {
-                // Depois da resposta (FPM), para o envio do alerta não virar diferença de tempo.
-                $existente = $porCpf ?? $porEmail;
-                app()->terminating(function () use ($existente) {
-                    // Um aviso por hora por conta existente.
-                    if (Cache::add('cadastro-alerta:'.$existente->id, 1, 3600)) {
-                        $this->alertarAdmins($existente);
-                    }
-                });
-            }
+            app(CadastroNotificador::class)->tentativaContaExistente($porCpf ?? $porEmail);
 
             return;
         }
@@ -72,7 +60,7 @@ class CadastroSolicitacaoService
         }
 
         // Pedido + protocolo + card juntos: se algo falhar, nada fica pela metade (a resposta pública não muda em caso de sucesso).
-        DB::transaction(function () use ($dados, $digitos, $email, $hash) {
+        $pedido = DB::transaction(function () use ($dados, $digitos, $email, $hash) {
             $pedido = CadastroSolicitacao::create([
                 'nome' => $dados['name'],
                 'preferred_name' => $dados['preferred_name'] ?? null,
@@ -85,6 +73,14 @@ class CadastroSolicitacaoService
                 'observacao' => $dados['observacao'] ?? null,
             ]);
             app(CadastroProtocoloService::class)->abrir($pedido);
+
+            return $pedido;
+        });
+
+        // Depois da resposta (e da transação): sem diferença de tempo entre os ramos da resposta pública.
+        app()->terminating(function () use ($pedido) {
+            app(CadastroNotificador::class)->pedidoRecebido($pedido);
+            app(CadastroNotificador::class)->novoPedido($pedido);
         });
     }
 
@@ -186,14 +182,17 @@ class CadastroSolicitacaoService
         $this->notificarRecusado($s, $motivo);
     }
 
-    /** Seam da Task 11 (aviso ao solicitante). Roda depois do commit. */
+    /** Roda depois do commit; nunca lança. */
     protected function notificarAprovado(CadastroSolicitacao $s, User $user): void
     {
+        app(CadastroNotificador::class)->aprovado($s, $user);
     }
 
-    /** Seam da Task 11 (aviso ao solicitante). Roda depois do commit. */
+    /** Roda depois do commit; nunca lança. */
     protected function notificarRecusado(CadastroSolicitacao $s, string $motivo): void
     {
+        $s->motivo_recusa = $motivo;
+        app(CadastroNotificador::class)->recusado($s);
     }
 
     /** Relê o pedido com trava; só um pendente, e só para quem pode abrir o pedido (404 se não). */
@@ -254,34 +253,5 @@ class CadastroSolicitacaoService
             'status' => 'concluido', 'concluido_at' => now(), 'updated_by_id' => $por->id, 'secretaria_id' => $secretariaId,
         ])->save();
         AuditService::record('ENCERRADO', $protocolo, ['status' => $anterior], ['status' => 'encerrado'], $por);
-    }
-
-    /** Nunca lança. Não inclui dados digitados pelo solicitante. */
-    private function alertarAdmins(User $existente): void
-    {
-        $assunto = 'Tentativa de cadastro com conta existente';
-        $mensagem = "Um pedido público de cadastro usou CPF ou e-mail de uma conta existente (usuário #{$existente->id}). Nenhum pedido foi criado.";
-        $meta = ['origem' => 'cadastro_publico_conta_existente'];
-
-        try {
-            $admins = User::where('profile', 'admin')->where('active', true)->get();
-        } catch (Throwable $e) {
-            report($e);
-
-            return;
-        }
-
-        foreach ($admins as $admin) {
-            try {
-                app(WhatsappEvolutionService::class)->sendTextToUser($admin, $mensagem, $meta);
-            } catch (Throwable $e) {
-                report($e);
-            }
-            try {
-                app(ConfiguredEmailService::class)->sendTextToUser($admin, $assunto, $mensagem, $meta);
-            } catch (Throwable $e) {
-                report($e);
-            }
-        }
     }
 }
