@@ -27,6 +27,7 @@ class CadastroSolicitacaoService
      */
     public function registrar(array $dados): void
     {
+        $inicio = hrtime(true);
         $hash = Hash::make((string) $dados['password']);
         $digitos = Cpf::digits((string) $dados['cpf']);
         $email = (string) $dados['email'];
@@ -37,6 +38,12 @@ class CadastroSolicitacaoService
             $resultado = Cache::lock('cadastro:cpf:'.$digitos, 10)->block(5, fn () => $this->criarSeCabivel($dados, $digitos, $email, $hash));
         } catch (LockTimeoutException) {
             // Trava ocupada: responde igual, sem criar (o outro pedido em andamento vale).
+        }
+
+        // Piso de tempo igual para todos os ramos (criar pedido+protocolo+card é mais lento que recusar).
+        $restanteUs = (int) config('cadastro.tempo_minimo_ms', 600) * 1000 - intdiv(hrtime(true) - $inicio, 1000);
+        if ($restanteUs > 0) {
+            usleep($restanteUs);
         }
 
         // Depois da resposta: a confirmação ao solicitante sai nos 3 ramos (criado, pendente, conta existente), idêntica.
