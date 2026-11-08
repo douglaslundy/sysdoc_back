@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreKanbanRequest;
+use App\Models\CadastroSolicitacao;
 use App\Models\KanbanTask;
 use App\Models\Protocol;
 use App\Models\Scopes\CadastroProtocoloScope;
@@ -17,7 +18,7 @@ class KanbanController extends Controller
     {
         $query = KanbanTask::query()
             ->with([
-                'protocol:id,numero,assunto,status', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name',
+                'protocol:id,numero,assunto,status,tipo', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name',
                 'unit:id,nome,tipo', 'fiscalizacao:id,protocolo',
             ])
             ->whereNull('arquivado_at')
@@ -69,7 +70,16 @@ class KanbanController extends Controller
             });
         }
 
-        return response()->json($query->get());
+        $tasks = $query->get();
+
+        // Só cards de cadastro (já filtrados pelo escopo para quem pode vê-los); uma consulta para todos.
+        $protocolos = $tasks->pluck('protocol')->filter(fn ($p) => $p?->tipo === CadastroProtocoloScope::TIPO);
+        if ($protocolos->isNotEmpty()) {
+            $ids = CadastroSolicitacao::whereIn('protocol_id', $protocolos->pluck('id'))->pluck('id', 'protocol_id');
+            $protocolos->each(fn ($p) => $p->setAttribute('solicitacao_id', $ids[$p->id] ?? null));
+        }
+
+        return response()->json($tasks);
     }
 
     public function store(StoreKanbanRequest $request): JsonResponse
