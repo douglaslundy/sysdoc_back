@@ -31,24 +31,29 @@ class CadastroSolicitacaoService
         $digitos = Cpf::digits((string) $dados['cpf']);
         $email = (string) $dados['email'];
 
-        $pedido = null;
+        $resultado = [null, null];
         try {
             // Trava por CPF: duas requisições simultâneas não criam dois pedidos pendentes.
-            $pedido = Cache::lock('cadastro:cpf:'.$digitos, 10)->block(5, fn () => $this->criarSeCabivel($dados, $digitos, $email, $hash));
+            $resultado = Cache::lock('cadastro:cpf:'.$digitos, 10)->block(5, fn () => $this->criarSeCabivel($dados, $digitos, $email, $hash));
         } catch (LockTimeoutException) {
             // Trava ocupada: responde igual, sem criar (o outro pedido em andamento vale).
         }
 
         // Depois da resposta: a confirmação ao solicitante sai nos 3 ramos (criado, pendente, conta existente), idêntica.
-        app()->terminating(function () use ($pedido, $email, $dados) {
-            app(CadastroNotificador::class)->confirmarRecebimento($email, $dados['phone'] ?? null);
+        // Ordem fixa: a confirmação é sempre o primeiro envio; só depois vêm os avisos internos (sem diferença de tempo entre ramos).
+        [$pedido, $existente] = $resultado;
+        app()->terminating(function () use ($pedido, $existente, $email, $dados) {
+            $n = app(CadastroNotificador::class);
+            $n->confirmarRecebimento($email, $dados['phone'] ?? null);
             if ($pedido) {
-                app(CadastroNotificador::class)->novoPedido($pedido);
+                $n->novoPedido($pedido);
+            } elseif ($existente) {
+                $n->tentativaContaExistente($existente);
             }
         });
     }
 
-    private function criarSeCabivel(array $dados, string $digitos, string $email, string $hash): ?CadastroSolicitacao
+    private function criarSeCabivel(array $dados, string $digitos, string $email, string $hash): array
     {
         $porCpf = User::whereCpfIgual($digitos)->first();
         $porEmail = User::where('email', $email)->first();
@@ -60,12 +65,10 @@ class CadastroSolicitacaoService
         $bloqueado = ($porCpf && $porCpf->active) || ($porEmail && (! $porCpf || $porEmail->id !== $porCpf->id));
 
         if ($bloqueado) {
-            app(CadastroNotificador::class)->tentativaContaExistente($porCpf ?? $porEmail);
-
-            return null;
+            return [null, $porCpf ?? $porEmail];
         }
         if ($pendente) {
-            return null;
+            return [null, null];
         }
 
         // Pedido + protocolo + card juntos: se algo falhar, nada fica pela metade (a resposta pública não muda em caso de sucesso).
@@ -86,7 +89,7 @@ class CadastroSolicitacaoService
             return $pedido;
         });
 
-        return $pedido;
+        return [$pedido, null];
     }
 
     /**

@@ -63,27 +63,20 @@ class CadastroNotificador
         ));
     }
 
-    /** Tentativa pública com CPF/e-mail de conta existente (flag cadastro.alertar_tentativa_conta_ativa). Roda depois da resposta. */
+    /** Tentativa pública com CPF/e-mail de conta existente (flag cadastro.alertar_tentativa_conta_ativa). Chamar já no pós-resposta, depois da confirmação. */
     public function tentativaContaExistente(User $existente): void
     {
         $this->seguro(function () use ($existente) {
-            if (! config('cadastro.alertar_tentativa_conta_ativa')) {
+            // Um aviso por hora por conta existente.
+            if (! config('cadastro.alertar_tentativa_conta_ativa') || ! Cache::add('cadastro-alerta:'.$existente->id, 1, 3600)) {
                 return;
             }
-            app()->terminating(function () use ($existente) {
-                $this->seguro(function () use ($existente) {
-                    // Um aviso por hora por conta existente.
-                    if (! Cache::add('cadastro-alerta:'.$existente->id, 1, 3600)) {
-                        return;
-                    }
-                    $this->avisarUsuarios(
-                        User::where('profile', 'admin')->where('active', true)->get(),
-                        'Tentativa de cadastro com conta existente',
-                        "Um pedido público de cadastro usou CPF ou e-mail de uma conta existente (usuário #{$existente->id}). Nenhum pedido foi criado.",
-                        'cadastro_publico_conta_existente'
-                    );
-                });
-            });
+            $this->avisarUsuarios(
+                User::where('profile', 'admin')->where('active', true)->get(),
+                'Tentativa de cadastro com conta existente',
+                "Um pedido público de cadastro usou CPF ou e-mail de uma conta existente (usuário #{$existente->id}). Nenhum pedido foi criado.",
+                'cadastro_publico_conta_existente'
+            );
         });
     }
 

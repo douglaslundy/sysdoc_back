@@ -23,7 +23,8 @@ class CadastroPublicoRequest extends FormRequest
             if (! is_string($v)) {
                 return $v;
             }
-            $v = preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $v) ?? '';
+            $v = preg_replace('/\p{Cf}+/u', '', $v) ?? ''; // formatação invisível (zero-width, bidi)
+            $v = preg_replace('/[\x00-\x1F\x7F\p{Zl}\p{Zp}]+/u', ' ', $v) ?? '';
 
             return trim(preg_replace('/\s+/u', ' ', $v) ?? '');
         };
