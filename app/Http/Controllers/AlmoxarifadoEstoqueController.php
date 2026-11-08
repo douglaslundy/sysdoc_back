@@ -59,7 +59,7 @@ class AlmoxarifadoEstoqueController extends Controller
 
         $resultado = DB::transaction(function () use ($validated, $request) {
             $produto = AlmoxarifadoProduto::findOrFail($validated['almoxarifado_produto_id']);
-            $config = AlmoxarifadoConfig::current();
+            $config = AlmoxarifadoConfig::current((int) $produto->secretaria_id);
             $origemId = $validated['almoxarifado_secretaria_id'] ?? null;
             $destinoId = $validated['secretaria_destino_id'] ?? null;
             $quantidade = (float) $validated['quantidade'];
@@ -70,6 +70,7 @@ class AlmoxarifadoEstoqueController extends Controller
                     'almoxarifado_secretaria_id' => $origemId,
                 ],
                 [
+                    'secretaria_id' => $produto->secretaria_id,
                     'quantidade_disponivel' => 0,
                     'quantidade_reservada' => 0,
                     'quantidade_em_separacao' => 0,
@@ -112,6 +113,7 @@ class AlmoxarifadoEstoqueController extends Controller
                         'almoxarifado_secretaria_id' => $destinoId,
                     ],
                     [
+                        'secretaria_id' => $produto->secretaria_id,
                         'quantidade_disponivel' => 0,
                         'quantidade_reservada' => 0,
                         'quantidade_em_separacao' => 0,
@@ -123,6 +125,7 @@ class AlmoxarifadoEstoqueController extends Controller
             }
 
             $movimentacao = AlmoxarifadoMovimentacao::create([
+                'secretaria_id' => $produto->secretaria_id,
                 'almoxarifado_produto_id' => $produto->id,
                 'almoxarifado_secretaria_origem_id' => $origemId,
                 'almoxarifado_secretaria_destino_id' => $destinoId,

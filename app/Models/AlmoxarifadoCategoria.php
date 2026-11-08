@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class AlmoxarifadoCategoria extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     protected $table = 'almoxarifado_categorias';
 
-    protected $fillable = ['nome', 'observacoes', 'ativo'];
+    protected $fillable = ['secretaria_id', 'nome', 'observacoes', 'ativo'];
 
     protected $casts = ['ativo' => 'boolean'];
 }

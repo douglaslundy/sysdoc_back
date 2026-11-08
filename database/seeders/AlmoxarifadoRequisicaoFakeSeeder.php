@@ -11,8 +11,10 @@ class AlmoxarifadoRequisicaoFakeSeeder extends Seeder
     {
         DB::transaction(function () {
             $now = now();
+            $sec = \App\Models\Secretaria::saudeId();
             $userId = DB::table('users')->where('active', true)->orderBy('id')->value('id');
             $secretarias = DB::table('almoxarifado_secretarias')
+                ->where('secretaria_id', $sec)
                 ->where('ativo', true)
                 ->orderBy('id')
                 ->get();
@@ -36,7 +38,7 @@ class AlmoxarifadoRequisicaoFakeSeeder extends Seeder
             $produtoIds = [];
             foreach ($produtos as $produto) {
                 DB::table('almoxarifado_produtos')->updateOrInsert(
-                    ['codigo_interno' => $produto['codigo']],
+                    ['secretaria_id' => $sec, 'codigo_interno' => $produto['codigo']],
                     [
                         'nome' => $produto['nome'],
                         'descricao' => 'Produto fictício para testes das rotinas do almoxarifado.',
@@ -48,7 +50,7 @@ class AlmoxarifadoRequisicaoFakeSeeder extends Seeder
                     ]
                 );
                 $produtoIds[] = DB::table('almoxarifado_produtos')
-                    ->where('codigo_interno', $produto['codigo'])
+                    ->where('secretaria_id', $sec)->where('codigo_interno', $produto['codigo'])
                     ->value('id');
             }
 
@@ -60,6 +62,7 @@ class AlmoxarifadoRequisicaoFakeSeeder extends Seeder
                             'almoxarifado_secretaria_id' => $secretaria->id,
                         ],
                         [
+                            'secretaria_id' => $sec,
                             'quantidade_disponivel' => 100,
                             'quantidade_reservada' => 0,
                             'quantidade_em_separacao' => 0,
@@ -76,7 +79,7 @@ class AlmoxarifadoRequisicaoFakeSeeder extends Seeder
                 $secretaria = $secretarias[($index - 1) % $secretarias->count()];
 
                 DB::table('almoxarifado_requisicoes')->updateOrInsert(
-                    ['numero' => $numero],
+                    ['secretaria_id' => $sec, 'numero' => $numero],
                     [
                         'almoxarifado_secretaria_id' => $secretaria->id,
                         'solicitante' => "Solicitante Teste {$index}",
@@ -93,7 +96,7 @@ class AlmoxarifadoRequisicaoFakeSeeder extends Seeder
                 );
 
                 $requisicaoId = DB::table('almoxarifado_requisicoes')
-                    ->where('numero', $numero)
+                    ->where('secretaria_id', $sec)->where('numero', $numero)
                     ->value('id');
                 $itens = [
                     $produtoIds[($index - 1) % count($produtoIds)] => $index + 1,

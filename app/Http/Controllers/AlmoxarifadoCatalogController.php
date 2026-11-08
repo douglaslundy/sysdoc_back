@@ -8,6 +8,7 @@ use App\Models\AlmoxarifadoFornecedor;
 use App\Models\AlmoxarifadoLocalizacao;
 use App\Models\AlmoxarifadoSecretaria;
 use App\Models\AlmoxarifadoUnidadeMedida;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -100,13 +101,27 @@ class AlmoxarifadoCatalogController extends Controller
         };
     }
 
-    private function updateRules(string $type, int $id): array
+    /** Unicidade do nome vale por secretaria. */
+    private function scopedRules(array $rules, int $sid): array
+    {
+        foreach ($rules as &$fieldRules) {
+            foreach ($fieldRules as &$rule) {
+                if ($rule instanceof Unique) {
+                    $rule = $rule->where('secretaria_id', $sid);
+                }
+            }
+        }
+
+        return $rules;
+    }
+
+    private function updateRules(string $type, int $id, int $sid): array
     {
         $config = $this->resourceConfig($type);
         $rules = $config['rules'];
 
         foreach ($rules as $field => &$fieldRules) {
-            $fieldRules = array_values(array_filter($fieldRules, fn ($rule) => !($rule instanceof Unique)));
+            $fieldRules = array_values(array_filter($fieldRules, fn ($rule) => ! ($rule instanceof Unique)));
             array_unshift($fieldRules, 'sometimes');
             if ($field === 'nome') {
                 $table = match ($type) {
@@ -120,7 +135,7 @@ class AlmoxarifadoCatalogController extends Controller
                 };
 
                 if ($table) {
-                    $fieldRules[] = Rule::unique($table, 'nome')->ignore($id);
+                    $fieldRules[] = Rule::unique($table, 'nome')->where('secretaria_id', $sid)->ignore($id);
                 }
             }
         }
@@ -142,9 +157,13 @@ class AlmoxarifadoCatalogController extends Controller
     {
         $config = $this->resourceConfig($type);
         $model = $config['model'];
-        $validated = $request->validate($config['rules']);
+        // Admin em "Todas" informa a secretaria (422 errors.secretaria_id); os demais gravam na ativa.
+        $request->validate(['secretaria_id' => EscopoAlmoxarifado::regraCampo()]);
+        $sid = EscopoAlmoxarifado::id($request->input('secretaria_id'));
+        $validated = $request->validate($this->scopedRules($config['rules'], $sid));
         $payload = Arr::only($validated, $config['fields']);
         $payload['ativo'] = $validated['ativo'] ?? true;
+        $payload['secretaria_id'] = $sid;
 
         return response()->json($model::create($payload), 201);
     }
@@ -159,7 +178,7 @@ class AlmoxarifadoCatalogController extends Controller
             return response()->json(['message' => 'Registro não encontrado.'], 404);
         }
 
-        $validated = $request->validate($this->updateRules($type, $item->id));
+        $validated = $request->validate($this->updateRules($type, $item->id, (int) $item->secretaria_id));
         $payload = Arr::only($validated, $config['fields']);
         $item->update($payload);
 
@@ -178,6 +197,7 @@ class AlmoxarifadoCatalogController extends Controller
 
         if (array_key_exists('ativo', $item->getAttributes())) {
             $item->update(['ativo' => false]);
+
             return response()->json(['message' => 'Registro inativado com sucesso.']);
         }
 

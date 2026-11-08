@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class AlmoxarifadoConfig extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     protected $table = 'almoxarifado_configs';
 
     protected $fillable = [
+        'secretaria_id',
         'permitir_saida_sem_saldo',
         'permitir_transferencia_entre_secretarias',
         'exigir_justificativa_saida',
@@ -29,9 +32,10 @@ class AlmoxarifadoConfig extends Model
         'permite_produto_sem_validade' => 'boolean',
     ];
 
-    public static function current(): self
+    /** Configuração da secretaria ativa (ou da informada: admin em "Todas", seeders). */
+    public static function current(?int $secretariaId = null): self
     {
-        return static::query()->firstOrCreate([], [
+        return static::withoutSecretaria()->firstOrCreate(['secretaria_id' => $secretariaId ?? \App\Support\EscopoAlmoxarifado::id()], [
             'permitir_saida_sem_saldo' => false,
             'permitir_transferencia_entre_secretarias' => true,
             'exigir_justificativa_saida' => true,

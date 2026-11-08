@@ -651,9 +651,10 @@ class DashboardController extends MonitorApsBaseController
                 'label' => 'Almoxarifado',
                 'permissao' => '/dashboard/almoxarifado',
                 'kpi' => 'Estoque Abaixo do Mínimo',
-                'calcular' => fn () => DB::table('almoxarifado_estoques as e')
-                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
-                    ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
+                // Eloquent: o escopo de secretaria vale (DB::table ignoraria).
+                'calcular' => fn () => \App\Models\AlmoxarifadoEstoque::query()
+                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_estoques.almoxarifado_produto_id')
+                    ->whereColumn('almoxarifado_estoques.quantidade_disponivel', '<', 'p.estoque_minimo')
                     ->count(),
             ],
             'protocolo' => [
@@ -1107,38 +1108,33 @@ class DashboardController extends MonitorApsBaseController
 
     public function almoxarifado()
     {
-        // Dados globais (iguais para todos): 60 s de cache no servidor evita repetir 8 consultas por usuario.
-        $data = Cache::remember('dashboard.almoxarifado', 60, fn () => [
+        // Eloquent (escopo de secretaria) e cache por secretaria: nada de contagem de outra secretaria.
+        $data = Cache::remember('dashboard.almoxarifado.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 60, fn () => [
             'totais' => [
-                'produtos' => DB::table('almoxarifado_produtos')->where('ativo', true)->count(),
-                'quantidade_disponivel' => (float) DB::table('almoxarifado_estoques')->sum('quantidade_disponivel'),
-                'estoque_baixo' => DB::table('almoxarifado_estoques as e')
-                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
-                    ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
+                'produtos' => \App\Models\AlmoxarifadoProduto::where('ativo', true)->count(),
+                'quantidade_disponivel' => (float) \App\Models\AlmoxarifadoEstoque::sum('quantidade_disponivel'),
+                'estoque_baixo' => \App\Models\AlmoxarifadoEstoque::query()
+                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_estoques.almoxarifado_produto_id')
+                    ->whereColumn('almoxarifado_estoques.quantidade_disponivel', '<', 'p.estoque_minimo')
                     ->count(),
-                'requisicoes_pendentes' => DB::table('almoxarifado_requisicoes')
-                    ->whereNotIn('status', ['entregue', 'cancelada'])
-                    ->count(),
-                'movimentacoes_mes' => DB::table('almoxarifado_movimentacoes')
-                    ->whereBetween('created_at', [now()->startOfMonth(), now()])
-                    ->count(),
+                'requisicoes_pendentes' => \App\Models\AlmoxarifadoRequisicao::whereNotIn('status', ['entregue', 'cancelada'])->count(),
+                'movimentacoes_mes' => \App\Models\AlmoxarifadoMovimentacao::whereBetween('created_at', [now()->startOfMonth(), now()])->count(),
             ],
-            'requisicoes_status' => DB::table('almoxarifado_requisicoes')
-                ->select('status', DB::raw('COUNT(*) as total'))
+            'requisicoes_status' => \App\Models\AlmoxarifadoRequisicao::select('status', DB::raw('COUNT(*) as total'))
                 ->groupBy('status')
                 ->orderByDesc('total')
                 ->get(),
-            'estoque_baixo' => DB::table('almoxarifado_estoques as e')
-                ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
-                ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
-                ->orderBy('e.quantidade_disponivel')
+            'estoque_baixo' => \App\Models\AlmoxarifadoEstoque::query()
+                ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_estoques.almoxarifado_produto_id')
+                ->whereColumn('almoxarifado_estoques.quantidade_disponivel', '<', 'p.estoque_minimo')
+                ->orderBy('almoxarifado_estoques.quantidade_disponivel')
                 ->limit(8)
-                ->get(['p.nome', 'p.codigo_interno', 'e.quantidade_disponivel', 'p.estoque_minimo']),
-            'movimentacoes_recentes' => DB::table('almoxarifado_movimentacoes as m')
-                ->join('almoxarifado_produtos as p', 'p.id', '=', 'm.almoxarifado_produto_id')
-                ->orderByDesc('m.created_at')
+                ->get(['p.nome', 'p.codigo_interno', 'almoxarifado_estoques.quantidade_disponivel', 'p.estoque_minimo']),
+            'movimentacoes_recentes' => \App\Models\AlmoxarifadoMovimentacao::query()
+                ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_movimentacoes.almoxarifado_produto_id')
+                ->orderByDesc('almoxarifado_movimentacoes.created_at')
                 ->limit(8)
-                ->get(['m.id', 'p.nome as produto', 'm.tipo', 'm.quantidade', 'm.created_at']),
+                ->get(['almoxarifado_movimentacoes.id', 'p.nome as produto', 'almoxarifado_movimentacoes.tipo', 'almoxarifado_movimentacoes.quantidade', 'almoxarifado_movimentacoes.created_at']),
         ]);
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=120');

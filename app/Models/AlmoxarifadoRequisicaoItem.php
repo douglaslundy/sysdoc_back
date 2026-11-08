@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AlmoxarifadoRequisicaoItem extends Model
 {
+    // Herda a secretaria da requisição (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('almoxarifado_requisicao_id', 'almoxarifado_requisicoes'));
+    }
+
     protected $table = 'almoxarifado_requisicao_itens';
 
     protected $fillable = [

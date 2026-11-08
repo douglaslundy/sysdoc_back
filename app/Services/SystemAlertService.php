@@ -75,7 +75,7 @@ class SystemAlertService
 
     private function contextSecretariaId(array $context): ?int
     {
-        foreach (['document', 'letter', 'protocol', 'kanban_task', 'ordinance'] as $chave) {
+        foreach (['document', 'letter', 'protocol', 'kanban_task', 'ordinance', 'almoxarifado_requisicao'] as $chave) {
             $id = $context[$chave]->secretaria_id ?? null;
             if ($id) {
                 return (int) $id;
