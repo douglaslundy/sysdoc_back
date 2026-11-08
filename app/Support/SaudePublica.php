@@ -12,9 +12,15 @@ use App\Services\Secretarias\ActiveSecretaria;
  */
 class SaudePublica
 {
-    public static function aplicar(): void
+    /** Vigilância pública (denúncia, consulta de protocolo, motivos): a secretaria dona vem da config (padrão Saúde). */
+    public static function vigilancia(): void
     {
-        $id = Secretaria::where('slug', Secretaria::SAUDE_SLUG)->where('ativa', true)->value('id');
+        self::aplicar((string) config('vigilancia.secretaria_slug', Secretaria::SAUDE_SLUG));
+    }
+
+    public static function aplicar(?string $slug = null): void
+    {
+        $id = Secretaria::where('slug', $slug ?: Secretaria::SAUDE_SLUG)->where('ativa', true)->value('id');
 
         app(ActiveSecretaria::class)->set($id ? (int) $id : null, false, $id ? [(int) $id] : []);
     }

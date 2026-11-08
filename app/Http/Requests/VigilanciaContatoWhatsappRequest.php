@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EscopoAlmoxarifado;
 
 /** Cadastro/edição de profissional que recebe avisos da Vigilância por WhatsApp. */
 class VigilanciaContatoWhatsappRequest extends FormRequest
@@ -23,6 +24,7 @@ class VigilanciaContatoWhatsappRequest extends FormRequest
     public function rules(): array
     {
         return [
+            ...($this->isMethod('post') ? ['secretaria_id' => EscopoAlmoxarifado::regraCampo()] : []),
             'nome' => ['required', 'string', 'max:150'],
             'telefone' => ['required', 'string', 'regex:/^\d{10,13}$/'],
             'ativo' => ['sometimes', 'boolean'],

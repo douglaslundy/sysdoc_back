@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PeticaoMotivo extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     protected $table = 'peticao_motivos';
 
-    protected $fillable = ['nome', 'descricao', 'unit_id', 'ativo', 'ordem'];
+    protected $fillable = ['secretaria_id', 'nome', 'descricao', 'unit_id', 'ativo', 'ordem'];
 
     protected $casts = ['ativo' => 'boolean', 'ordem' => 'integer'];
 

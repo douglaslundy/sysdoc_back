@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class StoreAlvaraRequest extends FormRequest
@@ -17,8 +18,11 @@ class StoreAlvaraRequest extends FormRequest
 
     public function rules(): array
     {
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\Alvara::class, null, $this->input('secretaria_id'));
+
         return [
-            'estabelecimento_id' => ['required', 'integer', 'exists:estabelecimentos,id'],
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
+            'estabelecimento_id' => ['required', 'integer', EscopoAlmoxarifado::existe('estabelecimentos', $sid)],
             'nivel_risco' => ['required', Rule::in(['1', '2', '3', 'N/A'])],
             'status' => ['sometimes', 'nullable', Rule::in([
                 'Não requerido', 'Dispensado', 'Protocolado', 'Em análise', 'Em exigência',

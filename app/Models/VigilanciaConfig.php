@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class VigilanciaConfig extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     protected $table = 'vigilancia_configs';
 
     protected $fillable = [
+        'secretaria_id',
         'estado',
         'nome_municipio',
         'nome_prefeitura',
@@ -28,9 +31,10 @@ class VigilanciaConfig extends Model
 
     protected $casts = ['observacoes' => 'array'];
 
-    public static function get(): self
+    /** Config da secretaria ativa (ou da informada: admin em "Todas", PDF do alvará). */
+    public static function get(?int $secretariaId = null): self
     {
-        return static::firstOrCreate([], [
+        return static::withoutSecretaria()->firstOrCreate(['secretaria_id' => $secretariaId ?? \App\Support\EscopoAlmoxarifado::id()], [
             'grant_type' => 'ALVARÁ SANITÁRIO DE FUNCIONAMENTO',
         ]);
     }

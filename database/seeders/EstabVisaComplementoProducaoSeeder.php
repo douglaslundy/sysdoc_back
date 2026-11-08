@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Cnae;
+use App\Models\Secretaria;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,7 @@ class EstabVisaComplementoProducaoSeeder extends Seeder
         DB::transaction(function () use (&$estabelecimentosPorNome, $agora) {
             foreach ($this->carregarRegistros() as $registro) {
                 $alvaraExistente = DB::table('alvaras')
+                    ->where('secretaria_id', Secretaria::saudeId())
                     ->where('numero_alvara', $registro['numero_alvara'])
                     ->first();
 
@@ -53,6 +55,7 @@ class EstabVisaComplementoProducaoSeeder extends Seeder
                         ->update($dadosEstabelecimento);
                 } else {
                     $estabelecimentoId = DB::table('estabelecimentos')->insertGetId($dadosEstabelecimento + [
+                        'secretaria_id' => Secretaria::saudeId(),
                         'created_at' => $agora,
                     ]);
                     $estabelecimentosPorNome[$this->chaveNome($registro['nome_estabelecimento'])] = $estabelecimentoId;
@@ -77,6 +80,7 @@ class EstabVisaComplementoProducaoSeeder extends Seeder
                         ->update($dadosAlvara);
                 } else {
                     DB::table('alvaras')->insert($dadosAlvara + [
+                        'secretaria_id' => Secretaria::saudeId(),
                         'numero_alvara' => $registro['numero_alvara'],
                         'created_at' => $agora,
                     ]);
@@ -107,6 +111,7 @@ class EstabVisaComplementoProducaoSeeder extends Seeder
         $index = [];
 
         DB::table('estabelecimentos')
+            ->where('secretaria_id', Secretaria::saudeId())
             ->select('id', 'nome_estabelecimento')
             ->orderBy('id')
             ->get()

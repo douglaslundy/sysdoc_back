@@ -9,6 +9,12 @@ class FiscalizacaoAttachment extends Model
 {
     use HasFactory;
 
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('fiscalizacao_id', 'fiscalizacoes'));
+    }
+
     protected $fillable = [
         'fiscalizacao_id',
         'uploaded_by',

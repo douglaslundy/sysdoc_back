@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class StoreFiscalizacaoRequest extends FormRequest
@@ -17,8 +18,11 @@ class StoreFiscalizacaoRequest extends FormRequest
 
     public function rules(): array
     {
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\Fiscalizacao::class, null, $this->input('secretaria_id'));
+
         return [
-            'estabelecimento_id' => ['required', 'integer', 'exists:estabelecimentos,id'],
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
+            'estabelecimento_id' => ['required', 'integer', EscopoAlmoxarifado::existe('estabelecimentos', $sid)],
             'data_visita' => ['required', 'date'],
             'resultado' => ['required', Rule::in(['Conforme', 'Não conforme', 'Notificação', 'Auto de infração', 'Pendente de apuração'])],
             'observacoes' => ['nullable', 'string', 'max:2000'],

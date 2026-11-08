@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EscopoAlmoxarifado;
 
 class StoreIluminacaoPosteRequest extends FormRequest
 {
@@ -17,6 +18,7 @@ class StoreIluminacaoPosteRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
             'client_uuid' => ['nullable', 'uuid'],
             'ponto_referencia' => ['required', 'string', 'min:3', 'max:160'],
             'logradouro' => ['required', 'string', 'max:160'],

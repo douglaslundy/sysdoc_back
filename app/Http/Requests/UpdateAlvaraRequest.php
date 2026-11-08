@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class UpdateAlvaraRequest extends FormRequest
@@ -17,8 +18,11 @@ class UpdateAlvaraRequest extends FormRequest
 
     public function rules(): array
     {
+        // 404 se o alvara for de outra secretaria; o estabelecimento tem de ser da mesma secretaria.
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\Alvara::class, $this->route('alvara'));
+
         return [
-            'estabelecimento_id' => ['sometimes', 'required', 'integer', 'exists:estabelecimentos,id'],
+            'estabelecimento_id' => ['sometimes', 'required', 'integer', EscopoAlmoxarifado::existe('estabelecimentos', $sid)],
             'nivel_risco' => ['sometimes', 'required', Rule::in(['1', '2', '3', 'N/A'])],
             'status' => ['nullable', Rule::in([
                 'Não requerido', 'Dispensado', 'Protocolado', 'Em análise', 'Em exigência',

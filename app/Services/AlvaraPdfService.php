@@ -12,7 +12,7 @@ class AlvaraPdfService
     {
         $alvara->load('estabelecimento.cnaes');
 
-        $config = VigilanciaConfig::get();
+        $config = VigilanciaConfig::get((int) $alvara->secretaria_id);
 
         $brasaoPath = public_path('files/brasao.png');
         $brasaoB64 = file_exists($brasaoPath)

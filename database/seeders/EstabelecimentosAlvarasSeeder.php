@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Cnae;
+use App\Models\Secretaria;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '12-09/2025',
             'nivel_risco' => '2',
@@ -46,7 +47,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '19-08/2025',
             'nivel_risco' => '2',
@@ -67,7 +68,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-09/2025',
             'nivel_risco' => '2',
@@ -108,7 +109,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-06/2025',
             'nivel_risco' => '3',
@@ -149,7 +150,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-10/2025',
             'nivel_risco' => '2',
@@ -170,7 +171,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '08-07/2025',
             'nivel_risco' => '1',
@@ -191,7 +192,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '08-07/2025',
             'nivel_risco' => '2',
@@ -232,7 +233,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '12-02/2026',
             'nivel_risco' => '3',
@@ -323,7 +324,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-02/2025',
             'nivel_risco' => '2',
@@ -344,7 +345,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '06-08/2025',
             'nivel_risco' => '2',
@@ -365,7 +366,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-07/2025',
             'nivel_risco' => '2',
@@ -386,7 +387,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-02/2025',
             'nivel_risco' => '2',
@@ -407,7 +408,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '17-10/2025',
             'nivel_risco' => '2',
@@ -428,7 +429,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-11/2025',
             'nivel_risco' => '3',
@@ -459,7 +460,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '07-01/2026',
             'nivel_risco' => '2',
@@ -510,7 +511,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '06-02/2025',
             'nivel_risco' => null,
@@ -531,7 +532,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-06/2025',
             'nivel_risco' => null,
@@ -562,7 +563,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '02-02/2026',
             'nivel_risco' => '2',
@@ -583,7 +584,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-08/2025',
             'nivel_risco' => '3',
@@ -604,7 +605,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '08-03/2025',
             'nivel_risco' => null,
@@ -625,7 +626,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '12-04/2025',
             'nivel_risco' => null,
@@ -646,7 +647,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '02-01/2026',
             'nivel_risco' => '2',
@@ -667,7 +668,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-01/2026',
             'nivel_risco' => '1',
@@ -688,7 +689,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '03-12/2025',
             'nivel_risco' => '3',
@@ -709,7 +710,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-01/2026',
             'nivel_risco' => '3',
@@ -730,7 +731,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '03-09/2025',
             'nivel_risco' => '3',
@@ -751,7 +752,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '06-07/2025',
             'nivel_risco' => '3',
@@ -772,7 +773,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-06/2025',
             'nivel_risco' => '3',
@@ -793,7 +794,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '02-05/2025',
             'nivel_risco' => '3',
@@ -814,7 +815,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-07/2025',
             'nivel_risco' => '3',
@@ -835,7 +836,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '09-07/2025',
             'nivel_risco' => '3',
@@ -856,7 +857,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '03-05/2025',
             'nivel_risco' => '3',
@@ -877,7 +878,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-03/2025',
             'nivel_risco' => '2',
@@ -898,7 +899,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-03/2025',
             'nivel_risco' => null,
@@ -919,7 +920,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-02/2026',
             'nivel_risco' => '2',
@@ -970,7 +971,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-02/2025',
             'nivel_risco' => '3',
@@ -1021,7 +1022,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '02-04/2026',
             'nivel_risco' => '3',
@@ -1062,7 +1063,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-11/2025',
             'nivel_risco' => '2',
@@ -1083,7 +1084,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-09/2025',
             'nivel_risco' => '2',
@@ -1104,7 +1105,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '14-03/2025',
             'nivel_risco' => null,
@@ -1125,7 +1126,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-03/2025',
             'nivel_risco' => null,
@@ -1156,7 +1157,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '09-03/2025',
             'nivel_risco' => '2',
@@ -1177,7 +1178,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '06-01/2026',
             'nivel_risco' => '1',
@@ -1198,7 +1199,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-07/2025',
             'nivel_risco' => null,
@@ -1219,7 +1220,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-06/2025',
             'nivel_risco' => null,
@@ -1240,7 +1241,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '14-01/2026',
             'nivel_risco' => '3',
@@ -1291,7 +1292,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-04/2025',
             'nivel_risco' => '1',
@@ -1312,7 +1313,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-08/2025',
             'nivel_risco' => '3',
@@ -1333,7 +1334,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-09/2025',
             'nivel_risco' => '1',
@@ -1384,7 +1385,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '18-08/2025',
             'nivel_risco' => '3',
@@ -1405,7 +1406,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-03/2025',
             'nivel_risco' => '2',
@@ -1506,7 +1507,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '15-04/2025',
             'nivel_risco' => '2',
@@ -1527,7 +1528,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '16-08/2025',
             'nivel_risco' => '3',
@@ -1548,7 +1549,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '09-11/2025',
             'nivel_risco' => '2',
@@ -1569,7 +1570,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-07/2025',
             'nivel_risco' => null,
@@ -1590,7 +1591,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '02-09/2025',
             'nivel_risco' => '2',
@@ -1611,7 +1612,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '08-02/2025',
             'nivel_risco' => '2',
@@ -1632,7 +1633,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '25-07/2025',
             'nivel_risco' => '2',
@@ -1653,7 +1654,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '02-07/2025',
             'nivel_risco' => '2',
@@ -1674,7 +1675,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '11-02/2026',
             'nivel_risco' => '3',
@@ -1695,7 +1696,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '12-08/2025',
             'nivel_risco' => '2',
@@ -1716,7 +1717,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '03-01/2026',
             'nivel_risco' => '2',
@@ -1747,7 +1748,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-12/2025',
             'nivel_risco' => '3',
@@ -1768,7 +1769,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '12-02/2025',
             'nivel_risco' => '2',
@@ -1789,7 +1790,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-08/2025',
             'nivel_risco' => '2',
@@ -1810,7 +1811,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '11-07/2025',
             'nivel_risco' => '3',
@@ -1831,7 +1832,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '02-03/2026',
             'nivel_risco' => '2',
@@ -1852,7 +1853,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-17/2025',
             'nivel_risco' => null,
@@ -1903,7 +1904,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '09-01/2026',
             'nivel_risco' => '2',
@@ -1934,7 +1935,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-02/2026',
             'nivel_risco' => '2',
@@ -2005,7 +2006,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '07-06/2025',
             'nivel_risco' => '3',
@@ -2026,7 +2027,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-03/2025',
             'nivel_risco' => '3',
@@ -2047,7 +2048,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '11-09/2025',
             'nivel_risco' => '2',
@@ -2068,7 +2069,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-06/2025',
             'nivel_risco' => null,
@@ -2089,7 +2090,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '10-01/2025',
             'nivel_risco' => null,
@@ -2110,7 +2111,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '08-01/2026',
             'nivel_risco' => '3',
@@ -2131,7 +2132,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '09-10/2025',
             'nivel_risco' => '3',
@@ -2152,7 +2153,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '05-10/2025',
             'nivel_risco' => '3',
@@ -2173,7 +2174,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-10/2025',
             'nivel_risco' => '3',
@@ -2194,7 +2195,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '08-10/2025',
             'nivel_risco' => '2',
@@ -2215,7 +2216,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-03/2025',
             'nivel_risco' => null,
@@ -2236,7 +2237,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '03-10/2025',
             'nivel_risco' => '2',
@@ -2257,7 +2258,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '16-07/2025',
             'nivel_risco' => '2',
@@ -2278,7 +2279,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '12-01/2025',
             'nivel_risco' => '2',
@@ -2309,7 +2310,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '09-06/2025',
             'nivel_risco' => null,
@@ -2330,7 +2331,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-04/2025',
             'nivel_risco' => null,
@@ -2351,7 +2352,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '03-08/2025',
             'nivel_risco' => '3',
@@ -2372,7 +2373,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '11-02/2025',
             'nivel_risco' => '2',
@@ -2393,7 +2394,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '23-07/2025',
             'nivel_risco' => '2',
@@ -2414,7 +2415,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-10/2025',
             'nivel_risco' => '2',
@@ -2435,7 +2436,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '19-07/2025',
             'nivel_risco' => '2',
@@ -2456,7 +2457,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '20-07/2025',
             'nivel_risco' => '2',
@@ -2477,7 +2478,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '01-01/2026',
             'nivel_risco' => '2',
@@ -2498,7 +2499,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '04-09/2025',
             'nivel_risco' => null,
@@ -2519,7 +2520,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '06-09/2025',
             'nivel_risco' => '2',
@@ -2540,7 +2541,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '06-10/2025',
             'nivel_risco' => '2',
@@ -2591,7 +2592,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '11-08/2025',
             'nivel_risco' => '2',
@@ -2632,7 +2633,7 @@ class EstabelecimentosAlvarasSeeder extends Seeder
             'created_at' => $agora,
             'updated_at' => $agora,
         ]);
-        DB::table('alvaras')->insertOrIgnore([
+        $this->alvara([
             'estabelecimento_id' => $estId,
             'numero_alvara' => '13-04/2025',
             'nivel_risco' => '3',
@@ -2656,12 +2657,18 @@ class EstabelecimentosAlvarasSeeder extends Seeder
 
     }
 
+    private function alvara(array $dados): void
+    {
+        DB::table('alvaras')->insertOrIgnore($dados + ['secretaria_id' => Secretaria::saudeId()]);
+    }
+
     private function inserirEstabelecimento(array $dados): int
     {
         $cnaesRaw = (string) ($dados['cnaes'] ?? '');
         unset($dados['cnaes']);
 
-        $estabelecimentoId = DB::table('estabelecimentos')->insertGetId($dados);
+        // Seeder roda fora de requisicao: grava explicitamente na Saude.
+        $estabelecimentoId = DB::table('estabelecimentos')->insertGetId($dados + ['secretaria_id' => Secretaria::saudeId()]);
         $this->sincronizarCnaes($estabelecimentoId, $cnaesRaw, $dados['created_at'] ?? now());
 
         return $estabelecimentoId;

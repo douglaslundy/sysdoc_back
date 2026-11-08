@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Estabelecimento extends Model
 {
     use HasFactory, SoftDeletes;
+    use \App\Models\Concerns\BelongsToSecretaria;
 
     protected $table = 'estabelecimentos';
 
     protected $fillable = [
+        'secretaria_id',
         'nome_responsavel',
         'nome_estabelecimento',
         'razao_social',

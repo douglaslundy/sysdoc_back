@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EscopoAlmoxarifado;
 
 class StoreEstabelecimentoRequest extends FormRequest
 {
@@ -22,6 +23,7 @@ class StoreEstabelecimentoRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
             'nome_responsavel' => ['required', 'string', 'max:255'],
             'nome_estabelecimento' => ['required', 'string', 'max:255'],
             'razao_social' => ['nullable', 'string', 'max:255'],

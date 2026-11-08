@@ -1045,8 +1045,8 @@ class DashboardController extends MonitorApsBaseController
         ];
 
         try {
-            // v2: o payload ganhou "fiscalizacoes"; a chave nova evita servir o formato antigo do cache.
-            $data = Cache::remember('dashboard.vigilancia.v2', 300, function () use ($empty) {
+            // v3: cache por secretaria (v2 era global e serviria numeros de outra secretaria).
+            $data = Cache::remember('dashboard.vigilancia.v3.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 300, function () use ($empty) {
                 try {
                     $totais = $this->service->getVigilanciaTotais();
                 } catch (\Throwable $e) {

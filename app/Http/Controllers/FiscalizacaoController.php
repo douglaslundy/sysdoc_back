@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateFiscalizacaoRequest;
 use App\Http\Resources\FiscalizacaoResource;
 use App\Models\Fiscalizacao;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
+use App\Support\EscopoAlmoxarifado;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
 use App\Services\Fiscalizacao\VigilanciaAvisoService;
 use Illuminate\Http\JsonResponse;
@@ -66,6 +67,7 @@ class FiscalizacaoController extends Controller
     {
         $dados = $request->validated();
         $dados['fiscal_id'] = $request->user()->id;
+        $dados['secretaria_id'] = EscopoAlmoxarifado::id($request->input('secretaria_id')); // admin em "Todas" sem escolher = 422
 
         $fiscalizacao = Fiscalizacao::create($dados);
         $fiscalizacao->forceFill([
