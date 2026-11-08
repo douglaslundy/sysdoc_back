@@ -385,6 +385,8 @@ class PainelEsusController extends MonitorApsBaseController
     public function estado(Request $request): JsonResponse
     {
         $request->validate(['cnes' => 'required|string|max:20']);
+        // Rota pública: o painel e-SUS pertence à Saúde (secretaria fixada no servidor, nunca pelo cliente).
+        \App\Support\SaudePublica::aplicar();
         $cnes = trim($request->input('cnes'));
         $hoje = now()->toDateString();
 
@@ -424,7 +426,7 @@ class PainelEsusController extends MonitorApsBaseController
                 );
             } catch (\Throwable) {}
 
-            PainelEsusPresence::updateOrCreate(
+            app(\App\Services\Secretarias\ActiveSecretaria::class)->id() && PainelEsusPresence::updateOrCreate(
                 ['cnes' => $cnes],
                 [
                     'panel_name' => $unidadeRow?->nome ?? 'CNES ' . $cnes,

@@ -15,7 +15,7 @@ class UpdateUserSpecialityPermissionRequest extends FormRequest
     {
         return [
             'permissions' => ['present', 'array'],
-            'permissions.*.speciality_id' => ['required', 'integer', 'distinct', 'exists:specialities,id'],
+            'permissions.*.speciality_id' => ['required', 'integer', 'distinct', \App\Support\EscopoAlmoxarifado::existeNaAtiva('specialities')],
             'permissions.*.can_view' => ['boolean'],
             'permissions.*.can_edit' => ['boolean'],
             'permissions.*.can_insert' => ['boolean'],

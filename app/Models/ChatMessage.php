@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ChatMessage extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('conversation_id', 'chat_conversations'));
+    }
+
     protected $fillable = [
         'conversation_id', 'sender_id', 'body', 'message_type', 'status',
         'delivered_at', 'read_at', 'deleted_at', 'deleted_by',

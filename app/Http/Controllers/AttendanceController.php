@@ -56,6 +56,7 @@ class AttendanceController extends Controller
         return response()->json(
             User::query()
                 ->where('active', true)
+                ->when(! app(\App\Services\Secretarias\ActiveSecretaria::class)->isAll(), fn ($q) => \App\Services\Secretarias\SecretariaMembership::filtrar($q, (int) app(\App\Services\Secretarias\ActiveSecretaria::class)->id()))
                 ->orderBy('name')
                 ->get(['id', 'name', 'email'])
         );
@@ -125,7 +126,7 @@ class AttendanceController extends Controller
     public function callSpecific(int $ticketId, Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'roomId' => 'required|integer|exists:attendance_rooms,id',
+            'roomId' => ['required', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('attendance_rooms')],
         ]);
 
         try {
@@ -196,6 +197,9 @@ class AttendanceController extends Controller
 
     public function panelState(): JsonResponse
     {
+        // Rota pública (painel da sala de espera): a secretaria dona vem da config do servidor (FILA_SECRETARIA_SLUG), nunca do cliente.
+        \App\Support\SaudePublica::fila();
+
         return response()->json($this->panelService->state());
     }
 
@@ -223,6 +227,7 @@ class AttendanceController extends Controller
         $validated = $request->validated();
 
         $room = \App\Models\AttendanceRoom::query()->create([
+            'secretaria_id' => \App\Support\EscopoAlmoxarifado::id($validated['secretaria_id'] ?? null),
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'active' => (bool) ($validated['active'] ?? true),
@@ -246,8 +251,10 @@ class AttendanceController extends Controller
 
     public function roomsUpdate(int $id, Request $request): JsonResponse
     {
+        // 404 se a sala for de outra secretaria; o nome é único só dentro da secretaria da sala.
+        $sid = \App\Support\EscopoAlmoxarifado::alvo(\App\Models\AttendanceRoom::class, $id);
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:100|unique:attendance_rooms,name,'.$id,
+            'name' => ['sometimes', 'required', 'string', 'max:100', \App\Support\EscopoAlmoxarifado::unico('attendance_rooms', 'name', $sid)->ignore($id)],
             'description' => 'nullable|string|max:255',
             'active' => 'nullable|boolean',
         ]);

@@ -14,6 +14,7 @@ class StoreSpecialityRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo(),
             'id_user' => 'required|exists:users,id',
             'name' => 'required|string|max:50',
             'allows_session_scheduling' => 'sometimes|boolean',

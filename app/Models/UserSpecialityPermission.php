@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserSpecialityPermission extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('speciality_id', 'specialities'));
+    }
+
     protected $fillable = [
         'user_id',
         'speciality_id',

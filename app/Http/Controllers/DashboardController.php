@@ -115,7 +115,7 @@ class DashboardController extends MonitorApsBaseController
     public function fila()
     {
         try {
-            $data = Cache::remember('dashboard.fila', 120, function () {
+            $data = Cache::remember('dashboard.fila.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 120, function () {
                 try {
                     $totais = $this->service->getFilaTotais();
                 } catch (\Throwable $e) {
@@ -178,7 +178,7 @@ class DashboardController extends MonitorApsBaseController
             ? request()->input('periodo')
             : 'mes';
 
-        $cacheKey = 'dashboard.tfd.'.$periodo.'.'.now()->format('Y-m');
+        $cacheKey = 'dashboard.tfd.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey().'.'.$periodo.'.'.now()->format('Y-m');
         try {
             $data = Cache::remember($cacheKey, 300, function () use ($periodo) {
                 try {
@@ -256,7 +256,7 @@ class DashboardController extends MonitorApsBaseController
     public function logs()
     {
         try {
-            $data = Cache::remember('dashboard.logs', 600, function () {
+            $data = Cache::remember('dashboard.logs.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 600, function () {
                 try {
                     $totais = $this->service->getLogsTotais();
                 } catch (\Throwable $e) {
@@ -698,7 +698,7 @@ class DashboardController extends MonitorApsBaseController
                 'label' => 'Fila',
                 'permissao' => '/dashboard/fila',
                 'kpi' => 'Total na Fila',
-                'calcular' => fn () => DB::table('queue')->where('done', 0)->count(),
+                'calcular' => fn () => \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'secretaria_id')->where('done', 0)->count(),
             ],
             'tfd' => [
                 'label' => 'TFD',
@@ -708,7 +708,7 @@ class DashboardController extends MonitorApsBaseController
                     $inicioDoMes = now()->startOfMonth();
                     $fimDoMes = now()->endOfMonth();
 
-                    return DB::table('trip_clients')
+                    return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trip_clients'), 'trips.secretaria_id')
                         ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
                         ->whereBetween('trips.departure_date', [$inicioDoMes, $fimDoMes])
                         ->count();
@@ -762,7 +762,7 @@ class DashboardController extends MonitorApsBaseController
     public function conformidades()
     {
         try {
-            $data = Cache::remember('dashboard.conformidades', 60, function () {
+            $data = Cache::remember('dashboard.conformidades.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 60, function () {
                 $empty = [
                     'totais' => [
                         'usuarios_total' => 0,
@@ -788,11 +788,14 @@ class DashboardController extends MonitorApsBaseController
                 ];
 
                 try {
+                    // Só quem atende a secretaria ativa (admin sempre entra); "Todas" vê todos.
+                    $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
                     $usuarios = User::query()
                         ->where('active', true)
+                        ->when(! $ativa->isAll(), fn ($q) => \App\Services\Secretarias\SecretariaMembership::filtrar($q, (int) $ativa->id()))
                         ->orderBy('name')
                         ->get(['id', 'name', 'email']);
-                    $presencasUsuarios = UserPresence::query()->get()->keyBy('user_id');
+                    $presencasUsuarios = UserPresence::query()->whereIn('user_id', $usuarios->pluck('id'))->get()->keyBy('user_id');
                 } catch (\Throwable $e) {
                     Log::error('DashboardConformidades usuarios: '.$e->getMessage());
                     $usuarios = collect();

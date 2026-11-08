@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceRoom extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     protected $fillable = [
+        'secretaria_id',
         'name',
         'description',
         'active',

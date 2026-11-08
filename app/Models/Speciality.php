@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Speciality extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     // Define a tabela associada à model (opcional, se o nome da tabela for o plural do nome da model)
@@ -14,6 +15,7 @@ class Speciality extends Model
 
     // Define os campos que podem ser preenchidos via mass assignment
     protected $fillable = [
+        'secretaria_id',
         'id_user',
         'name',
         'allows_session_scheduling',

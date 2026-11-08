@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceTicket extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     public const STATUS_AGUARDANDO = 'aguardando';
@@ -22,6 +23,7 @@ class AttendanceTicket extends Model
     public const STATUS_NAO_COMPARECEU = 'nao_compareceu';
 
     protected $fillable = [
+        'secretaria_id',
         'number',
         'display_code',
         'sequence_date',

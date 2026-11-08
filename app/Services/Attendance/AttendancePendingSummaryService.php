@@ -25,10 +25,10 @@ class AttendancePendingSummaryService
         }
 
         if (Schema::hasTable('trip_clients')) {
-            $pendingTrips = DB::table('trip_clients')
-                ->where('client_id', $clientId)
+            $pendingTrips = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trip_clients')->join('trips', 'trips.id', '=', 'trip_clients.trip_id'), 'trips.secretaria_id')
+                ->where('trip_clients.client_id', $clientId)
                 ->where(function ($q) {
-                    $q->whereNull('is_confirmed')->orWhere('is_confirmed', false);
+                    $q->whereNull('trip_clients.is_confirmed')->orWhere('trip_clients.is_confirmed', false);
                 })
                 ->count();
 
@@ -40,7 +40,7 @@ class AttendancePendingSummaryService
         }
 
         if (Schema::hasTable('queue')) {
-            $pendingQueue = DB::table('queue')
+            $pendingQueue = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'secretaria_id')
                 ->where('id_client', $clientId)
                 ->where('done', 0)
                 ->count();

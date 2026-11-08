@@ -18,6 +18,18 @@ class SaudePublica
         self::aplicar((string) config('vigilancia.secretaria_slug', Secretaria::SAUDE_SLUG));
     }
 
+    /** Painel público da fila (/showPublicQueue): a secretaria dona vem da config (padrão Saúde). */
+    public static function fila(): void
+    {
+        self::aplicar((string) config('fila.secretaria_slug', Secretaria::SAUDE_SLUG));
+    }
+
+    /** Rota pública que identifica o registro (ex.: UUID da fila): a requisição passa a valer na secretaria do registro. */
+    public static function de(int $secretariaId): void
+    {
+        app(ActiveSecretaria::class)->set($secretariaId, false, [$secretariaId]);
+    }
+
     public static function aplicar(?string $slug = null): void
     {
         $id = Secretaria::where('slug', $slug ?: Secretaria::SAUDE_SLUG)->where('ativa', true)->value('id');

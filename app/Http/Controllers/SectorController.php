@@ -32,6 +32,7 @@ class SectorController extends Controller
             //$file = $request->file('photo')->store('public');
 
             $sector = new Sector();
+            $sector->secretaria_id = \App\Support\EscopoAlmoxarifado::id($request->input('secretaria_id'));
             $sector->name = $request->input('name');
             $sector->save();
             AuditService::record('CREATE', $sector, null, $sector->toArray());
@@ -49,6 +50,11 @@ class SectorController extends Controller
     {
         $array = ['errors' => ''];
         $array['sectors'] = Sector::find($id);
+
+        // Setor de outra secretaria é invisível: mesma resposta de "não existe".
+        if ($array['sectors'] === null) {
+            return response()->json($array, 404);
+        }
 
         return $array;
     }
@@ -69,6 +75,8 @@ class SectorController extends Controller
             if (is_null($sector)) {
 
                 $array['errors'] = 'sector has not found';
+
+                return response()->json($array, 404);
 
             } else {
 
@@ -97,6 +105,8 @@ class SectorController extends Controller
         if (is_null($sector)) {
 
             $array['errors'] = 'sector has not found';
+
+            return response()->json($array, 404);
 
         } else {
 

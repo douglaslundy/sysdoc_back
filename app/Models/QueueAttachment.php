@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class QueueAttachment extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('queue_id', 'queue'));
+    }
+
     use HasFactory;
 
     protected $fillable = [

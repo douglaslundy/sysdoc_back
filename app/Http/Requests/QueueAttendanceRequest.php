@@ -14,7 +14,7 @@ class QueueAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
+            'roomId' => ['nullable', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('attendance_rooms')],
         ];
     }
 }

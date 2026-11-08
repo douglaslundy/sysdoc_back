@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ChatConversation extends Model
 {
-    protected $fillable = ['type', 'created_by', 'last_message_at'];
+    use \App\Models\Concerns\BelongsToSecretaria;
+    protected $fillable = ['secretaria_id', 'type', 'created_by', 'last_message_at'];
 
     protected $casts = ['last_message_at' => 'datetime'];
 

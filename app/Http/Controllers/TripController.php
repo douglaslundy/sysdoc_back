@@ -25,6 +25,7 @@ class TripController extends Controller
         return User::query()
             ->where('active', true)
             ->where('is_driver', true)
+            ->when(! app(\App\Services\Secretarias\ActiveSecretaria::class)->isAll(), fn ($q) => \App\Services\Secretarias\SecretariaMembership::filtrar($q, (int) app(\App\Services\Secretarias\ActiveSecretaria::class)->id()))
             ->orderBy('name')
             ->get(['id', 'name']);
     }
@@ -135,6 +136,7 @@ class TripController extends Controller
 
             foreach ($request->dates as $date) {
                 $newTrip = Trip::create([
+                    'secretaria_id' => $trip->secretaria_id,
                     'user_id' => auth()->id(),
                     'driver_id' => null,
                     'vehicle_id' => null,

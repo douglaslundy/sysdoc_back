@@ -14,7 +14,10 @@ use App\Services\AuditService;
 use App\Services\Authorization\PagePermissionService;
 use App\Services\Authorization\SpecialityPermissionService;
 use App\Services\IpOriginService;
+use App\Services\Secretarias\ActiveSecretaria;
 use App\Support\ClientInfo;
+use App\Support\EscopoAlmoxarifado;
+use App\Support\SaudePublica;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -78,6 +81,9 @@ class QueueController extends Controller
 
     public function showPublicQueue()
     {
+        // Rota pública: a secretaria dona do painel vem da config do servidor, nunca do cliente.
+        SaudePublica::fila();
+
         $queues = Queue::with(['client', 'user', 'speciality'])
             ->where('done', 0)
             ->orderBy('created_at', 'asc')
@@ -96,7 +102,9 @@ class QueueController extends Controller
                 ];
             })->sortKeys();
 
-        PublicQueueLog::create([
+        $secretariaId = app(ActiveSecretaria::class)->id();
+        $secretariaId && PublicQueueLog::create([
+            'secretaria_id' => $secretariaId,
             'ip_address' => request()->ip(),
             'user_agent' => substr(request()->header('User-Agent'), 0, 255),
             'host_name' => gethostbyaddr(request()->ip()),
@@ -114,7 +122,10 @@ class QueueController extends Controller
 
     public function store(StoreQueueRequest $request)
     {
-        $queue = Queue::create($request->validated());
+        $queue = Queue::create([
+            ...$request->validated(),
+            'secretaria_id' => EscopoAlmoxarifado::id($request->input('secretaria_id')),
+        ]);
         AuditService::record('CREATE', $queue, null, $queue->toArray());
 
         $queue->load('client', 'speciality', 'user', 'doneBy')->loadCount('attachments');
@@ -172,13 +183,16 @@ class QueueController extends Controller
 
     public function showByUuid($uuid, Request $request)
     {
-        $queue = Queue::with(['client', 'user', 'speciality'])
-            ->where('uuid', $uuid)
-            ->first();
+        // Rota pública por UUID: a secretaria é a do registro (nunca a do cliente); o resto da requisição vale nela.
+        $dono = Queue::withoutSecretaria()->where('uuid', $uuid)->first();
 
-        if (! $queue) {
+        if (! $dono) {
             return response()->json(['message' => 'Registro não encontrado'], 404);
         }
+
+        SaudePublica::de((int) $dono->secretaria_id);
+
+        $queue = Queue::with(['client', 'user', 'speciality'])->find($dono->id);
 
         $queue->position = $this->calculateQueuePosition($queue);
 
@@ -218,6 +232,9 @@ class QueueController extends Controller
     {
                 $data = $request->validated();
 
+        $dono = Queue::withoutSecretaria()->where('uuid', $data['uuid'])->first();
+        $dono && SaudePublica::de((int) $dono->secretaria_id);
+
         QRCodeLog::where('uuid', $data['uuid'])
             ->latest()
             ->first()
@@ -246,6 +263,7 @@ class QueueController extends Controller
                 $query->from('queue as ahead')
                     ->selectRaw('COUNT(*) + 1')
                     ->whereColumn('ahead.id_specialities', 'queue.id_specialities')
+                    ->whereColumn('ahead.secretaria_id', 'queue.secretaria_id')
                     ->whereColumn('ahead.urgency', 'queue.urgency')
                     ->where('ahead.done', 0)
                     ->where(function ($query) {

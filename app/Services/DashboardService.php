@@ -163,19 +163,25 @@ class DashboardService
     // Coluna de prioridade: urgency (boolean) — urgency=true = urgente
     // -------------------------------------------------------------------------
 
+    /** qrcode_logs não tem secretaria própria: herda a do item da fila. */
+    private function qrcodeLogs(): \Illuminate\Database\Query\Builder
+    {
+        return DB::table('qrcode_logs')->whereIn('queue_id', \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')->select('id'));
+    }
+
     public function getFilaTotais(): array
     {
         return [
-            'total_na_fila' => DB::table('queue')->where('done', 0)->count(),
-            'fila_7_dias' => DB::table('queue')->where('created_at', '>=', now()->subDays(7))->count(),
-            'total_realizados' => DB::table('queue')->where('done', 1)->count(),
+            'total_na_fila' => \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')->where('done', 0)->count(),
+            'fila_7_dias' => \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')->where('created_at', '>=', now()->subDays(7))->count(),
+            'total_realizados' => \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')->where('done', 1)->count(),
             'especialidades' => Speciality::count(),
         ];
     }
 
     public function getFilaPorEspecialidade(): \Illuminate\Support\Collection
     {
-        return DB::table('queue')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')
             ->leftJoin('specialities', 'queue.id_specialities', '=', 'specialities.id')
             ->whereNotNull('specialities.id')
             ->select(
@@ -197,7 +203,7 @@ class DashboardService
 
     public function getFilaPorMes(): array
     {
-        return DB::table('queue')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')
             ->where('created_at', '>=', now()->subMonths(12))
             ->select(
                 DB::raw('DATE_FORMAT(created_at, "%Y-%m") as mes'),
@@ -211,7 +217,7 @@ class DashboardService
 
     public function getEspecialidadesRealizadas(): \Illuminate\Support\Collection
     {
-        return DB::table('queue')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')
             ->leftJoin('specialities', 'queue.id_specialities', '=', 'specialities.id')
             ->whereNotNull('specialities.id')
             ->where('queue.done', 1)
@@ -230,7 +236,7 @@ class DashboardService
     {
         $desde = now()->subMonths(11)->startOfMonth();
 
-        $dados = DB::table('queue')
+        $dados = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'queue.secretaria_id')
             ->leftJoin('specialities', 'queue.id_specialities', '=', 'specialities.id')
             ->whereNotNull('specialities.id')
             ->where('queue.done', 1)
@@ -266,19 +272,19 @@ class DashboardService
         $inicioDomes = now()->startOfMonth();
         $fimDomes = now()->endOfMonth();
 
-        $totalViagens = DB::table('trips')
+        $totalViagens = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->whereBetween('departure_date', [$inicioDomes, $fimDomes])
             ->count();
 
         // Passageiros = contagem de registros em trip_clients para as trips do mês
-        $pessoasTransportadas = DB::table('trip_clients')
+        $pessoasTransportadas = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trip_clients'), 'trips.secretaria_id')
             ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
             ->whereBetween('trips.departure_date', [$inicioDomes, $fimDomes])
             ->count();
 
         // KM rodados = soma da distância das rotas para as trips do mês
         // Não há coluna km direta na trips; usamos routes.distance como distância por viagem
-        $kmRodados = DB::table('trips')
+        $kmRodados = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->join('routes', 'trips.route_id', '=', 'routes.id')
             ->whereBetween('trips.departure_date', [$inicioDomes, $fimDomes])
             ->sum('routes.distance');
@@ -292,7 +298,7 @@ class DashboardService
 
     public function getViagensPorDia(): \Illuminate\Support\Collection
     {
-        return DB::table('trips')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->whereBetween('departure_date', [now()->startOfMonth()->toDateString(), now()->toDateString()])
             ->select(DB::raw('DAY(departure_date) as dia'), DB::raw('count(*) as total'))
             ->groupBy('dia')
@@ -302,7 +308,7 @@ class DashboardService
 
     public function getViagensPorDiaAgendadas(): \Illuminate\Support\Collection
     {
-        return DB::table('trips')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->where('departure_date', '>', now()->toDateString())
             ->where('departure_date', '<=', now()->endOfMonth()->toDateString())
             ->select(DB::raw('DAY(departure_date) as dia'), DB::raw('count(*) as total'))
@@ -314,7 +320,7 @@ class DashboardService
     public function getViagensPorMotorista(): \Illuminate\Support\Collection
     {
         // Motorista armazenado em trips.driver_id (users.is_driver = true)
-        return DB::table('trips')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->join('users', 'trips.driver_id', '=', 'users.id')
             ->select('users.name as nome', DB::raw('count(*) as total'))
             ->groupBy('users.id', 'users.name')
@@ -325,7 +331,7 @@ class DashboardService
 
     public function getTopRotas(): \Illuminate\Support\Collection
     {
-        return DB::table('trips')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->join('routes', 'trips.route_id', '=', 'routes.id')
             ->select(
                 DB::raw('CONCAT(routes.origin, " X ", routes.destination) as rota'),
@@ -339,7 +345,7 @@ class DashboardService
 
     public function getTodosMotoristas(string $periodo = 'mes'): \Illuminate\Support\Collection
     {
-        $query = DB::table('trips')->join('users', 'trips.driver_id', '=', 'users.id');
+        $query = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')->join('users', 'trips.driver_id', '=', 'users.id');
 
         if ($periodo === 'mes') {
             $query->whereBetween('departure_date', [now()->startOfMonth(), now()->endOfMonth()]);
@@ -358,7 +364,7 @@ class DashboardService
 
     public function getTodasRotas(string $periodo = 'mes'): \Illuminate\Support\Collection
     {
-        $query = DB::table('trips')->join('routes', 'trips.route_id', '=', 'routes.id');
+        $query = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')->join('routes', 'trips.route_id', '=', 'routes.id');
 
         if ($periodo === 'mes') {
             $query->whereBetween('departure_date', [now()->startOfMonth(), now()->endOfMonth()]);
@@ -383,14 +389,14 @@ class DashboardService
     {
         $desde = now()->subMonths(11)->startOfMonth();
 
-        $viagens = DB::table('trips')
+        $viagens = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->where('departure_date', '>=', $desde)
             ->select(DB::raw('DATE_FORMAT(departure_date, "%Y-%m") as mes'), DB::raw('count(*) as total'))
             ->groupBy('mes')
             ->orderBy('mes')
             ->pluck('total', 'mes');
 
-        $pessoas = DB::table('trip_clients')
+        $pessoas = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trip_clients'), 'trips.secretaria_id')
             ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
             ->where('trips.departure_date', '>=', $desde)
             ->select(DB::raw('DATE_FORMAT(trips.departure_date, "%Y-%m") as mes'), DB::raw('count(*) as total'))
@@ -398,7 +404,7 @@ class DashboardService
             ->orderBy('mes')
             ->pluck('total', 'mes');
 
-        $km = DB::table('trips')
+        $km = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->join('routes', 'trips.route_id', '=', 'routes.id')
             ->where('trips.departure_date', '>=', $desde)
             ->select(DB::raw('DATE_FORMAT(trips.departure_date, "%Y-%m") as mes'), DB::raw('sum(routes.distance) as total'))
@@ -424,14 +430,14 @@ class DashboardService
     {
         $desde = now()->subYears(4)->startOfYear();
 
-        $viagens = DB::table('trips')
+        $viagens = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->where('departure_date', '>=', $desde)
             ->select(DB::raw('YEAR(departure_date) as ano'), DB::raw('count(*) as total'))
             ->groupBy('ano')
             ->orderBy('ano')
             ->pluck('total', 'ano');
 
-        $pessoas = DB::table('trip_clients')
+        $pessoas = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trip_clients'), 'trips.secretaria_id')
             ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
             ->where('trips.departure_date', '>=', $desde)
             ->select(DB::raw('YEAR(trips.departure_date) as ano'), DB::raw('count(*) as total'))
@@ -439,7 +445,7 @@ class DashboardService
             ->orderBy('ano')
             ->pluck('total', 'ano');
 
-        $km = DB::table('trips')
+        $km = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trips'), 'trips.secretaria_id')
             ->join('routes', 'trips.route_id', '=', 'routes.id')
             ->where('trips.departure_date', '>=', $desde)
             ->select(DB::raw('YEAR(trips.departure_date) as ano'), DB::raw('sum(routes.distance) as total'))
@@ -475,12 +481,12 @@ class DashboardService
         $fimDomes = now()->endOfMonth();
 
         return [
-            'total_qr' => DB::table('qrcode_logs')->count(),
-            'total_link_publico' => DB::table('public_queue_logs')->count(),
-            'qr_mes' => DB::table('qrcode_logs')
+            'total_qr' => $this->qrcodeLogs()->count(),
+            'total_link_publico' => \App\Support\EscopoAlmoxarifado::filtrar(DB::table('public_queue_logs'), 'secretaria_id')->count(),
+            'qr_mes' => $this->qrcodeLogs()
                 ->whereBetween('accessed_at', [$inicioDomes, $fimDomes])
                 ->count(),
-            'link_publico_mes' => DB::table('public_queue_logs')
+            'link_publico_mes' => \App\Support\EscopoAlmoxarifado::filtrar(DB::table('public_queue_logs'), 'secretaria_id')
                 ->whereBetween('accessed_at', [$inicioDomes, $fimDomes])
                 ->count(),
         ];
@@ -488,7 +494,7 @@ class DashboardService
 
     public function getQrPorDia(): \Illuminate\Support\Collection
     {
-        return DB::table('qrcode_logs')
+        return $this->qrcodeLogs()
             ->whereBetween('accessed_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->select(DB::raw('DAY(accessed_at) as dia'), DB::raw('count(*) as total'))
             ->groupBy('dia')
@@ -498,7 +504,7 @@ class DashboardService
 
     public function getLinkPorDia(): \Illuminate\Support\Collection
     {
-        return DB::table('public_queue_logs')
+        return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('public_queue_logs'), 'secretaria_id')
             ->whereBetween('accessed_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->select(DB::raw('DAY(accessed_at) as dia'), DB::raw('count(*) as total'))
             ->groupBy('dia')

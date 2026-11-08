@@ -26,9 +26,12 @@ class StoreQueueRequest extends BaseApiFormRequest
 
     public function rules(): array
     {
+        $sid = app(\App\Services\Secretarias\ActiveSecretaria::class)->forCreate($this->input('secretaria_id')) ?? 0;
+
         return [
+            'secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo(),
             'id_client' => ['required', 'exists:clients,id'],
-            'id_specialities' => ['required', 'exists:specialities,id'],
+            'id_specialities' => ['required', 'integer', \App\Support\EscopoAlmoxarifado::existe('specialities', $sid)],
             'id_user' => ['required', 'exists:users,id'],
             'done' => ['boolean'],
             'date_of_realized' => ['nullable', 'date'],

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sector extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     public $timestamps = false;

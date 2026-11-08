@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class QRCodeLog extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('queue_id', 'queue'));
+    }
+
     protected $table = 'qrcode_logs';
 
     protected $fillable = [

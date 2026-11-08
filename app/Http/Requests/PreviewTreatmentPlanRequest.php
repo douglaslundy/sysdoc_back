@@ -14,7 +14,7 @@ class PreviewTreatmentPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'speciality_id' => ['required', 'integer', 'exists:specialities,id'],
+            'speciality_id' => ['required', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('specialities')],
             'weekdays' => ['required', 'array', 'min:1'],
             'weekdays.*' => ['integer', 'between:1,7'],
             'total_sessions' => ['required', 'integer', 'min:1', 'max:200'],

@@ -24,6 +24,11 @@ class SecretariaMembership
     /** Filtra uma consulta de usuários para os que atendem a secretaria (admin sempre entra). */
     public static function filtrar($query, int $secretariaId)
     {
+        // Sem secretaria resolvida (id 0): ninguém, nem admin (falha fechado).
+        if ($secretariaId <= 0) {
+            return $query->whereRaw('1=0');
+        }
+
         return $query->where(fn ($q) => $q->where('profile', 'admin')
             ->orWhereIn('id', DB::table('user_secretarias')->select('user_id')->where('secretaria_id', $secretariaId)));
     }

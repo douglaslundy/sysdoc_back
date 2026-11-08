@@ -16,7 +16,7 @@ class CreateTicketAttendanceRequest extends FormRequest
         return [
             'clientId' => 'required|integer|exists:clients,id',
             'prefix' => 'nullable|string|max:3',
-            'roomId' => 'nullable|integer|exists:attendance_rooms,id',
+            'roomId' => ['nullable', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('attendance_rooms')],
         ];
     }
 }
