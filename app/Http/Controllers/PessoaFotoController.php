@@ -68,7 +68,10 @@ class PessoaFotoController extends Controller
     {
         $foto = PessoaFoto::daPessoa($pessoa);
 
-        abort_unless($foto && Storage::disk($foto->disk)->exists($foto->path), 404);
+        // Sem foto e o caso comum (nem todo cidadao/usuario tem): 204, sem 404 no console do navegador.
+        if (! $foto || ! Storage::disk($foto->disk)->exists($foto->path)) {
+            return response()->noContent();
+        }
 
         // Content-Type vem do banco (só imagens validadas no upload); no-cache porque a foto pode ser trocada.
         return Storage::disk($foto->disk)->response($foto->path, null, [
