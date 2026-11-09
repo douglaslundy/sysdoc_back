@@ -51,6 +51,18 @@ class RouteServiceProvider extends ServiceProvider
     }
 
     /**
+     * Chave do limitador do chat: usuario Sanctum (nunca o IP de quem esta logado).
+     * O guard padrao e 'api' (jwt) e nao le o token Sanctum; cair no IP faria todos os
+     * usuarios de uma prefeitura atras do mesmo link dividirem um unico balde.
+     */
+    protected function chaveChat(Request $request): string
+    {
+        $userId = optional($request->user('sanctum'))->id;
+
+        return $userId ? 'user:'.$userId : 'ip:'.$request->ip();
+    }
+
+    /**
      * Configure the rate limiters for the application.
      *
      * @return void
@@ -69,16 +81,16 @@ class RouteServiceProvider extends ServiceProvider
             // O balde por IP e COMPARTILHADO por todos os usuarios atras do mesmo link
             // (uma prefeitura inteira sai por 1 IP), por isso e bem mais folgado.
             return $userId
-                ? Limit::perMinute(600)->by('user:'.$userId)
+                ? Limit::perMinute(1500)->by('user:'.$userId)
                 : Limit::perMinute(240)->by('ip:'.$request->ip());
         });
 
         RateLimiter::for('chat-sync', function (Request $request) {
             $limits = ChatRealtimeConfig::rateLimits();
-            $limit = $limits['rate_limit_sync'] === 0 ? 5000 : $limits['rate_limit_sync'];
+            $limit = $limits['rate_limit_sync'] === 0 ? 5000 : max($limits['rate_limit_sync'], 600);
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip())
+                ->by($this->chaveChat($request))
                 ->response(function () {
                     return response()->json([
                         'message' => 'Muitas sincronizações do chat em sequência. Aguarde um instante e tente novamente.',
@@ -91,7 +103,7 @@ class RouteServiceProvider extends ServiceProvider
             $limit = $limits['rate_limit_messages'] === 0 ? 5000 : $limits['rate_limit_messages'];
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip())
+                ->by($this->chaveChat($request))
                 ->response(function () {
                     return response()->json([
                         'message' => 'Limite de envio de mensagens atingido. Aguarde um instante para enviar novamente.',
@@ -104,7 +116,7 @@ class RouteServiceProvider extends ServiceProvider
             $limit = $limits['rate_limit_typing'] === 0 ? 5000 : $limits['rate_limit_typing'];
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip())
+                ->by($this->chaveChat($request))
                 ->response(function () {
                     return response()->json([
                         'message' => 'Muitos eventos de digitação em sequência. Aguarde um instante e tente novamente.',
@@ -114,10 +126,10 @@ class RouteServiceProvider extends ServiceProvider
 
         RateLimiter::for('chat-presence', function (Request $request) {
             $limits = ChatRealtimeConfig::rateLimits();
-            $limit = $limits['rate_limit_presence'] === 0 ? 5000 : $limits['rate_limit_presence'];
+            $limit = $limits['rate_limit_presence'] === 0 ? 5000 : max($limits['rate_limit_presence'], 600);
 
             return Limit::perMinutes($limits['rate_limit_decay_minutes'], $limit)
-                ->by(optional($request->user())->id ?: $request->ip())
+                ->by($this->chaveChat($request))
                 ->response(function () {
                     return response()->json([
                         'message' => 'Muitas atualizações de presença em sequência. Aguarde um instante e tente novamente.',
