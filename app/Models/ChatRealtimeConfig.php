@@ -28,7 +28,7 @@ class ChatRealtimeConfig extends Model
         'host', 'port', 'scheme', 'use_tls', 'updated_by',
         'rate_limit_decay_minutes', 'rate_limit_global', 'rate_limit_sync',
         'rate_limit_messages', 'rate_limit_typing', 'rate_limit_presence',
-        'auto_open_on_message', 'play_sound_on_message',
+        'auto_open_on_message', 'play_sound_on_message', 'chat_enabled',
     ];
 
     protected $casts = [
@@ -46,6 +46,7 @@ class ChatRealtimeConfig extends Model
         'rate_limit_presence' => 'integer',
         'auto_open_on_message' => 'boolean',
         'play_sound_on_message' => 'boolean',
+        'chat_enabled' => 'boolean',
     ];
 
     protected $hidden = ['app_id', 'app_key', 'app_secret'];
@@ -124,6 +125,21 @@ class ChatRealtimeConfig extends Model
             'rate_limit_typing' => static::normalizeThrottle($config->rate_limit_typing, static::RATE_LIMIT_DEFAULTS['rate_limit_typing']),
             'rate_limit_presence' => static::normalizeThrottle($config->rate_limit_presence, static::RATE_LIMIT_DEFAULTS['rate_limit_presence']),
         ];
+    }
+
+    private static ?bool $chatEnabledColumn = null;
+
+    /** Interruptor geral do chat. Sem a coluna (antes da migration) o chat segue ligado. */
+    public static function chatGloballyEnabled(): bool
+    {
+        static::$chatEnabledColumn ??= Schema::hasTable('chat_realtime_configs')
+            && Schema::hasColumn('chat_realtime_configs', 'chat_enabled');
+
+        if (! static::$chatEnabledColumn) {
+            return true;
+        }
+
+        return (bool) (static::current()->chat_enabled ?? true);
     }
 
     public static function supportsBehaviorFlags(): bool
