@@ -678,8 +678,10 @@ class DashboardController extends MonitorApsBaseController
                             $sub->where('responsavel_atual_id', $user->id)
                                 ->orWhere('criado_por_id', $user->id);
                             if ($unitIds) {
-                                $sub->orWhereIn('origem_unit_id', $unitIds)
-                                    ->orWhereIn('destino_unit_id', $unitIds);
+                                $sub->orWhere(function ($unit) use ($unitIds) {
+                                    $unit->whereNull('responsavel_atual_id')
+                                        ->where(fn ($u) => $u->whereIn('origem_unit_id', $unitIds)->orWhereIn('destino_unit_id', $unitIds));
+                                });
                             }
                         });
                     }
