@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Schema;
 
 class UpdateLabConfigRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class UpdateLabConfigRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo(),
             'email_habilitado' => 'boolean',
             'nome_estabelecimento' => 'nullable|string|max:255',
@@ -28,5 +29,11 @@ class UpdateLabConfigRequest extends FormRequest
             'rodape1' => 'nullable|string',
             'rodape2' => 'nullable|string',
         ];
+
+        if (Schema::hasColumn('lab_configs', 'imprimir_rascunho_exame')) {
+            $rules['imprimir_rascunho_exame'] = 'boolean';
+        }
+
+        return $rules;
     }
 }

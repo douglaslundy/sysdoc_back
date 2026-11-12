@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CallNextAttendanceRequest;
+use App\Http\Requests\CallSpecificAttendanceRequest;
 use App\Http\Requests\CreateTicketAttendanceRequest;
 use App\Http\Requests\ListTicketsAttendanceRequest;
 use App\Http\Requests\QueueAttendanceRequest;
 use App\Http\Requests\RoomsStoreAttendanceRequest;
+use App\Http\Requests\RoomsUpdateAttendanceRequest;
+use App\Http\Requests\ServiceFinishAttendanceRequest;
+use App\Http\Requests\ServiceNotesAttendanceRequest;
 use App\Models\User;
 use App\Services\Attendance\AttendancePanelService;
 use App\Services\Attendance\AttendancePendingSummaryService;
@@ -124,11 +128,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function callSpecific(int $ticketId, Request $request): JsonResponse
+    public function callSpecific(int $ticketId, CallSpecificAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'roomId' => ['required', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('attendance_rooms')],
-        ]);
+        $validated = $request->validated();
 
         try {
             $ticket = $this->queueService->callSpecific($ticketId, (int) auth()->id(), (int) $validated['roomId']);
@@ -168,11 +170,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function serviceNotes(int $ticketId, Request $request): JsonResponse
+    public function serviceNotes(int $ticketId, ServiceNotesAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         try {
             return response()->json($this->serviceFlow->saveNotes($ticketId, $validated['notes'] ?? null));
@@ -181,11 +181,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function serviceFinish(int $ticketId, Request $request): JsonResponse
+    public function serviceFinish(int $ticketId, ServiceFinishAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         try {
             return response()->json($this->serviceFlow->finish($ticketId, $validated['notes'] ?? null));
@@ -250,15 +248,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function roomsUpdate(int $id, Request $request): JsonResponse
+    public function roomsUpdate(int $id, RoomsUpdateAttendanceRequest $request): JsonResponse
     {
-        // 404 se a sala for de outra secretaria; o nome é único só dentro da secretaria da sala.
-        $sid = \App\Support\EscopoAlmoxarifado::alvo(\App\Models\AttendanceRoom::class, $id);
-        $validated = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:100', \App\Support\EscopoAlmoxarifado::unico('attendance_rooms', 'name', $sid)->ignore($id)],
-            'description' => 'nullable|string|max:255',
-            'active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         try {
             $room = \App\Models\AttendanceRoom::query()->findOrFail($id);

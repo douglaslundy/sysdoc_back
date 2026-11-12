@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SetActiveChatRealtimeConfigRequest;
+use App\Http\Requests\SetChatEnabledChatRealtimeConfigRequest;
+use App\Http\Requests\TestChatRealtimeConfigRequest;
+use App\Http\Requests\UpdateChatRealtimeConfigRequest;
 use App\Models\ChatRealtimeConfig;
 use App\Services\AuditService;
 use App\Services\ChatBroadcastConfigService;
@@ -9,7 +13,6 @@ use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 use Pusher\Pusher;
 
 class ChatRealtimeConfigController extends Controller
@@ -23,9 +26,9 @@ class ChatRealtimeConfigController extends Controller
         return response()->json($this->adminPayload(ChatRealtimeConfig::current()));
     }
 
-    public function setChatEnabled(Request $request): JsonResponse
+    public function setChatEnabled(SetChatEnabledChatRealtimeConfigRequest $request): JsonResponse
     {
-        $data = $request->validate(['chat_enabled' => ['required', 'boolean']]);
+        $data = $request->validated();
         $config = ChatRealtimeConfig::current();
         $old = (bool) ($config->chat_enabled ?? true);
         $new = (bool) $data['chat_enabled'];
@@ -46,9 +49,9 @@ class ChatRealtimeConfigController extends Controller
         return response()->json($this->broadcastConfig->publicPayload());
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateChatRealtimeConfigRequest $request): JsonResponse
     {
-        $data = $request->validate($this->rules(true));
+        $data = $request->validated();
         $user = $request->user();
 
         $config = ChatRealtimeConfig::current();
@@ -106,9 +109,9 @@ class ChatRealtimeConfigController extends Controller
         return response()->json($this->adminPayload($config));
     }
 
-    public function setActive(Request $request): JsonResponse
+    public function setActive(SetActiveChatRealtimeConfigRequest $request): JsonResponse
     {
-        $data = $request->validate(['active' => ['required', 'boolean']]);
+        $data = $request->validated();
         $config = ChatRealtimeConfig::current();
 
         if ($data['active'] && (! $config->app_id || ! $config->app_key || ! $config->app_secret)) {
@@ -180,9 +183,9 @@ class ChatRealtimeConfigController extends Controller
         return response()->json($this->adminPayload($config));
     }
 
-    public function test(Request $request): JsonResponse
+    public function test(TestChatRealtimeConfigRequest $request): JsonResponse
     {
-        $data = $request->validate($this->rules(false));
+        $data = $request->validated();
         $user = $request->user();
 
         $stored = ChatRealtimeConfig::current();
@@ -269,30 +272,6 @@ class ChatRealtimeConfigController extends Controller
                                     : 'Não foi possível validar o motor selecionado.')))),
             ], $rateLimited ? 429 : 422);
         }
-    }
-
-    private function rules(bool $saving): array
-    {
-        return [
-            'engine' => ['required', Rule::in(['pusher', 'soketi'])],
-            'active' => [$saving ? 'required' : 'nullable', 'boolean'],
-            'app_id' => ['nullable', 'string', 'max:255'],
-            'app_key' => ['nullable', 'string', 'max:255'],
-            'app_secret' => ['nullable', 'string', 'max:500'],
-            'cluster' => ['nullable', 'string', 'max:40', 'required_if:engine,pusher'],
-            'host' => ['nullable', 'string', 'max:255', 'required_if:engine,soketi'],
-            'port' => ['nullable', 'integer', 'min:1', 'max:65535', 'required_if:engine,soketi'],
-            'scheme' => ['nullable', Rule::in(['http', 'https']), 'required_if:engine,soketi'],
-            'use_tls' => ['nullable', 'boolean'],
-            'rate_limit_decay_minutes' => ['nullable', 'integer', 'min:1', 'max:60'],
-            'rate_limit_global' => ['nullable', 'integer', 'min:0', 'max:5000'],
-            'rate_limit_sync' => ['nullable', 'integer', 'min:0', 'max:5000'],
-            'rate_limit_messages' => ['nullable', 'integer', 'min:0', 'max:5000'],
-            'rate_limit_typing' => ['nullable', 'integer', 'min:0', 'max:5000'],
-            'rate_limit_presence' => ['nullable', 'integer', 'min:0', 'max:5000'],
-            'auto_open_on_message' => ['nullable', 'boolean'],
-            'play_sound_on_message' => ['nullable', 'boolean'],
-        ];
     }
 
     private function adminPayload(ChatRealtimeConfig $config): array

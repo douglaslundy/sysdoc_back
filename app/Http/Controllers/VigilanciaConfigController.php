@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShowVigilanciaConfigRequest;
 use App\Http\Requests\UpdateVigilanciaConfigRequest;
 use App\Models\VigilanciaConfig;
 use App\Services\AuditService;
@@ -11,11 +12,8 @@ use Illuminate\Http\Request;
 
 class VigilanciaConfigController extends Controller
 {
-    public function show(Request $request): JsonResponse
+    public function show(ShowVigilanciaConfigRequest $request): JsonResponse
     {
-        // Admin em "Todas" escolhe a secretaria (?secretaria_id=), validada; os demais usam a ativa.
-        $request->validate(['secretaria_id' => EscopoAlmoxarifado::regraCampo()]);
-
         return response()->json(VigilanciaConfig::get(EscopoAlmoxarifado::id($request->input('secretaria_id'))));
     }
 

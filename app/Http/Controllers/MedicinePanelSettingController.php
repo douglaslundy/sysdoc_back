@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShowMedicinePanelSettingRequest;
 use App\Http\Requests\UpdateMedicinePanelSettingRequest;
 use App\Models\PharmacyMedicinePanelSetting;
 use App\Support\EscopoAlmoxarifado;
@@ -10,11 +11,8 @@ use Illuminate\Http\Request;
 
 class MedicinePanelSettingController extends Controller
 {
-    public function show(Request $request): JsonResponse
+    public function show(ShowMedicinePanelSettingRequest $request): JsonResponse
     {
-        // Admin em "Todas" escolhe a secretaria (?secretaria_id=), validada; os demais usam a ativa.
-        $request->validate(['secretaria_id' => EscopoAlmoxarifado::regraCampo()]);
-
         return response()->json(PharmacyMedicinePanelSetting::current(EscopoAlmoxarifado::id($request->input('secretaria_id'))));
     }
 

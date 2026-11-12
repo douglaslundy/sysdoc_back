@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateLetterAiRequest;
 use App\Http\Requests\CreateProtocolLetterRequest;
 use App\Http\Requests\CreateProtocolV2LetterRequest;
 use App\Models\Letter;
@@ -172,18 +173,8 @@ class LetterController extends Controller
         }
     }
 
-    public function createLetterAi(Request $req)
+    public function createLetterAi(CreateLetterAiRequest $req)
     {
-        $req->validate([
-            'id_user' => ['required'],
-            'sender' => ['required', 'string'],
-            'recipient' => ['required', 'string'],
-            'subject_matter' => ['required', 'string'],
-            'summary' => ['nullable', 'string'],
-            'wishes' => ['nullable', 'string'],
-            'treatment_pronoun' => ['nullable', 'string'],
-        ]);
-
         $promptText = 'Elabore um OFICIO FORMAL com linguagem juridica precisa, objetiva e tecnica.'
             ."\n\nSiga rigorosamente a estrutura abaixo:\n"
             ."\n1. Vocativo:\nInicie com o pronome de tratamento: ".$req->treatment_pronoun

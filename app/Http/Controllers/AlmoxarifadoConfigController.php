@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShowAlmoxarifadoConfigRequest;
 use App\Http\Requests\UpdateAlmoxarifadoConfigRequest;
 use App\Models\AlmoxarifadoConfig;
 use App\Support\EscopoAlmoxarifado;
@@ -10,11 +11,8 @@ use Illuminate\Http\Request;
 
 class AlmoxarifadoConfigController extends Controller
 {
-    public function show(Request $request): JsonResponse
+    public function show(ShowAlmoxarifadoConfigRequest $request): JsonResponse
     {
-        // Admin em "Todas" escolhe a secretaria (?secretaria_id=), validada (inexistente/inativa = 422, sem gravar); os demais usam a ativa.
-        $request->validate(['secretaria_id' => EscopoAlmoxarifado::regraCampo()]);
-
         return response()->json(AlmoxarifadoConfig::current(EscopoAlmoxarifado::id($request->input('secretaria_id'))));
     }
 
