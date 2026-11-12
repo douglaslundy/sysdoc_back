@@ -15,6 +15,7 @@ class ListClientsRequest extends BaseApiFormRequest
                 '/clients',
                 '/queue',
                 '/trips',
+                '/trips/agenda',
                 '/laboratorio/pedidos',
                 '/attendance/tickets',
             ]);

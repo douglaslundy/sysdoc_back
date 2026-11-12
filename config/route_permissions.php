@@ -66,14 +66,14 @@ return [
         ['prefix' => 'peticao-motivos', 'pages' => ['/peticao-motivos']],
 
         // ---- viagens (TFD) ----
-        ['prefix' => 'trips', 'pages' => ['/trips', '/clients']],
+        ['prefix' => 'trips', 'pages' => ['/trips', '/trips/agenda', '/clients']],
         ['prefix' => 'trip-clients', 'pages' => ['/trips']],
-        ['prefix' => 'trip-schedule', 'pages' => ['/trips']],
+        ['prefix' => 'trip-schedule', 'pages' => ['/trips', '/trips/agenda']],
         ['prefix' => 'confirm-trip-client', 'pages' => ['/trips']],
         ['prefix' => 'unconfirm-trip-client', 'pages' => ['/trips']],
-        ['prefix' => 'vehicles', 'methods' => ['GET'], 'pages' => ['/vehicles', '/trips']],
+        ['prefix' => 'vehicles', 'methods' => ['GET'], 'pages' => ['/vehicles', '/trips', '/trips/agenda']],
         ['prefix' => 'vehicles', 'pages' => ['/vehicles']],
-        ['prefix' => 'routes', 'methods' => ['GET'], 'pages' => ['/routes', '/trips']],
+        ['prefix' => 'routes', 'methods' => ['GET'], 'pages' => ['/routes', '/trips', '/trips/agenda']],
         ['prefix' => 'routes', 'pages' => ['/routes']],
 
         // ---- cadastros de apoio: a lista é usada por vários módulos; só a escrita é restrita ----
