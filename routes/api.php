@@ -612,6 +612,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     });
 
     // Ordem de Serviço (acesso por route_permissions.php; regras de papel dentro dos controllers)
+    Route::get('/ordens-servico/secretarias', [OrdemServicoController::class, 'secretarias']);
     Route::get('/ordens-servico/tecnicos', [OrdemServicoController::class, 'tecnicos']);
     Route::get('/ordens-servico', [OrdemServicoController::class, 'index']);
     Route::get('/ordens-servico/{id}', [OrdemServicoController::class, 'show'])->whereNumber('id');

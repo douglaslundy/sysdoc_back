@@ -166,6 +166,12 @@ class OrdemServicoController extends Controller
             ->download('OS-'.str_replace('/', '-', $os->numero).'.pdf');
     }
 
+    /** Secretarias ativas (destino possível de uma OS; qualquer uma atende qualquer solicitante). */
+    public function secretarias(): JsonResponse
+    {
+        return response()->json(\App\Models\Secretaria::where('ativa', true)->orderBy('nome')->get(['id', 'nome']));
+    }
+
     /** Técnicos da secretaria destino e se o solicitante pode apontar um (usado no formulário de abertura). */
     public function tecnicos(Request $request): JsonResponse
     {
