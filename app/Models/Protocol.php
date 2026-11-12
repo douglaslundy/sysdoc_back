@@ -20,6 +20,7 @@ class Protocol extends Model
         'assunto',
         'descricao',
         'tipo',
+        'visibility',
         'status',
         'prioridade',
         'solicitante_tipo',
@@ -54,6 +55,33 @@ class Protocol extends Model
         'novo' => 'boolean',
         'vencido' => 'boolean',
     ];
+
+    /**
+     * Quem enxerga o protocolo: admin vê todos; os demais veem os públicos, os que criaram, os que respondem
+     * e, enquanto não há destinatário pessoa, os da própria unidade. Lista, kanban e KPIs usam esta mesma regra.
+     */
+    public function scopeVisiveisPara($query, ?User $user)
+    {
+        if ($user?->profile === 'admin') {
+            return $query;
+        }
+
+        $unitIds = $user
+            ? ProtocolUserUnit::query()->where('user_id', $user->id)->where('ativo', true)->pluck('protocol_organizational_unit_id')->all()
+            : [];
+
+        return $query->where(function ($sub) use ($user, $unitIds) {
+            $sub->where('protocols.visibility', 'public')
+                ->orWhere('protocols.responsavel_atual_id', $user?->id)
+                ->orWhere('protocols.criado_por_id', $user?->id);
+            if ($unitIds) {
+                $sub->orWhere(function ($unit) use ($unitIds) {
+                    $unit->whereNull('protocols.responsavel_atual_id')
+                        ->where(fn ($u) => $u->whereIn('protocols.origem_unit_id', $unitIds)->orWhereIn('protocols.destino_unit_id', $unitIds));
+                });
+            }
+        });
+    }
 
     public static function gerarNumero(): string
     {

@@ -18,6 +18,7 @@ class StoreProtocolRequest extends FormRequest
     {
         return [
             'status' => ['nullable', 'string', \Illuminate\Validation\Rule::in(self::STATUSES_INICIAIS)],
+            'visibility' => ['nullable', 'string', 'in:public,private'],
             'assunto' => 'required|string|max:200',
             'descricao' => 'nullable|string',
             'tipo' => 'required|string|max:40|exists:protocol_types,codigo',

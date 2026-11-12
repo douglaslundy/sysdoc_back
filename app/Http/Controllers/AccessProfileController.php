@@ -32,6 +32,10 @@ class AccessProfileController extends Controller
             'client_trips_view_enabled' => $request->boolean('client_trips_view_enabled'),
             'client_report_view_enabled' => $request->boolean('client_report_view_enabled'),
             'client_history_view_enabled' => $request->boolean('client_history_view_enabled'),
+            'protocol_allowed_types' => $request->input('protocol_allowed_types'),
+            'protocol_allowed_statuses' => $request->input('protocol_allowed_statuses'),
+            'protocol_allowed_visibilities' => $request->input('protocol_allowed_visibilities'),
+            'protocol_can_change_visibility' => $request->boolean('protocol_can_change_visibility'),
         ]);
 
         if ($request->has('page_ids')) {
@@ -70,6 +74,10 @@ class AccessProfileController extends Controller
             'client_trips_view_enabled',
             'client_report_view_enabled',
             'client_history_view_enabled',
+            'protocol_allowed_types',
+            'protocol_allowed_statuses',
+            'protocol_allowed_visibilities',
+            'protocol_can_change_visibility',
         ]));
 
         if ($request->has('page_ids')) {

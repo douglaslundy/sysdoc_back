@@ -75,10 +75,6 @@ class UserRequest extends FormRequest
             'is_rt_psf' => ['nullable', 'boolean'],
             'rt_all_teams' => ['nullable', 'boolean'],
             'chat_access_override' => ['nullable', 'boolean'],
-            'protocol_allowed_types' => ['nullable', 'array'],
-            'protocol_allowed_types.*' => ['string', 'exists:protocol_types,codigo'],
-            'protocol_allowed_statuses' => ['nullable', 'array'],
-            'protocol_allowed_statuses.*' => ['string', Rule::in(\App\Http\Requests\StoreProtocolRequest::STATUSES_INICIAIS)],
             'protocol_unit_ids' => ['nullable', 'array'],
             'protocol_unit_ids.*' => ['integer', 'distinct', 'exists:protocol_organizational_units,id'],
         ];

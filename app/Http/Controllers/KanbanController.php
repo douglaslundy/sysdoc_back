@@ -15,7 +15,7 @@ class KanbanController extends Controller
     {
         $query = KanbanTask::query()
             ->with([
-                'protocol:id,numero,assunto,status', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name',
+                'protocol:id,numero,assunto,status,tipo,visibility,criado_por_id', 'protocol.criadoPor:id,name', 'createdBy:id,name', 'updatedBy:id,name', 'responsavel:id,name',
                 'unit:id,nome,tipo', 'fiscalizacao:id,protocolo',
             ])
             ->whereNull('arquivado_at')
@@ -29,8 +29,11 @@ class KanbanController extends Controller
                     $scope->orWhereIn('unit_id', UnitTree::visibleUnitIdsForUser((int) $user->id));
                 }
             })
+            // Card de protocolo segue a regra do protocolo (a mesma da lista); admin vê todos.
+            ->where(fn ($q) => $q->whereNull('protocol_id')
+                ->orWhereHas('protocol', fn ($p) => $p->visiveisPara($request->user())))
             ->where(function ($builder) use ($request) {
-                $builder->where('visibility', 'public');
+                $builder->whereNotNull('protocol_id')->orWhere('visibility', 'public');
 
                 if ($request->user()?->id) {
                     $builder->orWhere(function ($privateQuery) use ($request) {

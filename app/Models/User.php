@@ -15,14 +15,12 @@ class User extends Authenticatable
 
     public $timestamps = false;
 
-    protected $fillable = ['profile', 'chat_access_override', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date', 'protocol_allowed_types', 'protocol_allowed_statuses'];
+    protected $fillable = ['profile', 'chat_access_override', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date'];
 
     protected $hidden = ['password'];
 
     protected $casts = [
         'chat_access_override' => 'boolean',
-        'protocol_allowed_types' => 'array',
-        'protocol_allowed_statuses' => 'array',
     ];
 
     public function specialities()
@@ -136,6 +134,27 @@ class User extends Authenticatable
         }
 
         return (bool) $this->accessProfile()->value('client_history_view_enabled');
+    }
+
+    /**
+     * O que este usuário pode cadastrar em protocolo, definido no perfil de acesso.
+     * types/statuses null = sem restrição; visibilities nunca vazio (padrão: só privado). Admin não tem restrição.
+     */
+    public function protocolCreationRules(): array
+    {
+        if ($this->profile === 'admin') {
+            return ['types' => null, 'statuses' => null, 'visibilities' => ['private', 'public'], 'can_change_visibility' => true];
+        }
+
+        $perfil = $this->accessProfile;
+        $visibilidades = array_values(array_intersect(['private', 'public'], (array) ($perfil?->protocol_allowed_visibilities ?? ['private'])));
+
+        return [
+            'types' => $perfil?->protocol_allowed_types,
+            'statuses' => $perfil?->protocol_allowed_statuses,
+            'visibilities' => $visibilidades ?: ['private'],
+            'can_change_visibility' => (bool) $perfil?->protocol_can_change_visibility,
+        ];
     }
 
     public function chatDisplayName(): string

@@ -24,6 +24,13 @@ class StoreAccessProfileRequest extends FormRequest
             'client_trips_view_enabled' => 'nullable|boolean',
             'client_report_view_enabled' => 'nullable|boolean',
             'client_history_view_enabled' => 'nullable|boolean',
+            'protocol_allowed_types' => 'nullable|array',
+            'protocol_allowed_types.*' => 'string|exists:protocol_types,codigo',
+            'protocol_allowed_statuses' => 'nullable|array',
+            'protocol_allowed_statuses.*' => ['string', \Illuminate\Validation\Rule::in(\App\Http\Requests\StoreProtocolRequest::STATUSES_INICIAIS)],
+            'protocol_allowed_visibilities' => 'nullable|array',
+            'protocol_allowed_visibilities.*' => 'string|in:public,private',
+            'protocol_can_change_visibility' => 'nullable|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
         ];
