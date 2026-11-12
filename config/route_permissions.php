@@ -65,6 +65,7 @@ return [
         // ---- viagens (TFD) ----
         ['prefix' => 'trips', 'pages' => ['/trips', '/clients']],
         ['prefix' => 'trip-clients', 'pages' => ['/trips']],
+        ['prefix' => 'trip-schedule', 'pages' => ['/trips']],
         ['prefix' => 'confirm-trip-client', 'pages' => ['/trips']],
         ['prefix' => 'unconfirm-trip-client', 'pages' => ['/trips']],
         ['prefix' => 'vehicles', 'methods' => ['GET'], 'pages' => ['/vehicles', '/trips']],

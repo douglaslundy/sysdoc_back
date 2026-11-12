@@ -11,9 +11,13 @@ class StoreProtocolRequest extends FormRequest
         return true;
     }
 
+    /** Status que o usuário pode escolher ao criar (padrão: novo). */
+    public const STATUSES_INICIAIS = ['novo', 'recebido', 'encaminhado', 'encerrado', 'concluido', 'cancelado'];
+
     public function rules(): array
     {
         return [
+            'status' => ['nullable', 'string', \Illuminate\Validation\Rule::in(self::STATUSES_INICIAIS)],
             'assunto' => 'required|string|max:200',
             'descricao' => 'nullable|string',
             'tipo' => 'required|string|max:40|exists:protocol_types,codigo',

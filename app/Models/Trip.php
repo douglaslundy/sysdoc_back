@@ -39,6 +39,8 @@ class Trip extends Model
     public function clients()
     {
         return $this->belongsToMany(Client::class, 'trip_clients')->with(['addresses:id_client,street,number,district'])
-            ->withPivot(['id', 'person_type', 'phone', 'departure_location',  'destination_location', 'time', 'is_confirmed', 'updated_at']); // Adiciona o campo da tabela intermediária;
+            // Passageiro primeiro e seus acompanhantes logo abaixo (telas e relatórios herdam esta ordem).
+            ->orderByRaw('COALESCE(trip_clients.companion_of, trip_clients.id), trip_clients.companion_of IS NOT NULL, trip_clients.id')
+            ->withPivot(['id', 'person_type', 'companion_of', 'phone', 'departure_location',  'destination_location', 'time', 'is_confirmed', 'updated_at']); // Adiciona o campo da tabela intermediária;
     }
 }

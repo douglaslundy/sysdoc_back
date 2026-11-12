@@ -15,12 +15,14 @@ class User extends Authenticatable
 
     public $timestamps = false;
 
-    protected $fillable = ['profile', 'chat_access_override', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date'];
+    protected $fillable = ['profile', 'chat_access_override', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'is_driver', 'is_rt_psf', 'rt_all_teams', 'password', 'active', 'inactive_date', 'protocol_allowed_types', 'protocol_allowed_statuses'];
 
     protected $hidden = ['password'];
 
     protected $casts = [
         'chat_access_override' => 'boolean',
+        'protocol_allowed_types' => 'array',
+        'protocol_allowed_statuses' => 'array',
     ];
 
     public function specialities()

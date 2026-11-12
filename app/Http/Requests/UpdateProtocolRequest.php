@@ -18,6 +18,8 @@ class UpdateProtocolRequest extends FormRequest
             'descricao' => 'nullable|string',
             'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo',
             'prioridade' => 'nullable|string|max:20',
+            'status' => 'sometimes|string|in:novo,recebido,encaminhado,devolvido,reaberto,encerrado,concluido,cancelado',
+            'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_user_id' => 'nullable|integer|exists:users,id',
             'prazo_dias' => 'nullable|integer|min:1|max:365',

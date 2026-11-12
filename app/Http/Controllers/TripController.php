@@ -144,17 +144,19 @@ class TripController extends Controller
                     'obs' => $trip->obs,
                 ]);
 
-                foreach ($trip->clients as $client) {
-                    TripClient::create([
+                $novoId = []; // id antigo da trip_clients => id novo (para religar acompanhantes)
+                foreach ($trip->clients->sortBy(fn ($c) => $c->pivot->person_type === 'passenger' ? 0 : 1) as $client) {
+                    $novoId[$client->pivot->id] = TripClient::create([
                         'trip_id' => $newTrip->id,
                         'client_id' => $client->id,
                         'person_type' => $client->pivot->person_type,
+                        'companion_of' => $client->pivot->companion_of ? ($novoId[$client->pivot->companion_of] ?? null) : null,
                         'phone' => $client->pivot->phone,
                         'departure_location' => $client->pivot->departure_location,
                         'destination_location' => $client->pivot->destination_location,
                         'time' => $client->pivot->time,
                         'is_confirmed' => false,
-                    ]);
+                    ])->id;
                 }
 
                 $created[] = $newTrip->load('driver', 'route', 'vehicle', 'user', 'clients');
@@ -178,6 +180,7 @@ class TripController extends Controller
     {
         $tripId = DB::transaction(function () use ($id) {
             $cli = TripClient::findOrFail($id);
+            TripClient::where('companion_of', $cli->id)->update(['companion_of' => null]); // acompanhantes ficam na viagem
             $cli->delete();
 
             return $cli->trip_id;

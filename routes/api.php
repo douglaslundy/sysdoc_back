@@ -542,6 +542,11 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     Route::get('/trips/drivers-options', [TripController::class, 'drivers']);
     Route::apiResource('trips', TripController::class);
     Route::post('/trips/{trip}/replicate', [TripController::class, 'replicate']);
+    Route::get('/trip-schedule', [\App\Http\Controllers\TripScheduleController::class, 'index']);
+    Route::post('/trip-schedule', [\App\Http\Controllers\TripScheduleController::class, 'store']);
+    Route::post('/trip-schedule/send', [\App\Http\Controllers\TripScheduleController::class, 'send']);
+    Route::put('/trip-schedule/{id}', [\App\Http\Controllers\TripScheduleController::class, 'update'])->whereNumber('id');
+    Route::delete('/trip-schedule/{id}', [\App\Http\Controllers\TripScheduleController::class, 'destroy'])->whereNumber('id');
     Route::post('/trip-clients', [TripController::class, 'insertTripClient']);
     Route::patch('/confirm-trip-client/{client_id}', [TripController::class, 'confirmTripClient']);
     Route::patch('/unconfirm-trip-client/{client_id}', [TripController::class, 'unconfirmTripClient']);

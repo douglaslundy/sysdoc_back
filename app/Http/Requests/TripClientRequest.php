@@ -68,6 +68,21 @@ class TripClientRequest extends FormRequest
                 },
             ],
             'person_type' => 'required|in:passenger,companion',
+            'companion_of' => [
+                'nullable',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    // O passageiro de referência precisa estar na mesma viagem e ser passageiro.
+                    $ok = \DB::table('trip_clients')
+                        ->where('id', $value)
+                        ->where('trip_id', $this->trip_id)
+                        ->where('person_type', 'passenger')
+                        ->exists();
+                    if (! $ok) {
+                        $fail('O passageiro do acompanhante não pertence a esta viagem.');
+                    }
+                },
+            ],
             'phone' => 'nullable|string|max:20', // Corrigido "ohone" para "phone"
             'departure_location' => 'nullable|string|max:50',
             'destination_location' => 'nullable|string|max:50',

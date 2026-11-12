@@ -98,8 +98,13 @@ class BannedIpService
 
         try {
             $key = 'scan404:'.$ip;
-            Cache::add($key, 0, self::STRIKE_WINDOW);
-            $count = Cache::increment($key);
+            // Cache "file" não incrementa de forma atômica: varreduras paralelas perdiam contagens
+            // (IP chegava a 9 hits com limite 2). O lock serializa leitura+gravação por IP.
+            $count = Cache::lock('lock:'.$key, 5)->block(3, function () use ($key) {
+                Cache::add($key, 0, self::STRIKE_WINDOW);
+
+                return Cache::increment($key);
+            });
 
             if ($count >= $this->strikeLimit() && ! $this->isBanned($ip)) {
                 $this->ban($ip, "Varredura de rotas inexistentes ({$count} x 404 em ".(self::STRIKE_WINDOW / 60)." min; última: /{$path})", 'auto', self::AUTO_BAN_DAYS, $count);

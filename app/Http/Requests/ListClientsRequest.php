@@ -24,6 +24,7 @@ class ListClientsRequest extends BaseApiFormRequest
     {
         return [
             'search' => ['nullable', 'string', 'max:120'],
+            'somente_nome' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];

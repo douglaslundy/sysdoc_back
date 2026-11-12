@@ -113,9 +113,13 @@ class ClientController extends Controller
             $search = $this->escapeLike(trim($filters['search']));
             $digits = preg_replace('/\D/', '', $search);
 
-            $query->where(function ($q) use ($search, $digits) {
-                $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('mother', 'LIKE', "%{$search}%");
+            $somenteNome = ! empty($filters['somente_nome']);
+
+            $query->where(function ($q) use ($search, $digits, $somenteNome) {
+                $q->where('name', 'LIKE', "%{$search}%");
+                if (! $somenteNome) {
+                    $q->orWhere('mother', 'LIKE', "%{$search}%");
+                }
 
                 if (strlen($digits) >= 3) {
                     $q->orWhere('cpf', 'LIKE', "%{$digits}%")
