@@ -39,6 +39,8 @@ use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\FiscalizacaoHistoricoController;
 use App\Http\Controllers\IluminacaoDesfechoController;
 use App\Http\Controllers\IluminacaoPosteController;
+use App\Http\Controllers\OrdemServicoController;
+use App\Http\Controllers\OsTipoServicoController;
 use App\Http\Controllers\IluminacaoPosteFotoController;
 use App\Http\Controllers\PessoaFotoController;
 use App\Http\Controllers\KanbanController;
@@ -608,6 +610,25 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     Route::middleware('page.permission:/alvaras')->group(function () {
         Route::apiResource('alvaras', AlvaraController::class)->only(['store', 'update', 'destroy']);
     });
+
+    // Ordem de Serviço (acesso por route_permissions.php; regras de papel dentro dos controllers)
+    Route::get('/ordens-servico/tecnicos', [OrdemServicoController::class, 'tecnicos']);
+    Route::get('/ordens-servico', [OrdemServicoController::class, 'index']);
+    Route::get('/ordens-servico/{id}', [OrdemServicoController::class, 'show'])->whereNumber('id');
+    Route::get('/ordens-servico/{id}/pdf', [OrdemServicoController::class, 'pdf'])->whereNumber('id');
+    Route::get('/ordens-servico/{id}/fotos/{fotoId}', [OrdemServicoController::class, 'foto'])->whereNumber(['id', 'fotoId']);
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::post('/ordens-servico', [OrdemServicoController::class, 'store']);
+        Route::post('/ordens-servico/{id}/atribuir', [OrdemServicoController::class, 'atribuir'])->whereNumber('id');
+        Route::post('/ordens-servico/{id}/iniciar', [OrdemServicoController::class, 'iniciar'])->whereNumber('id');
+        Route::post('/ordens-servico/{id}/concluir', [OrdemServicoController::class, 'concluir'])->whereNumber('id');
+        Route::post('/ordens-servico/{id}/cancelar', [OrdemServicoController::class, 'cancelar'])->whereNumber('id');
+        Route::post('/os-tipos', [OsTipoServicoController::class, 'store']);
+        Route::put('/os-tipos/{id}', [OsTipoServicoController::class, 'update'])->whereNumber('id');
+        Route::put('/os-configuracao', [OsTipoServicoController::class, 'salvarConfiguracao']);
+    });
+    Route::get('/os-tipos', [OsTipoServicoController::class, 'index']);
+    Route::get('/os-configuracao', [OsTipoServicoController::class, 'configuracao']);
 
     // Iluminação pública (acesso por route_permissions.php)
     Route::get('/iluminacao/postes', [IluminacaoPosteController::class, 'index']);

@@ -56,6 +56,11 @@ return [
 
         // ---- vigilância sanitária (leituras; escritas já têm grupo próprio) ----
         ['prefix' => 'fiscalizacoes', 'methods' => ['GET'], 'pages' => ['/fiscalizacoes']],
+        // Ordem de Serviço: abrir/atender é '/ordem-servico'; tipos e configuração, '/ordem-servico/configuracao'.
+        ['prefix' => 'ordens-servico', 'pages' => ['/ordem-servico']],
+        ['prefix' => 'os-tipos', 'methods' => ['GET'], 'pages' => ['/ordem-servico', '/ordem-servico/configuracao']],
+        ['prefix' => 'os-tipos', 'pages' => ['/ordem-servico/configuracao']],
+        ['prefix' => 'os-configuracao', 'pages' => ['/ordem-servico/configuracao']],
         // Iluminação pública: cadastro e serviço são páginas irmãs; qualquer uma libera a leitura.
         ['prefix' => 'iluminacao/postes', 'pages' => ['/iluminacao/cadastro', '/iluminacao/servico']],
         ['prefix' => 'estabelecimentos', 'methods' => ['GET'], 'pages' => ['/estabelecimentos', '/alvaras', '/fiscalizacoes', '/auditoria']],
