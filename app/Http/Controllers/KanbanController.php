@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreKanbanRequest;
+use App\Http\Requests\UpdateKanbanTaskRequest;
 use App\Models\CadastroSolicitacao;
 use App\Models\KanbanTask;
 use App\Models\Protocol;
@@ -123,27 +124,10 @@ class KanbanController extends Controller
         return response()->json($freshTask, 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateKanbanTaskRequest $request, int $id): JsonResponse
     {
-        $task = KanbanTask::with(['protocol', 'createdBy', 'updatedBy', 'responsavel'])->find($id);
-        if (! $task) {
-            return response()->json(['message' => 'Item do kanban não encontrado.'], 404);
-        }
-
-        if ($this->isPrivateTaskFromAnotherUser($task, $request) || $this->isUnitTaskFromAnotherUnit($task, $request)) {
-            return response()->json(['message' => 'Você não possui permissão para acessar este item.'], 403);
-        }
-
-        $validated = $request->validate([
-            'titulo' => 'sometimes|required|string|max:200',
-            'descricao' => 'nullable|string',
-            'status' => 'sometimes|required|string|max:40',
-            'prioridade' => 'sometimes|required|string|max:20',
-            'vencimento' => 'nullable|date',
-            'responsavel_id' => 'nullable|integer|exists:users,id',
-            'visibility' => 'nullable|string|in:public,private',
-            'ordem' => 'nullable|integer|min:0',
-        ]);
+        $task = KanbanTask::with(['protocol', 'createdBy', 'updatedBy', 'responsavel'])->findOrFail($id); // 404/403 já checados no FormRequest
+        $validated = $request->validated();
 
         if (! empty($validated['responsavel_id']) && ! SecretariaMembership::atende((int) $validated['responsavel_id'], (int) $task->secretaria_id)) {
             return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => ['responsavel_id' => ['Usuário não pertence a esta secretaria.']]], 422);
@@ -211,7 +195,7 @@ class KanbanController extends Controller
         return response()->json(['message' => 'Item do kanban removido com sucesso.']);
     }
 
-    private function isUnitTaskFromAnotherUnit(KanbanTask $task, Request $request): bool
+    public function isUnitTaskFromAnotherUnit(KanbanTask $task, Request $request): bool
     {
         $user = $request->user();
         if (! $task->unit_id || $user?->profile === 'admin') {
@@ -221,7 +205,7 @@ class KanbanController extends Controller
         return ! in_array((int) $task->unit_id, UnitTree::visibleUnitIdsForUser((int) $user?->id), true);
     }
 
-    private function isPrivateTaskFromAnotherUser(KanbanTask $task, Request $request): bool
+    public function isPrivateTaskFromAnotherUser(KanbanTask $task, Request $request): bool
     {
         // Card de pedido de cadastro tem dono nulo: quem chegou até aqui passou pelo escopo (admin/gestor da secretaria).
         if ($task->protocol?->tipo === CadastroProtocoloScope::TIPO) {

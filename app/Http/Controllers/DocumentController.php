@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreDocumentRequest;
+use App\Http\Requests\UpdateDocumentRequest;
+use App\Http\Requests\UploadDocumentVersionRequest;
 use App\Models\AuditLog;
 use App\Models\Document;
 use App\Models\DocumentApproval;
@@ -20,7 +23,6 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -148,21 +150,9 @@ class DocumentController extends Controller
         return response()->json($history);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreDocumentRequest $request): JsonResponse
     {
-        if (! $this->canManageDocuments($request->user())) {
-            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
-        }
-
-        $validated = $request->validate([
-            'document_type_id' => ['nullable', 'integer', 'exists:document_types,id'],
-            'titulo' => ['required', 'string', 'max:200'],
-            'resumo' => ['nullable', 'string'],
-            'sigilo' => ['required', 'string', Rule::in(self::SIGILOS)],
-            'status' => ['nullable', 'string', 'max:30'],
-            'arquivo' => ['required', 'file', 'max:51200'],
-            'secretaria_id' => \App\Models\Secretaria::regraId(),
-        ]);
+        $validated = $request->validated();
 
         // Admin em "Todas" informa a secretaria (sem ela: 422); os demais gravam na ativa.
         $secretariaId = app(\App\Services\Secretarias\ActiveSecretaria::class)->forCreate($validated['secretaria_id'] ?? null);
@@ -198,21 +188,10 @@ class DocumentController extends Controller
         return response()->json($document, 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateDocumentRequest $request, int $id): JsonResponse
     {
-        $document = Document::find($id);
-        if (! $document || ! $this->canManageDocumentRecord($document, $request->user())) {
-            return response()->json(['message' => 'Documento não encontrado.'], 404);
-        }
-
-        $validated = $request->validate([
-            'document_type_id' => ['nullable', 'integer', 'exists:document_types,id'],
-            'titulo' => ['sometimes', 'required', 'string', 'max:200'],
-            'resumo' => ['nullable', 'string'],
-            'sigilo' => ['sometimes', 'required', 'string', Rule::in(self::SIGILOS)],
-            'status' => ['nullable', 'string', 'max:30'],
-            'arquivo' => ['nullable', 'file', 'max:51200'],
-        ]);
+        $document = Document::findOrFail($id); // 404/permissão já checados no FormRequest
+        $validated = $request->validated();
 
         $old = $document->toArray();
 
@@ -249,16 +228,10 @@ class DocumentController extends Controller
         return response()->json($document->fresh(['type:id,codigo,nome', 'creator:id,name', 'latestVersion.uploader:id,name']));
     }
 
-    public function uploadVersion(Request $request, int $id): JsonResponse
+    public function uploadVersion(UploadDocumentVersionRequest $request, int $id): JsonResponse
     {
-        $document = Document::find($id);
-        if (! $document || ! $this->canManageDocumentRecord($document, $request->user())) {
-            return response()->json(['message' => 'Documento não encontrado.'], 404);
-        }
-
-        $validated = $request->validate([
-            'arquivo' => ['required', 'file', 'max:51200'],
-        ]);
+        $document = Document::findOrFail($id); // 404/permissão já checados no FormRequest
+        $validated = $request->validated();
 
         $version = DB::transaction(function () use ($document, $validated, $request) {
             return $this->storeVersion($document, $validated['arquivo'], $request->user());

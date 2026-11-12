@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateDocumentConfigRequest;
 use App\Models\DocumentConfig;
 use App\Models\User;
 use App\Services\Authorization\PagePermissionService;
@@ -27,26 +28,9 @@ class DocumentConfigController extends Controller
         return response()->json($this->payload(DocumentConfig::current()));
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateDocumentConfigRequest $request): JsonResponse
     {
-        if (! $this->canManageConfig($request->user())) {
-            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
-        }
-
-        if (! Schema::hasTable('document_configs')) {
-            return response()->json([
-                'message' => 'A configuração de documentos ainda não está disponível. Execute a migration document_configs antes de salvar.',
-            ], 409);
-        }
-
-        $validated = $request->validate([
-            'triple_signature_enabled' => ['nullable', 'boolean'],
-            'triple_signature_sigilos' => ['nullable', 'array'],
-            'triple_signature_sigilos.*' => ['string', 'distinct', 'in:publico,interno,restrito'],
-            'signer_user_1_id' => ['nullable', 'integer', 'distinct', 'exists:users,id'],
-            'signer_user_2_id' => ['nullable', 'integer', 'distinct', 'exists:users,id'],
-            'signer_user_3_id' => ['nullable', 'integer', 'distinct', 'exists:users,id'],
-        ]);
+        $validated = $request->validated();
 
         $config = DocumentConfig::current();
         $enabled = $request->boolean('triple_signature_enabled');
