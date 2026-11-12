@@ -27,6 +27,7 @@ class Protocol extends Model
         'assunto',
         'descricao',
         'tipo',
+        'visibility',
         'status',
         'prioridade',
         'solicitante_tipo',
@@ -62,6 +63,42 @@ class Protocol extends Model
         'novo' => 'boolean',
         'vencido' => 'boolean',
     ];
+
+    /**
+     * Quem enxerga o protocolo: admin vê todos; os demais veem os públicos, os que criaram, os que respondem
+     * e, enquanto não há destinatário pessoa, os da própria unidade. Lista, kanban e KPIs usam esta mesma regra.
+     */
+    public function scopeVisiveisPara($query, ?User $user)
+    {
+        if ($user?->profile === 'admin') {
+            return $query;
+        }
+
+        $unitIds = $user
+            ? ProtocolUserUnit::query()->where('user_id', $user->id)->where('ativo', true)->pluck('protocol_organizational_unit_id')->all()
+            : [];
+
+        return $query->where(function ($sub) use ($user, $unitIds) {
+            $sub->where('protocols.visibility', 'public')
+                ->orWhere('protocols.responsavel_atual_id', $user?->id)
+                ->orWhere('protocols.criado_por_id', $user?->id);
+            if ($unitIds) {
+                $sub->orWhere(function ($unit) use ($unitIds) {
+                    $unit->whereNull('protocols.responsavel_atual_id')
+                        ->where(fn ($u) => $u->whereIn('protocols.origem_unit_id', $unitIds)->orWhereIn('protocols.destino_unit_id', $unitIds));
+                });
+            }
+            // Gestor enxerga os pedidos de cadastro das suas secretarias.
+            if ($user?->profile === 'gestor') {
+                $sub->orWhere(fn ($c) => $c->where('protocols.tipo', \App\Models\Scopes\CadastroProtocoloScope::TIPO)
+                    ->whereIn('protocols.secretaria_id', \App\Models\Scopes\CadastroProtocoloScope::secretariasDe($user)));
+            }
+            // Protocolo de outra secretaria em que o usuário tramitou (protocolo entre secretarias).
+            if ($user) {
+                \App\Support\ParticipacaoProtocolo::aplicar($sub, (int) $user->id);
+            }
+        });
+    }
 
     public static function gerarNumero(): string
     {

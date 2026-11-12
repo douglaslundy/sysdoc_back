@@ -19,6 +19,10 @@ class AccessProfile extends Model
         'client_report_view_enabled',
         'client_history_view_enabled',
         'created_by_id',
+        'protocol_allowed_types',
+        'protocol_allowed_statuses',
+        'protocol_allowed_visibilities',
+        'protocol_can_change_visibility',
     ];
 
     protected $casts = [
@@ -30,6 +34,10 @@ class AccessProfile extends Model
         'client_trips_view_enabled' => 'boolean',
         'client_report_view_enabled' => 'boolean',
         'client_history_view_enabled' => 'boolean',
+        'protocol_allowed_types' => 'array',
+        'protocol_allowed_statuses' => 'array',
+        'protocol_allowed_visibilities' => 'array',
+        'protocol_can_change_visibility' => 'boolean',
     ];
 
     public function pages()

@@ -18,6 +18,7 @@ class UpdateProtocolRequest extends FormRequest
             'descricao' => 'nullable|string',
             'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo|not_in:solicitacao_cadastro',
             'prioridade' => 'nullable|string|max:20',
+            'visibility' => 'sometimes|string|in:public,private',
             'status' => 'sometimes|string|in:novo,recebido,encaminhado,devolvido,reaberto,encerrado,concluido,cancelado',
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'destino_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',

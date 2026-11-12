@@ -96,7 +96,7 @@ class ProtocolController extends Controller
 
     public function inbox(Request $request): JsonResponse
     {
-        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount())->withMax('movements as ultima_movimentacao_em', 'created_at')->where(function ($q) use ($request) {
+        $query = $this->baseQuery($request->user())->withCount($this->activeAttachmentsCount())->withMax('movements as ultima_movimentacao_em', 'created_at')->when(! $this->isAdmin($request->user()), fn ($outer) => $outer->where(function ($q) use ($request) {
             $q->where('responsavel_atual_id', $request->user()?->id)
                 ->orWhere('criado_por_id', $request->user()?->id);
 
@@ -109,7 +109,7 @@ class ProtocolController extends Controller
                 });
             }
             $this->orPedidosCadastroDoGestor($q, $request->user());
-        });
+        }));
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
@@ -152,11 +152,11 @@ class ProtocolController extends Controller
             'notifications.user:id,name',
         ])->find($id);
 
-        if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
+        if (! $protocol || ! $this->canView($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
-        if ($protocol->novo) {
+        if ($protocol->novo && $this->canAccess($protocol, $request->user())) {
             $protocol->update(['novo' => false]);
         }
 
@@ -184,7 +184,7 @@ class ProtocolController extends Controller
     public function visualizations(int $id): JsonResponse
     {
         $protocol = Protocol::visiveis(request()->user())->find($id);
-        if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
+        if (! $protocol || ! $this->canView($protocol, request()->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
@@ -222,7 +222,7 @@ class ProtocolController extends Controller
     public function historico(int $id): JsonResponse
     {
         $protocol = Protocol::visiveis(request()->user())->with(['movements.user:id,name'])->find($id);
-        if (! $protocol || ! $this->canAccess($protocol, request()->user())) {
+        if (! $protocol || ! $this->canView($protocol, request()->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
 
@@ -267,9 +267,15 @@ class ProtocolController extends Controller
 
         $user = $request->user();
         $statusInicial = $validated['status'] ?? 'novo';
+        $visibilidades = $this->visibilidadesPermitidas($user);
+        $visibilidade = $validated['visibility'] ?? (in_array('private', $visibilidades, true) ? 'private' : ($visibilidades[0] ?? 'private'));
+        if (! in_array($visibilidade, $visibilidades, true)) {
+            return response()->json(['message' => 'Você não tem permissão para cadastrar protocolo com esta visibilidade.', 'errors' => ['visibility' => ['Visibilidade não permitida para o seu usuário.']]], 403);
+        }
         if (! $this->isAdmin($user)) {
-            $tipos = $user->protocol_allowed_types;
-            $statuses = $user->protocol_allowed_statuses;
+            $regras = $user->protocolCreationRules();
+            $tipos = $regras['types'];
+            $statuses = $regras['statuses'];
             if (is_array($tipos) && ! in_array($validated['tipo'], $tipos, true)) {
                 return response()->json(['message' => 'Você não tem permissão para cadastrar este tipo de protocolo.', 'errors' => ['tipo' => ['Tipo não permitido para o seu usuário.']]], 403);
             }
@@ -309,7 +315,7 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'O usuário de destino pertence a outra secretaria.'], 422);
         }
 
-        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser, $secretariaId, $statusInicial) {
+        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser, $secretariaId, $statusInicial, $visibilidade) {
             $protocol = Protocol::create([
                 'secretaria_id' => $secretariaId,
                 'numero' => Protocol::gerarNumero(),
@@ -317,6 +323,7 @@ class ProtocolController extends Controller
                 'descricao' => $validated['descricao'] ?? null,
                 'tipo' => $validated['tipo'],
                 'status' => $statusInicial,
+                'visibility' => $visibilidade,
                 'prioridade' => $validated['prioridade'] ?? $config->default_priority ?? 'normal',
                 'solicitante_tipo' => 'interno',
                 'solicitante_nome' => $user?->name,
@@ -365,6 +372,9 @@ class ProtocolController extends Controller
         if (! $this->isAdmin($request->user())) {
             unset($validated['status'], $validated['origem_unit_id']); // só admin corrige status e origem
         }
+        if (! $this->podeMudarVisibilidade($request->user())) {
+            unset($validated['visibility']);
+        }
 
         if ($recusa = $this->referenciasDeOutraSecretaria((int) $protocol->secretaria_id, $validated)) {
             return $recusa;
@@ -389,6 +399,9 @@ class ProtocolController extends Controller
         $protocol->update($protocolData);
         if (isset($validated['status']) && $validated['status'] !== $old['status']) {
             $this->movimentar($protocol, 'status_alterado', null, $validated['status'], $request->user()?->id, ['status_anterior' => $old['status']]);
+        }
+        if (isset($validated['visibility']) && $validated['visibility'] !== $old['visibility']) {
+            $this->movimentar($protocol, 'visibilidade_alterada', null, null, $request->user()?->id, ['visibilidade_anterior' => $old['visibility'], 'visibilidade_nova' => $validated['visibility']]);
         }
         if (! empty($validated['kanban'])) {
             $this->kanbanService->sync($protocol, $validated['kanban'], $request->user());
@@ -673,7 +686,7 @@ class ProtocolController extends Controller
     public function downloadAttachment(Request $request, int $attachment): \Symfony\Component\HttpFoundation\BinaryFileResponse|JsonResponse
     {
         $attachmentModel = ProtocolAttachment::with('protocol')->find($attachment);
-        if (! $attachmentModel || ! $attachmentModel->ativo || ! $attachmentModel->protocol || ! $this->canAccess($attachmentModel->protocol, $request->user())) {
+        if (! $attachmentModel || ! $attachmentModel->ativo || ! $attachmentModel->protocol || ! $this->canView($attachmentModel->protocol, $request->user())) {
             return response()->json(['message' => 'Anexo não encontrado.'], 404);
         }
 
@@ -722,8 +735,10 @@ class ProtocolController extends Controller
             'origin' => $origin,
             'origin_locked' => $origin !== null,
             // null = sem restrição; admin nunca é restrito.
-            'allowed_types' => $this->isAdmin($request->user()) ? null : $request->user()?->protocol_allowed_types,
-            'allowed_statuses' => $this->isAdmin($request->user()) ? null : $request->user()?->protocol_allowed_statuses,
+            'allowed_types' => $request->user()?->protocolCreationRules()['types'],
+            'allowed_statuses' => $request->user()?->protocolCreationRules()['statuses'],
+            'allowed_visibilities' => $this->visibilidadesPermitidas($request->user()),
+            'can_change_visibility' => $this->podeMudarVisibilidade($request->user()),
         ]);
     }
 
@@ -836,20 +851,7 @@ class ProtocolController extends Controller
     {
         return Protocol::visiveis($user)
             ->with(['origemUnit:id,nome,tipo', 'destinoUnit:id,nome,tipo', 'responsavelAtual:id,name', 'criadoPor:id,name'])
-            ->when(! $this->isAdmin($user), function ($q) use ($user) {
-                $unitIds = $this->visibleUnitIds($user);
-                $q->where(function ($sub) use ($user, $unitIds) {
-                    $sub->where('responsavel_atual_id', $user?->id)
-                        ->orWhere('criado_por_id', $user?->id);
-                    if ($unitIds) {
-                        $sub->orWhere(function ($unit) use ($unitIds) {
-                            $unit->whereNull('responsavel_atual_id')
-                                ->where(fn ($u) => $u->whereIn('origem_unit_id', $unitIds)->orWhereIn('destino_unit_id', $unitIds));
-                        });
-                    }
-                    $this->orPedidosCadastroDoGestor($sub, $user);
-                });
-            })
+            ->visiveisPara($user)
             ->orderByDesc('novo')
             ->orderByDesc('updated_at');
     }
@@ -947,6 +949,23 @@ class ProtocolController extends Controller
         }
 
         return \App\Support\ParticipacaoProtocolo::participa($protocol, (int) $user->id);
+    }
+
+    /** Visibilidades que o usuário pode escolher ao criar: admin as duas; os demais, o que o cadastro permite (padrão: só privado). */
+    private function visibilidadesPermitidas(?User $user): array
+    {
+        return $user ? $user->protocolCreationRules()['visibilities'] : ['private'];
+    }
+
+    private function podeMudarVisibilidade(?User $user): bool
+    {
+        return (bool) $user?->protocolCreationRules()['can_change_visibility'];
+    }
+
+    /** Leitura: quem tem acesso ou o protocolo é público. Ações (receber, encaminhar...) seguem exigindo canAccess. */
+    private function canView(Protocol $protocol, ?User $user): bool
+    {
+        return $protocol->visibility === 'public' || $this->canAccess($protocol, $user);
     }
 
     private function canAccess(Protocol $protocol, ?User $user): bool
