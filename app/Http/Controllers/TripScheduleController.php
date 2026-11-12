@@ -15,12 +15,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 /** Agenda de viagens: fila por data de passageiros (+ acompanhantes) que ainda não têm viagem. */
 class TripScheduleController extends Controller
 {
-    private const STATUSES = ['agendado', 'confirmado'];
+    private const STATUSES = ['agendado', 'confirmado', 'cancelado', 'concluido'];
 
     private function autorizar(Request $request): ?JsonResponse
     {
         $user = $request->user();
-        if (! $user || ! app(PagePermissionService::class)->canAccess($user, '/trips')) {
+        if (! $user || ! app(PagePermissionService::class)->canAccessAny($user, ['/trips', '/trips/agenda'])) {
             return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
         }
 
@@ -178,6 +178,9 @@ class TripScheduleController extends Controller
         $selecionadas = TripScheduleEntry::whereIn('id', $v['entry_ids'])->get();
         if ($selecionadas->isEmpty()) {
             return response()->json(['message' => 'Nenhum item da agenda encontrado.'], 422);
+        }
+        if ($selecionadas->whereIn('status', ['cancelado', 'concluido'])->isNotEmpty()) {
+            return response()->json(['message' => 'Itens cancelados ou concluídos não podem ser enviados para uma viagem.'], 422);
         }
         // Acompanhantes sempre vão junto do passageiro; passageiros entram antes (para religar companion_of).
         $paxIds = $selecionadas->where('person_type', 'passenger')->pluck('id');
