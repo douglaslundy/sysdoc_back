@@ -80,6 +80,10 @@ class UserRequest extends FormRequest
             'is_rt_psf' => ['nullable', 'boolean'],
             'rt_all_teams' => ['nullable', 'boolean'],
             'chat_access_override' => ['nullable', 'boolean'],
+            'protocol_allowed_types' => ['nullable', 'array'],
+            'protocol_allowed_types.*' => ['string', 'exists:protocol_types,codigo'],
+            'protocol_allowed_statuses' => ['nullable', 'array'],
+            'protocol_allowed_statuses.*' => ['string', Rule::in(\App\Http\Requests\StoreProtocolRequest::STATUSES_INICIAIS)],
             'secretaria_ids' => [$this->route('user') === null ? 'required' : 'sometimes', 'array', 'min:1'],
             'secretaria_ids.*' => array_values(array_filter([
                 'integer', 'distinct', 'exists:secretarias,id',

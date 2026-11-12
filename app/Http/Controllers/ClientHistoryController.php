@@ -46,6 +46,7 @@ class ClientHistoryController extends Controller
             'QueueTreatmentSession' => DB::table('queue_treatment_sessions')->select('id')->whereIn('treatment_plan_id', $planos),
             'Trip' => $viagens,
             'TripClient' => DB::table('trip_clients')->select('id')->whereIn('trip_id', $viagens),
+            'TripScheduleEntry' => DB::table('trip_schedule_entries')->select('id')->where('secretaria_id', $sid),
             'AttendanceTicket' => $senhas,
         ];
         $q->whereNull('model_type')->orWhereNotIn('model_type', array_keys($donos));

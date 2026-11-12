@@ -262,8 +262,20 @@ class ProtocolController extends Controller
             return $recusa;
         }
 
-        $config = ProtocolConfig::current();
         $user = $request->user();
+        $statusInicial = $validated['status'] ?? 'novo';
+        if (! $this->isAdmin($user)) {
+            $tipos = $user->protocol_allowed_types;
+            $statuses = $user->protocol_allowed_statuses;
+            if (is_array($tipos) && ! in_array($validated['tipo'], $tipos, true)) {
+                return response()->json(['message' => 'Você não tem permissão para cadastrar este tipo de protocolo.', 'errors' => ['tipo' => ['Tipo não permitido para o seu usuário.']]], 403);
+            }
+            if (is_array($statuses) && ! in_array($statusInicial, $statuses, true)) {
+                return response()->json(['message' => 'Você não tem permissão para cadastrar protocolo com este status.', 'errors' => ['status' => ['Status não permitido para o seu usuário.']]], 403);
+            }
+        }
+
+        $config = ProtocolConfig::current();
         $linkedOrigin = $this->linkedOriginUnit($user, $secretariaId);
         $destinationUser = ! empty($validated['destino_user_id'])
             ? User::query()->where('active', true)->find($validated['destino_user_id'])
@@ -294,14 +306,14 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'O usuário de destino pertence a outra secretaria.'], 422);
         }
 
-        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser, $secretariaId) {
+        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser, $secretariaId, $statusInicial) {
             $protocol = Protocol::create([
                 'secretaria_id' => $secretariaId,
                 'numero' => Protocol::gerarNumero(),
                 'assunto' => $validated['assunto'],
                 'descricao' => $validated['descricao'] ?? null,
                 'tipo' => $validated['tipo'],
-                'status' => 'novo',
+                'status' => $statusInicial,
                 'prioridade' => $validated['prioridade'] ?? $config->default_priority ?? 'normal',
                 'solicitante_tipo' => 'interno',
                 'solicitante_nome' => $user?->name,
@@ -341,11 +353,15 @@ class ProtocolController extends Controller
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
-        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user())) {
+        // Admin corrige protocolo de qualquer secretaria; os demais seguem a regra de membro.
+        if (! $this->isAdmin($request->user()) && ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user()))) {
             return $negado;
         }
 
         $validated = $request->validated();
+        if (! $this->isAdmin($request->user())) {
+            unset($validated['status'], $validated['origem_unit_id']); // só admin corrige status e origem
+        }
 
         if ($recusa = $this->referenciasDeOutraSecretaria((int) $protocol->secretaria_id, $validated)) {
             return $recusa;
@@ -368,6 +384,9 @@ class ProtocolController extends Controller
             $protocolData['responsavel_atual_id'] = $validated['destino_user_id'];
         }
         $protocol->update($protocolData);
+        if (isset($validated['status']) && $validated['status'] !== $old['status']) {
+            $this->movimentar($protocol, 'status_alterado', null, $validated['status'], $request->user()?->id, ['status_anterior' => $old['status']]);
+        }
         if (! empty($validated['kanban'])) {
             $this->kanbanService->sync($protocol, $validated['kanban'], $request->user());
         }
@@ -699,6 +718,9 @@ class ProtocolController extends Controller
             ],
             'origin' => $origin,
             'origin_locked' => $origin !== null,
+            // null = sem restrição; admin nunca é restrito.
+            'allowed_types' => $this->isAdmin($request->user()) ? null : $request->user()?->protocol_allowed_types,
+            'allowed_statuses' => $this->isAdmin($request->user()) ? null : $request->user()?->protocol_allowed_statuses,
         ]);
     }
 
