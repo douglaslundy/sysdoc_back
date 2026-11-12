@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AtribuirOrdemServicoRequest;
 use App\Http\Requests\ConcluirOrdemServicoRequest;
+use App\Http\Requests\ObservacaoOrdemServicoRequest;
 use App\Http\Requests\StoreOrdemServicoRequest;
 use App\Models\OrdemServico;
 use App\Models\OsConfiguracao;
@@ -21,6 +22,9 @@ use Illuminate\Support\Facades\Storage;
 class OrdemServicoController extends Controller
 {
     private const DISK = 'private';
+
+    /** @var string[] arquivos gravados na requisição atual */
+    private array $gravados = [];
 
     public function index(Request $request): JsonResponse
     {
@@ -57,21 +61,21 @@ class OrdemServicoController extends Controller
             }
         }
 
-        $os = DB::transaction(function () use ($dados, $user, $tecnicoId, $request) {
-            $os = OrdemServico::create(collect($dados)->except(['fotos', 'tecnico_id'])->all() + [
+        $os = $this->comLimpezaDeFotos(fn () => $this->tentar(fn () => DB::transaction(function () use ($dados, $user, $tecnicoId, $request) {
+            $os = OrdemServico::create(array_merge(collect($dados)->except(['fotos', 'tecnico_id', 'prioridade'])->all(), [
                 'numero' => OrdemServico::gerarNumero(),
                 'solicitante_id' => $user->id,
                 'tecnico_id' => $tecnicoId,
                 'prioridade' => $dados['prioridade'] ?? 'normal',
                 'status' => $tecnicoId ? 'atribuida' : 'aberta',
-            ]);
+            ]));
             $this->historico($os, $user, 'aberta', null, $os->status);
             $this->guardarFotos($os, $request->file('fotos', []), 'abertura', $user->id);
 
             return $os;
-        });
+        })));
 
-        app(OrdemServicoNotificador::class)->aberta($os->load('tecnico'));
+        $this->avisar(fn ($n) => $n->aberta($os->load('tecnico')));
 
         return response()->json($os, 201);
     }
@@ -89,15 +93,26 @@ class OrdemServicoController extends Controller
             return response()->json(['message' => 'Técnico não pertence à secretaria da OS.'], 422);
         }
 
-        $de = $os->status;
-        $os->update(['tecnico_id' => $request->tecnico_id, 'status' => 'atribuida']);
-        $this->historico($os, $request->user(), 'atribuida', $de, 'atribuida');
-        app(OrdemServicoNotificador::class)->tecnicoApontado($os->load('tecnico'));
+        $resp = DB::transaction(function () use ($os, $request) {
+            $os = $this->travar($os);
+            if (! in_array($os->status, ['aberta', 'atribuida'], true)) {
+                return response()->json(['message' => 'A OS já está em atendimento ou encerrada.'], 422);
+            }
+            $de = $os->status;
+            $os->update(['tecnico_id' => $request->tecnico_id, 'status' => 'atribuida']);
+            $this->historico($os, $request->user(), 'atribuida', $de, 'atribuida');
 
-        return response()->json($os);
+            return $os;
+        });
+        if ($resp instanceof JsonResponse) {
+            return $resp;
+        }
+        $this->avisar(fn ($n) => $n->tecnicoApontado($resp->load('tecnico')));
+
+        return response()->json($resp);
     }
 
-    public function iniciar(Request $request, int $id): JsonResponse
+    public function iniciar(ObservacaoOrdemServicoRequest $request, int $id): JsonResponse
     {
         $os = $this->achar($request, $id);
         if ($os->tecnico_id !== $request->user()->id) {
@@ -117,20 +132,29 @@ class OrdemServicoController extends Controller
             return response()->json(['message' => 'A OS precisa estar em atendimento.'], 422);
         }
 
-        DB::transaction(function () use ($os, $request) {
+        $resp = $this->comLimpezaDeFotos(fn () => DB::transaction(function () use ($os, $request) {
+            $os = $this->travar($os);
+            if ($os->status !== 'em_atendimento') {
+                return response()->json(['message' => 'A OS precisa estar em atendimento.'], 422);
+            }
             $os->update([
                 'status' => 'concluida', 'concluida_em' => now(), 'fechamento_relato' => $request->relato,
                 'materiais' => $request->materiais, 'tempo_gasto_min' => $request->tempo_gasto_min,
             ]);
             $this->historico($os, $request->user(), 'concluida', 'em_atendimento', 'concluida', $request->relato);
             $this->guardarFotos($os, $request->file('fotos', []), 'fechamento', $request->user()->id);
-        });
-        app(OrdemServicoNotificador::class)->mudouStatus($os->load('tecnico'), 'concluída');
 
-        return response()->json($os);
+            return $os;
+        }));
+        if ($resp instanceof JsonResponse) {
+            return $resp;
+        }
+        $this->avisar(fn ($n) => $n->mudouStatus($resp->load('tecnico'), 'concluída'));
+
+        return response()->json($resp);
     }
 
-    public function cancelar(Request $request, int $id): JsonResponse
+    public function cancelar(ObservacaoOrdemServicoRequest $request, int $id): JsonResponse
     {
         $os = $this->achar($request, $id);
         $user = $request->user();
@@ -191,15 +215,63 @@ class OrdemServicoController extends Controller
 
     private function transicao(Request $request, OrdemServico $os, array $de, string $para, string $rotulo): JsonResponse
     {
-        if (! in_array($os->status, $de, true)) {
-            return response()->json(['message' => 'Esta ação não é possível no status atual da OS.'], 422);
-        }
-        $anterior = $os->status;
-        $os->update(['status' => $para]);
-        $this->historico($os, $request->user(), $para, $anterior, $para, $request->input('observacao'));
-        app(OrdemServicoNotificador::class)->mudouStatus($os->load('tecnico'), $rotulo);
+        $resp = DB::transaction(function () use ($os, $request, $de, $para) {
+            $os = $this->travar($os);
+            if (! in_array($os->status, $de, true)) {
+                return response()->json(['message' => 'Esta ação não é possível no status atual da OS.'], 422);
+            }
+            $anterior = $os->status;
+            $os->update(['status' => $para]);
+            $this->historico($os, $request->user(), $para, $anterior, $para, $request->input('observacao'));
 
-        return response()->json($os);
+            return $os;
+        });
+        if ($resp instanceof JsonResponse) {
+            return $resp;
+        }
+        $this->avisar(fn ($n) => $n->mudouStatus($resp->load('tecnico'), $rotulo));
+
+        return response()->json($resp);
+    }
+
+    /** Relê a OS travada (dentro de transação) para revalidar o status contra transições concorrentes. */
+    private function travar(OrdemServico $os): OrdemServico
+    {
+        return OrdemServico::whereKey($os->id)->lockForUpdate()->firstOrFail();
+    }
+
+    /** Número sequencial concorrente: repete se outra abertura levou o mesmo número (1062) ou houve deadlock (1213). */
+    private function tentar(callable $fn, int $vezes = 4)
+    {
+        for ($i = 1; ; $i++) {
+            try {
+                return $fn();
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($i >= $vezes || ! in_array((int) ($e->errorInfo[1] ?? 0), [1062, 1213], true)) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /** Avisos saem depois da resposta: WhatsApp/e-mail lentos não seguram a requisição. */
+    private function avisar(callable $fn): void
+    {
+        dispatch(fn () => $fn(app(OrdemServicoNotificador::class)))->afterResponse();
+    }
+
+    /** Se a gravação falhar, apaga do disco as fotos já enviadas (a transação só desfaz as linhas). */
+    private function comLimpezaDeFotos(callable $fn)
+    {
+        $this->gravados = [];
+        try {
+            return $fn();
+        } catch (\Throwable $e) {
+            foreach ($this->gravados as $path) {
+                Storage::disk(self::DISK)->delete($path);
+            }
+            throw $e;
+        }
     }
 
     private function achar(Request $request, int $id): OrdemServico
@@ -235,9 +307,10 @@ class OrdemServicoController extends Controller
     private function guardarFotos(OrdemServico $os, array $arquivos, string $fase, int $userId): void
     {
         foreach ($arquivos as $a) {
+            $this->gravados[] = $path = $a->store("ordem-servico/{$os->id}", self::DISK);
             OsFoto::create([
                 'ordem_servico_id' => $os->id, 'fase' => $fase, 'enviada_por' => $userId, 'disk' => self::DISK,
-                'path' => $a->store("ordem-servico/{$os->id}", self::DISK), 'original_name' => $a->getClientOriginalName(),
+                'path' => $path, 'original_name' => $a->getClientOriginalName(),
                 'mime_type' => $a->getMimeType() ?? $a->getClientMimeType(), 'size_bytes' => (int) $a->getSize(),
             ]);
         }
