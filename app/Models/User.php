@@ -72,6 +72,10 @@ class User extends Authenticatable
 
     public function canUseChat(): bool
     {
+        if (! \App\Models\ChatRealtimeConfig::chatGloballyEnabled()) {
+            return false;
+        }
+
         if ($this->profile === 'admin') {
             return true;
         }
@@ -90,6 +94,10 @@ class User extends Authenticatable
      */
     public function canUseChatWith($chatEnabledByProfile): bool
     {
+        if (! \App\Models\ChatRealtimeConfig::chatGloballyEnabled()) {
+            return false;
+        }
+
         if ($this->profile === 'admin') {
             return true;
         }

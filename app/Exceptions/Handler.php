@@ -167,6 +167,8 @@ class Handler extends ExceptionHandler
             'robots.txt',
             'favicon.ico',
             'file-manager/*',
+            // Usuario sem foto: 404 esperado, o front usa a imagem padrao.
+            'api/users/*/photo',
             'wp-*',
             'wordpress/*',
             '.env',

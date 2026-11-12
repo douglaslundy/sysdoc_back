@@ -23,6 +23,24 @@ class ChatRealtimeConfigController extends Controller
         return response()->json($this->adminPayload(ChatRealtimeConfig::current()));
     }
 
+    public function setChatEnabled(Request $request): JsonResponse
+    {
+        $data = $request->validate(['chat_enabled' => ['required', 'boolean']]);
+        $config = ChatRealtimeConfig::current();
+        $old = (bool) ($config->chat_enabled ?? true);
+        $new = (bool) $data['chat_enabled'];
+
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('chat_realtime_configs', 'chat_enabled')) {
+            return response()->json(['message' => 'Execute as migrations antes de usar o interruptor do chat.'], 409);
+        }
+
+        $config->forceFill(['chat_enabled' => $new, 'updated_by' => $request->user()->id])->save();
+
+        Log::info('chat: interruptor geral alterado', ['por' => $request->user()->id, 'de' => $old, 'para' => $new]);
+
+        return response()->json(['chat_enabled' => $new]);
+    }
+
     public function publicConfig(): JsonResponse
     {
         return response()->json($this->broadcastConfig->publicPayload());
@@ -279,9 +297,11 @@ class ChatRealtimeConfigController extends Controller
 
     private function adminPayload(ChatRealtimeConfig $config): array
     {
+        $chatEnabled = ChatRealtimeConfig::chatGloballyEnabled();
         $supportsBehaviorFlags = ChatRealtimeConfig::supportsBehaviorFlags();
 
         return [
+            'chat_enabled' => $chatEnabled,
             'engine' => $config->engine,
             'active' => (bool) $config->active,
             'cluster' => $config->cluster ?: 'mt1',

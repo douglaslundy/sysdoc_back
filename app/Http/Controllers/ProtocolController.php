@@ -101,9 +101,12 @@ class ProtocolController extends Controller
                 ->orWhere('criado_por_id', $request->user()?->id);
 
             $unitIds = $this->visibleUnitIds($request->user());
+            // Encaminhado a uma pessoa: so ela, quem criou e o admin veem (a unidade so ve sem destinatario).
             if ($unitIds) {
-                $q->orWhereIn('destino_unit_id', $unitIds)
-                    ->orWhereIn('origem_unit_id', $unitIds);
+                $q->orWhere(function ($unit) use ($unitIds) {
+                    $unit->whereNull('responsavel_atual_id')
+                        ->where(fn ($u) => $u->whereIn('destino_unit_id', $unitIds)->orWhereIn('origem_unit_id', $unitIds));
+                });
             }
             $this->orPedidosCadastroDoGestor($q, $request->user());
         });
@@ -839,8 +842,10 @@ class ProtocolController extends Controller
                     $sub->where('responsavel_atual_id', $user?->id)
                         ->orWhere('criado_por_id', $user?->id);
                     if ($unitIds) {
-                        $sub->orWhereIn('origem_unit_id', $unitIds)
-                            ->orWhereIn('destino_unit_id', $unitIds);
+                        $sub->orWhere(function ($unit) use ($unitIds) {
+                            $unit->whereNull('responsavel_atual_id')
+                                ->where(fn ($u) => $u->whereIn('origem_unit_id', $unitIds)->orWhereIn('destino_unit_id', $unitIds));
+                        });
                     }
                     $this->orPedidosCadastroDoGestor($sub, $user);
                 });
@@ -957,9 +962,17 @@ class ProtocolController extends Controller
 
         $unitIds = $this->visibleUnitIds($user);
 
-        return $protocol->responsavel_atual_id === $user?->id
-            || $protocol->criado_por_id === $user?->id
-            || in_array($protocol->origem_unit_id, $unitIds, true)
+        if ($protocol->responsavel_atual_id === $user?->id || $protocol->criado_por_id === $user?->id) {
+            return true;
+        }
+
+        // Encaminhado a uma pessoa: a unidade deixa de ver (só a participação entre secretarias segue valendo);
+        // sem destinatario, a unidade enxerga.
+        if ($protocol->responsavel_atual_id !== null) {
+            return $this->participouEntreSecretarias($protocol, $user);
+        }
+
+        return in_array($protocol->origem_unit_id, $unitIds, true)
             || in_array($protocol->destino_unit_id, $unitIds, true)
             || $this->participouEntreSecretarias($protocol, $user);
     }

@@ -433,6 +433,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::get('/chat/config', [ChatRealtimeConfigController::class, 'show']);
         Route::put('/chat/config', [ChatRealtimeConfigController::class, 'update']);
         Route::patch('/chat/config/status', [ChatRealtimeConfigController::class, 'setActive']);
+        Route::patch('/chat/config/chat-enabled', [ChatRealtimeConfigController::class, 'setChatEnabled']);
         Route::delete('/chat/config', [ChatRealtimeConfigController::class, 'destroy']);
         Route::post('/chat/config/test', [ChatRealtimeConfigController::class, 'test']);
         Route::get('/admin/backup/download', [BackupController::class, 'download']);
