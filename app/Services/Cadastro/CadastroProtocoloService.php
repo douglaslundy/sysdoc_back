@@ -62,7 +62,7 @@ class CadastroProtocoloService
             "Cargo: {$s->cargo}",
             "CPF: ***.***.***-{$cpf}",
             $s->observacao ? "Observação: {$s->observacao}" : null,
-            "Pedido de cadastro #{$s->id}: aprovar ou recusar em Usuários > Pedidos de cadastro.",
+            "Pedido de cadastro #{$s->id}: aprovar ou recusar abrindo este card no Kanban.",
         ]));
     }
 }
