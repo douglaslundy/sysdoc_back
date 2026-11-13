@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\InsertSectorRequest;
 use App\Models\Sector;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
@@ -18,12 +19,10 @@ class SectorController extends Controller
         return $array;
     }
 
-    public function insert(Request $request)
+    // Admin em "Todas" informa a secretaria (existente e ativa); id inválido é 422, nunca 500 (InsertSectorRequest).
+    public function insert(InsertSectorRequest $request)
     {
         $array = ['errors' => ''];
-
-        // Admin em "Todas" informa a secretaria (existente e ativa); id inválido é 422, nunca 500.
-        Validator::make($request->all(), ['secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo()])->validate();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required',
