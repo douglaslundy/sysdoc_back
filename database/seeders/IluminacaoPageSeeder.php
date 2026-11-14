@@ -47,5 +47,7 @@ class IluminacaoPageSeeder extends Seeder
                 );
             }
         }
+
+        \App\Models\Secretaria::liberarPaginas(array_column(self::PAGINAS, 'path'));
     }
 }

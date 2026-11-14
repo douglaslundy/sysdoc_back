@@ -18,6 +18,7 @@ class AccessProfile extends Model
         'client_trips_view_enabled',
         'client_report_view_enabled',
         'client_history_view_enabled',
+        'created_by_id',
         'protocol_allowed_types',
         'protocol_allowed_statuses',
         'protocol_allowed_visibilities',

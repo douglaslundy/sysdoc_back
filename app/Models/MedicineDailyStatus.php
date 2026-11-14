@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MedicineDailyStatus extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory;
 
     protected $table = 'medicine_daily_statuses';
 
     protected $fillable = [
+        'secretaria_id',
         'medicine_item_id',
         'reference_date',
         'availability_status',

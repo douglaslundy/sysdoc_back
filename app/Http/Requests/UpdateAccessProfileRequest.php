@@ -2,13 +2,29 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ChecksGestorProfileScope;
+use App\Models\AccessProfile;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAccessProfileRequest extends FormRequest
 {
+    use ChecksGestorProfileScope;
+
+    public function withValidator($validator): void
+    {
+        $validator->after(fn ($v) => $this->checkGestorScope($v));
+    }
+
+    /** Não-admin edita só perfil que ele criou (perfil inexistente cai no 404 do controller). */
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+        if ($user?->profile === 'admin') {
+            return true;
+        }
+        $perfil = AccessProfile::find($this->route('access_profile'));
+
+        return ! $perfil || ($user && (int) $perfil->created_by_id === (int) $user->id);
     }
 
     public function rules(): array

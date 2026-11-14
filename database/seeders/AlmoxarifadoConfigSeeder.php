@@ -9,6 +9,6 @@ class AlmoxarifadoConfigSeeder extends Seeder
 {
     public function run(): void
     {
-        AlmoxarifadoConfig::current();
+        AlmoxarifadoConfig::current(\App\Models\Secretaria::saudeId());
     }
 }

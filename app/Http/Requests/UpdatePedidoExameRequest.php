@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdatePedidoExameRequest extends FormRequest
@@ -17,13 +18,17 @@ class UpdatePedidoExameRequest extends FormRequest
 
     public function rules(): array
     {
+        // Pedido de outra secretaria = 404 antes de validar (a rota já resolve o model com escopo).
+        $pedido = $this->route('pedido');
+        $sid = (int) ($pedido instanceof \Illuminate\Database\Eloquent\Model ? $pedido->secretaria_id : EscopoAlmoxarifado::alvo(\App\Models\PedidoExame::class, $pedido));
+
         return [
-            'medico_solicitante_id' => 'nullable|exists:medicos_solicitantes,id',
+            'medico_solicitante_id' => ['nullable', EscopoAlmoxarifado::existe('medicos_solicitantes', $sid)],
             'data_pedido' => 'nullable|date',
             'data_coleta' => 'nullable|date',
             'observacoes' => 'nullable|string|max:1000',
             'exames' => 'nullable|array|min:1',
-            'exames.*' => 'integer|distinct|exists:exames,id',
+            'exames.*' => ['integer', 'distinct', EscopoAlmoxarifado::existe('exames', $sid)],
         ];
     }
 

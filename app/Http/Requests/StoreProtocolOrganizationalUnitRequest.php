@@ -14,6 +14,7 @@ class StoreProtocolOrganizationalUnitRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => \App\Models\Secretaria::regraId(),
             'parent_id' => 'nullable|integer|exists:protocol_organizational_units,id',
             'tipo' => 'required|string|max:40',
             'codigo' => 'nullable|string|max:60',

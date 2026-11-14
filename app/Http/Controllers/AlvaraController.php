@@ -9,6 +9,7 @@ use App\Models\Alvara;
 use App\Services\AlvaraNumberService;
 use App\Services\AlvaraPdfService;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -86,6 +87,7 @@ class AlvaraController extends Controller
     public function store(StoreAlvaraRequest $request): JsonResponse
     {
         $dados = $request->validated();
+        $dados['secretaria_id'] = EscopoAlmoxarifado::id($request->input('secretaria_id')); // admin em "Todas" sem escolher = 422
 
         if (empty($dados['vencimento_alvara'])) {
             $dados['vencimento_alvara'] = self::vencimentoPadrao($dados['data_alvara']);
@@ -96,7 +98,7 @@ class AlvaraController extends Controller
         for ($tentativa = 1; $tentativa <= $maxTentativas; $tentativa++) {
             try {
                 $alvara = DB::transaction(function () use ($dados) {
-                    $dados['numero_alvara'] = AlvaraNumberService::gerar($dados['data_alvara']);
+                    $dados['numero_alvara'] = AlvaraNumberService::gerar($dados['data_alvara'], $dados['secretaria_id']);
 
                     $alvara = Alvara::create($dados);
                     $alvara->load('estabelecimento');

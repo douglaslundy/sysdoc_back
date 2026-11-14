@@ -53,7 +53,7 @@ class RouteController extends Controller
         DB::beginTransaction();
         try {
             $array = ['status' => 'updated'];
-            $route->update($request->all());
+            $route->update($request->except('secretaria_id'));
             $array['route'] = $route;
 
             DB::commit();

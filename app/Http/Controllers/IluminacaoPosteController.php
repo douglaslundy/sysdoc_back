@@ -9,6 +9,7 @@ use App\Http\Resources\IluminacaoPosteResource;
 use App\Models\IluminacaoPoste;
 use App\Models\IluminacaoPosteMovimentacao;
 use App\Services\Iluminacao\IluminacaoFotoStorage;
+use App\Support\EscopoAlmoxarifado;
 use App\Services\Iluminacao\IluminacaoProtocolo;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -99,6 +100,7 @@ class IluminacaoPosteController extends Controller
         return DB::transaction(function () use ($request, $user) {
             $poste = new IluminacaoPoste($request->validated());
             $poste->cadastrado_por = $user->id;
+            $poste->secretaria_id = EscopoAlmoxarifado::id($request->input('secretaria_id')); // admin em "Todas" sem escolher = 422
             $poste->save();
 
             $poste->protocolo = IluminacaoProtocolo::for($poste->id, $poste->created_at);

@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShowAlmoxarifadoConfigRequest;
 use App\Http\Requests\UpdateAlmoxarifadoConfigRequest;
 use App\Models\AlmoxarifadoConfig;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AlmoxarifadoConfigController extends Controller
 {
-    public function show(): JsonResponse
+    public function show(ShowAlmoxarifadoConfigRequest $request): JsonResponse
     {
-        return response()->json(AlmoxarifadoConfig::current());
+        return response()->json(AlmoxarifadoConfig::current(EscopoAlmoxarifado::id($request->input('secretaria_id'))));
     }
 
     public function update(UpdateAlmoxarifadoConfigRequest $request): JsonResponse
     {
-        $config = AlmoxarifadoConfig::current();
+        $config = AlmoxarifadoConfig::current(EscopoAlmoxarifado::id($request->input('secretaria_id')));
         $config->update($request->only([
             'permitir_saida_sem_saldo',
             'permitir_transferencia_entre_secretarias',

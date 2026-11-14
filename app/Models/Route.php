@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Route extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     protected $fillable = [
+        'secretaria_id',
         'origin',
         'origin_state',
         'destination',

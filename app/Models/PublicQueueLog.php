@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class PublicQueueLog extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     public $timestamps = false;
 
     protected $fillable = [
+        'secretaria_id',
         'ip_address',
         'user_agent',
         'host_name',

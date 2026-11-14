@@ -23,7 +23,7 @@ class FiscalizacaoObserver
     public function deleted(Fiscalizacao $model): void
     {
         // Fiscalizacao usa soft delete (o cascade do banco não dispara): o card da petição sai junto.
-        KanbanTask::where('fiscalizacao_id', $model->id)->delete();
+        KanbanTask::withoutSecretaria()->where('fiscalizacao_id', $model->id)->delete();
 
         AuditService::record('DELETE', $model, $model->toArray(), null);
     }

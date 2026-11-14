@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceRecord extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('attendance_ticket_id', 'attendance_tickets'));
+    }
+
     use HasFactory;
 
     protected $fillable = [

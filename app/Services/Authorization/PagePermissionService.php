@@ -20,9 +20,10 @@ class PagePermissionService
             ->exists();
     }
 
-    public function canAccessAny(User $user, array $paths): bool
+    /** @param int[]|null $secretariaPageIds se informado, só conta páginas liberadas na secretaria ativa */
+    public function canAccessAny(User $user, array $paths, ?array $secretariaPageIds = null): bool
     {
-        if ($user->profile === 'admin') {
+        if ($user->profile === 'admin' && $secretariaPageIds === null) {
             return true;
         }
 
@@ -30,19 +31,29 @@ class PagePermissionService
         $exact = array_values(array_filter($paths, fn ($p) => ! str_ends_with($p, '*')));
         $prefixes = array_map(fn ($p) => rtrim(substr($p, 0, -1), '/'), array_filter($paths, fn ($p) => str_ends_with($p, '*')));
 
+        $match = function ($q) use ($exact, $prefixes, $secretariaPageIds) {
+            $q->where('ativo', true)->where(function ($w) use ($exact, $prefixes) {
+                if ($exact) {
+                    $w->orWhereIn('path', $exact);
+                }
+                foreach ($prefixes as $prefix) {
+                    $w->orWhere('path', $prefix)->orWhere('path', 'like', $prefix.'/%');
+                }
+            });
+            if ($secretariaPageIds !== null) {
+                $q->whereIn('system_pages.id', $secretariaPageIds);
+            }
+        };
+
+        // Admin numa secretaria específica: vale só o que a secretaria libera.
+        if ($user->profile === 'admin') {
+            return \App\Models\SystemPage::query()->where($match)->exists();
+        }
+
         return AccessProfile::query()
             ->where('slug', $user->profile)
             ->where('ativo', true)
-            ->whereHas('pages', function ($q) use ($exact, $prefixes) {
-                $q->where('ativo', true)->where(function ($w) use ($exact, $prefixes) {
-                    if ($exact) {
-                        $w->orWhereIn('path', $exact);
-                    }
-                    foreach ($prefixes as $prefix) {
-                        $w->orWhere('path', $prefix)->orWhere('path', 'like', $prefix.'/%');
-                    }
-                });
-            })
+            ->whereHas('pages', $match)
             ->exists();
     }
 }

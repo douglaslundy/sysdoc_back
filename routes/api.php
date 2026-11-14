@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccessProfileController;
+use App\Http\Controllers\CadastroPublicoController;
 use App\Http\Controllers\AgendaColetaController;
 use App\Http\Controllers\AlmoxarifadoCatalogController;
 use App\Http\Controllers\AlmoxarifadoConfigController;
@@ -38,6 +39,8 @@ use App\Http\Controllers\FiscalizacaoController;
 use App\Http\Controllers\FiscalizacaoHistoricoController;
 use App\Http\Controllers\IluminacaoDesfechoController;
 use App\Http\Controllers\IluminacaoPosteController;
+use App\Http\Controllers\OrdemServicoController;
+use App\Http\Controllers\OsTipoServicoController;
 use App\Http\Controllers\IluminacaoPosteFotoController;
 use App\Http\Controllers\PessoaFotoController;
 use App\Http\Controllers\KanbanController;
@@ -135,11 +138,16 @@ Route::middleware('throttle:30,1')->group(function () {
     Route::get('/public/painel-esus/estado', [PainelEsusController::class, 'estado']);
 });
 
+// Pedido público de cadastro (flag cadastro.publico_habilitado; desligado = 404)
+Route::middleware('throttle:cadastro-publico-leitura')->get('/public/cadastro/secretarias', [CadastroPublicoController::class, 'secretarias']);
+Route::middleware('throttle:cadastro-publico-leitura')->get('/public/cadastro/desafio', [CadastroPublicoController::class, 'desafio']);
+Route::middleware('throttle:cadastro-publico')->post('/public/cadastro', [CadastroPublicoController::class, 'store']);
+
 // Redefinição de senha (throttle: 3 req/min por IP)
 Route::middleware('throttle:forgot-password')->post('/forgot-password', [PasswordResetController::class, 'sendLink']);
 Route::middleware('throttle:5,1')->post('/reset-password', [PasswordResetController::class, 'reset']);
 
-Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages']], function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/validate', [AuthController::class, 'validateToken']);
@@ -170,7 +178,7 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     // Monitor APS — indicadores Portaria GM/MS 6.907/2025
     // audit.read removido: auditoria granular feita no frontend (1 VIEW por page load, 1 READ por filtro aplicado)
     // throttle 180/min: cada página dispara 4-7 consultas por troca de filtro (com retry no front)
-    Route::prefix('monitor-aps')->middleware(['throttle:180,1', 'equipe.aps'])->group(function () {
+    Route::prefix('monitor-aps')->middleware(['secretaria.only:saude', 'throttle:180,1', 'equipe.aps'])->group(function () {
         Route::get('/minhas-equipes', [MonitorApsController::class, 'minhasEquipes']);
         Route::prefix('indicadores')->group(function () {
             Route::get('/resumo', [MonitorApsController::class, 'resumo']);
@@ -209,7 +217,7 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     });
 
     // Painel de atendimento eSUS PEC — gestão de fila (autenticado)
-    Route::prefix('painel-esus')->group(function () {
+    Route::prefix('painel-esus')->middleware('secretaria.only:saude')->group(function () {
         Route::get('/fila', [PainelEsusController::class, 'fila'])->middleware('equipe.aps');
         Route::get('/filtros', [PainelEsusController::class, 'filtros'])->middleware('equipe.aps');
         Route::get('/unidades', [PainelEsusController::class, 'unidades'])->middleware('equipe.aps');
@@ -235,6 +243,7 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
 
     // Permissões do usuário logado
     Route::get('/auth/my-permissions', [AccessProfileController::class, 'myPermissions']);
+    Route::get('/auth/secretarias', [AccessProfileController::class, 'mySecretarias']);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     Route::prefix('chat')->middleware(['chat.access'])->group(function () {
@@ -331,6 +340,13 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::post('/testar', [EmailConfigController::class, 'test']);
     });
 
+    // Decisão sobre pedidos de cadastro: o controller limita a admin e gestor da secretaria do pedido (demais: 404).
+    Route::prefix('cadastro-solicitacoes')->whereNumber('id')->group(function () {
+        Route::get('/{id}', [\App\Http\Controllers\CadastroSolicitacaoController::class, 'show']);
+        Route::post('/{id}/autorizar', [\App\Http\Controllers\CadastroSolicitacaoController::class, 'autorizar']);
+        Route::post('/{id}/recusar', [\App\Http\Controllers\CadastroSolicitacaoController::class, 'recusar']);
+    });
+
     Route::prefix('protocolos')->group(function () {
         Route::get('/', [ProtocolController::class, 'index']);
         Route::get('/caixa-entrada', [ProtocolController::class, 'inbox']);
@@ -370,8 +386,16 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::get('/anexos/{attachment}/download', [ProtocolController::class, 'downloadAttachment'])->whereNumber('attachment');
     });
 
+    // message_logs não têm secretaria: a lista é global, por isso só o administrador a vê.
     Route::get('/mensagens-enviadas', [\App\Http\Controllers\MessageLogController::class, 'index'])
-        ->middleware('page.permission:/sistema/mensagens-enviadas');
+        ->middleware('admin');
+
+    Route::prefix('secretarias-admin')->controller(\App\Http\Controllers\SecretariaAdminController::class)->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::put('/{id}', 'update')->whereNumber('id');
+        Route::delete('/{id}', 'destroy')->whereNumber('id');
+    });
 
     Route::prefix('kanban')->group(function () {
         Route::get('/', [KanbanController::class, 'index']);
@@ -417,11 +441,13 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::get('/admin/backup/download', [BackupController::class, 'download']);
     });
 
-    // Auditoria + perfis de acesso e páginas do sistema (somente admin)
+    // Perfis de acesso: admin e gestor (o controller restringe o gestor ao que ele mesmo tem)
+    Route::apiResource('access-profiles', AccessProfileController::class);
+
+    // Auditoria + páginas do sistema (somente admin)
     Route::middleware('admin')->group(function () {
         Route::get('/audit-logs', [AuditLogController::class, 'index']);
         Route::get('/audit-logs/users', [AuditLogController::class, 'users']);
-        Route::apiResource('access-profiles', AccessProfileController::class);
         Route::get('/system-pages', [SystemPageController::class, 'index']);
         Route::post('/system-pages', [SystemPageController::class, 'store']);
         Route::put('/system-pages/{id}', [SystemPageController::class, 'update']);
@@ -454,11 +480,9 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     Route::get('/letters/{letter}/attachments/{attachment}/download', [LetterAttachmentController::class, 'download']);
     Route::delete('/letters/{letter}/attachments/{attachment}', [LetterAttachmentController::class, 'destroy']);
 
-    // users — gestão de usuários é restrita a administradores (evita que qualquer usuário
-    // autenticado se autopromova a admin ou edite/exclua a conta de outro usuário).
-    Route::middleware('admin')->group(function () {
-        Route::apiResource('users', UserController::class);
-    });
+    // users — gestão restrita a admin e gestor (UserController::__construct); o gestor só alcança
+    // usuários das suas secretarias e a rota é liberada pela página /users (config/route_permissions.php).
+    Route::apiResource('users', UserController::class);
     Route::post('/users/presence/ping', [UserController::class, 'presence']);
 
     // Foto de usuário (cada um troca a própria; admin troca de qualquer um). Compartilhada com o cidadão de mesmo CPF.
@@ -587,6 +611,26 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
         Route::apiResource('alvaras', AlvaraController::class)->only(['store', 'update', 'destroy']);
     });
 
+    // Ordem de Serviço (acesso por route_permissions.php; regras de papel dentro dos controllers)
+    Route::get('/ordens-servico/secretarias', [OrdemServicoController::class, 'secretarias']);
+    Route::get('/ordens-servico/tecnicos', [OrdemServicoController::class, 'tecnicos']);
+    Route::get('/ordens-servico', [OrdemServicoController::class, 'index']);
+    Route::get('/ordens-servico/{id}', [OrdemServicoController::class, 'show'])->whereNumber('id');
+    Route::get('/ordens-servico/{id}/pdf', [OrdemServicoController::class, 'pdf'])->whereNumber('id')->middleware('throttle:20,1');
+    Route::get('/ordens-servico/{id}/fotos/{fotoId}', [OrdemServicoController::class, 'foto'])->whereNumber(['id', 'fotoId']);
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::post('/ordens-servico', [OrdemServicoController::class, 'store']);
+        Route::post('/ordens-servico/{id}/atribuir', [OrdemServicoController::class, 'atribuir'])->whereNumber('id');
+        Route::post('/ordens-servico/{id}/iniciar', [OrdemServicoController::class, 'iniciar'])->whereNumber('id');
+        Route::post('/ordens-servico/{id}/concluir', [OrdemServicoController::class, 'concluir'])->whereNumber('id');
+        Route::post('/ordens-servico/{id}/cancelar', [OrdemServicoController::class, 'cancelar'])->whereNumber('id');
+        Route::post('/os-tipos', [OsTipoServicoController::class, 'store']);
+        Route::put('/os-tipos/{id}', [OsTipoServicoController::class, 'update'])->whereNumber('id');
+        Route::put('/os-configuracao', [OsTipoServicoController::class, 'salvarConfiguracao']);
+    });
+    Route::get('/os-tipos', [OsTipoServicoController::class, 'index']);
+    Route::get('/os-configuracao', [OsTipoServicoController::class, 'configuracao']);
+
     // Iluminação pública (acesso por route_permissions.php)
     Route::get('/iluminacao/postes', [IluminacaoPosteController::class, 'index']);
     Route::get('/iluminacao/postes/{poste}', [IluminacaoPosteController::class, 'show']);
@@ -701,7 +745,7 @@ Route::group(['middleware' => ['auth:sanctum', 'route.pages']], function () {
     });
 
     // Conformidade de Cidadãos — sync Sysdoc x e-SUS PEC
-    Route::prefix('conformidade-cidadao')->group(function () {
+    Route::prefix('conformidade-cidadao')->middleware('secretaria.only:saude')->group(function () {
         Route::post('analisar', [ConformidadeCidadaoController::class, 'analisar']);
         Route::get('status/{job_id}', [ConformidadeCidadaoController::class, 'status']);
         Route::post('aplicar/{job_id}', [ConformidadeCidadaoController::class, 'aplicar']);

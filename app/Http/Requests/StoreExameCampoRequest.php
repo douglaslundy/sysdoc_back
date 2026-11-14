@@ -17,6 +17,8 @@ class StoreExameCampoRequest extends FormRequest
 
     public function rules(): array
     {
+        \App\Models\Exame::find($this->route('exame')) ?? abort(404, 'Exame não encontrado.'); // exame de outra secretaria = 404
+
         return [
             'nome' => 'required|string|max:100',
             'descricao' => 'nullable|string|max:200',

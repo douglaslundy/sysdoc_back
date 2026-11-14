@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\DB;
 
 class AttendanceTicketNumberService
 {
-    public function nextNumberForDate(CarbonInterface $date): int
+    public function nextNumberForDate(CarbonInterface $date, ?int $secretariaId = null): int
     {
-        return DB::transaction(function () use ($date) {
+        return DB::transaction(function () use ($date, $secretariaId) {
             $last = AttendanceTicket::query()
+                ->when($secretariaId, fn ($q) => $q->where('secretaria_id', $secretariaId))
                 ->whereDate('sequence_date', $date->toDateString())
                 ->lockForUpdate()
                 ->max('number');

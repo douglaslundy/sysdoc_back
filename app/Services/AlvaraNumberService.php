@@ -12,9 +12,9 @@ class AlvaraNumberService
      * Gera o próximo número de alvará no formato XX-MM/AAAA.
      * Usa transação com lockForUpdate para garantir unicidade sob concorrência.
      */
-    public static function gerar(string $dataAlvara): string
+    public static function gerar(string $dataAlvara, ?int $secretariaId = null): string
     {
-        return DB::transaction(function () use ($dataAlvara) {
+        return DB::transaction(function () use ($dataAlvara, $secretariaId) {
             $data = Carbon::parse($dataAlvara);
             $mes = $data->month;
             $ano = $data->year;
@@ -24,7 +24,9 @@ class AlvaraNumberService
             // realmente protege), nao pela coluna data_alvara: ela pode ser editada depois
             // da criacao (update() nao altera numero_alvara), deixando o numero "orfao" do
             // seu mes/ano original e invisivel para uma busca por data_alvara.
+            // Sequencial por secretaria (o escopo global nao basta: admin em "Todas" enxerga todas).
             $sequencial = Alvara::withTrashed()
+                ->when($secretariaId, fn ($q) => $q->where('secretaria_id', $secretariaId))
                 ->where('numero_alvara', 'LIKE', "%-{$sufixo}")
                 ->lockForUpdate()
                 ->get(['numero_alvara'])

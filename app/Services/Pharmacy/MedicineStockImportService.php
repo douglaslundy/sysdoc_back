@@ -5,6 +5,7 @@ namespace App\Services\Pharmacy;
 use App\Models\MedicineDailyStatus;
 use App\Models\MedicineItem;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -45,7 +46,7 @@ class MedicineStockImportService
         $aggregated = $this->aggregateRows($rows);
         $medicines = MedicineItem::query()
             ->where('active', true)
-            ->get(['id', 'active_ingredient', 'concentration', 'pharmaceutical_form']);
+            ->get(['id', 'secretaria_id', 'active_ingredient', 'concentration', 'pharmaceutical_form']);
 
         $today = Carbon::today()->toDateString();
         $report = [
@@ -94,6 +95,7 @@ class MedicineStockImportService
                         'reference_date' => $today,
                     ],
                     [
+                        'secretaria_id' => $medicines->firstWhere('id', $medicineId)?->secretaria_id, // admin em "Todas" grava na do medicamento
                         'availability_status' => $availabilityStatus,
                         'available_quantity' => $quantity,
                         'updated_by_user_id' => $userId,
@@ -213,6 +215,7 @@ class MedicineStockImportService
                         'reference_date' => $today,
                     ],
                     [
+                        'secretaria_id' => $medicine->secretaria_id,
                         'availability_status' => $availabilityStatus,
                         'available_quantity' => round((float) $quantity, 2),
                         'updated_by_user_id' => $userId,
@@ -247,7 +250,8 @@ class MedicineStockImportService
             ->select('mds.medicine_item_id', DB::raw('MAX(mds.id) as latest_status_id'))
             ->groupBy('mds.medicine_item_id');
 
-        return DB::table('medicine_items as mi')
+        // DB::table ignora o escopo global: filtra a secretaria ativa à mão (o backup nunca traz outra secretaria).
+        return EscopoAlmoxarifado::filtrar(DB::table('medicine_items as mi'), 'mi.secretaria_id')
             ->leftJoinSub($latestSub, 'latest', function ($join) {
                 $join->on('latest.medicine_item_id', '=', 'mi.id');
             })

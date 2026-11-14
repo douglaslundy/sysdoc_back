@@ -19,6 +19,9 @@ class PharmacyCatalogSeeder extends Seeder
      */
     public function run(): void
     {
+        // Catálogos são por secretaria: os iniciais ficam na Saúde (explícito, seeder roda fora de requisição).
+        $sec = \App\Models\Secretaria::saudeId();
+
         $units = [
             ['code' => 'cp', 'name' => 'Comprimido'],
             ['code' => 'cap', 'name' => 'Cápsula'],
@@ -40,7 +43,7 @@ class PharmacyCatalogSeeder extends Seeder
 
         foreach ($units as $unit) {
             PharmacyUnit::updateOrCreate(
-                ['code' => $unit['code']],
+                ['secretaria_id' => $sec, 'code' => $unit['code']],
                 ['name' => $unit['name'], 'active' => true]
             );
         }
@@ -60,7 +63,7 @@ class PharmacyCatalogSeeder extends Seeder
 
         foreach ($sources as $source) {
             PharmacyAcquisitionSource::updateOrCreate(
-                ['name' => $source],
+                ['secretaria_id' => $sec, 'name' => $source],
                 ['active' => true]
             );
         }
@@ -95,7 +98,7 @@ class PharmacyCatalogSeeder extends Seeder
 
         foreach ($forms as $form) {
             PharmacyPharmaceuticalForm::updateOrCreate(
-                ['name' => $form],
+                ['secretaria_id' => $sec, 'name' => $form],
                 ['active' => true]
             );
         }
@@ -118,7 +121,7 @@ class PharmacyCatalogSeeder extends Seeder
 
         foreach ($presentations as $presentation) {
             PharmacyPresentation::updateOrCreate(
-                ['name' => $presentation],
+                ['secretaria_id' => $sec, 'name' => $presentation],
                 ['active' => true]
             );
         }

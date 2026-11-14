@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PresenceChatRequest;
+use App\Http\Requests\SendMessageChatRequest;
+use App\Http\Requests\TypingChatRequest;
 use App\Http\Requests\StartConversationChatRequest;
 use App\Http\Requests\DeleteMessagesChatRequest;
 use App\Models\AccessProfile;
@@ -16,7 +18,10 @@ use App\Models\UserPresence;
 use App\Services\AuditService;
 use App\Services\ChatRealtimeService;
 use App\Services\ChatBroadcastConfigService;
+use App\Services\Secretarias\ActiveSecretaria;
+use App\Services\Secretarias\SecretariaMembership;
 use App\Services\SystemAlertService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,6 +53,7 @@ class ChatController extends Controller
         $users = User::query()
             ->where('active', true)
             ->whereKeyNot($currentUserId)
+            ->when(! app(ActiveSecretaria::class)->isAll(), fn ($q) => SecretariaMembership::filtrar($q, (int) app(ActiveSecretaria::class)->id()))
             ->orderBy('name')
             ->get(['id', 'name', 'preferred_name', 'email', 'profile', 'chat_access_override'])
             ->filter(fn (User $user) => $user->canUseChatWith($chatEnabledByProfile))
@@ -125,12 +131,19 @@ class ChatController extends Controller
             return response()->json(['message' => 'Selecione outro usuário para iniciar a conversa.'], 422);
         }
 
+        // A conversa nasce na secretaria ativa (admin em "Todas" informa); os dois lados precisam atendê-la.
+        $sid = EscopoAlmoxarifado::id($request->input('secretaria_id'));
+
         $otherUser = User::find($otherId);
         if (! $otherUser?->canUseChat()) {
             return response()->json(['message' => 'O usuário selecionado não possui acesso ao chat.'], 422);
         }
+        if (! SecretariaMembership::atende($otherId, $sid) || ! SecretariaMembership::atende($userId, $sid)) {
+            return response()->json(['message' => 'O usuário selecionado não pertence a esta secretaria.'], 422);
+        }
 
         $conversation = ChatConversation::query()
+            ->where('secretaria_id', $sid)
             ->where('type', 'direct')
             ->whereHas('participants', fn ($query) => $query->where('users.id', $userId))
             ->whereHas('participants', fn ($query) => $query->where('users.id', $otherId))
@@ -139,8 +152,9 @@ class ChatController extends Controller
             ->firstWhere('participants_count', 2);
 
         if (! $conversation) {
-            $conversation = DB::transaction(function () use ($userId, $otherId) {
+            $conversation = DB::transaction(function () use ($userId, $otherId, $sid) {
                 $conversation = ChatConversation::create([
+                    'secretaria_id' => $sid,
                     'type' => 'direct',
                     'created_by' => $userId,
                 ]);
@@ -189,27 +203,10 @@ class ChatController extends Controller
         return response()->json($page);
     }
 
-    public function sendMessage(Request $request, ChatConversation $conversation): JsonResponse
+    public function sendMessage(SendMessageChatRequest $request, ChatConversation $conversation): JsonResponse
     {
         $userId = (int) $request->user()->id;
-        $this->authorizeParticipant($conversation, $userId);
-
-        $maxKb = $this->effectiveMaxAttachmentKb();
-        $data = $request->validate([
-            'body' => ['nullable', 'string', 'max:'.config('chat.max_message_length')],
-            'file' => [
-                'nullable',
-                'file',
-                'max:'.$maxKb,
-                'mimes:'.implode(',', config('chat.allowed_extensions')),
-                'mimetypes:'.implode(',', config('chat.allowed_mimes')),
-            ],
-        ], [
-            'file.uploaded' => 'O arquivo excede o limite permitido pelo servidor ('.$this->formatAttachmentLimitLabel($maxKb).').',
-            'file.max' => 'O arquivo excede o limite permitido de '.$this->formatAttachmentLimitLabel($maxKb).'.',
-            'file.mimes' => 'Envie apenas arquivos JPG, JPEG, PNG, WEBP, TXT ou PDF.',
-            'file.mimetypes' => 'Envie apenas arquivos JPG, JPEG, PNG, WEBP, TXT ou PDF.',
-        ]);
+        $data = $request->validated();
 
         $body = trim(strip_tags((string) ($data['body'] ?? '')));
         if ($body === '' && ! $request->hasFile('file')) {
@@ -433,11 +430,10 @@ class ChatController extends Controller
         return response()->json(['message' => 'Conversa removida da sua lista.']);
     }
 
-    public function typing(Request $request, ChatConversation $conversation): JsonResponse
+    public function typing(TypingChatRequest $request, ChatConversation $conversation): JsonResponse
     {
         $userId = (int) $request->user()->id;
-        $this->authorizeParticipant($conversation, $userId);
-        $data = $request->validate(['typing' => ['required', 'boolean']]);
+        $data = $request->validated();
 
         $this->realtime->publishMany(
             $this->recipientIds($conversation, $userId),
@@ -557,6 +553,11 @@ class ChatController extends Controller
         $isSoketi = ($realtimeConfig['engine'] ?? null) === 'soketi';
         $today = now()->toDateString();
         $monthStart = now()->startOfMonth()->toDateString();
+        // Presença só de quem atende a secretaria ativa; os contadores de uso (cota do serviço de tempo real) são globais.
+        $ativa = app(ActiveSecretaria::class);
+        $presences = UserPresence::query()
+            ->when(! $ativa->isAll(), fn ($q) => $q->whereIn('user_id', SecretariaMembership::filtrar(User::query(), (int) $ativa->id())->select('id')))
+            ->get();
         $daily = ChatUsageDaily::whereDate('usage_date', '>=', now()->subDays(29))
             ->orderBy('usage_date')
             ->get();
@@ -576,8 +577,8 @@ class ChatController extends Controller
             'today' => $todayUsage,
             'month' => $month,
             'current' => [
-                'connections' => (int) UserPresence::sum('connection_count'),
-                'online_users' => UserPresence::where('connection_count', '>', 0)->count(),
+                'connections' => (int) $presences->sum('connection_count'),
+                'online_users' => $presences->where('connection_count', '>', 0)->count(),
                 'unread_messages' => ChatMessage::whereNull('read_at')->count(),
             ],
             'totals' => [
@@ -597,16 +598,20 @@ class ChatController extends Controller
             ->where('user_id', $userId)
             ->exists();
 
-        abort_unless($allowed, 403, 'Conversa não autorizada.');
+        // Quem saiu da secretaria da conversa deixa de acessá-la.
+        abort_unless($allowed && SecretariaMembership::atende($userId, (int) $conversation->secretaria_id), 403, 'Conversa não autorizada.');
     }
 
     private function recipientIds(ChatConversation $conversation, ?int $exceptUserId): array
     {
+        // Tempo real só para participantes que ainda atendem a secretaria da conversa.
         return DB::table('chat_conversation_participants')
             ->where('conversation_id', $conversation->id)
             ->when($exceptUserId, fn ($query) => $query->where('user_id', '!=', $exceptUserId))
             ->pluck('user_id')
             ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => SecretariaMembership::atende($id, (int) $conversation->secretaria_id))
+            ->values()
             ->all();
     }
 
@@ -683,41 +688,6 @@ class ChatController extends Controller
             return 'image';
         }
         return $extension === 'pdf' ? 'pdf' : 'txt';
-    }
-
-    private function effectiveMaxAttachmentKb(): int
-    {
-        $configuredKb = max(1, (int) config('chat.max_attachment_kb', 10240));
-        $uploadKb = $this->iniSizeToKb(ini_get('upload_max_filesize'));
-        $postKb = $this->iniSizeToKb(ini_get('post_max_size'));
-        $limits = array_filter([$configuredKb, $uploadKb, $postKb], fn ($value) => (int) $value > 0);
-
-        return (int) (empty($limits) ? $configuredKb : min($limits));
-    }
-
-    private function iniSizeToKb(string|false|null $value): int
-    {
-        $raw = trim((string) $value);
-        if ($raw === '') {
-            return 0;
-        }
-
-        $unit = strtolower(substr($raw, -1));
-        $number = (float) $raw;
-
-        return match ($unit) {
-            'g' => (int) round($number * 1024 * 1024),
-            'm' => (int) round($number * 1024),
-            'k' => (int) round($number),
-            default => (int) round($number / 1024),
-        };
-    }
-
-    private function formatAttachmentLimitLabel(int $maxKb): string
-    {
-        return $maxKb >= 1024
-            ? number_format($maxKb / 1024, 0, ',', '.').' MB'
-            : number_format($maxKb, 0, ',', '.').' KB';
     }
 
     private function safeFilename(string $filename): string

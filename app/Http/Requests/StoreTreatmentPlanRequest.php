@@ -14,7 +14,7 @@ class StoreTreatmentPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'queue_id' => ['required', 'integer', 'exists:queue,id'],
+            'queue_id' => ['required', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('queue')],
             'weekdays' => ['required', 'array', 'min:1'],
             'weekdays.*' => ['integer', 'between:1,7'],
             'total_sessions' => ['required', 'integer', 'min:1', 'max:200'],

@@ -14,6 +14,23 @@ class ProtocolKanbanService
             return null;
         }
 
+        // Participante de outra secretaria não cria card; só acompanha o status do card da origem (ex.: encerrar).
+        $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
+        if ($protocol->secretaria_id && ! $ativa->isAll() && $ativa->inRequest() && (int) $protocol->secretaria_id !== (int) $ativa->id()) {
+            $card = KanbanTask::withoutSecretaria()->where('protocol_id', $protocol->id)->first();
+            if (! $card || ! isset($kanbanData['status'])) {
+                return null;
+            }
+            $status = (string) $kanbanData['status'];
+            $card->forceFill([
+                'status' => $status,
+                'concluido_at' => $status === 'concluido' ? ($card->concluido_at ?? now()) : null,
+                'updated_by_id' => $user?->id,
+            ])->save();
+
+            return $card;
+        }
+
         $enabled = (bool) ($kanbanData['ativar'] ?? $kanbanData['enabled'] ?? false);
         $taskId = $kanbanData['id'] ?? null;
 
@@ -25,6 +42,10 @@ class ProtocolKanbanService
 
         if ($taskId) {
             $task = KanbanTask::query()->find($taskId);
+            // Admin em "Todas" enxerga cards de qualquer secretaria: nunca reaproveita o de outra.
+            if ($task && (int) $task->secretaria_id !== (int) $protocol->secretaria_id) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['kanban.id' => 'Card de outra secretaria.']);
+            }
         }
 
         if (! $task) {
@@ -43,6 +64,7 @@ class ProtocolKanbanService
 
         $task->fill([
             'protocol_id' => $protocol->id,
+            'secretaria_id' => $protocol->secretaria_id, // o card é sempre da secretaria do protocolo
             'titulo' => $kanbanData['titulo'] ?? $protocol->assunto,
             'descricao' => $kanbanData['descricao'] ?? $protocol->descricao,
             'status' => $novoStatus,

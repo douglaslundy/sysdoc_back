@@ -14,7 +14,7 @@ class CallNextAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'roomId' => 'required|integer|exists:attendance_rooms,id',
+            'roomId' => ['required', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('attendance_rooms')],
         ];
     }
 }

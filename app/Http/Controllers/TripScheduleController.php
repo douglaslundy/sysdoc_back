@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\IndexTripScheduleRequest;
+use App\Http\Requests\SendTripScheduleRequest;
+use App\Http\Requests\StoreTripScheduleRequest;
+use App\Http\Requests\UpdateTripScheduleRequest;
 use App\Models\Trip;
 use App\Models\TripClient;
 use App\Models\TripScheduleEntry;
 use App\Services\Authorization\PagePermissionService;
+use App\Services\Secretarias\ActiveSecretaria;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /** Agenda de viagens: fila por data de passageiros (+ acompanhantes) que ainda não têm viagem. */
 class TripScheduleController extends Controller
 {
-    private const STATUSES = ['agendado', 'confirmado', 'cancelado', 'concluido'];
-
     private function autorizar(Request $request): ?JsonResponse
     {
         $user = $request->user();
@@ -27,12 +29,9 @@ class TripScheduleController extends Controller
         return null;
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(IndexTripScheduleRequest $request): JsonResponse
     {
-        if ($negado = $this->autorizar($request)) {
-            return $negado;
-        }
-        $v = $request->validate(['from' => 'required|date_format:Y-m-d', 'to' => 'required|date_format:Y-m-d|after_or_equal:from']);
+        $v = $request->validated();
 
         // Passageiro primeiro, acompanhantes logo abaixo dele.
         $entries = TripScheduleEntry::with('client')
@@ -44,25 +43,9 @@ class TripScheduleController extends Controller
         return response()->json($entries);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreTripScheduleRequest $request): JsonResponse
     {
-        if ($negado = $this->autorizar($request)) {
-            return $negado;
-        }
-
-        $v = $request->validate([
-            'scheduled_date' => 'required_without:companion_of|nullable|date_format:Y-m-d',
-            'client_id' => 'required|integer|exists:clients,id',
-            'companion_of' => 'nullable|integer|exists:trip_schedule_entries,id',
-            'phone' => 'nullable|string|max:20',
-            'departure_location' => 'nullable|string|max:50',
-            'destination_location' => 'nullable|string|max:50',
-            'time' => 'nullable|date_format:H:i',
-            'obs' => 'nullable|string|max:300',
-            'companions' => 'nullable|array|max:10',
-            'companions.*.client_id' => 'required|integer|exists:clients,id',
-            'companions.*.phone' => 'nullable|string|max:20',
-        ]);
+        $v = $request->validated();
 
         $parent = null;
         if (! empty($v['companion_of'])) {
@@ -72,6 +55,10 @@ class TripScheduleController extends Controller
             }
         }
 
+        $secretariaId = $parent?->secretaria_id ?? app(ActiveSecretaria::class)->forCreate($v['secretaria_id'] ?? null);
+        if (! $secretariaId) {
+            return response()->json(['message' => 'Escolha a secretaria.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
+        }
         $date = $parent ? $parent->scheduled_date->toDateString() : $v['scheduled_date'];
 
         $clientIds = array_merge([$v['client_id']], array_column($v['companions'] ?? [], 'client_id'));
@@ -82,8 +69,9 @@ class TripScheduleController extends Controller
             return response()->json(['message' => 'Alguém deste agendamento já está na agenda desse dia.'], 422);
         }
 
-        $criados = DB::transaction(function () use ($request, $v, $parent, $date) {
+        $criados = DB::transaction(function () use ($request, $v, $parent, $secretariaId, $date) {
             $base = [
+                'secretaria_id' => $secretariaId,
                 'scheduled_date' => $date,
                 'phone' => $v['phone'] ?? null,
                 'departure_location' => $v['departure_location'] ?? $parent?->departure_location,
@@ -113,21 +101,10 @@ class TripScheduleController extends Controller
         return response()->json(collect($criados)->map->load('client'), 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateTripScheduleRequest $request, int $id): JsonResponse
     {
-        if ($negado = $this->autorizar($request)) {
-            return $negado;
-        }
         $entry = TripScheduleEntry::findOrFail($id);
-        $v = $request->validate([
-            'scheduled_date' => 'sometimes|date_format:Y-m-d',
-            'phone' => 'nullable|string|max:20',
-            'departure_location' => 'nullable|string|max:50',
-            'destination_location' => 'nullable|string|max:50',
-            'time' => 'nullable|date_format:H:i',
-            'status' => ['sometimes', Rule::in(self::STATUSES)],
-            'obs' => 'nullable|string|max:300',
-        ]);
+        $v = $request->validated();
 
         DB::transaction(function () use ($entry, $v) {
             $entry->update($v);
@@ -155,22 +132,9 @@ class TripScheduleController extends Controller
     }
 
     /** Envia passageiros (com seus acompanhantes) da agenda para uma viagem existente ou nova; saem da agenda. */
-    public function send(Request $request): JsonResponse
+    public function send(SendTripScheduleRequest $request): JsonResponse
     {
-        if ($negado = $this->autorizar($request)) {
-            return $negado;
-        }
-        $v = $request->validate([
-            'entry_ids' => 'required|array|min:1|max:100',
-            'entry_ids.*' => 'integer',
-            'trip_id' => 'nullable|integer|exists:trips,id',
-            'new_trip' => 'nullable|array',
-            'new_trip.route_id' => 'required_with:new_trip|integer|exists:routes,id',
-            'new_trip.departure_date' => 'required_with:new_trip|date_format:Y-m-d',
-            'new_trip.departure_time' => 'nullable|date_format:H:i',
-            'new_trip.vehicle_id' => 'nullable|integer|exists:vehicles,id',
-            'new_trip.driver_id' => 'nullable|integer|exists:users,id',
-        ]);
+        $v = $request->validated();
         if (empty($v['trip_id']) === empty($v['new_trip'])) {
             return response()->json(['message' => 'Escolha uma viagem existente ou os dados da nova viagem.'], 422);
         }
@@ -196,6 +160,7 @@ class TripScheduleController extends Controller
                 } else {
                     $n = $v['new_trip'];
                     $trip = Trip::create([
+                        'secretaria_id' => $todas->first()->secretaria_id,
                         'user_id' => $request->user()->id,
                         'route_id' => $n['route_id'],
                         'departure_date' => $n['departure_date'],

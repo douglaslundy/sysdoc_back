@@ -16,7 +16,7 @@ class UpdateProtocolRequest extends FormRequest
         return [
             'assunto' => 'sometimes|required|string|max:200',
             'descricao' => 'nullable|string',
-            'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo',
+            'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo|not_in:solicitacao_cadastro',
             'prioridade' => 'nullable|string|max:20',
             'visibility' => 'sometimes|string|in:public,private',
             'status' => 'sometimes|string|in:novo,recebido,encaminhado,devolvido,reaberto,encerrado,concluido,cancelado',

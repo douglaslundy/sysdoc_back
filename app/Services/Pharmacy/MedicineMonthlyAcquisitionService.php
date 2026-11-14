@@ -4,6 +4,7 @@ namespace App\Services\Pharmacy;
 
 use App\Models\MedicineMonthlyAcquisition;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -31,6 +32,7 @@ class MedicineMonthlyAcquisitionService
     public function upsert(array $data, ?int $userId): MedicineMonthlyAcquisition
     {
         $data['updated_by_user_id'] = $userId;
+        $data['secretaria_id'] = EscopoAlmoxarifado::id($data['secretaria_id'] ?? null); // admin em "Todas" sem escolher = 422
 
         $acquisition = MedicineMonthlyAcquisition::updateOrCreate(
             [

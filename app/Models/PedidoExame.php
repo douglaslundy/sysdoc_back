@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PedidoExame extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory, SoftDeletes;
 
     protected $table = 'pedidos_exame';
 
     protected $fillable = [
+        'secretaria_id',
         'client_id', 'criado_por', 'medico_solicitante_id',
         'data_pedido', 'data_coleta', 'status', 'observacoes',
     ];

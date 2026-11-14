@@ -168,6 +168,14 @@ class RouteServiceProvider extends ServiceProvider
                 ], 429));
         });
 
+        // Pedido público de cadastro: 5 por hora por IP; leituras (lista/desafio): 30 por minuto.
+        RateLimiter::for('cadastro-publico', fn (Request $request) => Limit::perHour(5)
+            ->by('cadastro-publico|'.$request->ip())
+            ->response(fn () => response()->json(['message' => 'Muitos pedidos deste local. Tente novamente mais tarde.'], 429)));
+        RateLimiter::for('cadastro-publico-leitura', fn (Request $request) => Limit::perMinute(30)
+            ->by('cadastro-publico-leitura|'.$request->ip())
+            ->response(fn () => response()->json(['message' => 'Muitas requisições. Aguarde um instante.'], 429)));
+
         RateLimiter::for('forgot-password', function (Request $request) {
             $email = (string) $request->input('email', '');
             $key = sprintf('forgot-password|%s|%s', mb_strtolower(trim($email)), $request->ip());

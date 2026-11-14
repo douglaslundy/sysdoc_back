@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateLetterAiRequest;
 use App\Http\Requests\CreateProtocolLetterRequest;
 use App\Http\Requests\CreateProtocolV2LetterRequest;
 use App\Models\Letter;
@@ -15,6 +16,8 @@ use App\Models\ProtocolOrganizationalUnit;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
+use App\Services\Secretarias\ActiveSecretaria;
+use App\Services\Secretarias\SecretariaMembership;
 use App\Services\SystemAlertService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +50,7 @@ class LetterController extends Controller
             'subject_matter' => 'required',
             'sender' => 'required',
             'recipient' => 'required',
+            'secretaria_id' => \App\Models\Secretaria::regraId(),
             // 'fileurl' => 'required',
             //'arquivo' => 'required|mimes:jpg, png, pdf
         ]);
@@ -55,15 +59,20 @@ class LetterController extends Controller
 
             //$file = $request->file('photo')->store('public');
 
-            $letter = new Letter();
-            $letter->id_user = $request->input('id_user');
+            // Admin em "Todas" informa a secretaria (sem ela: 422); os demais usam a ativa. A numeração é por secretaria.
+            $secretariaId = app(ActiveSecretaria::class)->forCreate($request->input('secretaria_id'));
+            if (! $secretariaId) {
+                return response()->json(['message' => 'Escolha a secretaria.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
+            }
 
-            $letter->number = (DB::table('letters')
-                ->whereYear('created_at', date('Y')) // Filtra os registros pelo ano corrente
-                ->orderBy('number', 'desc')
-                ->value('number')
-                // ->first()
-            ) + 1;
+            // O autor do ofício precisa atender a secretaria do registro.
+            if (! SecretariaMembership::atende((int) $request->input('id_user'), $secretariaId)) {
+                return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => ['id_user' => ['Usuário não pertence a esta secretaria.']]], 422);
+            }
+
+            $letter = new Letter();
+            $letter->secretaria_id = $secretariaId;
+            $letter->id_user = $request->input('id_user');
 
             $letter->subject_matter = $request->input('subject_matter');
             $letter->sender = $request->input('sender');
@@ -71,7 +80,16 @@ class LetterController extends Controller
             $letter->obs = $request->input('obs');
             $letter->summary = $request->input('summary');
             $letter->fileurl = $request->input('fileurl');
-            $letter->save();
+
+            // Lock por secretaria: duas criações simultâneas não repetem o número.
+            \Illuminate\Support\Facades\Cache::lock('oficio-numero-'.$secretariaId, 10)->block(10, function () use ($letter, $secretariaId) {
+                $letter->number = (Letter::withoutSecretaria()
+                    ->where('secretaria_id', $secretariaId)
+                    ->whereYear('created_at', date('Y')) // Filtra os registros pelo ano corrente
+                    ->max('number')
+                ) + 1;
+                $letter->save();
+            });
             app(SystemAlertService::class)->dispatch('oficios', 'oficio_cadastrado', [
                 'letter' => $letter->load('user'),
                 'requester' => $request->user(),
@@ -105,6 +123,9 @@ class LetterController extends Controller
             //$file = $request->file('photo')->store('public');
 
             $letter = Letter::find($request->input('id'));
+            if (! $letter) {
+                return response()->json(['errors' => 'letter has not found', 'message' => 'Ofício não encontrado.'], 404);
+            }
             $letter->subject_matter = $request->input('subject_matter');
             $letter->sender = $request->input('sender');
             $letter->recipient = $request->input('recipient');
@@ -136,10 +157,11 @@ class LetterController extends Controller
 
         if (is_null($letter)) {
 
-            $array['errors'] = 'letter has not found';
+            return response()->json(['errors' => 'letter has not found', 'message' => 'Ofício não encontrado.'], 404);
         } else {
 
-            $lastLetter = Letter::latest()->first();
+            // O último ofício da mesma secretaria (a numeração é por secretaria).
+            $lastLetter = Letter::withoutSecretaria()->where('secretaria_id', $letter->secretaria_id)->latest()->first();
 
             if ($letter->id !== $lastLetter->id) {
                 throw new Exception('é permitido excluir Somente o ultimo Ofício');
@@ -151,18 +173,8 @@ class LetterController extends Controller
         }
     }
 
-    public function createLetterAi(Request $req)
+    public function createLetterAi(CreateLetterAiRequest $req)
     {
-        $req->validate([
-            'id_user' => ['required'],
-            'sender' => ['required', 'string'],
-            'recipient' => ['required', 'string'],
-            'subject_matter' => ['required', 'string'],
-            'summary' => ['nullable', 'string'],
-            'wishes' => ['nullable', 'string'],
-            'treatment_pronoun' => ['nullable', 'string'],
-        ]);
-
         $promptText = 'Elabore um OFICIO FORMAL com linguagem juridica precisa, objetiva e tecnica.'
             ."\n\nSiga rigorosamente a estrutura abaixo:\n"
             ."\n1. Vocativo:\nInicie com o pronome de tratamento: ".$req->treatment_pronoun
@@ -253,11 +265,12 @@ class LetterController extends Controller
             ], 422);
         }
 
-        $originUnit = $user?->protocolUnits()
-            ->where('ativo', true)
-            ->with('unit')
-            ->first()
-            ?->unit;
+        $originUnit = $this->linkedSecretariatUnit($user, (int) $letter->secretaria_id);
+
+        // Unidade de origem sempre da secretaria do ofício (admin em "Todas" poderia ter lotação em outra).
+        if ($originUnit && (int) $originUnit->secretaria_id !== (int) $letter->secretaria_id) {
+            $originUnit = null;
+        }
 
         if (! $originUnit) {
             return response()->json([
@@ -265,7 +278,7 @@ class LetterController extends Controller
             ], 422);
         }
 
-        $destinationUnit = $destinationUser->protocolUnits()
+        $destinationUnit = \App\Models\ProtocolUserUnit::withoutGlobalScopes()->where('user_id', $destinationUser->id)
             ->where('ativo', true)
             ->with('unit')
             ->first()
@@ -285,6 +298,7 @@ class LetterController extends Controller
                 &$storedPath
             ) {
                 $protocol = Protocol::create([
+                    'secretaria_id' => $letter->secretaria_id,
                     'numero' => Protocol::gerarNumero(),
                     'assunto' => 'Ofício '.$letter->number.' - '.$letter->subject_matter,
                     'descricao' => $letter->summary ?: $letter->subject_matter,
@@ -403,7 +417,8 @@ class LetterController extends Controller
         $validated = $request->validated();
 
         $user = $request->user();
-        $destinationUnit = ProtocolOrganizationalUnit::query()->find($validated['destino_unit_id']);
+        // Destino pode ser de outra secretaria (ofício/protocolo entre secretarias): sem o escopo.
+        $destinationUnit = ProtocolOrganizationalUnit::withoutSecretaria()->find($validated['destino_unit_id']);
         $destinationUser = ! empty($validated['destino_user_id'])
             ? User::query()->whereKey($validated['destino_user_id'])->where('active', true)->first()
             : null;
@@ -438,7 +453,7 @@ class LetterController extends Controller
             ], 422);
         }
 
-        $originUnit = $this->linkedSecretariatUnit($user);
+        $originUnit = $this->linkedSecretariatUnit($user, (int) $letter->secretaria_id);
         if (! $originUnit) {
             return response()->json([
                 'message' => 'Seu usuário não possui secretaria ou unidade vinculada para criar o protocolo.',
@@ -460,6 +475,7 @@ class LetterController extends Controller
                 &$storedPath
             ) {
                 $protocol = Protocol::create([
+                    'secretaria_id' => $letter->secretaria_id,
                     'numero' => Protocol::gerarNumero(),
                     'assunto' => 'Ofício '.$letter->number.' - '.$letter->subject_matter,
                     'descricao' => $letter->summary ?: $letter->subject_matter,
@@ -579,17 +595,18 @@ class LetterController extends Controller
         ], 201);
     }
 
-    private function linkedSecretariatUnit(?User $user): ?ProtocolOrganizationalUnit
+    private function linkedSecretariatUnit(?User $user, ?int $secretariaId = null): ?ProtocolOrganizationalUnit
     {
         if (! $user) {
             return null;
         }
 
-        $links = $user->protocolUnits()
+        $links = \App\Models\ProtocolUserUnit::withoutGlobalScopes()->where('user_id', $user->id)
             ->where('ativo', true)
             ->with('unit.parent')
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->filter(fn ($link) => ! $secretariaId || (int) $link->unit?->secretaria_id === $secretariaId);
 
         $directSecretaria = $links->first(fn ($link) => $link->unit?->tipo === 'secretaria');
         if ($directSecretaria?->unit) {

@@ -12,6 +12,12 @@ class ProtocolUserUnit extends Model
 
     protected $table = 'protocol_user_units';
 
+    // Herda a secretaria do registro pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('protocol_organizational_unit_id', 'protocol_organizational_units'));
+    }
+
     protected $fillable = [
         'user_id',
         'protocol_organizational_unit_id',
@@ -30,6 +36,6 @@ class ProtocolUserUnit extends Model
 
     public function unit(): BelongsTo
     {
-        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'protocol_organizational_unit_id');
+        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'protocol_organizational_unit_id')->withoutGlobalScope(\App\Models\Scopes\SecretariaScope::class);
     }
 }

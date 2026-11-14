@@ -52,7 +52,7 @@ class VehicleController extends Controller
         DB::beginTransaction();
         try {
             $array = ['status' => 'updated'];
-            $vehicle->update($request->all());
+            $vehicle->update($request->except('secretaria_id'));
             $array['vehicle'] = $vehicle;
 
             DB::commit();

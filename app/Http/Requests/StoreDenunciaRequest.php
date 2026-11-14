@@ -4,7 +4,9 @@ namespace App\Http\Requests;
 
 use App\Models\PeticaoMotivo;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
+use App\Services\Secretarias\ActiveSecretaria;
+use App\Support\EscopoAlmoxarifado;
+use App\Support\SaudePublica;
 
 /** Petição pública (denúncia, vistoria...): qualquer pessoa pode enviar; identificação é opcional. */
 class StoreDenunciaRequest extends FormRequest
@@ -18,6 +20,13 @@ class StoreDenunciaRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        // Rota publica: as regras abaixo ja precisam enxergar so a secretaria dona (nunca a do cliente).
+        $this->request->remove('secretaria_id');
+        SaudePublica::vigilancia();
+    }
+
     public function rules(): array
     {
         // O motivo é obrigatório assim que existir algum motivo ativo cadastrado; antes disso
@@ -28,7 +37,7 @@ class StoreDenunciaRequest extends FormRequest
             'motivo_id' => [
                 $haMotivos ? 'required' : 'nullable',
                 'integer',
-                Rule::exists('peticao_motivos', 'id')->where('ativo', true),
+                EscopoAlmoxarifado::existe('peticao_motivos', (int) app(ActiveSecretaria::class)->id())->where('ativo', true),
             ],
             'assunto' => ['required', 'string', 'max:200'],
             'descricao_denuncia' => ['required', 'string', 'max:4000'],

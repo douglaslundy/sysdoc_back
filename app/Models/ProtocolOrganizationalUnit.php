@@ -9,11 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProtocolOrganizationalUnit extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     protected $table = 'protocol_organizational_units';
 
     protected $fillable = [
+        'secretaria_id',
         'parent_id',
         'tipo',
         'codigo',
@@ -28,7 +30,7 @@ class ProtocolOrganizationalUnit extends Model
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(self::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id')->withoutGlobalScope(\App\Models\Scopes\SecretariaScope::class);
     }
 
     public function children(): HasMany

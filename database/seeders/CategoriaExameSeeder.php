@@ -47,8 +47,12 @@ class CategoriaExameSeeder extends Seeder
             'VITAMINAS E MICRONUTRIENTES',
         ];
 
+        // Seeder roda fora de requisição: grava explicitamente na Saúde.
+        $sec = \App\Models\Secretaria::saudeId();
+
         foreach ($categorias as $nome) {
             DB::table('categoria_exames')->insertOrIgnore([
+                'secretaria_id' => $sec,
                 'nome' => $nome,
                 'ativo' => true,
                 'created_at' => now(),

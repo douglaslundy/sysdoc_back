@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShowLabConfigRequest;
 use App\Http\Requests\UpdateLabConfigRequest;
 use App\Models\LabConfig;
 use App\Services\AuditService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
 class LabConfigController extends Controller
 {
-    public function show()
+    public function show(ShowLabConfigRequest $request)
     {
-        return response()->json(LabConfig::get());
+        return response()->json(LabConfig::get(\App\Support\EscopoAlmoxarifado::id($request->input('secretaria_id'))));
     }
 
     public function update(UpdateLabConfigRequest $request)
     {
-        $config = LabConfig::get();
+        $config = LabConfig::get(\App\Support\EscopoAlmoxarifado::id($request->input('secretaria_id')));
         $old = $config->toArray();
 
         $fields = [
@@ -29,9 +29,6 @@ class LabConfigController extends Controller
         ];
 
         if (Schema::hasColumn('lab_configs', 'imprimir_rascunho_exame')) {
-            $request->validate([
-                'imprimir_rascunho_exame' => 'boolean',
-            ]);
             $fields[] = 'imprimir_rascunho_exame';
         }
 

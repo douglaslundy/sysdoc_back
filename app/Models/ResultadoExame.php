@@ -9,6 +9,12 @@ use Illuminate\Support\Str;
 
 class ResultadoExame extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('pedido_exame_id', 'pedidos_exame'));
+    }
+
     use HasFactory;
 
     protected $fillable = [
@@ -54,7 +60,7 @@ class ResultadoExame extends Model
     {
         do {
             $protocolo = 'LAB-'.strtoupper(Str::random(8));
-        } while (self::where('protocolo', $protocolo)->exists());
+        } while (self::withoutGlobalScopes()->where('protocolo', $protocolo)->exists()); // protocolo é único em todo o sistema
 
         return $protocolo;
     }

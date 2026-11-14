@@ -8,6 +8,7 @@ use App\Http\Resources\EstabelecimentoResource;
 use App\Models\Cnae;
 use App\Models\Estabelecimento;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -77,6 +78,7 @@ class EstabelecimentoController extends Controller
         $dados = $request->validated();
         $codigos = $dados['cnaes'] ?? [];
         unset($dados['cnaes']);
+        $dados['secretaria_id'] = EscopoAlmoxarifado::id($request->input('secretaria_id')); // admin em "Todas" sem escolher = 422
 
         $estabelecimento = DB::transaction(function () use ($dados, $codigos) {
             $estabelecimento = Estabelecimento::create($dados);

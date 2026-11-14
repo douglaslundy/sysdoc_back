@@ -10,11 +10,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MedicineItem extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory, SoftDeletes;
 
     protected $table = 'medicine_items';
 
     protected $fillable = [
+        'secretaria_id',
         'internal_code',
         'brand_name',
         'active_ingredient',

@@ -6,5 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PharmacyUnit extends Model
 {
-    protected $fillable = ['code', 'name', 'active'];
+    use \App\Models\Concerns\BelongsToSecretaria;
+
+    protected $fillable = ['secretaria_id', 'code', 'name', 'active'];
 }

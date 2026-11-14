@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class IluminacaoPosteMovimentacao extends Model
 {
+
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('poste_id', 'iluminacao_postes'));
+    }
     public $timestamps = false;
 
     protected $table = 'iluminacao_poste_movimentacoes';

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EstadoPainelEsusRequest;
 use App\Http\Requests\FilaPainelEsusRequest;
 use App\Http\Requests\FiltrosPainelEsusRequest;
+use App\Http\Requests\ValidarCnesPainelEsusRequest;
 use App\Models\PainelEsusPresence;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -348,9 +350,8 @@ class PainelEsusController extends MonitorApsBaseController
      * GET /public/painel-esus/validar-cnes?cnes=XXXXXXX
      * Público — sem autenticação.
      */
-    public function validarCnes(Request $request): JsonResponse
+    public function validarCnes(ValidarCnesPainelEsusRequest $request): JsonResponse
     {
-        $request->validate(['cnes' => 'required|string|max:20']);
         $cnes = trim($request->input('cnes'));
 
         try {
@@ -382,9 +383,10 @@ class PainelEsusController extends MonitorApsBaseController
      * Público — sem autenticação.
      * Retorna quem está em atendimento agora e os últimos 5 atendidos no dia.
      */
-    public function estado(Request $request): JsonResponse
+    public function estado(EstadoPainelEsusRequest $request): JsonResponse
     {
-        $request->validate(['cnes' => 'required|string|max:20']);
+        // Rota pública: o painel e-SUS pertence à Saúde (secretaria fixada no servidor, nunca pelo cliente).
+        \App\Support\SaudePublica::aplicar();
         $cnes = trim($request->input('cnes'));
         $hoje = now()->toDateString();
 
@@ -424,7 +426,7 @@ class PainelEsusController extends MonitorApsBaseController
                 );
             } catch (\Throwable) {}
 
-            PainelEsusPresence::updateOrCreate(
+            app(\App\Services\Secretarias\ActiveSecretaria::class)->id() && PainelEsusPresence::updateOrCreate(
                 ['cnes' => $cnes],
                 [
                     'panel_name' => $unidadeRow?->nome ?? 'CNES ' . $cnes,

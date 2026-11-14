@@ -17,18 +17,26 @@ class AttendanceTicketService
     ) {
     }
 
-    public function issueTicket(int $clientId, ?int $createdByUserId = null, string $prefix = 'A', ?int $roomId = null): AttendanceTicket
+    public function issueTicket(int $clientId, ?int $createdByUserId = null, string $prefix = 'A', ?int $roomId = null, ?int $secretariaId = null): AttendanceTicket
     {
         Client::query()->findOrFail($clientId);
+        // A senha herda a secretaria da sala; sem sala, a ativa (ou a informada pelo admin em "Todas").
+        $sid = null;
         if ($roomId !== null) {
-            AttendanceRoom::query()->where('active', true)->findOrFail($roomId);
+            $room = AttendanceRoom::query()->where('active', true)->findOrFail($roomId);
+            if ($secretariaId && (int) $secretariaId !== (int) $room->secretaria_id) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['roomId' => ['A sala pertence a outra secretaria.']]);
+            }
+            $sid = (int) $room->secretaria_id;
         }
+        $sid ??= \App\Support\EscopoAlmoxarifado::id($secretariaId);
 
-        $ticket = DB::transaction(function () use ($clientId, $createdByUserId, $prefix, $roomId) {
+        $ticket = DB::transaction(function () use ($clientId, $createdByUserId, $prefix, $roomId, $sid) {
             $now = Carbon::now();
-            $number = $this->numberService->nextNumberForDate($now);
+            $number = $this->numberService->nextNumberForDate($now, $sid);
 
             $ticket = AttendanceTicket::query()->create([
+                'secretaria_id' => $sid,
                 'number' => $number,
                 'display_code' => $this->numberService->buildDisplayCode($number, $prefix),
                 'sequence_date' => $now->toDateString(),

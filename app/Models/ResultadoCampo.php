@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class ResultadoCampo extends Model
 {
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('exame_id', 'exames'));
+    }
+
     use HasFactory;
 
     protected $fillable = [

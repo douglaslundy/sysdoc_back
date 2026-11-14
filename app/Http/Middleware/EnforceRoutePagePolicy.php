@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Secretaria;
 use App\Services\Authorization\PagePermissionService;
+use App\Services\Secretarias\ActiveSecretaria;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,7 +15,7 @@ use Illuminate\Support\Str;
  */
 class EnforceRoutePagePolicy
 {
-    public function __construct(private PagePermissionService $pages)
+    public function __construct(private PagePermissionService $pages, private ActiveSecretaria $active)
     {
     }
 
@@ -34,9 +36,15 @@ class EnforceRoutePagePolicy
                 continue;
             }
 
+            $rulePages = $rule['pages'] ?? [];
+            // Perfil ∩ páginas liberadas na secretaria ativa; admin em "todas" e páginas de gestão ficam de fora.
+            $liberadas = $this->active->isAll() || array_intersect($rulePages, Secretaria::PAGINAS_GESTAO)
+                ? null
+                : ($this->active->id() ? Secretaria::find($this->active->id())->pages()->pluck('system_pages.id')->all() : []);
+
             $allowed = ($rule['admin'] ?? false)
                 ? $user->profile === 'admin'
-                : $this->pages->canAccessAny($user, $rule['pages'] ?? []);
+                : $this->pages->canAccessAny($user, $rulePages, $liberadas);
 
             if (! $allowed) {
                 return response()->json(['message' => 'Usuário sem permissão para esta página.'], 403);

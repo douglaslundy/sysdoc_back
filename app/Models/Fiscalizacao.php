@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Fiscalizacao extends Model
 {
     use HasFactory, SoftDeletes;
+    use \App\Models\Concerns\BelongsToSecretaria;
 
     protected $table = 'fiscalizacoes';
 
     protected $fillable = [
+        'secretaria_id',
         'estabelecimento_id',
         'fiscal_id',
         'data_visita',

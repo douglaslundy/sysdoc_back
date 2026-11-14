@@ -27,6 +27,7 @@ class StoreRouteRequest extends FormRequest
     public function rules()
     {
         return [
+            'secretaria_id' => $this->route('route') instanceof \App\Models\Route ? ['nullable'] : \App\Support\EscopoAlmoxarifado::regraCampo(),
             'origin' => 'required|string|max:50',
             'destination' => 'required|string|max:50',
 

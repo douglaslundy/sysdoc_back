@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AlmoxarifadoProduto;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAlmoxarifadoProdutoRequest extends FormRequest
@@ -13,17 +15,20 @@ class UpdateAlmoxarifadoProdutoRequest extends FormRequest
 
     public function rules(): array
     {
+        // Produto de outra secretaria (escopo) = 404 antes de validar o corpo.
+        $sid = (int) (AlmoxarifadoProduto::find($this->route('id'))?->secretaria_id ?? abort(404, 'Produto não encontrado.'));
+
         return [
             'nome' => ['sometimes', 'required', 'string', 'max:150'],
             'descricao' => ['nullable', 'string'],
-            'codigo_interno' => ['sometimes', 'nullable', 'string', 'max:60', 'unique:almoxarifado_produtos,codigo_interno,'.$this->route('id')],
+            'codigo_interno' => ['sometimes', 'nullable', 'string', 'max:60', EscopoAlmoxarifado::unico('almoxarifado_produtos', 'codigo_interno', $sid)->ignore($this->route('id'))],
             'codigo_barras' => ['nullable', 'string', 'max:80'],
             'qr_code' => ['nullable', 'string', 'max:255'],
-            'almoxarifado_categoria_id' => ['nullable', 'integer', 'exists:almoxarifado_categorias,id'],
-            'almoxarifado_especie_id' => ['nullable', 'integer', 'exists:almoxarifado_especies,id'],
-            'almoxarifado_unidade_medida_id' => ['nullable', 'integer', 'exists:almoxarifado_unidades_medida,id'],
-            'almoxarifado_fornecedor_id' => ['nullable', 'integer', 'exists:almoxarifado_fornecedores,id'],
-            'almoxarifado_localizacao_id' => ['nullable', 'integer', 'exists:almoxarifado_localizacoes,id'],
+            'almoxarifado_categoria_id' => ['nullable', 'integer', EscopoAlmoxarifado::existe('almoxarifado_categorias', $sid)],
+            'almoxarifado_especie_id' => ['nullable', 'integer', EscopoAlmoxarifado::existe('almoxarifado_especies', $sid)],
+            'almoxarifado_unidade_medida_id' => ['nullable', 'integer', EscopoAlmoxarifado::existe('almoxarifado_unidades_medida', $sid)],
+            'almoxarifado_fornecedor_id' => ['nullable', 'integer', EscopoAlmoxarifado::existe('almoxarifado_fornecedores', $sid)],
+            'almoxarifado_localizacao_id' => ['nullable', 'integer', EscopoAlmoxarifado::existe('almoxarifado_localizacoes', $sid)],
             'marca' => ['nullable', 'string', 'max:120'],
             'modelo' => ['nullable', 'string', 'max:120'],
             'fabricante' => ['nullable', 'string', 'max:120'],

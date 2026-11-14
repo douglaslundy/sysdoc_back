@@ -114,7 +114,7 @@ class ResultadoExameController extends Controller
         ]);
     }
 
-    public function downloadPdf(\Illuminate\Http\Request $request, $id): StreamedResponse|array
+    public function downloadPdf(\Illuminate\Http\Request $request, $id): mixed
     {
         $resultado = ResultadoExame::find($id);
         if (! $resultado) {
@@ -127,7 +127,7 @@ class ResultadoExameController extends Controller
                 return response()->json(['error' => 'Resultado ainda não liberado.'], 422);
             }
 
-            if (! \App\Models\LabConfig::get()->imprimir_rascunho_exame) {
+            if (! \App\Models\LabConfig::get($resultado->pedido?->secretaria_id)->imprimir_rascunho_exame) {
                 return response()->json(['error' => 'Impressão de rascunho desativada nas configurações.'], 403);
             }
         }

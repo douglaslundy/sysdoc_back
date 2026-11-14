@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreDocumentRequest;
+use App\Http\Requests\UpdateDocumentRequest;
+use App\Http\Requests\UploadDocumentVersionRequest;
 use App\Models\AuditLog;
 use App\Models\Document;
 use App\Models\DocumentApproval;
@@ -20,7 +23,6 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -148,23 +150,19 @@ class DocumentController extends Controller
         return response()->json($history);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreDocumentRequest $request): JsonResponse
     {
-        if (! $this->canManageDocuments($request->user())) {
-            return response()->json(['message' => 'Você não possui permissão para executar esta ação.'], 403);
+        $validated = $request->validated();
+
+        // Admin em "Todas" informa a secretaria (sem ela: 422); os demais gravam na ativa.
+        $secretariaId = app(\App\Services\Secretarias\ActiveSecretaria::class)->forCreate($validated['secretaria_id'] ?? null);
+        if (! $secretariaId) {
+            return response()->json(['message' => 'Escolha a secretaria.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
         }
 
-        $validated = $request->validate([
-            'document_type_id' => ['nullable', 'integer', 'exists:document_types,id'],
-            'titulo' => ['required', 'string', 'max:200'],
-            'resumo' => ['nullable', 'string'],
-            'sigilo' => ['required', 'string', Rule::in(self::SIGILOS)],
-            'status' => ['nullable', 'string', 'max:30'],
-            'arquivo' => ['required', 'file', 'max:51200'],
-        ]);
-
-        $document = DB::transaction(function () use ($request, $validated) {
+        $document = DB::transaction(function () use ($request, $validated, $secretariaId) {
             $document = Document::create([
+                'secretaria_id' => $secretariaId,
                 'document_type_id' => $validated['document_type_id'] ?? null,
                 'titulo' => $validated['titulo'],
                 'resumo' => $validated['resumo'] ?? null,
@@ -190,21 +188,10 @@ class DocumentController extends Controller
         return response()->json($document, 201);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateDocumentRequest $request, int $id): JsonResponse
     {
-        $document = Document::find($id);
-        if (! $document || ! $this->canManageDocumentRecord($document, $request->user())) {
-            return response()->json(['message' => 'Documento não encontrado.'], 404);
-        }
-
-        $validated = $request->validate([
-            'document_type_id' => ['nullable', 'integer', 'exists:document_types,id'],
-            'titulo' => ['sometimes', 'required', 'string', 'max:200'],
-            'resumo' => ['nullable', 'string'],
-            'sigilo' => ['sometimes', 'required', 'string', Rule::in(self::SIGILOS)],
-            'status' => ['nullable', 'string', 'max:30'],
-            'arquivo' => ['nullable', 'file', 'max:51200'],
-        ]);
+        $document = Document::findOrFail($id); // 404/permissão já checados no FormRequest
+        $validated = $request->validated();
 
         $old = $document->toArray();
 
@@ -241,16 +228,10 @@ class DocumentController extends Controller
         return response()->json($document->fresh(['type:id,codigo,nome', 'creator:id,name', 'latestVersion.uploader:id,name']));
     }
 
-    public function uploadVersion(Request $request, int $id): JsonResponse
+    public function uploadVersion(UploadDocumentVersionRequest $request, int $id): JsonResponse
     {
-        $document = Document::find($id);
-        if (! $document || ! $this->canManageDocumentRecord($document, $request->user())) {
-            return response()->json(['message' => 'Documento não encontrado.'], 404);
-        }
-
-        $validated = $request->validate([
-            'arquivo' => ['required', 'file', 'max:51200'],
-        ]);
+        $document = Document::findOrFail($id); // 404/permissão já checados no FormRequest
+        $validated = $request->validated();
 
         $version = DB::transaction(function () use ($document, $validated, $request) {
             return $this->storeVersion($document, $validated['arquivo'], $request->user());
@@ -275,7 +256,7 @@ class DocumentController extends Controller
         try {
             $signers = [];
             if ($this->currentConfig()->requiresTripleSignatureFor((string) $document->sigilo)) {
-                $signers = $this->resolveTripleSignatureSigners($request->user()?->id);
+                $signers = $this->resolveTripleSignatureSigners($request->user()?->id, (int) $document->secretaria_id);
             }
         } catch (ValidationException $e) {
             return response()->json([
@@ -602,7 +583,7 @@ class DocumentController extends Controller
             || app(PagePermissionService::class)->canAccess($user, '/documentos/aprovacoes');
     }
 
-    private function resolveTripleSignatureSigners(?int $requesterId = null): array
+    private function resolveTripleSignatureSigners(?int $requesterId = null, ?int $secretariaId = null): array
     {
         $signers = $this->currentConfig()->signerUserIds();
         if (count($signers) !== 3) {
@@ -616,6 +597,15 @@ class DocumentController extends Controller
             throw ValidationException::withMessages([
                 'triple_signature' => 'A configuração da tripla assinatura possui usuários inválidos.',
             ]);
+        }
+
+        // Todos os 3 precisam atender a secretaria do documento: senão a solicitação ficaria sem quem assine.
+        foreach ($signers as $signerId) {
+            if ($secretariaId && ! \App\Services\Secretarias\SecretariaMembership::atende((int) $signerId, $secretariaId)) {
+                throw ValidationException::withMessages([
+                    'triple_signature' => 'Há responsáveis da tripla assinatura que não pertencem à secretaria deste documento.',
+                ]);
+            }
         }
 
         if ($requesterId && in_array((int) $requesterId, array_map('intval', $signers), true)) {

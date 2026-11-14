@@ -14,14 +14,15 @@ class ChatRealtimeEvent implements ShouldBroadcastNow
     public function __construct(
         public readonly ?int $recipientId,
         public readonly string $eventName,
-        public readonly array $payload
+        public readonly array $payload,
+        public readonly ?int $secretariaId = null
     ) {
     }
 
     public function broadcastOn(): PrivateChannel
     {
         return new PrivateChannel(
-            $this->recipientId === null ? 'chat.presence' : 'chat.user.'.$this->recipientId
+            $this->recipientId === null ? 'chat.presence.'.$this->secretariaId : 'chat.user.'.$this->recipientId
         );
     }
 

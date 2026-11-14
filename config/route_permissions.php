@@ -36,8 +36,8 @@ return [
         // ---- avisos do sistema: todo usuário lê os ativos e registra a visualização ----
         ['prefix' => 'system-notices', 'except' => ['system-notices/active', 'system-notices/{id}/views'], 'pages' => ['/avisos']],
 
-        // ---- mensagens enviadas pelo sistema (log de WhatsApp/e-mail) ----
-        ['prefix' => 'mensagens-enviadas', 'pages' => ['/sistema/mensagens-enviadas']],
+        // ---- mensagens enviadas pelo sistema (log de WhatsApp/e-mail de todas as secretarias): somente administrador ----
+        ['prefix' => 'mensagens-enviadas', 'admin' => true],
 
         // ---- protocolo: núcleo protegido; listas de apoio dos formulários seguem abertas ----
         [
@@ -51,8 +51,16 @@ return [
             'pages' => ['/protocolo*', '/kanban'],
         ],
 
+        // ---- pedidos de cadastro: a tela fica em Usuários/Protocolo; o controller limita a admin e gestor da secretaria ----
+        ['prefix' => 'cadastro-solicitacoes', 'pages' => ['/users', '/protocolo*', '/kanban']],
+
         // ---- vigilância sanitária (leituras; escritas já têm grupo próprio) ----
         ['prefix' => 'fiscalizacoes', 'methods' => ['GET'], 'pages' => ['/fiscalizacoes']],
+        // Ordem de Serviço: abrir/atender é '/ordem-servico'; tipos e configuração, '/ordem-servico/configuracao'.
+        ['prefix' => 'ordens-servico', 'pages' => ['/ordem-servico']],
+        ['prefix' => 'os-tipos', 'methods' => ['GET'], 'pages' => ['/ordem-servico', '/ordem-servico/configuracao']],
+        ['prefix' => 'os-tipos', 'pages' => ['/ordem-servico/configuracao']],
+        ['prefix' => 'os-configuracao', 'pages' => ['/ordem-servico/configuracao']],
         // Iluminação pública: cadastro e serviço são páginas irmãs; qualquer uma libera a leitura.
         ['prefix' => 'iluminacao/postes', 'pages' => ['/iluminacao/cadastro', '/iluminacao/servico']],
         ['prefix' => 'estabelecimentos', 'methods' => ['GET'], 'pages' => ['/estabelecimentos', '/alvaras', '/fiscalizacoes', '/auditoria']],
@@ -75,6 +83,15 @@ return [
 
         // ---- cadastros de apoio: a lista é usada por vários módulos; só a escrita é restrita ----
         ['prefix' => 'specialities', 'methods' => ['POST', 'PUT', 'PATCH', 'DELETE'], 'pages' => ['/specialities']],
+
+        // ---- usuários: admin e gestor (a página /users é de gestão); ping de presença e foto seguem só com login ----
+        ['prefix' => 'users', 'except' => ['users/presence/ping', 'users/{user}/photo'], 'pages' => ['/users']],
+
+        // ---- perfis de acesso: admin e gestor (a página /users é de gestão); o controller limita o gestor ----
+        ['prefix' => 'access-profiles', 'pages' => ['/users']],
+
+        // ---- cadastro de secretarias (não confundir com almoxarifado/secretarias) ----
+        ['prefix' => 'secretarias-admin', 'admin' => true],
 
         // ---- legado (setores): somente administrador ----
         ['prefix' => 'sector', 'admin' => true],

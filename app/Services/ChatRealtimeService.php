@@ -46,13 +46,26 @@ class ChatRealtimeService
         ));
     }
 
+    /**
+     * A presença sai só nos canais das secretarias do usuário (chat.presence.{id}); quem não atende a secretaria
+     * não a assina. Admin atende todas as secretarias ativas.
+     */
     public function publishPresence(array $payload): void
     {
-        $this->dispatchEvents([[null, 'presence.updated', $payload]]);
+        $user = \App\Models\User::find((int) ($payload['user_id'] ?? 0));
+        if (! $user) {
+            return;
+        }
+
+        $ids = $user->profile === 'admin'
+            ? \App\Models\Secretaria::where('ativa', true)->pluck('id')
+            : DB::table('user_secretarias')->where('user_id', $user->id)->pluck('secretaria_id');
+
+        $this->dispatchEvents($ids->map(fn ($sid) => [null, 'presence.updated', $payload, (int) $sid])->all());
     }
 
     /**
-     * @param  array<int, array{0: ?int, 1: string, 2: array}>  $events
+     * @param  array<int, array{0: ?int, 1: string, 2: array, 3?: int}>  $events  (3 = secretaria do canal de presença)
      */
     private function dispatchEvents(array $events): void
     {
@@ -78,9 +91,11 @@ class ChatRealtimeService
             $published = 0;
             $failed = 0;
 
-            foreach ($events as [$recipientId, $eventName, $payload]) {
+            foreach ($events as $event) {
+                [$recipientId, $eventName, $payload] = $event;
+                $secretariaId = $event[3] ?? null;
                 try {
-                    broadcast(new ChatRealtimeEvent($recipientId, $eventName, $payload));
+                    broadcast(new ChatRealtimeEvent($recipientId, $eventName, $payload, $secretariaId));
                     $published++;
                 } catch (\Throwable $e) {
                     $failed++;

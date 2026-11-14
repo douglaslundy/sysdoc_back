@@ -6,15 +6,41 @@ use App\Http\Requests\UpdateAccessProfileRequest;
 use App\Http\Requests\StoreAccessProfileRequest;
 use App\Models\AccessProfile;
 use App\Models\DocumentApproval;
+use App\Models\Secretaria;
 use App\Models\SystemPage;
+use App\Models\User;
+use App\Services\Secretarias\GestorProfileScope;
 use Illuminate\Http\Request;
 
 class AccessProfileController extends Controller
 {
-    public function index()
+    public function __construct()
+    {
+        // Perfis: admin, ou gestor (limitado ao que ele mesmo tem, ver GestorProfileScope); /my-* seguem só com login.
+        $this->middleware(function (Request $request, $next) {
+            if (! in_array($request->user()?->profile, ['admin', 'gestor'], true)) {
+                return response()->json(['message' => 'Acesso restrito a administradores e gestores.'], 403);
+            }
+
+            return $next($request);
+        })->except(['mySecretarias', 'myPermissions']);
+    }
+
+    /** Gestor vê só id/nome/slug/descricao dos perfis alheios; o admin e o dono veem tudo. */
+    private function visible(Request $request, AccessProfile $profile)
+    {
+        $user = $request->user();
+        if ($user->profile === 'admin' || (int) $profile->created_by_id === (int) $user->id) {
+            return $profile->loadMissing('pages');
+        }
+
+        return $profile->only(['id', 'nome', 'slug', 'descricao']);
+    }
+
+    public function index(Request $request)
     {
         return response()->json(
-            AccessProfile::with('pages')->orderBy('nome')->get()
+            AccessProfile::with('pages')->orderBy('nome')->get()->map(fn ($p) => $this->visible($request, $p))->values()
         );
     }
 
@@ -25,8 +51,11 @@ class AccessProfileController extends Controller
             'slug' => $request->slug,
             'descricao' => $request->descricao,
             'ativo' => true,
+            'created_by_id' => $request->user()->id,
             'chat_enabled' => $request->boolean('chat_enabled'),
-            'almoxarifado_create_enabled' => $request->boolean('almoxarifado_create_enabled', true),
+            // Padrão true só vale se o ator tem a permissão (gestor sem ela não a herda por omissão).
+            'almoxarifado_create_enabled' => $request->boolean('almoxarifado_create_enabled', $request->user()->profile === 'admin'
+                || GestorProfileScope::capabilities($request->user())['almoxarifado_create_enabled']),
             'almoxarifado_approve_enabled' => $request->boolean('almoxarifado_approve_enabled'),
             'almoxarifado_deliver_enabled' => $request->boolean('almoxarifado_deliver_enabled'),
             'client_trips_view_enabled' => $request->boolean('client_trips_view_enabled'),
@@ -45,14 +74,14 @@ class AccessProfileController extends Controller
         return response()->json($profile->load('pages'), 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $profile = AccessProfile::with('pages')->find($id);
         if (! $profile) {
             return response()->json(['error' => 'Perfil não encontrado'], 404);
         }
 
-        return response()->json($profile);
+        return response()->json($this->visible($request, $profile));
     }
 
     public function update(UpdateAccessProfileRequest $request, $id)
@@ -62,7 +91,7 @@ class AccessProfileController extends Controller
             return response()->json(['error' => 'Perfil não encontrado'], 404);
         }
 
-                $profile->update($request->only([
+        $campos = [
             'nome',
             'slug',
             'descricao',
@@ -78,7 +107,12 @@ class AccessProfileController extends Controller
             'protocol_allowed_statuses',
             'protocol_allowed_visibilities',
             'protocol_can_change_visibility',
-        ]));
+        ];
+        // O slug é a chave dos usuários: só o admin o troca.
+        if ($request->user()->profile !== 'admin') {
+            $campos = array_values(array_diff($campos, ['slug']));
+        }
+        $profile->update($request->only($campos));
 
         if ($request->has('page_ids')) {
             $profile->pages()->sync($request->page_ids);
@@ -87,11 +121,18 @@ class AccessProfileController extends Controller
         return response()->json($profile->load('pages'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $profile = AccessProfile::find($id);
         if (! $profile) {
             return response()->json(['error' => 'Perfil não encontrado'], 404);
+        }
+        $user = $request->user();
+        if ($user->profile !== 'admin' && (int) $profile->created_by_id !== (int) $user->id) {
+            return response()->json(['message' => 'Você só exclui perfis criados por você.'], 403);
+        }
+        if (User::where('profile', $profile->slug)->exists()) {
+            return response()->json(['message' => 'Perfil em uso por usuários; reatribua-os antes de excluir.'], 409);
         }
         $profile->delete();
 
@@ -99,6 +140,19 @@ class AccessProfileController extends Controller
     }
 
     // Retorna páginas permitidas para o perfil do usuário logado
+    public function mySecretarias(Request $request)
+    {
+        $admin = $request->user()->profile === 'admin';
+        $query = $admin ? Secretaria::query() : $request->user()->secretarias();
+
+        return response()->json([
+            'secretarias' => $query->where('secretarias.ativa', true)->orderBy('secretarias.id')
+                ->get(['secretarias.id', 'secretarias.nome'])
+                ->map(fn ($s) => ['id' => $s->id, 'nome' => $s->nome])->values(),
+            'pode_todas' => $admin,
+        ]);
+    }
+
     public function myPermissions(Request $request)
     {
         $user = $request->user();
@@ -131,6 +185,17 @@ class AccessProfileController extends Controller
                     'client_history_view' => $user->canViewClientHistory(),
                 ],
             ]);
+        }
+
+        // Acesso final = páginas do perfil ∩ páginas liberadas na secretaria ativa (admin em "todas" não filtra).
+        $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
+        if (! $ativa->isAll()) {
+            $liberadas = $ativa->id()
+                ? Secretaria::find($ativa->id())->pages()->pluck('system_pages.id')->all()
+                : [];
+            $profile->setRelation('pages', $profile->pages->filter(
+                fn ($p) => in_array($p->id, $liberadas, true) || in_array($p->path, Secretaria::PAGINAS_GESTAO, true)
+            )->values());
         }
 
         $pages = $profile->pages->values()->map(function ($page) {

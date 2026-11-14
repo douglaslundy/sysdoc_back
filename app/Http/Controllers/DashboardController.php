@@ -20,7 +20,7 @@ class DashboardController extends MonitorApsBaseController
     public function laboratorio()
     {
         try {
-            $data = Cache::remember('dashboard.laboratorio', 300, function () {
+            $data = Cache::remember('dashboard.laboratorio.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 300, function () {
                 try {
                     $totais = $this->service->getTotais();
                 } catch (\Throwable $e) {
@@ -115,7 +115,7 @@ class DashboardController extends MonitorApsBaseController
     public function fila()
     {
         try {
-            $data = Cache::remember('dashboard.fila', 120, function () {
+            $data = Cache::remember('dashboard.fila.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 120, function () {
                 try {
                     $totais = $this->service->getFilaTotais();
                 } catch (\Throwable $e) {
@@ -178,7 +178,7 @@ class DashboardController extends MonitorApsBaseController
             ? request()->input('periodo')
             : 'mes';
 
-        $cacheKey = 'dashboard.tfd.'.$periodo.'.'.now()->format('Y-m');
+        $cacheKey = 'dashboard.tfd.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey().'.'.$periodo.'.'.now()->format('Y-m');
         try {
             $data = Cache::remember($cacheKey, 300, function () use ($periodo) {
                 try {
@@ -256,7 +256,7 @@ class DashboardController extends MonitorApsBaseController
     public function logs()
     {
         try {
-            $data = Cache::remember('dashboard.logs', 600, function () {
+            $data = Cache::remember('dashboard.logs.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 600, function () {
                 try {
                     $totais = $this->service->getLogsTotais();
                 } catch (\Throwable $e) {
@@ -329,15 +329,15 @@ class DashboardController extends MonitorApsBaseController
         $currentMonth = now()->format('Y-m');
 
         try {
-            $cacheKey = 'dashboard.farmacia.v2.'.$janelaDias.'.'.$janelaMeses.'.'.now()->format('Y-m-d');
+            $cacheKey = 'dashboard.farmacia.v3.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey().'.'.$janelaDias.'.'.$janelaMeses.'.'.now()->format('Y-m-d');
             $data = Cache::remember($cacheKey, 180, function () use ($currentMonth, $janelaDias, $janelaMeses) {
                 try {
-                    $medicamentosAtivos = (int) DB::table('medicine_items')
+                    $medicamentosAtivos = (int) \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items'), 'secretaria_id')
                         ->whereNull('deleted_at')
                         ->where('active', true)
                         ->count();
 
-                    $statusAtual = DB::table('medicine_items as m')
+                    $statusAtual = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items as m'), 'm.secretaria_id')
                         ->leftJoin('medicine_daily_statuses as s', function ($join) {
                             $join->on('s.medicine_item_id', '=', 'm.id')
                                 ->whereRaw('s.id = (
@@ -361,7 +361,7 @@ class DashboardController extends MonitorApsBaseController
                         ? round(($disponiveisHoje / $registrosStatusHoje) * 100, 1)
                         : 0;
 
-                    $aquisicoesMesAtualQuery = DB::table('medicine_monthly_acquisitions')
+                    $aquisicoesMesAtualQuery = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->where('reference_month', $currentMonth);
 
                     $aquisicoesMesAtual = (int) (clone $aquisicoesMesAtualQuery)->count();
@@ -378,7 +378,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $statusPorDia = DB::table('medicine_daily_statuses')
+                    $statusPorDia = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_daily_statuses'), 'secretaria_id')
                         ->select(
                             'reference_date as dia',
                             DB::raw("SUM(CASE WHEN availability_status = 'available' AND COALESCE(available_quantity, 0) > 0 THEN 1 ELSE 0 END) as disponiveis"),
@@ -395,7 +395,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $aquisicoesPorMes = DB::table('medicine_monthly_acquisitions')
+                    $aquisicoesPorMes = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->select(
                             'reference_month as mes',
                             DB::raw('COUNT(*) as registros'),
@@ -411,7 +411,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $topIndisponiveis = DB::table('medicine_daily_statuses as s')
+                    $topIndisponiveis = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_daily_statuses as s'), 's.secretaria_id')
                         ->join('medicine_items as m', 'm.id', '=', 's.medicine_item_id')
                         ->select(
                             'm.id',
@@ -436,7 +436,7 @@ class DashboardController extends MonitorApsBaseController
                 }
 
                 try {
-                    $fontesAquisicaoMes = DB::table('medicine_monthly_acquisitions')
+                    $fontesAquisicaoMes = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->select('source_document', DB::raw('COUNT(*) as total'))
                         ->where('reference_month', $currentMonth)
                         ->groupBy('source_document')
@@ -460,7 +460,7 @@ class DashboardController extends MonitorApsBaseController
                         $mesesFechados[] = $mesInicial->copy()->subMonths($i)->format('Y-m');
                     }
 
-                    $statusDetalhado = DB::table('medicine_daily_statuses as s')
+                    $statusDetalhado = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_daily_statuses as s'), 's.secretaria_id')
                         ->join('medicine_items as m', 'm.id', '=', 's.medicine_item_id')
                         ->select(
                             's.medicine_item_id',
@@ -493,7 +493,7 @@ class DashboardController extends MonitorApsBaseController
                         }
                     }
 
-                    $aquisicoesPorMedicamentoMes = DB::table('medicine_monthly_acquisitions')
+                    $aquisicoesPorMedicamentoMes = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_monthly_acquisitions'), 'secretaria_id')
                         ->select('medicine_item_id', 'reference_month', DB::raw('SUM(acquired_quantity) as total'))
                         ->whereIn('reference_month', $mesesFechados)
                         ->groupBy('medicine_item_id', 'reference_month')
@@ -520,7 +520,7 @@ class DashboardController extends MonitorApsBaseController
                         $consumoPorMedicamento[$idMedicamento]['consumo_total'] += $consumoMes;
                     }
 
-                    $estoqueAtualPorMedicamento = DB::table('medicine_items as m')
+                    $estoqueAtualPorMedicamento = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items as m'), 'm.secretaria_id')
                         ->leftJoin('medicine_daily_statuses as s', function ($join) {
                             $join->on('s.medicine_item_id', '=', 'm.id')
                                 ->whereRaw('s.id = (
@@ -616,9 +616,9 @@ class DashboardController extends MonitorApsBaseController
                 'permissao' => '/dashboard/farmacia',
                 'kpi' => 'Indisponíveis Hoje',
                 'calcular' => function () {
-                    $ativos = DB::table('medicine_items')->whereNull('deleted_at')->where('active', true);
+                    $ativos = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items'), 'secretaria_id')->whereNull('deleted_at')->where('active', true);
                     $registrosStatusHoje = (clone $ativos)->count();
-                    $statusAtual = DB::table('medicine_items as m')
+                    $statusAtual = \App\Support\EscopoAlmoxarifado::filtrar(DB::table('medicine_items as m'), 'm.secretaria_id')
                         ->leftJoin('medicine_daily_statuses as s', function ($join) {
                             $join->on('s.medicine_item_id', '=', 'm.id')
                                 ->whereRaw('s.id = (
@@ -651,9 +651,10 @@ class DashboardController extends MonitorApsBaseController
                 'label' => 'Almoxarifado',
                 'permissao' => '/dashboard/almoxarifado',
                 'kpi' => 'Estoque Abaixo do Mínimo',
-                'calcular' => fn () => DB::table('almoxarifado_estoques as e')
-                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
-                    ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
+                // Eloquent: o escopo de secretaria vale (DB::table ignoraria).
+                'calcular' => fn () => \App\Models\AlmoxarifadoEstoque::query()
+                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_estoques.almoxarifado_produto_id')
+                    ->whereColumn('almoxarifado_estoques.quantidade_disponivel', '<', 'p.estoque_minimo')
                     ->count(),
             ],
             'protocolo' => [
@@ -699,7 +700,7 @@ class DashboardController extends MonitorApsBaseController
                 'label' => 'Fila',
                 'permissao' => '/dashboard/fila',
                 'kpi' => 'Total na Fila',
-                'calcular' => fn () => DB::table('queue')->where('done', 0)->count(),
+                'calcular' => fn () => \App\Support\EscopoAlmoxarifado::filtrar(DB::table('queue'), 'secretaria_id')->where('done', 0)->count(),
             ],
             'tfd' => [
                 'label' => 'TFD',
@@ -709,7 +710,7 @@ class DashboardController extends MonitorApsBaseController
                     $inicioDoMes = now()->startOfMonth();
                     $fimDoMes = now()->endOfMonth();
 
-                    return DB::table('trip_clients')
+                    return \App\Support\EscopoAlmoxarifado::filtrar(DB::table('trip_clients'), 'trips.secretaria_id')
                         ->join('trips', 'trip_clients.trip_id', '=', 'trips.id')
                         ->whereBetween('trips.departure_date', [$inicioDoMes, $fimDoMes])
                         ->count();
@@ -719,7 +720,7 @@ class DashboardController extends MonitorApsBaseController
 
         $setoresComAlerta = ['farmacia', 'vigilancia', 'almoxarifado', 'protocolo'];
 
-        $cacheKey = 'dashboard.inicio.v3.'.$user->id.'.'.now()->format('Y-m-d-H');
+        $cacheKey = 'dashboard.inicio.v4.'.$user->id.'.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey().'.'.now()->format('Y-m-d-H');
         try {
             $setores = Cache::remember($cacheKey, 120, function () use ($definicoes, $user, $permissionService, $setoresComAlerta) {
                 $resultado = [];
@@ -763,7 +764,7 @@ class DashboardController extends MonitorApsBaseController
     public function conformidades()
     {
         try {
-            $data = Cache::remember('dashboard.conformidades', 60, function () {
+            $data = Cache::remember('dashboard.conformidades.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 60, function () {
                 $empty = [
                     'totais' => [
                         'usuarios_total' => 0,
@@ -789,11 +790,14 @@ class DashboardController extends MonitorApsBaseController
                 ];
 
                 try {
+                    // Só quem atende a secretaria ativa (admin sempre entra); "Todas" vê todos.
+                    $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
                     $usuarios = User::query()
                         ->where('active', true)
+                        ->when(! $ativa->isAll(), fn ($q) => \App\Services\Secretarias\SecretariaMembership::filtrar($q, (int) $ativa->id()))
                         ->orderBy('name')
                         ->get(['id', 'name', 'email']);
-                    $presencasUsuarios = UserPresence::query()->get()->keyBy('user_id');
+                    $presencasUsuarios = UserPresence::query()->whereIn('user_id', $usuarios->pluck('id'))->get()->keyBy('user_id');
                 } catch (\Throwable $e) {
                     Log::error('DashboardConformidades usuarios: '.$e->getMessage());
                     $usuarios = collect();
@@ -1046,8 +1050,8 @@ class DashboardController extends MonitorApsBaseController
         ];
 
         try {
-            // v2: o payload ganhou "fiscalizacoes"; a chave nova evita servir o formato antigo do cache.
-            $data = Cache::remember('dashboard.vigilancia.v2', 300, function () use ($empty) {
+            // v3: cache por secretaria (v2 era global e serviria numeros de outra secretaria).
+            $data = Cache::remember('dashboard.vigilancia.v3.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 300, function () use ($empty) {
                 try {
                     $totais = $this->service->getVigilanciaTotais();
                 } catch (\Throwable $e) {
@@ -1109,38 +1113,33 @@ class DashboardController extends MonitorApsBaseController
 
     public function almoxarifado()
     {
-        // Dados globais (iguais para todos): 60 s de cache no servidor evita repetir 8 consultas por usuario.
-        $data = Cache::remember('dashboard.almoxarifado', 60, fn () => [
+        // Eloquent (escopo de secretaria) e cache por secretaria: nada de contagem de outra secretaria.
+        $data = Cache::remember('dashboard.almoxarifado.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 60, fn () => [
             'totais' => [
-                'produtos' => DB::table('almoxarifado_produtos')->where('ativo', true)->count(),
-                'quantidade_disponivel' => (float) DB::table('almoxarifado_estoques')->sum('quantidade_disponivel'),
-                'estoque_baixo' => DB::table('almoxarifado_estoques as e')
-                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
-                    ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
+                'produtos' => \App\Models\AlmoxarifadoProduto::where('ativo', true)->count(),
+                'quantidade_disponivel' => (float) \App\Models\AlmoxarifadoEstoque::sum('quantidade_disponivel'),
+                'estoque_baixo' => \App\Models\AlmoxarifadoEstoque::query()
+                    ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_estoques.almoxarifado_produto_id')
+                    ->whereColumn('almoxarifado_estoques.quantidade_disponivel', '<', 'p.estoque_minimo')
                     ->count(),
-                'requisicoes_pendentes' => DB::table('almoxarifado_requisicoes')
-                    ->whereNotIn('status', ['entregue', 'cancelada'])
-                    ->count(),
-                'movimentacoes_mes' => DB::table('almoxarifado_movimentacoes')
-                    ->whereBetween('created_at', [now()->startOfMonth(), now()])
-                    ->count(),
+                'requisicoes_pendentes' => \App\Models\AlmoxarifadoRequisicao::whereNotIn('status', ['entregue', 'cancelada'])->count(),
+                'movimentacoes_mes' => \App\Models\AlmoxarifadoMovimentacao::whereBetween('created_at', [now()->startOfMonth(), now()])->count(),
             ],
-            'requisicoes_status' => DB::table('almoxarifado_requisicoes')
-                ->select('status', DB::raw('COUNT(*) as total'))
+            'requisicoes_status' => \App\Models\AlmoxarifadoRequisicao::select('status', DB::raw('COUNT(*) as total'))
                 ->groupBy('status')
                 ->orderByDesc('total')
                 ->get(),
-            'estoque_baixo' => DB::table('almoxarifado_estoques as e')
-                ->join('almoxarifado_produtos as p', 'p.id', '=', 'e.almoxarifado_produto_id')
-                ->whereColumn('e.quantidade_disponivel', '<', 'p.estoque_minimo')
-                ->orderBy('e.quantidade_disponivel')
+            'estoque_baixo' => \App\Models\AlmoxarifadoEstoque::query()
+                ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_estoques.almoxarifado_produto_id')
+                ->whereColumn('almoxarifado_estoques.quantidade_disponivel', '<', 'p.estoque_minimo')
+                ->orderBy('almoxarifado_estoques.quantidade_disponivel')
                 ->limit(8)
-                ->get(['p.nome', 'p.codigo_interno', 'e.quantidade_disponivel', 'p.estoque_minimo']),
-            'movimentacoes_recentes' => DB::table('almoxarifado_movimentacoes as m')
-                ->join('almoxarifado_produtos as p', 'p.id', '=', 'm.almoxarifado_produto_id')
-                ->orderByDesc('m.created_at')
+                ->get(['p.nome', 'p.codigo_interno', 'almoxarifado_estoques.quantidade_disponivel', 'p.estoque_minimo']),
+            'movimentacoes_recentes' => \App\Models\AlmoxarifadoMovimentacao::query()
+                ->join('almoxarifado_produtos as p', 'p.id', '=', 'almoxarifado_movimentacoes.almoxarifado_produto_id')
+                ->orderByDesc('almoxarifado_movimentacoes.created_at')
                 ->limit(8)
-                ->get(['m.id', 'p.nome as produto', 'm.tipo', 'm.quantidade', 'm.created_at']),
+                ->get(['almoxarifado_movimentacoes.id', 'p.nome as produto', 'almoxarifado_movimentacoes.tipo', 'almoxarifado_movimentacoes.quantidade', 'almoxarifado_movimentacoes.created_at']),
         ]);
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=120');
@@ -1148,35 +1147,28 @@ class DashboardController extends MonitorApsBaseController
 
     public function arquivo()
     {
-        $data = Cache::remember('dashboard.arquivo', 60, fn () => [
+        // Eloquent (escopo de secretaria) e chave de cache por secretaria: nada de contagem de outra secretaria.
+        $data = Cache::remember('dashboard.arquivo.'.app(\App\Services\Secretarias\ActiveSecretaria::class)->cacheKey(), 60, fn () => [
             'totais' => [
-                'documentos' => DB::table('documents')->whereNull('deleted_at')->count(),
-                'versoes' => DB::table('document_versions')->whereNull('deleted_at')->count(),
-                'tamanho_bytes' => (int) DB::table('document_versions')->whereNull('deleted_at')->sum('size_bytes'),
-                'aprovacoes_registradas' => DB::table('document_approvals')->count(),
-                'documentos_mes' => DB::table('documents')
-                    ->whereNull('deleted_at')
-                    ->whereBetween('created_at', [now()->startOfMonth(), now()])
-                    ->count(),
+                'documentos' => \App\Models\Document::count(),
+                'versoes' => \App\Models\DocumentVersion::count(),
+                'tamanho_bytes' => (int) \App\Models\DocumentVersion::sum('size_bytes'),
+                'aprovacoes_registradas' => \App\Models\DocumentApproval::count(),
+                'documentos_mes' => \App\Models\Document::whereBetween('created_at', [now()->startOfMonth(), now()])->count(),
             ],
-            'por_status' => DB::table('documents')
-                ->whereNull('deleted_at')
-                ->select('status', DB::raw('COUNT(*) as total'))
+            'por_status' => \App\Models\Document::select('status', DB::raw('COUNT(*) as total'))
                 ->groupBy('status')
                 ->orderByDesc('total')
                 ->get(),
-            'por_sigilo' => DB::table('documents')
-                ->whereNull('deleted_at')
-                ->select('sigilo', DB::raw('COUNT(*) as total'))
+            'por_sigilo' => \App\Models\Document::select('sigilo', DB::raw('COUNT(*) as total'))
                 ->groupBy('sigilo')
                 ->orderByDesc('total')
                 ->get(),
-            'recentes' => DB::table('documents as d')
-                ->leftJoin('document_types as t', 't.id', '=', 'd.document_type_id')
-                ->whereNull('d.deleted_at')
-                ->orderByDesc('d.updated_at')
+            'recentes' => \App\Models\Document::query()
+                ->leftJoin('document_types as t', 't.id', '=', 'documents.document_type_id')
+                ->orderByDesc('documents.updated_at')
                 ->limit(8)
-                ->get(['d.id', 'd.titulo', 'd.status', 'd.sigilo', 'd.current_version_number', 'd.updated_at', 't.nome as tipo']),
+                ->get(['documents.id', 'documents.titulo', 'documents.status', 'documents.sigilo', 'documents.current_version_number', 'documents.updated_at', 't.nome as tipo']),
         ]);
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=120');

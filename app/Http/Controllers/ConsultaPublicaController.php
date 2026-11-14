@@ -7,6 +7,7 @@ use App\Models\ResultadoExame;
 use App\Services\AuditService;
 use App\Services\Laboratorio\LaudoPdfService;
 use App\Services\Laboratorio\ResultadoExameService;
+use App\Support\SaudePublica;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +20,8 @@ class ConsultaPublicaController extends Controller
 
     public function consultar(ConsultarConsultaPublicaRequest $request)
     {
+        SaudePublica::aplicar(); // consulta pública de exame: sempre a Saúde
+
         $resultado = $this->service->consultarPublico(
             $request->input('protocolo'),
             $request->input('senha')
@@ -67,6 +70,8 @@ class ConsultaPublicaController extends Controller
 
     public function downloadPdf(Request $request, string $protocolo): mixed
     {
+        SaudePublica::aplicar();
+
         $resultado = ResultadoExame::where('protocolo', strtoupper($protocolo))->first();
 
         $autorizado = $resultado && Hash::check($request->input('senha', ''), $resultado->senha_hash);

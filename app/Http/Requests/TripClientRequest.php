@@ -48,7 +48,7 @@ class TripClientRequest extends FormRequest
     {
         return [
             'id' => 'nullable|int',
-            'trip_id' => 'required|exists:trips,id',
+            'trip_id' => ['required', \App\Support\EscopoAlmoxarifado::existeNaAtiva('trips')],
             'client_id' => [
                 'required',
                 'exists:clients,id',

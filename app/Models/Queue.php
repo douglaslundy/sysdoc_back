@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 
 class Queue extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     // Definindo o nome da tabela, caso seja necessário (opcional se o nome segue o padrão plural)
@@ -15,6 +16,7 @@ class Queue extends Model
 
     // Definindo quais atributos podem ser preenchidos em massa (mass assignment)
     protected $fillable = [
+        'secretaria_id',
         'id_client',
         'id_specialities',
         'id_user',

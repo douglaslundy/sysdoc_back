@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Alvara extends Model
 {
     use HasFactory, SoftDeletes;
+    use \App\Models\Concerns\BelongsToSecretaria;
 
     protected $table = 'alvaras';
 
     protected $fillable = [
+        'secretaria_id',
         'numero_alvara',
         'nivel_risco',
         'status',

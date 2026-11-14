@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EscopoAlmoxarifado;
 
 class UpdateVigilanciaConfigRequest extends FormRequest
 {
@@ -14,6 +15,7 @@ class UpdateVigilanciaConfigRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
             'estado' => 'nullable|string|max:2',
             'nome_municipio' => 'nullable|string|max:255',
             'nome_prefeitura' => 'nullable|string|max:255',

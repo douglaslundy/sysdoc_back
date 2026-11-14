@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class IluminacaoPoste extends Model
 {
     use HasFactory;
+    use \App\Models\Concerns\BelongsToSecretaria;
 
     public const PENDENTE = 'pendente';
 
@@ -21,6 +22,7 @@ class IluminacaoPoste extends Model
 
     // status, protocolo e cadastrado_por ficam de fora: só o servidor define.
     protected $fillable = [
+        'secretaria_id',
         'client_uuid', 'ponto_referencia', 'logradouro', 'numero', 'bairro',
         'latitude', 'longitude', 'precisao_m',
     ];

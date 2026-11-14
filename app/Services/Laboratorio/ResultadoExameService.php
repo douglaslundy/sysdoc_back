@@ -109,7 +109,7 @@ class ResultadoExameService
 
             $resultado->load(['pedido.cliente', 'campos.campo']);
             $clienteEmail = $resultado->pedido->cliente?->email;
-            $config = \App\Models\LabConfig::get();
+            $config = \App\Models\LabConfig::get($resultado->pedido->secretaria_id);
             if ($config->email_habilitado && $clienteEmail) {
                 Mail::to($clienteEmail)
                     ->queue(new ResultadoLiberadoMail($resultado, $senha ?? ''));

@@ -22,7 +22,8 @@ class VigilanciaAvisoService
 
     public function notificarNova(Fiscalizacao $fiscalizacao): void
     {
-        $contatos = VigilanciaContatoWhatsapp::query()->where('ativo', true)->get(['id', 'nome', 'telefone']);
+        // Contatos da secretaria da fiscalizacao (admin em "Todas" nao filtra pelo escopo global).
+        $contatos = VigilanciaContatoWhatsapp::query()->where('secretaria_id', $fiscalizacao->secretaria_id)->where('ativo', true)->get(['id', 'nome', 'telefone']);
         if ($contatos->isEmpty()) {
             return;
         }

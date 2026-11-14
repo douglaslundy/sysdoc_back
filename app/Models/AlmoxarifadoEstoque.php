@@ -7,9 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AlmoxarifadoEstoque extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     protected $table = 'almoxarifado_estoques';
 
     protected $fillable = [
+        'secretaria_id',
         'almoxarifado_produto_id',
         'almoxarifado_secretaria_id',
         'quantidade_disponivel',

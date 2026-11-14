@@ -15,6 +15,7 @@ class StartConversationChatRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => \App\Support\EscopoAlmoxarifado::regraCampo(),
             'user_id' => ['required', 'integer', Rule::exists('users', 'id')->where('active', true)],
         ];
     }

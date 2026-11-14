@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class FiscalizacaoMovimentacao extends Model
 {
+
+    // Herda a secretaria do pai (sem coluna própria).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\SecretariaDoPaiScope('fiscalizacao_id', 'fiscalizacoes'));
+    }
     public $timestamps = false;
 
     protected $table = 'fiscalizacao_movimentacoes';

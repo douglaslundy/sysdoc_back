@@ -39,9 +39,12 @@ class UpdateQueueRequest extends BaseApiFormRequest
 
     public function rules(): array
     {
+        // 404 se o item for de outra secretaria; a especialidade nova tem de ser da mesma secretaria do item.
+        $sid = \App\Support\EscopoAlmoxarifado::alvo(Queue::class, $this->route('queue'));
+
         return [
             'id_client' => ['sometimes', 'required', 'exists:clients,id'],
-            'id_specialities' => ['sometimes', 'required', 'exists:specialities,id'],
+            'id_specialities' => ['sometimes', 'required', 'integer', \App\Support\EscopoAlmoxarifado::existe('specialities', $sid)],
             'id_user' => ['sometimes', 'required', 'exists:users,id'],
             'done' => ['boolean'],
             'date_of_realized' => ['nullable', 'date'],

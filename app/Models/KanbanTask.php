@@ -8,15 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KanbanTask extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     protected $table = 'kanban_tasks';
+
+    // Protocolo de pedido de cadastro só para admin e gestor da secretaria (ver o escopo).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope('protocol_id'));
+    }
 
     protected $fillable = [
         'protocol_id',
         'unit_id',
         'fiscalizacao_id',
         'created_by_id',
+        'secretaria_id',
         'updated_by_id',
         'responsavel_id',
         'visibility',
@@ -35,6 +43,13 @@ class KanbanTask extends Model
         'concluido_at' => 'datetime',
         'arquivado_at' => 'datetime',
     ];
+
+    /** Card de pedido de cadastro (consulta sem escopo: vale mesmo se o chamador não o enxergar). */
+    public function isCadastro(): bool
+    {
+        return $this->protocol_id !== null
+            && Protocol::withoutGlobalScopes()->whereKey($this->protocol_id)->where('tipo', \App\Models\Scopes\CadastroProtocoloScope::TIPO)->exists();
+    }
 
     public function protocol(): BelongsTo
     {

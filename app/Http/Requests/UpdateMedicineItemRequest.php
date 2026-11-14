@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Services\Authorization\PagePermissionService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class UpdateMedicineItemRequest extends BaseApiFormRequest
@@ -18,15 +19,17 @@ class UpdateMedicineItemRequest extends BaseApiFormRequest
     public function rules(): array
     {
         $medicineId = $this->route('medicine') ?? $this->route('id');
+        // Medicamento de outra secretaria (escopo) = 404 antes de validar o corpo.
+        $sid = EscopoAlmoxarifado::alvo(\App\Models\MedicineItem::class, $medicineId);
 
         return [
-            'internal_code' => ['sometimes', 'required', 'string', 'max:80', Rule::unique('medicine_items', 'internal_code')->ignore($medicineId)],
+            'internal_code' => ['sometimes', 'required', 'string', 'max:80', EscopoAlmoxarifado::unico('medicine_items', 'internal_code', $sid)->ignore($medicineId)],
             'brand_name' => ['nullable', 'string', 'max:255'],
             'active_ingredient' => ['sometimes', 'required', 'string', 'max:255'],
             'concentration' => ['sometimes', 'required', 'string', 'max:100'],
-            'pharmaceutical_form' => ['sometimes', 'required', 'string', 'max:120', Rule::exists('pharmacy_pharmaceutical_forms', 'name')->where('active', true)],
-            'presentation' => ['sometimes', 'required', 'string', 'max:120', Rule::exists('pharmacy_presentations', 'name')->where('active', true)],
-            'unit_measure' => ['sometimes', 'required', 'string', 'max:20', Rule::exists('pharmacy_units', 'code')->where('active', true)],
+            'pharmaceutical_form' => ['sometimes', 'required', 'string', 'max:120', Rule::exists('pharmacy_pharmaceutical_forms', 'name')->where('active', true)->where('secretaria_id', $sid)],
+            'presentation' => ['sometimes', 'required', 'string', 'max:120', Rule::exists('pharmacy_presentations', 'name')->where('active', true)->where('secretaria_id', $sid)],
+            'unit_measure' => ['sometimes', 'required', 'string', 'max:20', Rule::exists('pharmacy_units', 'code')->where('active', true)->where('secretaria_id', $sid)],
             'ean_code' => ['nullable', 'string', 'max:50'],
             'is_free_distribution' => ['sometimes', 'boolean'],
             'is_controlled' => ['sometimes', 'boolean'],

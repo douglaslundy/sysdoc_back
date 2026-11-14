@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaveMonitorApsConfigRequest;
+use App\Http\Requests\TestMonitorApsConnectionRequest;
 use App\Services\AuditService;
 use Illuminate\Encryption\MissingAppKeyException;
 use Illuminate\Http\Request;
@@ -89,16 +90,10 @@ class MonitorApsConfigController extends MonitorApsBaseController
     }
 
     // POST /monitor-aps/config/test  (admin)
-    public function testar(Request $request)
+    public function testar(TestMonitorApsConnectionRequest $request)
     {
         set_time_limit(120);
-        $data = $request->validate([
-            'host'     => 'required|string',
-            'database' => 'required|string',
-            'user'     => 'required|string',
-            'port'     => 'nullable|integer',
-            'password' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         $password = $data['password'] ?? '';
         if ($password === '') {

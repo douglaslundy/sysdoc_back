@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class CategoriaExame extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     use HasFactory;
 
     protected $table = 'categoria_exames';
 
-    protected $fillable = ['nome', 'ativo'];
+    protected $fillable = ['secretaria_id', 'nome', 'ativo'];
 
     public function exames()
     {

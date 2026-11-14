@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
@@ -22,6 +23,15 @@ class User extends Authenticatable
     protected $casts = [
         'chat_access_override' => 'boolean',
     ];
+
+    /** Compara só os dígitos: casa com o CPF salvo em qualquer formatação ('529.982.247-25', ' 52998224725 ', ...). */
+    public function scopeWhereCpfIgual($query, string $cpf)
+    {
+        return $query->whereRaw(
+            "REPLACE(REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', ''), '/', '') = ?",
+            [\App\Support\Cpf::digits($cpf)]
+        );
+    }
 
     public function specialities()
     {
@@ -41,6 +51,11 @@ class User extends Authenticatable
     public function equipeAps()
     {
         return $this->hasMany(UserEquipeAps::class, 'user_id');
+    }
+
+    public function secretarias(): BelongsToMany
+    {
+        return $this->belongsToMany(Secretaria::class, 'user_secretarias');
     }
 
     public function accessProfile(): HasOne

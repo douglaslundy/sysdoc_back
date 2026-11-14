@@ -18,9 +18,12 @@ use App\Models\ProtocolComment;
 use App\Models\ProtocolConfig;
 use App\Models\ProtocolMovement;
 use App\Models\ProtocolNotification;
+use App\Models\Scopes\CadastroProtocoloScope;
 use App\Models\ProtocolOrganizationalUnit;
 use App\Models\ProtocolUserUnit;
 use App\Services\Protocol\UnitTree;
+use App\Services\Secretarias\ActiveSecretaria;
+use App\Services\Secretarias\SecretariaMembership;
 use App\Models\ProtocolView;
 use App\Models\User;
 use App\Services\AuditService;
@@ -105,6 +108,7 @@ class ProtocolController extends Controller
                         ->where(fn ($u) => $u->whereIn('destino_unit_id', $unitIds)->orWhereIn('origem_unit_id', $unitIds));
                 });
             }
+            $this->orPedidosCadastroDoGestor($q, $request->user());
         }));
 
         if ($request->filled('status')) {
@@ -137,7 +141,7 @@ class ProtocolController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $protocol = Protocol::with([
+        $protocol = Protocol::visiveis(request()->user())->with([
             'origemUnit:id,nome,tipo',
             'destinoUnit:id,nome,tipo',
             'responsavelAtual:id,name',
@@ -179,7 +183,7 @@ class ProtocolController extends Controller
 
     public function visualizations(int $id): JsonResponse
     {
-        $protocol = Protocol::find($id);
+        $protocol = Protocol::visiveis(request()->user())->find($id);
         if (! $protocol || ! $this->canView($protocol, request()->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
@@ -217,7 +221,7 @@ class ProtocolController extends Controller
 
     public function historico(int $id): JsonResponse
     {
-        $protocol = Protocol::with(['movements.user:id,name'])->find($id);
+        $protocol = Protocol::visiveis(request()->user())->with(['movements.user:id,name'])->find($id);
         if (! $protocol || ! $this->canView($protocol, request()->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
@@ -251,6 +255,16 @@ class ProtocolController extends Controller
     {
         $validated = $request->validated();
 
+        // Admin em "Todas" informa a secretaria; os demais criam na ativa (nunca silencioso).
+        $secretariaId = app(ActiveSecretaria::class)->forCreate($validated['secretaria_id'] ?? null);
+        if (! $secretariaId) {
+            return response()->json(['message' => 'Escolha a secretaria do protocolo.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
+        }
+
+        if ($recusa = $this->referenciasDeOutraSecretaria($secretariaId, $validated)) {
+            return $recusa;
+        }
+
         $user = $request->user();
         $statusInicial = $validated['status'] ?? 'novo';
         $visibilidades = $this->visibilidadesPermitidas($user);
@@ -271,7 +285,7 @@ class ProtocolController extends Controller
         }
 
         $config = ProtocolConfig::current();
-        $linkedOrigin = $this->linkedOriginUnit($user);
+        $linkedOrigin = $this->linkedOriginUnit($user, $secretariaId);
         $destinationUser = ! empty($validated['destino_user_id'])
             ? User::query()->where('active', true)->find($validated['destino_user_id'])
             : null;
@@ -301,8 +315,9 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'O usuário de destino pertence a outra secretaria.'], 422);
         }
 
-        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser, $statusInicial, $visibilidade) {
+        $protocol = DB::transaction(function () use ($request, $validated, $config, $user, $linkedOrigin, $destinationUnit, $destinationUser, $secretariaId, $statusInicial, $visibilidade) {
             $protocol = Protocol::create([
+                'secretaria_id' => $secretariaId,
                 'numero' => Protocol::gerarNumero(),
                 'assunto' => $validated['assunto'],
                 'descricao' => $validated['descricao'] ?? null,
@@ -344,9 +359,13 @@ class ProtocolController extends Controller
 
     public function update(UpdateProtocolRequest $request, int $id): JsonResponse
     {
-        $protocol = Protocol::find($id);
+        $protocol = Protocol::visiveis(request()->user())->find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+        // Admin corrige protocolo de qualquer secretaria; os demais seguem a regra de membro.
+        if (! $this->isAdmin($request->user()) && ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user()))) {
+            return $negado;
         }
 
         $validated = $request->validated();
@@ -357,8 +376,19 @@ class ProtocolController extends Controller
             unset($validated['visibility']);
         }
 
+        if ($recusa = $this->referenciasDeOutraSecretaria((int) $protocol->secretaria_id, $validated)) {
+            return $recusa;
+        }
+
+        if ($recusa = $this->responsavelInvalidoDeCadastro($protocol, $validated)) {
+            return $recusa;
+        }
+
         $old = $protocol->toArray();
         $protocolData = collect($validated)->except(['destino_user_id', 'kanban', 'prazo_dias'])->all();
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            unset($protocolData['tipo']); // o tipo do pedido de cadastro não muda (soltaria os dados pessoais do escopo)
+        }
         if (! empty($validated['prazo_dias'])) {
             // Prazo em dias a partir de hoje; o banco guarda a data resultante.
             $protocolData['prazo_atendimento'] = now()->addDays((int) $validated['prazo_dias'])->toDateString();
@@ -381,9 +411,44 @@ class ProtocolController extends Controller
         return response()->json($protocol->fresh()->load(['kanbanTask.createdBy', 'kanbanTask.updatedBy', 'kanbanTask.responsavel']));
     }
 
+    /**
+     * Origem e responsável do card ficam na secretaria do protocolo (o card é isolado). O DESTINO (unidade
+     * ou usuário) pode ser de outra secretaria: é o encaminhamento entre secretarias.
+     */
+    private function referenciasDeOutraSecretaria(int $secretariaId, array $validated): ?JsonResponse
+    {
+        if (! empty($validated['origem_unit_id'])
+            && (int) ProtocolOrganizationalUnit::withoutSecretaria()->whereKey($validated['origem_unit_id'])->value('secretaria_id') !== $secretariaId) {
+            return response()->json(['message' => 'Unidade de origem de outra secretaria.', 'errors' => ['origem_unit_id' => ['Unidade de origem não pertence a esta secretaria.']]], 422);
+        }
+
+        $responsavelCard = $validated['kanban']['responsavel_id'] ?? null;
+        if ($responsavelCard && ! SecretariaMembership::atende((int) $responsavelCard, $secretariaId)) {
+            return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => ['kanban.responsavel_id' => ['Responsável do card deve ser desta secretaria.']]], 422);
+        }
+
+        return null;
+    }
+
+    /** Responsável de pedido de cadastro: só quem pode abrir o pedido (admin ou gestor da secretaria). */
+    private function responsavelInvalidoDeCadastro(Protocol $protocol, array $validated): ?JsonResponse
+    {
+        if ($protocol->tipo !== CadastroProtocoloScope::TIPO) {
+            return null;
+        }
+        $campos = ['destino_user_id' => $validated['destino_user_id'] ?? null, 'kanban.responsavel_id' => $validated['kanban']['responsavel_id'] ?? null];
+        foreach (array_filter($campos) as $campo => $alvoId) {
+            if (! CadastroProtocoloScope::pode(User::find($alvoId), $protocol->secretaria_id)) {
+                return response()->json(['message' => 'Esse usuário não pode acessar o pedido de cadastro.', 'errors' => [$campo => ['Usuário sem acesso ao pedido.']]], 422);
+            }
+        }
+
+        return null;
+    }
+
     public function receive(Request $request, int $id): JsonResponse
     {
-        $protocol = Protocol::find($id);
+        $protocol = Protocol::visiveis(request()->user())->find($id);
         if (! $protocol) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
@@ -409,6 +474,16 @@ class ProtocolController extends Controller
     public function forward(ForwardProtocolRequest $request, int $id): JsonResponse
     {
         $validated = $request->validated();
+
+        $protocolo = Protocol::visiveis(request()->user())->find($id);
+        if ($protocolo && $this->canAccess($protocolo, $request->user())) {
+            if ($recusa = $this->referenciasDeOutraSecretaria((int) $protocolo->secretaria_id, $validated)) {
+                return $recusa;
+            }
+            if ($recusa = $this->responsavelInvalidoDeCadastro($protocolo, $validated)) {
+                return $recusa;
+            }
+        }
 
         return $this->applyAction($request, $id, 'encaminhado', function (Protocol $protocol) use ($request, $validated) {
             $protocol->update([
@@ -489,7 +564,7 @@ class ProtocolController extends Controller
     {
         $validated = $request->validated();
 
-        $protocol = Protocol::find($id);
+        $protocol = Protocol::visiveis(request()->user())->find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
         }
@@ -567,7 +642,7 @@ class ProtocolController extends Controller
     {
         $senderUser = User::find($senderUserId);
         $senderUnitId = $senderUser
-            ? ($this->linkedOriginUnit($senderUser)?->id ?? $protocol->origem_unit_id)
+            ? ($this->linkedOriginUnit($senderUser, (int) $protocol->secretaria_id)?->id ?? $protocol->origem_unit_id)
             : $protocol->origem_unit_id;
 
         return [
@@ -580,9 +655,12 @@ class ProtocolController extends Controller
     {
         $validated = $request->validated();
 
-        $protocol = Protocol::find($id);
+        $protocol = Protocol::visiveis(request()->user())->find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user())) {
+            return $negado;
         }
 
         $file = $validated['arquivo'];
@@ -685,9 +763,12 @@ class ProtocolController extends Controller
             ->whereHas('pages', fn ($q) => $q->where('path', 'like', '/protocolo%')->where('ativo', true))
             ->pluck('slug');
 
+        $ativa = app(ActiveSecretaria::class);
         $eligible = User::query()
             ->where('active', true)
             ->where(fn ($q) => $q->whereIn('profile', $allowedProfiles)->orWhere('profile', 'admin'))
+            // Com unit_id a lista é a lotação da unidade (que pode ser de outra secretaria: protocolo entre secretarias).
+            ->when(! $ativa->isAll() && ! $request->filled('unit_id'), fn ($q) => SecretariaMembership::filtrar($q, (int) $ativa->id()))
             ->when($request->filled('unit_id'), function ($q) use ($request) {
                 $unitIds = UnitTree::withDescendantIds((int) $request->input('unit_id'));
                 $q->whereIn('id', ProtocolUserUnit::query()
@@ -706,9 +787,12 @@ class ProtocolController extends Controller
     {
         $validated = $request->validated();
 
-        $protocol = Protocol::with('kanbanTask')->find($id);
+        $protocol = Protocol::visiveis(request()->user())->with('kanbanTask')->find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user())) {
+            return $negado;
         }
 
         DB::transaction(function () use ($protocol, $validated, $request) {
@@ -765,11 +849,20 @@ class ProtocolController extends Controller
 
     private function baseQuery(?User $user)
     {
-        return Protocol::query()
+        return Protocol::visiveis($user)
             ->with(['origemUnit:id,nome,tipo', 'destinoUnit:id,nome,tipo', 'responsavelAtual:id,name', 'criadoPor:id,name'])
             ->visiveisPara($user)
             ->orderByDesc('novo')
             ->orderByDesc('updated_at');
+    }
+
+    /** Gestor também enxerga os pedidos de cadastro das suas secretarias (o escopo global esconde dos demais). */
+    private function orPedidosCadastroDoGestor($q, ?User $user): void
+    {
+        if ($user?->profile === 'gestor') {
+            $q->orWhere(fn ($c) => $c->where('tipo', CadastroProtocoloScope::TIPO)
+                ->whereIn('secretaria_id', CadastroProtocoloScope::secretariasDe($user)));
+        }
     }
 
     private function visibleUnitIds(?User $user): array
@@ -778,25 +871,24 @@ class ProtocolController extends Controller
             return [];
         }
 
-        return ProtocolUserUnit::query()
-            ->where('user_id', $user->id)
-            ->where('ativo', true)
-            ->pluck('protocol_organizational_unit_id')
-            ->all();
+        // Lotação só vale em unidade de secretaria do próprio usuário (ex-membro com lotação ativa não conta).
+        return \App\Support\LotacaoPorSecretaria::unidadesValidas($user);
     }
 
-    private function linkedOriginUnit(?User $user): ?ProtocolOrganizationalUnit
+    /** $secretariaId: só lotações de unidades dessa secretaria (admin em "Todas" pode ter lotação em várias). */
+    private function linkedOriginUnit(?User $user, ?int $secretariaId = null): ?ProtocolOrganizationalUnit
     {
         if (! $user) {
             return null;
         }
 
-        $links = ProtocolUserUnit::query()
+        $links = ProtocolUserUnit::withoutGlobalScopes()
             ->with('unit.parent')
             ->where('user_id', $user->id)
             ->where('ativo', true)
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->filter(fn (ProtocolUserUnit $link) => ! $secretariaId || (int) $link->unit?->secretaria_id === $secretariaId);
 
         $directSecretaria = $links->first(fn (ProtocolUserUnit $link) => $link->unit?->tipo === 'secretaria');
         if ($directSecretaria?->unit) {
@@ -823,7 +915,7 @@ class ProtocolController extends Controller
         $ids = [];
         while ($unit && ! in_array($unit->id, $ids, true)) {
             $ids[] = $unit->id;
-            $unit = $unit->parent_id ? ProtocolOrganizationalUnit::find($unit->parent_id) : null;
+            $unit = $unit->parent_id ? ProtocolOrganizationalUnit::withoutSecretaria()->find($unit->parent_id) : null;
         }
 
         return $ids;
@@ -832,7 +924,8 @@ class ProtocolController extends Controller
     private function resolveDestinationUnit(array $validated, ?User $destinationUser): ?ProtocolOrganizationalUnit
     {
         if (! empty($validated['destino_unit_id'])) {
-            return ProtocolOrganizationalUnit::query()->find($validated['destino_unit_id']);
+            // Destino pode ser de outra secretaria (protocolo entre secretarias): consulta sem o escopo.
+            return ProtocolOrganizationalUnit::withoutSecretaria()->find($validated['destino_unit_id']);
         }
 
         if ($destinationUser) {
@@ -845,6 +938,17 @@ class ProtocolController extends Controller
     private function isAdmin(?User $user): bool
     {
         return (string) ($user?->profile ?? '') === 'admin';
+    }
+
+    /** Protocolo de outra secretaria em que o usuário já tramitou (recebeu, comentou, encaminhou). */
+    private function participouEntreSecretarias(Protocol $protocol, ?User $user): bool
+    {
+        $ativa = app(ActiveSecretaria::class);
+        if (! $user || $ativa->isAll() || (int) $protocol->secretaria_id === (int) $ativa->id()) {
+            return false;
+        }
+
+        return \App\Support\ParticipacaoProtocolo::participa($protocol, (int) $user->id);
     }
 
     /** Visibilidades que o usuário pode escolher ao criar: admin as duas; os demais, o que o cadastro permite (padrão: só privado). */
@@ -870,19 +974,26 @@ class ProtocolController extends Controller
             return true;
         }
 
+        // Pedido de cadastro: só gestor da secretaria do pedido (responsável/criador/unidade não bastam).
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            return CadastroProtocoloScope::pode($user, $protocol->secretaria_id);
+        }
+
         $unitIds = $this->visibleUnitIds($user);
 
         if ($protocol->responsavel_atual_id === $user?->id || $protocol->criado_por_id === $user?->id) {
             return true;
         }
 
-        // Encaminhado a uma pessoa: a unidade deixa de ver; sem destinatario, a unidade enxerga.
+        // Encaminhado a uma pessoa: a unidade deixa de ver (só a participação entre secretarias segue valendo);
+        // sem destinatario, a unidade enxerga.
         if ($protocol->responsavel_atual_id !== null) {
-            return false;
+            return $this->participouEntreSecretarias($protocol, $user);
         }
 
         return in_array($protocol->origem_unit_id, $unitIds, true)
-            || in_array($protocol->destino_unit_id, $unitIds, true);
+            || in_array($protocol->destino_unit_id, $unitIds, true)
+            || $this->participouEntreSecretarias($protocol, $user);
     }
 
     /**
@@ -907,11 +1018,48 @@ class ProtocolController extends Controller
         return in_array($protocol->destino_unit_id, $unitIds, true);
     }
 
+    /** Membro = a secretaria ativa é a do protocolo (ou admin em "Todas"). Os demais só participam por encaminhamento. */
+    private function ehMembro(Protocol $protocol): bool
+    {
+        $ativa = app(ActiveSecretaria::class);
+
+        return $ativa->isAll() || (int) $protocol->secretaria_id === (int) $ativa->id();
+    }
+
+    /** Destinatário ATUAL: usuário destino, ou (sem usuário) membro da unidade destino de uma secretaria dele. */
+    private function destinatarioAtual(Protocol $protocol, ?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+        if ($protocol->responsavel_atual_id) {
+            return (int) $protocol->responsavel_atual_id === (int) $user->id;
+        }
+
+        return $protocol->destino_unit_id && in_array((int) $protocol->destino_unit_id, \App\Support\LotacaoPorSecretaria::unidadesValidas($user), true);
+    }
+
+    /** Não-membro: só o destinatário atual age, e só em comentar/receber/encaminhar/encerrar. Passado ou outra ação: só leitura. */
+    private function negarEscritaDeNaoMembro(Protocol $protocol, ?User $user, ?string $acao = null): ?JsonResponse
+    {
+        if ($this->ehMembro($protocol)) {
+            return null;
+        }
+        if ($acao !== null && in_array($acao, ['recebido', 'encaminhado', 'comentado', 'encerrado'], true) && $this->destinatarioAtual($protocol, $user)) {
+            return null;
+        }
+
+        return response()->json(['message' => 'Você só pode visualizar este protocolo.'], 403);
+    }
+
     private function applyAction(Request $request, int $id, string $acao, \Closure $callback): JsonResponse
     {
-        $protocol = Protocol::find($id);
+        $protocol = Protocol::visiveis(request()->user())->find($id);
         if (! $protocol || ! $this->canAccess($protocol, $request->user())) {
             return response()->json(['message' => 'Protocolo não encontrado.'], 404);
+        }
+        if ($negado = $this->negarEscritaDeNaoMembro($protocol, $request->user(), $acao)) {
+            return $negado;
         }
 
         DB::transaction(function () use ($protocol, $acao, $callback) {
@@ -1047,6 +1195,11 @@ class ProtocolController extends Controller
         }
 
         // Alertas configurados em Alertas (módulo "protocolo"), ex.: aviso ao administrador.
+        // Pedido de cadastro não dispara: o alerta pode ter destinatários que não podem ver o pedido.
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            return;
+        }
+
         app(SystemAlertService::class)->dispatch(
             'protocolo',
             $acao === 'criado' ? 'protocolo_criado' : 'protocolo_status_alterado',
@@ -1108,6 +1261,10 @@ class ProtocolController extends Controller
 
         // Usuário inativo não recebe alerta.
         $users = User::query()->whereIn('id', $recipientIds)->where('active', true)->get()->keyBy('id');
+        if ($protocol->tipo === CadastroProtocoloScope::TIPO) {
+            // Só quem pode ver o pedido recebe o aviso (o texto leva o assunto, com o nome do solicitante).
+            $users = $users->filter(fn ($u) => CadastroProtocoloScope::pode($u, $protocol->secretaria_id));
+        }
 
         foreach ($recipientIds as $recipientId) {
             $recipient = $users->get($recipientId);

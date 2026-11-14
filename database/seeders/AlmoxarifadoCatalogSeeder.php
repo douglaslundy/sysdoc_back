@@ -10,6 +10,8 @@ class AlmoxarifadoCatalogSeeder extends Seeder
     public function run(): void
     {
         $now = now();
+        // Catálogos são por secretaria: os iniciais ficam na Saúde (explícito, seeder roda fora de requisição).
+        $sec = \App\Models\Secretaria::saudeId();
 
         $categories = [
             'Material de Consumo',
@@ -24,7 +26,7 @@ class AlmoxarifadoCatalogSeeder extends Seeder
 
         foreach ($categories as $nome) {
             DB::table('almoxarifado_categorias')->updateOrInsert(
-                ['nome' => $nome],
+                ['secretaria_id' => $sec, 'nome' => $nome],
                 ['observacoes' => null, 'ativo' => true, 'updated_at' => $now, 'created_at' => $now]
             );
         }
@@ -39,7 +41,7 @@ class AlmoxarifadoCatalogSeeder extends Seeder
 
         foreach ($species as $nome) {
             DB::table('almoxarifado_especies')->updateOrInsert(
-                ['nome' => $nome],
+                ['secretaria_id' => $sec, 'nome' => $nome],
                 ['observacoes' => null, 'ativo' => true, 'updated_at' => $now, 'created_at' => $now]
             );
         }
@@ -57,7 +59,7 @@ class AlmoxarifadoCatalogSeeder extends Seeder
 
         foreach ($units as $unit) {
             DB::table('almoxarifado_unidades_medida')->updateOrInsert(
-                ['nome' => $unit['nome']],
+                ['secretaria_id' => $sec, 'nome' => $unit['nome']],
                 ['sigla' => $unit['sigla'], 'observacoes' => null, 'ativo' => true, 'updated_at' => $now, 'created_at' => $now]
             );
         }
@@ -72,7 +74,7 @@ class AlmoxarifadoCatalogSeeder extends Seeder
 
         foreach ($secretarias as $secretaria) {
             DB::table('almoxarifado_secretarias')->updateOrInsert(
-                ['nome' => $secretaria['nome']],
+                ['secretaria_id' => $sec, 'nome' => $secretaria['nome']],
                 [
                     'sigla' => $secretaria['sigla'],
                     'responsavel' => null,
@@ -93,7 +95,7 @@ class AlmoxarifadoCatalogSeeder extends Seeder
 
         foreach ($fornecedores as $fornecedor) {
             DB::table('almoxarifado_fornecedores')->updateOrInsert(
-                ['nome' => $fornecedor['nome']],
+                ['secretaria_id' => $sec, 'nome' => $fornecedor['nome']],
                 [
                     'documento' => $fornecedor['documento'],
                     'telefone' => null,
@@ -116,7 +118,7 @@ class AlmoxarifadoCatalogSeeder extends Seeder
 
         foreach ($localizacoes as $localizacao) {
             DB::table('almoxarifado_localizacoes')->updateOrInsert(
-                ['nome' => $localizacao['nome']],
+                ['secretaria_id' => $sec, 'nome' => $localizacao['nome']],
                 [
                     'almoxarifado' => $localizacao['almoxarifado'],
                     'sala' => null,

@@ -2,25 +2,94 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserPresence;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
+use App\Models\UserPresence;
+use App\Services\Secretarias\GestorAlert;
 use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        // Gestão de usuários: admin ou gestor (o gestor fica restrito às suas secretarias, ver scopedTo).
+        $this->middleware(function (Request $request, $next) {
+            if (! in_array($request->user()?->profile, ['admin', 'gestor'], true)) {
+                return response()->json(['message' => 'Acesso restrito a administradores e gestores.'], 403);
+            }
+
+            return $next($request);
+        })->except('presence');
+    }
+
+    /** Admin vê todos; gestor só quem divide secretaria com ele, nunca administradores. */
+    private function scopedTo(User $actor)
+    {
+        $query = User::query();
+
+        if ($actor->profile === 'admin') {
+            return $query;
+        }
+
+        return $query->where('profile', '!=', 'admin')
+            ->whereHas('secretarias', fn ($q) => $q->whereIn('secretarias.id', $this->actorSecretariaIds($actor)));
+    }
+
+    private function actorSecretariaIds(User $actor): array
+    {
+        return $actor->secretarias()->pluck('secretarias.id')->all();
+    }
+
+    /** Só id e nome; gestor vê apenas as secretarias que também são dele. Exige `secretarias` carregada. */
+    private function secretariasPayload(User $actor, User $user, ?array $actorIds): array
+    {
+        return $user->secretarias
+            ->when($actor->profile !== 'admin', fn ($c) => $c->whereIn('id', $actorIds))
+            ->map(fn ($s) => ['id' => $s->id, 'nome' => $s->nome])
+            ->values()
+            ->all();
+    }
+
+    private function authorizeTarget(Request $request, User $user): void
+    {
+        abort_unless($this->scopedTo($request->user())->whereKey($user->id)->exists(), 403, 'Usuário fora das suas secretarias.');
+    }
+
+    /** Gestor mexe só nos vínculos das próprias secretarias: os demais vínculos do alvo ficam intactos. */
+    private function syncSecretarias(User $actor, User $user, array $ids): void
+    {
+        if ($actor->profile === 'admin') {
+            $user->secretarias()->sync($ids);
+        } else {
+            $user->secretarias()->detach($this->actorSecretariaIds($actor));
+            $user->secretarias()->syncWithoutDetaching($ids);
+        }
+
+        // Perdeu o vínculo com uma secretaria: as lotações nas unidades dela deixam de valer.
+        \App\Support\LotacaoPorSecretaria::inativarForaDosVinculos($user);
+    }
+
+    private function alertIfGestorAssigned(Request $request, User $user, ?string $previousProfile): void
+    {
+        if ($request->user()->profile === 'gestor' && $user->profile === 'gestor' && $previousProfile !== 'gestor') {
+            GestorAlert::perfilGestorAtribuido($request->user(), $user);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')
+        $actor = $request->user();
+        $actorIds = $actor->profile === 'admin' ? null : $this->actorSecretariaIds($actor);
+        $users = $this->scopedTo($actor)->with(['protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo', 'secretarias:secretarias.id,secretarias.nome'])
             ->where('active', true)
             ->orderBy('id', 'desc')
             ->get();
@@ -28,7 +97,7 @@ class UserController extends Controller
         // Um mapa perfil => chat_enabled em vez de uma consulta por usuario (canUseChat()).
         $chatEnabledByProfile = \App\Models\AccessProfile::query()->pluck('chat_enabled', 'slug');
 
-        return $users->map(function (User $user) use ($presences, $chatEnabledByProfile) {
+        return $users->map(function (User $user) use ($presences, $chatEnabledByProfile, $actor, $actorIds) {
             $presence = $presences->get($user->id);
             $lastSeenAt = $presence?->last_seen_at;
             $isOnline = $lastSeenAt !== null && $lastSeenAt->greaterThanOrEqualTo(now()->subMinutes(5));
@@ -39,6 +108,7 @@ class UserController extends Controller
                 'last_seen_at' => $lastSeenAt?->toDateTimeString(),
                 'last_path' => $presence?->last_path,
                 'can_chat' => $user->canUseChatWith($chatEnabledByProfile),
+                'secretarias' => $this->secretariasPayload($actor, $user, $actorIds),
                 'protocol_unit_ids' => $user->protocolUnits
                     ->where('ativo', true)
                     ->pluck('protocol_organizational_unit_id')
@@ -76,7 +146,10 @@ class UserController extends Controller
     {
 
         $array = ['status' => 'created'];
-        $data = $request->except(['password2', 'protocol_unit_ids']);
+        // Gestor só preenche dados cadastrais e perfil: flags de chat/RT/inativação são do admin.
+        $data = $request->user()->profile === 'admin'
+            ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids'])
+            : $request->only(['profile', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'password', 'is_driver']);
         $data['password'] = Hash::make($data['password']);
         $existing = $request->reactivatableUser();
         if ($existing) {
@@ -88,14 +161,22 @@ class UserController extends Controller
         $user = DB::transaction(function () use ($data, $request, $existing) {
             if ($existing) {
                 $existing->update($data);
+                // Reativação não herda lotações antigas (de qualquer secretaria, sem o escopo do aprovador).
+                \App\Models\ProtocolUserUnit::withoutGlobalScopes()->where('user_id', $existing->id)->update(['ativo' => false]);
                 $user = $existing;
             } else {
                 $user = User::create($data);
             }
-            $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            if ($request->user()->profile === 'admin') {
+                $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            }
+            // Gestor só troca os vínculos das suas secretarias; os de fora ficam (reativação).
+            $this->syncSecretarias($request->user(), $user, $request->input('secretaria_ids', []));
+
             return $user;
         });
-        $array['user'] = $this->userPayload($user);
+        $this->alertIfGestorAssigned($request, $user, null);
+        $array['user'] = $this->userPayload($user, $request->user());
 
         return $array;
     }
@@ -106,11 +187,11 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        // return User::where('active', true)->find($id) ? User::find($id) : ['error' => '404'];
-        $user = User::with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')->find($id);
-        return $user ? $this->userPayload($user) : ['error' => '404'];
+        $user = $this->scopedTo($request->user())->with('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo')->find($id);
+
+        return $user ? $this->userPayload($user, $request->user()) : ['error' => '404'];
     }
 
     /**
@@ -121,21 +202,28 @@ class UserController extends Controller
      */
     public function update(UserRequest $request, User $user)
     {
+        $this->authorizeTarget($request, $user);
+        $previousProfile = $user->profile;
         $array = ['status' => 'updated'];
-        $data = $request->except(['password2', 'protocol_unit_ids']);
+        $isAdmin = $request->user()->profile === 'admin';
+        // Gestor altera apenas perfil e vínculos (R10): nada mais do request chega ao model.
+        $data = $isAdmin ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids']) : $request->only('profile');
 
-        if ($request->input('password')) {
-
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            $data['password'] = $user->password;
+        if ($isAdmin) {
+            $data['password'] = $request->input('password') ? Hash::make($data['password']) : $user->password;
         }
 
-        DB::transaction(function () use ($user, $data, $request) {
+        DB::transaction(function () use ($user, $data, $request, $isAdmin) {
             $user->update($data);
-            $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            if ($isAdmin) {
+                $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+            }
+            if ($request->has('secretaria_ids')) {
+                $this->syncSecretarias($request->user(), $user, $request->input('secretaria_ids'));
+            }
         });
-        $array['user'] = $this->userPayload($user->fresh());
+        $this->alertIfGestorAssigned($request, $user, $previousProfile);
+        $array['user'] = $this->userPayload($user->fresh(), $request->user());
 
         return $array;
     }
@@ -145,8 +233,11 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
+        // Inativar é global (vale em todas as secretarias): só admin.
+        abort_unless($request->user()->profile === 'admin', 403, 'Somente administrador inativa usuário.');
+
         $array = ['status' => 'inactivated'];
 
         // User::where('id', $user)->update(['active' => 0, 'inactive_date' => new DateTime()]);
@@ -162,20 +253,22 @@ class UserController extends Controller
         $user->protocolUnits()->whereNotIn('protocol_organizational_unit_id', $unitIds)->update(['ativo' => false]);
 
         foreach ($unitIds as $unitId) {
-            $user->protocolUnits()->updateOrCreate(
-                ['protocol_organizational_unit_id' => $unitId],
+            // Sem escopo: lotação existente em outra secretaria seria duplicada (unique user+unidade).
+            \App\Models\ProtocolUserUnit::withoutGlobalScopes()->updateOrCreate(
+                ['user_id' => $user->id, 'protocol_organizational_unit_id' => $unitId],
                 ['papel' => 'lotacao', 'ativo' => true]
             );
         }
     }
 
-    private function userPayload(User $user): array
+    private function userPayload(User $user, User $actor): array
     {
-        $user->loadMissing('protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo');
+        $user->loadMissing(['protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo', 'secretarias:secretarias.id,secretarias.nome']);
 
         return [
             ...$user->toArray(),
             'can_chat' => $user->canUseChat(),
+            'secretarias' => $this->secretariasPayload($actor, $user, $actor->profile === 'admin' ? null : $this->actorSecretariaIds($actor)),
             'protocol_unit_ids' => $user->protocolUnits
                 ->where('ativo', true)
                 ->pluck('protocol_organizational_unit_id')

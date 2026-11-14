@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CallNextAttendanceRequest;
+use App\Http\Requests\CallSpecificAttendanceRequest;
 use App\Http\Requests\CreateTicketAttendanceRequest;
 use App\Http\Requests\ListTicketsAttendanceRequest;
 use App\Http\Requests\QueueAttendanceRequest;
 use App\Http\Requests\RoomsStoreAttendanceRequest;
+use App\Http\Requests\RoomsUpdateAttendanceRequest;
+use App\Http\Requests\ServiceFinishAttendanceRequest;
+use App\Http\Requests\ServiceNotesAttendanceRequest;
 use App\Models\User;
 use App\Services\Attendance\AttendancePanelService;
 use App\Services\Attendance\AttendancePendingSummaryService;
@@ -38,7 +42,8 @@ class AttendanceController extends Controller
             (int) $validated['clientId'],
             auth()->id(),
             $validated['prefix'] ?? 'A',
-            isset($validated['roomId']) ? (int) $validated['roomId'] : null
+            isset($validated['roomId']) ? (int) $validated['roomId'] : null,
+            isset($validated['secretaria_id']) ? (int) $validated['secretaria_id'] : null
         );
 
         return response()->json($ticket, 201);
@@ -56,6 +61,7 @@ class AttendanceController extends Controller
         return response()->json(
             User::query()
                 ->where('active', true)
+                ->when(! app(\App\Services\Secretarias\ActiveSecretaria::class)->isAll(), fn ($q) => \App\Services\Secretarias\SecretariaMembership::filtrar($q, (int) app(\App\Services\Secretarias\ActiveSecretaria::class)->id()))
                 ->orderBy('name')
                 ->get(['id', 'name', 'email'])
         );
@@ -122,11 +128,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function callSpecific(int $ticketId, Request $request): JsonResponse
+    public function callSpecific(int $ticketId, CallSpecificAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'roomId' => 'required|integer|exists:attendance_rooms,id',
-        ]);
+        $validated = $request->validated();
 
         try {
             $ticket = $this->queueService->callSpecific($ticketId, (int) auth()->id(), (int) $validated['roomId']);
@@ -166,11 +170,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function serviceNotes(int $ticketId, Request $request): JsonResponse
+    public function serviceNotes(int $ticketId, ServiceNotesAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         try {
             return response()->json($this->serviceFlow->saveNotes($ticketId, $validated['notes'] ?? null));
@@ -179,11 +181,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function serviceFinish(int $ticketId, Request $request): JsonResponse
+    public function serviceFinish(int $ticketId, ServiceFinishAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         try {
             return response()->json($this->serviceFlow->finish($ticketId, $validated['notes'] ?? null));
@@ -196,6 +196,9 @@ class AttendanceController extends Controller
 
     public function panelState(): JsonResponse
     {
+        // Rota pública (painel da sala de espera): a secretaria dona vem da config do servidor (FILA_SECRETARIA_SLUG), nunca do cliente.
+        \App\Support\SaudePublica::fila();
+
         return response()->json($this->panelService->state());
     }
 
@@ -223,6 +226,7 @@ class AttendanceController extends Controller
         $validated = $request->validated();
 
         $room = \App\Models\AttendanceRoom::query()->create([
+            'secretaria_id' => \App\Support\EscopoAlmoxarifado::id($validated['secretaria_id'] ?? null),
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'active' => (bool) ($validated['active'] ?? true),
@@ -244,13 +248,9 @@ class AttendanceController extends Controller
         }
     }
 
-    public function roomsUpdate(int $id, Request $request): JsonResponse
+    public function roomsUpdate(int $id, RoomsUpdateAttendanceRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:100|unique:attendance_rooms,name,'.$id,
-            'description' => 'nullable|string|max:255',
-            'active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         try {
             $room = \App\Models\AttendanceRoom::query()->findOrFail($id);

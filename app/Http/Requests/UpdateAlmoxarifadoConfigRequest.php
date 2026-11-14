@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAlmoxarifadoConfigRequest extends FormRequest
@@ -14,6 +15,7 @@ class UpdateAlmoxarifadoConfigRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'secretaria_id' => EscopoAlmoxarifado::regraCampo(),
             'permitir_saida_sem_saldo' => 'boolean',
             'permitir_transferencia_entre_secretarias' => 'boolean',
             'exigir_justificativa_saida' => 'boolean',

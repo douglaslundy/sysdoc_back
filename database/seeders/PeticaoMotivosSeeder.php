@@ -28,7 +28,7 @@ class PeticaoMotivosSeeder extends Seeder
 
         foreach ($motivos as $i => $nome) {
             $motivo = PeticaoMotivo::firstOrCreate(
-                ['nome' => $nome],
+                ['secretaria_id' => \App\Models\Secretaria::saudeId(), 'nome' => $nome],
                 ['ativo' => true, 'ordem' => $i + 1, 'unit_id' => $unit?->id]
             );
 
@@ -41,6 +41,7 @@ class PeticaoMotivosSeeder extends Seeder
     private function unidadeVigilancia(): ProtocolOrganizationalUnit
     {
         $unit = ProtocolOrganizationalUnit::query()
+            ->where('secretaria_id', \App\Models\Secretaria::saudeId())
             ->where('nome', 'like', '%vigil%')
             ->where('nome', 'like', '%sanit%')
             ->orderByDesc('ativo')
@@ -65,6 +66,7 @@ class PeticaoMotivosSeeder extends Seeder
         $this->command?->info('Unidade "Vigilância Sanitária" não existia: criada em /protocolo/estrutura.');
 
         return ProtocolOrganizationalUnit::create([
+            'secretaria_id' => \App\Models\Secretaria::saudeId(),
             'parent_id' => $secretaria?->id,
             'tipo' => 'departamento',
             'codigo' => 'VISA',

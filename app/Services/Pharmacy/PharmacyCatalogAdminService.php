@@ -7,6 +7,7 @@ use App\Models\PharmacyPharmaceuticalForm;
 use App\Models\PharmacyPresentation;
 use App\Models\PharmacyUnit;
 use App\Services\AuditService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PharmacyCatalogAdminService
@@ -22,6 +23,7 @@ class PharmacyCatalogAdminService
     {
         [$model, $isUnit] = $this->resolve($type);
         $payload = $this->sanitize($data, $isUnit);
+        $payload['secretaria_id'] = EscopoAlmoxarifado::id($data['secretaria_id'] ?? null); // admin em "Todas" sem escolher = 422
 
         $row = $model::create($payload);
         AuditService::record('CREATE_PHARMACY_CATALOG_ITEM', $row, null, $row->toArray());

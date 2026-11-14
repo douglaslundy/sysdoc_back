@@ -12,18 +12,22 @@ class Remume2025MedicinesSeeder extends Seeder
     {
         $items = $this->loadItems();
 
-        DB::transaction(function () use ($items) {
-            // Limpa dependências antes do catálogo de medicamentos.
-            DB::table('medicine_daily_statuses')->delete();
-            DB::table('medicine_monthly_acquisitions')->delete();
-            DB::table('medicine_publications')->delete();
+        // Seeder roda fora de requisição: limpa e grava só a Saúde (outras secretarias não são tocadas).
+        $sec = \App\Models\Secretaria::saudeId();
 
-            MedicineItem::query()->forceDelete();
+        DB::transaction(function () use ($items, $sec) {
+            // Limpa dependências antes do catálogo de medicamentos.
+            DB::table('medicine_daily_statuses')->where('secretaria_id', $sec)->delete();
+            DB::table('medicine_monthly_acquisitions')->where('secretaria_id', $sec)->delete();
+            DB::table('medicine_publications')->where('secretaria_id', $sec)->delete();
+
+            MedicineItem::query()->where('secretaria_id', $sec)->forceDelete();
 
             foreach ($items as $index => $rawItem) {
                 $normalized = $this->normalizeItem($rawItem, $index + 1);
 
                 MedicineItem::create([
+                    'secretaria_id' => $sec,
                     'internal_code' => sprintf('REMUME-2025-%04d', $normalized['number']),
                     'brand_name' => null,
                     'active_ingredient' => $normalized['active_ingredient'],

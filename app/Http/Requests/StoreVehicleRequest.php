@@ -18,13 +18,22 @@ class StoreVehicleRequest extends FormRequest
     // Regras de validação
     public function rules()
     {
+        // Edição: secretaria do veículo (404 se for de outra); criação: a ativa (ou a informada pelo admin em "Todas").
+        $vehicle = $this->route('vehicle');
+        $editando = $vehicle instanceof \App\Models\Vehicle;
+        $sid = $editando
+            ? (int) $vehicle->secretaria_id
+            : (app(\App\Services\Secretarias\ActiveSecretaria::class)->forCreate($this->input('secretaria_id')) ?? 0);
+        $unico = fn (string $coluna) => \App\Support\EscopoAlmoxarifado::unico('vehicles', $coluna, $sid)->ignore($editando ? $vehicle->id : null);
+
         return [
+            'secretaria_id' => $editando ? ['nullable'] : \App\Support\EscopoAlmoxarifado::regraCampo(),
             'brand' => 'required|string|max:20',
             'model' => 'required|string|max:20',
             'color' => 'required|string|max:10',
-            'license_plate' => 'required|string|size:7',
-            'renavan' => 'required|string|size:11',
-            'chassis' => 'required|string|size:17',
+            'license_plate' => ['required', 'string', 'size:7', $unico('license_plate')],
+            'renavan' => ['required', 'string', 'size:11', $unico('renavan')],
+            'chassis' => ['required', 'string', 'size:17', $unico('chassis')],
             'capacity' => 'required|integer|max:999|min:1',
             'year' => 'required|numeric|digits:4',
         ];
@@ -41,6 +50,9 @@ class StoreVehicleRequest extends FormRequest
             'color.required' => 'O campo cor é obrigatório.',
             'color.max' => 'A cor não pode ter mais que 10 caracteres.',
             'license_plate.required' => 'O campo placa é obrigatório.',
+            'license_plate.unique' => 'Já existe um veículo com esta placa.',
+            'renavan.unique' => 'Já existe um veículo com este Renavam.',
+            'chassis.unique' => 'Já existe um veículo com este chassi.',
             'license_plate.size' => 'A placa deve ter exatamente 7 caracteres.',
             'renavan.required' => 'O campo Renavam é obrigatório.',
             'renavan.size' => 'O Renavam deve ter exatamente 11 caracteres.',

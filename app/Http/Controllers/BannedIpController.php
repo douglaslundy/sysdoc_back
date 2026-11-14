@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\IndexBannedIpRequest;
+use App\Http\Requests\StoreBannedIpRequest;
 use App\Http\Requests\UpdateBannedIpSettingsRequest;
 use App\Models\BannedIp;
 use App\Services\BannedIpService;
@@ -14,13 +16,8 @@ class BannedIpController extends Controller
     {
     }
 
-    public function index(Request $request)
+    public function index(IndexBannedIpRequest $request)
     {
-        $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
         $page = BannedIp::query()
             ->when($request->date_from, fn ($q, $d) => $q->whereDate('created_at', '>=', $d))
             ->when($request->date_to, fn ($q, $d) => $q->whereDate('created_at', '<=', $d))
@@ -37,12 +34,9 @@ class BannedIpController extends Controller
         return $page;
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreBannedIpRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'ip' => ['required', 'ip'],
-            'reason' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
 
         $banned = $this->bans->ban($data['ip'], $data['reason'] ?? 'Banimento manual', 'manual');
 

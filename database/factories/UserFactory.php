@@ -24,6 +24,23 @@ class UserFactory extends Factory
         ];
     }
 
+    public function configure()
+    {
+        return $this->afterCreating(function (\App\Models\User $user) {
+            $saude = \App\Models\Secretaria::firstOrCreate(
+                ['slug' => \App\Models\Secretaria::SAUDE_SLUG],
+                ['nome' => 'Saúde', 'ativa' => true]
+            );
+            $user->secretarias()->syncWithoutDetaching([$saude->id]);
+        });
+    }
+
+    /** Usuário sem nenhuma secretaria (testa o isolamento). */
+    public function semSecretaria()
+    {
+        return $this->afterCreating(fn (\App\Models\User $user) => $user->secretarias()->detach());
+    }
+
     /**
      * Indicate that the model's email address should be unverified.
      *

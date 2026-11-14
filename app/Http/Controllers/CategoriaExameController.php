@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCategoriaExameRequest;
 use App\Models\CategoriaExame;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Http\Request;
 
 class CategoriaExameController extends Controller
@@ -30,6 +31,7 @@ class CategoriaExameController extends Controller
     public function store(StoreCategoriaExameRequest $request)
     {
         $categoria = CategoriaExame::create([
+            'secretaria_id' => EscopoAlmoxarifado::id($request->input('secretaria_id')), // admin em "Todas" sem escolher = 422
             'nome' => strtoupper($request->input('nome')),
             'ativo' => $request->input('ativo', true),
         ]);

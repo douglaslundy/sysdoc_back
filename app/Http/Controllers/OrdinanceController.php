@@ -7,6 +7,8 @@ use App\Http\Requests\StoreOrdinanceRequest;
 use App\Http\Requests\UpdateOrdinanceRequest;
 use App\Models\Models;
 use App\Models\Ordinance;
+use App\Models\Secretaria;
+use App\Services\Secretarias\ActiveSecretaria;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,15 +40,19 @@ class OrdinanceController extends Controller
             $currentYear = (int) date('Y');
             $today = date('Y-m-d');
 
-            $ordinance = new Ordinance();
-            $ordinance->user_id = $data['user_id'];
+            // Admin em "Todas" informa a secretaria (sem ela: 422); os demais usam a ativa. Numeração por secretaria.
+            $secretariaId = app(ActiveSecretaria::class)->forCreate($data['secretaria_id'] ?? null);
+            if (! $secretariaId) {
+                return response()->json(['message' => 'Escolha a secretaria.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
+            }
 
-            $ordinance->number = (
-                DB::table('ordinances')
-                    ->where('year', $currentYear)
-                    ->orderBy('number', 'desc')
-                    ->value('number')
-            ) + 1;
+            if (! \App\Services\Secretarias\SecretariaMembership::atende((int) $data['user_id'], $secretariaId)) {
+                return response()->json(['message' => 'Usuário de outra secretaria.', 'errors' => ['user_id' => ['Usuário não pertence a esta secretaria.']]], 422);
+            }
+
+            $ordinance = new Ordinance();
+            $ordinance->secretaria_id = $secretariaId;
+            $ordinance->user_id = $data['user_id'];
 
             $ordinance->year = $currentYear;
             $ordinance->type = $data['type'];
@@ -55,7 +61,7 @@ class OrdinanceController extends Controller
             $ordinance->summary = $data['summary'] ?? null;
             $ordinance->content = $data['content'] ?? null;
             $ordinance->legal_basis = $data['legal_basis'] ?? null;
-            $ordinance->department = 'Secretaria Municipal de Saúde';
+            $ordinance->department = 'Secretaria Municipal de '.Secretaria::whereKey($secretariaId)->value('nome');
             $ordinance->signatory_name = $data['signatory_name'];
             $ordinance->signatory_role = $data['signatory_role'] ?? null;
             $ordinance->publication_date = $today;
@@ -63,11 +69,21 @@ class OrdinanceController extends Controller
 
             if ($request->hasFile('file')) {
                 $ordinance->file_path = $request->file('file')->store('ordinances', 'public');
-            } elseif (! empty($data['file_path'])) {
-                $ordinance->file_path = $data['file_path'];
             }
 
-            $ordinance->save();
+            // Número no momento de gravar; corrida na unique (secretaria, número, ano) refaz o número (até 5 vezes).
+            for ($tentativa = 1; ; $tentativa++) {
+                $ordinance->number = (Ordinance::withoutSecretaria()
+                    ->where('secretaria_id', $secretariaId)->where('year', $currentYear)->max('number')) + 1;
+                try {
+                    $ordinance->save();
+                    break;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($e->getCode() !== '23000' || $tentativa >= 5) {
+                        throw $e;
+                    }
+                }
+            }
 
             $array['ordinance'] = $ordinance->load('user')->loadCount('attachments');
 
@@ -92,7 +108,6 @@ class OrdinanceController extends Controller
             $ordinance->summary = $data['summary'] ?? null;
             $ordinance->content = $data['content'] ?? null;
             $ordinance->legal_basis = $data['legal_basis'] ?? null;
-            $ordinance->department = 'Secretaria Municipal de Saúde';
             $ordinance->signatory_name = $data['signatory_name'];
             $ordinance->signatory_role = $data['signatory_role'] ?? null;
             $ordinance->notes = $data['notes'] ?? null;
@@ -102,9 +117,8 @@ class OrdinanceController extends Controller
                     Storage::disk('public')->delete($ordinance->file_path);
                 }
 
+                // Caminho do arquivo nunca vem do cliente: apontaria para arquivo alheio e o apagaria na troca/exclusão.
                 $ordinance->file_path = $request->file('file')->store('ordinances', 'public');
-            } elseif (array_key_exists('file_path', $data) && ! empty($data['file_path'])) {
-                $ordinance->file_path = $data['file_path'];
             }
 
             $ordinance->save();
@@ -124,7 +138,7 @@ class OrdinanceController extends Controller
         $array = ['errors' => ''];
 
         try {
-            $lastOrdinance = Ordinance::latest()->first();
+            $lastOrdinance = Ordinance::withoutSecretaria()->where('secretaria_id', $ordinance->secretaria_id)->latest()->first();
 
             if (! $lastOrdinance || $ordinance->id !== $lastOrdinance->id) {
                 throw new Exception('É permitido excluir somente a última portaria');

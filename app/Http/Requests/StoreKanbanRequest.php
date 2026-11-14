@@ -19,6 +19,7 @@ class StoreKanbanRequest extends FormRequest
             'status' => 'nullable|string|max:40',
             'prioridade' => 'nullable|string|max:20',
             'vencimento' => 'nullable|date',
+            'secretaria_id' => \App\Models\Secretaria::regraId(),
             'responsavel_id' => 'nullable|integer|exists:users,id',
             'visibility' => 'nullable|string|in:public,private',
             'ordem' => 'nullable|integer|min:0',

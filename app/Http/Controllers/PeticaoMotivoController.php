@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PeticaoMotivoRequest;
 use App\Models\PeticaoMotivo;
+use App\Support\EscopoAlmoxarifado;
+use App\Support\SaudePublica;
 use Illuminate\Http\JsonResponse;
 
 class PeticaoMotivoController extends Controller
@@ -17,7 +19,7 @@ class PeticaoMotivoController extends Controller
 
     public function store(PeticaoMotivoRequest $request): JsonResponse
     {
-        $motivo = PeticaoMotivo::create($request->validated());
+        $motivo = PeticaoMotivo::create(array_merge($request->validated(), ['secretaria_id' => EscopoAlmoxarifado::id($request->input('secretaria_id'))]));
 
         return response()->json($motivo->fresh()->load('unit:id,nome,tipo'), 201);
     }
@@ -39,6 +41,8 @@ class PeticaoMotivoController extends Controller
     /** Lista pública (formulário /petition): só motivos ativos, sem expor a unidade responsável. */
     public function publicIndex(): JsonResponse
     {
+        SaudePublica::vigilancia(); // so os motivos da secretaria dona da Vigilancia
+
         return response()->json(
             PeticaoMotivo::where('ativo', true)->orderBy('ordem')->orderBy('nome')->get(['id', 'nome', 'descricao'])
         );

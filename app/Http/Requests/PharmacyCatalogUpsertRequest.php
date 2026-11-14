@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Validation\Rule;
 
 class PharmacyCatalogUpsertRequest extends BaseApiFormRequest
@@ -17,11 +18,22 @@ class PharmacyCatalogUpsertRequest extends BaseApiFormRequest
     {
         $type = $this->route('type');
         $id = $this->route('id');
+        $model = match ($type) {
+            'units' => \App\Models\PharmacyUnit::class,
+            'forms' => \App\Models\PharmacyPharmaceuticalForm::class,
+            'presentations' => \App\Models\PharmacyPresentation::class,
+            'sources' => \App\Models\PharmacyAcquisitionSource::class,
+            default => null,
+        };
+        // PUT: a secretaria é a do registro (outra secretaria = 404); POST: a ativa, ou a informada pelo admin em "Todas".
+        $sid = $model ? EscopoAlmoxarifado::alvo($model, $id, $this->input('secretaria_id')) : 0;
+        $campo = $id === null ? ['secretaria_id' => EscopoAlmoxarifado::regraCampo()] : [];
 
         if ($type === 'units') {
             return [
-                'code' => ['required', 'string', 'max:20', Rule::unique('pharmacy_units', 'code')->ignore($id)],
-                'name' => ['required', 'string', 'max:80', Rule::unique('pharmacy_units', 'name')->ignore($id)],
+                ...$campo,
+                'code' => ['required', 'string', 'max:20', EscopoAlmoxarifado::unico('pharmacy_units', 'code', $sid)->ignore($id)],
+                'name' => ['required', 'string', 'max:80', EscopoAlmoxarifado::unico('pharmacy_units', 'name', $sid)->ignore($id)],
                 'active' => ['sometimes', 'boolean'],
             ];
         }
@@ -38,7 +50,8 @@ class PharmacyCatalogUpsertRequest extends BaseApiFormRequest
         }
 
         return [
-            'name' => ['required', 'string', 'max:120', Rule::unique($table, 'name')->ignore($id)],
+            ...$campo,
+            'name' => ['required', 'string', 'max:120', EscopoAlmoxarifado::unico($table, 'name', $sid)->ignore($id)],
             'active' => ['sometimes', 'boolean'],
         ];
     }

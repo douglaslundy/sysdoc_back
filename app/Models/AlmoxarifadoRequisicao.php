@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AlmoxarifadoRequisicao extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
+
     protected $table = 'almoxarifado_requisicoes';
 
     protected $fillable = [
+        'secretaria_id',
         'numero',
         'almoxarifado_secretaria_id',
         'solicitante',

@@ -21,7 +21,7 @@ class ListQueuesRequest extends BaseApiFormRequest
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'done' => ['nullable', 'integer', 'in:0,1,2'],
             'urgency' => ['nullable', 'integer', 'in:0,1,2'],
-            'speciality_id' => ['nullable', 'integer', 'exists:specialities,id'],
+            'speciality_id' => ['nullable', 'integer', \App\Support\EscopoAlmoxarifado::existeNaAtiva('specialities')],
             'date_from' => ['nullable', 'date_format:Y-m-d'],
             'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
             'sort_by' => ['nullable', 'string', 'in:done_at,date_of_realized,id'],

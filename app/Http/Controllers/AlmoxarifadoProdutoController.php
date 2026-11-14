@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UpdateAlmoxarifadoProdutoRequest;
 use App\Http\Requests\StoreAlmoxarifadoProdutoRequest;
+use App\Http\Requests\UpdateAlmoxarifadoProdutoRequest;
 use App\Models\AlmoxarifadoCategoria;
+use App\Models\AlmoxarifadoConfig;
 use App\Models\AlmoxarifadoEspecie;
 use App\Models\AlmoxarifadoFornecedor;
-use App\Models\AlmoxarifadoConfig;
 use App\Models\AlmoxarifadoLocalizacao;
 use App\Models\AlmoxarifadoProduto;
 use App\Models\AlmoxarifadoUnidadeMedida;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -78,13 +79,15 @@ class AlmoxarifadoProdutoController extends Controller
     {
         $validated = $request->validated();
 
-        $config = AlmoxarifadoConfig::current();
+        $sid = EscopoAlmoxarifado::id($validated['secretaria_id'] ?? null);
+        $config = AlmoxarifadoConfig::current($sid);
         if ($config->exigir_localizacao_produto && empty($validated['almoxarifado_localizacao_id'])) {
             abort(422, 'A localização do produto é obrigatória nas configurações do almoxarifado.');
         }
 
-        $validated['codigo_interno'] = $validated['codigo_interno'] ?: strtoupper('ALM-' . Str::random(10));
+        $validated['codigo_interno'] = ($validated['codigo_interno'] ?? null) ?: strtoupper('ALM-'.Str::random(10));
         $validated['ativo'] = $validated['ativo'] ?? true;
+        $validated['secretaria_id'] = $sid;
 
         return response()->json(
             AlmoxarifadoProduto::create($validated)->load([
@@ -106,9 +109,9 @@ class AlmoxarifadoProdutoController extends Controller
             return response()->json(['message' => 'Produto não encontrado.'], 404);
         }
 
-                $validated = $request->validated();
+        $validated = $request->validated();
 
-        $config = AlmoxarifadoConfig::current();
+        $config = AlmoxarifadoConfig::current((int) $produto->secretaria_id);
         if ($config->exigir_localizacao_produto && empty($validated['almoxarifado_localizacao_id'] ?? $produto->almoxarifado_localizacao_id)) {
             abort(422, 'A localização do produto é obrigatória nas configurações do almoxarifado.');
         }

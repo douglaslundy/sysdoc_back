@@ -7,10 +7,12 @@ use App\Http\Requests\StoreDenunciaRequest;
 use App\Models\Fiscalizacao;
 use App\Models\FiscalizacaoAttachment;
 use App\Models\KanbanTask;
+use App\Models\ProtocolOrganizationalUnit;
 use App\Services\AuditService;
 use App\Services\Fiscalizacao\FiscalizacaoProtocolo;
 use App\Services\Fiscalizacao\FiscalizacaoTimeline;
 use App\Services\Fiscalizacao\VigilanciaAvisoService;
+use App\Support\SaudePublica;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +47,8 @@ class DenunciaPublicaController extends Controller
 
     public function store(StoreDenunciaRequest $request): JsonResponse
     {
+        SaudePublica::vigilancia(); // a secretaria dona vem do servidor, nunca do cliente
+
         // Campo isca preenchido = robô: responde como se tivesse funcionado, sem gravar nada.
         if ($request->filled('website')) {
             return response()->json($this->recibo(
@@ -117,6 +121,8 @@ class DenunciaPublicaController extends Controller
      */
     public function consultar(ConsultaDenunciaRequest $request): JsonResponse
     {
+        SaudePublica::vigilancia(); // so protocolos da secretaria dona
+
         $protocolo = strtoupper(trim((string) $request->input('protocolo')));
         $senha = strtoupper(trim((string) $request->input('senha')));
         $chaveFalhas = 'denuncia-falhas:'.$protocolo;
@@ -187,7 +193,15 @@ class DenunciaPublicaController extends Controller
             return;
         }
 
+        // Rota pública: a secretaria do card é a da unidade responsável pelo motivo.
+        $secretariaId = ProtocolOrganizationalUnit::withoutSecretaria()->whereKey($motivo->unit_id)->value('secretaria_id');
+        // O card so nasce na unidade da mesma secretaria da fiscalizacao (motivo mal configurado nao vaza para outra).
+        if (! $secretariaId || (int) $secretariaId !== (int) $fiscalizacao->secretaria_id) {
+            return;
+        }
+
         KanbanTask::create([
+            'secretaria_id' => $secretariaId,
             'unit_id' => $motivo->unit_id,
             'fiscalizacao_id' => $fiscalizacao->id,
             'titulo' => mb_substr("Petição {$fiscalizacao->protocolo} — {$motivo->nome}", 0, 200),

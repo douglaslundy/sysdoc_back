@@ -21,6 +21,8 @@ Broadcast::channel('chat.user.{id}', function ($user, $id) {
     return $user->canUseChat() && (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('chat.presence', function ($user) {
-    return $user?->canUseChat() ?? false;
+// Presença por secretaria: só assina quem usa o chat e atende a secretaria do canal (admin atende todas).
+Broadcast::channel('chat.presence.{secretariaId}', function ($user, $secretariaId) {
+    return ($user?->canUseChat() ?? false)
+        && \App\Services\Secretarias\SecretariaMembership::atende((int) $user->id, (int) $secretariaId);
 });

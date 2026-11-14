@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class TripScheduleEntry extends Model
 {
+    use Concerns\BelongsToSecretaria;
+
     protected $fillable = [
-        'scheduled_date', 'client_id', 'person_type', 'companion_of', 'phone',
+        'secretaria_id', 'scheduled_date', 'client_id', 'person_type', 'companion_of', 'phone',
         'departure_location', 'destination_location', 'time', 'status', 'obs', 'created_by',
     ];
 

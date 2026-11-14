@@ -11,9 +11,16 @@ use Illuminate\Support\Str;
 
 class Protocol extends Model
 {
+    use \App\Models\Concerns\BelongsToSecretaria;
     use HasFactory;
 
     protected $table = 'protocols';
+
+    // Protocolo de pedido de cadastro só para admin e gestor da secretaria (ver o escopo).
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Models\Scopes\CadastroProtocoloScope());
+    }
 
     protected $fillable = [
         'numero',
@@ -30,6 +37,7 @@ class Protocol extends Model
         'destino_unit_id',
         'responsavel_atual_id',
         'criado_por_id',
+        'secretaria_id',
         'prazo_atendimento',
         'recebido_em',
         'encaminhado_em',
@@ -80,6 +88,15 @@ class Protocol extends Model
                         ->where(fn ($u) => $u->whereIn('protocols.origem_unit_id', $unitIds)->orWhereIn('protocols.destino_unit_id', $unitIds));
                 });
             }
+            // Gestor enxerga os pedidos de cadastro das suas secretarias.
+            if ($user?->profile === 'gestor') {
+                $sub->orWhere(fn ($c) => $c->where('protocols.tipo', \App\Models\Scopes\CadastroProtocoloScope::TIPO)
+                    ->whereIn('protocols.secretaria_id', \App\Models\Scopes\CadastroProtocoloScope::secretariasDe($user)));
+            }
+            // Protocolo de outra secretaria em que o usuário tramitou (protocolo entre secretarias).
+            if ($user) {
+                \App\Support\ParticipacaoProtocolo::aplicar($sub, (int) $user->id);
+            }
         });
     }
 
@@ -87,19 +104,46 @@ class Protocol extends Model
     {
         do {
             $numero = 'PRT-'.now()->format('Y').'-'.strtoupper(Str::random(8));
-        } while (self::where('numero', $numero)->exists());
+        } while (self::withoutGlobalScopes()->where('numero', $numero)->exists()); // sem escopo: número escondido não se repete
 
         return $numero;
     }
 
+    /**
+     * Consulta das rotas de protocolo: secretaria ativa OU participação (destinatário/tramitação).
+     * Só o ProtocolController usa; qualquer outra consulta de Protocol continua isolada pelo escopo.
+     */
+    public static function visiveis(?User $user = null): \Illuminate\Database\Eloquent\Builder
+    {
+        $ativa = app(\App\Services\Secretarias\ActiveSecretaria::class);
+
+        return static::withoutSecretaria()->where(function ($q) use ($ativa, $user) {
+            if (! $ativa->inRequest() || $ativa->isAll()) {
+                $q->whereRaw('1=1');
+            } elseif ($ativa->id() === null) {
+                $q->whereRaw('1=0');
+            } else {
+                $q->where('protocols.secretaria_id', $ativa->id());
+                if ($user) {
+                    \App\Support\ParticipacaoProtocolo::aplicar($q, (int) $user->id);
+                }
+            }
+        });
+    }
+
+    public function isCadastro(): bool
+    {
+        return $this->tipo === \App\Models\Scopes\CadastroProtocoloScope::TIPO;
+    }
+
     public function origemUnit(): BelongsTo
     {
-        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'origem_unit_id');
+        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'origem_unit_id')->withoutGlobalScope(\App\Models\Scopes\SecretariaScope::class);
     }
 
     public function destinoUnit(): BelongsTo
     {
-        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'destino_unit_id');
+        return $this->belongsTo(ProtocolOrganizationalUnit::class, 'destino_unit_id')->withoutGlobalScope(\App\Models\Scopes\SecretariaScope::class);
     }
 
     public function responsavelAtual(): BelongsTo

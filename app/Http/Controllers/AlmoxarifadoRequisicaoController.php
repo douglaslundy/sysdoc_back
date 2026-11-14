@@ -6,15 +6,15 @@ use App\Http\Requests\StoreAlmoxarifadoRequisicaoRequest;
 use App\Http\Requests\UpdateStatusAlmoxarifadoRequisicaoRequest;
 use App\Models\AlmoxarifadoEstoque;
 use App\Models\AlmoxarifadoMovimentacao;
-use App\Models\AlmoxarifadoProduto;
 use App\Models\AlmoxarifadoRequisicao;
 use App\Models\AlmoxarifadoRequisicaoHistorico;
 use App\Models\AlmoxarifadoRequisicaoItem;
+use App\Services\Almoxarifado\RequisicaoPdfService;
 use App\Services\SystemAlertService;
+use App\Support\EscopoAlmoxarifado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Services\Almoxarifado\RequisicaoPdfService;
 
 class AlmoxarifadoRequisicaoController extends Controller
 {
@@ -72,8 +72,10 @@ class AlmoxarifadoRequisicaoController extends Controller
 
         $requisicao = DB::transaction(function () use ($validated, $request) {
             $user = $request->user();
-            $numero = $this->nextNumero();
+            $sid = EscopoAlmoxarifado::id($validated['secretaria_id'] ?? null);
+            $numero = $this->nextNumero($sid);
             $requisicao = AlmoxarifadoRequisicao::create([
+                'secretaria_id' => $sid,
                 'numero' => $numero,
                 'almoxarifado_secretaria_id' => $validated['almoxarifado_secretaria_id'],
                 'solicitante' => $user?->name ?? 'Usuário não identificado',
@@ -233,11 +235,11 @@ class AlmoxarifadoRequisicaoController extends Controller
         }
     }
 
-    private function nextNumero(): string
+    private function nextNumero(int $secretariaId): string
     {
         $year = now()->format('Y');
         $prefix = "REQ-{$year}-";
-        $last = AlmoxarifadoRequisicao::where('numero', 'like', $prefix.'%')
+        $last = AlmoxarifadoRequisicao::withoutSecretaria()->where('secretaria_id', $secretariaId)->where('numero', 'like', $prefix.'%')
             ->orderByDesc('id')
             ->value('numero');
 
@@ -246,7 +248,7 @@ class AlmoxarifadoRequisicaoController extends Controller
             $next = ((int) $matches[1]) + 1;
         }
 
-        return $prefix . str_pad((string) $next, 5, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $next, 5, '0', STR_PAD_LEFT);
     }
 
     private function registrarHistorico(AlmoxarifadoRequisicao $requisicao, ?string $statusAnterior, string $novoStatus, ?int $userId, ?string $observacao): void
@@ -268,6 +270,7 @@ class AlmoxarifadoRequisicaoController extends Controller
                 'almoxarifado_secretaria_id' => $requisicao->almoxarifado_secretaria_id,
             ],
             [
+                'secretaria_id' => $requisicao->secretaria_id,
                 'quantidade_disponivel' => 0,
                 'quantidade_reservada' => 0,
                 'quantidade_em_separacao' => 0,
@@ -293,6 +296,7 @@ class AlmoxarifadoRequisicaoController extends Controller
             $item->update(['quantidade_atendida' => $item->quantidade_solicitada]);
 
             AlmoxarifadoMovimentacao::create([
+                'secretaria_id' => $requisicao->secretaria_id,
                 'almoxarifado_produto_id' => $item->almoxarifado_produto_id,
                 'almoxarifado_secretaria_origem_id' => $requisicao->almoxarifado_secretaria_id,
                 'almoxarifado_secretaria_destino_id' => $requisicao->almoxarifado_secretaria_id,
@@ -350,6 +354,7 @@ class AlmoxarifadoRequisicaoController extends Controller
             $item->update(['quantidade_entregue' => $quantidade]);
 
             AlmoxarifadoMovimentacao::create([
+                'secretaria_id' => $requisicao->secretaria_id,
                 'almoxarifado_produto_id' => $item->almoxarifado_produto_id,
                 'almoxarifado_secretaria_origem_id' => $requisicao->almoxarifado_secretaria_id,
                 'almoxarifado_secretaria_destino_id' => $requisicao->almoxarifado_secretaria_id,

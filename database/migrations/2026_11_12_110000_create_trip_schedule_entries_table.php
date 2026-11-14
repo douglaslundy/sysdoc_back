@@ -16,6 +16,7 @@ return new class extends Migration
 
         Schema::create('trip_schedule_entries', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('secretaria_id')->constrained('secretarias');
             $table->date('scheduled_date')->index();
             $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
             $table->enum('person_type', ['passenger', 'companion'])->default('passenger');
