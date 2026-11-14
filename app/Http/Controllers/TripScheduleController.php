@@ -127,7 +127,7 @@ class TripScheduleController extends Controller
         }
         $entry = TripScheduleEntry::findOrFail($id);
         DB::transaction(function () use ($entry) {
-            TripScheduleEntry::where('companion_of', $entry->id)->update(['companion_of' => null]); // acompanhantes ficam na agenda
+            TripScheduleEntry::where('companion_of', $entry->id)->delete(); // acompanhantes saem junto com o passageiro
             $entry->delete();
         });
 

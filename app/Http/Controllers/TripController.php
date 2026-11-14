@@ -182,7 +182,7 @@ class TripController extends Controller
     {
         $tripId = DB::transaction(function () use ($id) {
             $cli = TripClient::findOrFail($id);
-            TripClient::where('companion_of', $cli->id)->update(['companion_of' => null]); // acompanhantes ficam na viagem
+            TripClient::where('companion_of', $cli->id)->delete(); // acompanhantes saem junto com o passageiro
             $cli->delete();
 
             return $cli->trip_id;
