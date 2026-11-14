@@ -55,7 +55,10 @@ class TripScheduleController extends Controller
             }
         }
 
-        $secretariaId = $parent?->secretaria_id ?? app(ActiveSecretaria::class)->forCreate($v['secretaria_id'] ?? null);
+        // Admin em "Todas" sem secretaria informada: TFD pertence à Saúde.
+        $secretariaId = $parent?->secretaria_id
+            ?? app(ActiveSecretaria::class)->forCreate($v['secretaria_id'] ?? null)
+            ?? \App\Models\Secretaria::where('slug', \App\Models\Secretaria::SAUDE_SLUG)->value('id');
         if (! $secretariaId) {
             return response()->json(['message' => 'Escolha a secretaria.', 'errors' => ['secretaria_id' => ['Escolha a secretaria.']]], 422);
         }
