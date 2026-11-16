@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReordenarUserAtalhosRequest;
 use App\Http\Requests\UserAtalhoRequest;
 use App\Models\UserAtalho;
 use App\Services\Authorization\PagePermissionService;
@@ -47,6 +48,18 @@ class UserAtalhoController extends Controller
         ]);
 
         return response()->json($atalho, 201);
+    }
+
+    /** Grava a ordem enviada (posição na lista = ordem); ignora ids que não são do usuário. */
+    public function reordenar(ReordenarUserAtalhosRequest $request)
+    {
+        $userId = $request->user()->id;
+
+        foreach ($request->validated()['ids'] as $posicao => $id) {
+            UserAtalho::where('user_id', $userId)->where('id', $id)->update(['ordem' => $posicao]);
+        }
+
+        return response()->noContent();
     }
 
     public function destroy(Request $request, int $id)

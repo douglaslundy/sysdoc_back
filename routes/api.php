@@ -237,6 +237,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::get('/dashboard/atalhos', [DashboardAtalhoController::class, 'index']);
         Route::get('/dashboard/meus-atalhos', [UserAtalhoController::class, 'index']);
         Route::post('/dashboard/meus-atalhos', [UserAtalhoController::class, 'store']);
+        Route::put('/dashboard/meus-atalhos/ordem', [UserAtalhoController::class, 'reordenar']);
         Route::delete('/dashboard/meus-atalhos/{id}', [UserAtalhoController::class, 'destroy']);
         Route::get('/dashboard/conformidades', [DashboardController::class, 'conformidades']);
         Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
