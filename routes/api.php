@@ -24,7 +24,9 @@ use App\Http\Controllers\DenunciaPublicaController;
 use App\Http\Controllers\ClientHistoryController;
 use App\Http\Controllers\ConformidadeCidadaoController;
 use App\Http\Controllers\ConsultaPublicaController;
+use App\Http\Controllers\DashboardAtalhoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PainelPublicoController;
 use App\Http\Controllers\DocumentApprovalController;
 use App\Http\Controllers\DocumentConfigController;
 use App\Http\Controllers\DocumentController;
@@ -132,6 +134,9 @@ Route::get('/public/pharmacy/medicines/panel', [MedicineTransparencyPublicContro
 Route::get('/public/pharmacy/medicines/monthly-acquisitions', [MedicineTransparencyPublicController::class, 'monthly']);
 Route::get('/attendance/panel/state', [AttendanceController::class, 'panelState']);
 
+// Painel público: qual página a rota /painel-publico exibe (configurada pelo admin)
+Route::get('/public/painel-publico', [PainelPublicoController::class, 'show']);
+
 // Painel de atendimento eSUS PEC — público (sala de espera)
 Route::middleware('throttle:30,1')->group(function () {
     Route::get('/public/painel-esus/validar-cnes', [PainelEsusController::class, 'validarCnes']);
@@ -228,6 +233,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
     Route::middleware('throttle:120,1')->group(function () {
         Route::get('/dashboard/inicio', [DashboardController::class, 'inicio']);
+        Route::get('/dashboard/atalhos', [DashboardAtalhoController::class, 'index']);
         Route::get('/dashboard/conformidades', [DashboardController::class, 'conformidades']);
         Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
         Route::get('/dashboard/fila', [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
@@ -317,6 +323,11 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     });
 
     Route::middleware('admin')->group(function () {
+        Route::put('/admin/painel-publico', [PainelPublicoController::class, 'update']);
+        Route::get('/admin/dashboard-atalhos', [DashboardAtalhoController::class, 'adminIndex']);
+        Route::post('/admin/dashboard-atalhos', [DashboardAtalhoController::class, 'store']);
+        Route::put('/admin/dashboard-atalhos/{atalho}', [DashboardAtalhoController::class, 'update']);
+        Route::delete('/admin/dashboard-atalhos/{atalho}', [DashboardAtalhoController::class, 'destroy']);
         Route::put('/laboratorio/config', [LabConfigController::class, 'update']);
         Route::get('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'index']);
         Route::post('/pharmacy/catalogs/{type}', [PharmacyCatalogAdminController::class, 'store']);
