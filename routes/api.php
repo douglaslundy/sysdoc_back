@@ -27,6 +27,7 @@ use App\Http\Controllers\ConsultaPublicaController;
 use App\Http\Controllers\DashboardAtalhoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PainelPublicoController;
+use App\Http\Controllers\UserAtalhoController;
 use App\Http\Controllers\DocumentApprovalController;
 use App\Http\Controllers\DocumentConfigController;
 use App\Http\Controllers\DocumentController;
@@ -234,6 +235,9 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     Route::middleware('throttle:120,1')->group(function () {
         Route::get('/dashboard/inicio', [DashboardController::class, 'inicio']);
         Route::get('/dashboard/atalhos', [DashboardAtalhoController::class, 'index']);
+        Route::get('/dashboard/meus-atalhos', [UserAtalhoController::class, 'index']);
+        Route::post('/dashboard/meus-atalhos', [UserAtalhoController::class, 'store']);
+        Route::delete('/dashboard/meus-atalhos/{id}', [UserAtalhoController::class, 'destroy']);
         Route::get('/dashboard/conformidades', [DashboardController::class, 'conformidades']);
         Route::get('/dashboard/laboratorio', [DashboardController::class, 'laboratorio'])->middleware('can:dashboard-laboratorio');
         Route::get('/dashboard/fila', [DashboardController::class, 'fila'])->middleware('can:dashboard-fila');
