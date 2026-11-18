@@ -32,6 +32,7 @@ class StoreAccessProfileRequest extends FormRequest
             'client_trips_view_enabled' => 'nullable|boolean',
             'client_report_view_enabled' => 'nullable|boolean',
             'client_history_view_enabled' => 'nullable|boolean',
+            'os_encaminhar_enabled' => 'nullable|boolean',
             'protocol_allowed_types' => 'nullable|array',
             'protocol_allowed_types.*' => 'string|exists:protocol_types,codigo',
             'protocol_allowed_statuses' => 'nullable|array',

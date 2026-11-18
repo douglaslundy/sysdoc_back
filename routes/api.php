@@ -637,6 +637,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     Route::middleware('throttle:60,1')->group(function () {
         Route::post('/ordens-servico', [OrdemServicoController::class, 'store']);
         Route::post('/ordens-servico/{id}/atribuir', [OrdemServicoController::class, 'atribuir'])->whereNumber('id');
+        Route::post('/ordens-servico/{id}/encaminhar', [OrdemServicoController::class, 'encaminhar'])->whereNumber('id');
         Route::post('/ordens-servico/{id}/iniciar', [OrdemServicoController::class, 'iniciar'])->whereNumber('id');
         Route::post('/ordens-servico/{id}/concluir', [OrdemServicoController::class, 'concluir'])->whereNumber('id');
         Route::post('/ordens-servico/{id}/cancelar', [OrdemServicoController::class, 'cancelar'])->whereNumber('id');

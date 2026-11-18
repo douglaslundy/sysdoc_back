@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AtribuirOrdemServicoRequest;
+use App\Http\Requests\EncaminharOrdemServicoRequest;
 use App\Http\Requests\ConcluirOrdemServicoRequest;
 use App\Http\Requests\ObservacaoOrdemServicoRequest;
 use App\Http\Requests\StoreOrdemServicoRequest;
@@ -83,7 +84,7 @@ class OrdemServicoController extends Controller
     public function atribuir(AtribuirOrdemServicoRequest $request, int $id): JsonResponse
     {
         $os = $this->achar($request, $id);
-        if (! $os->ehGestorDaSecretaria($request->user())) {
+        if (! $os->ehGestorDaSecretaria($request->user()) && ! $request->user()->canEncaminharOs()) {
             return response()->json(['message' => 'Apenas o gestor da secretaria atribui técnico.'], 403);
         }
         if (! in_array($os->status, ['aberta', 'atribuida'], true)) {
@@ -108,6 +109,43 @@ class OrdemServicoController extends Controller
             return $resp;
         }
         $this->avisar(fn ($n) => $n->tecnicoApontado($resp->load('tecnico')));
+
+        return response()->json($resp);
+    }
+
+    /** Encaminha a OS (ainda não iniciada) a outra secretaria e, se informado, a um técnico dela. */
+    public function encaminhar(EncaminharOrdemServicoRequest $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user->canEncaminharOs()) {
+            return response()->json(['message' => 'Seu perfil não pode encaminhar ordens de serviço.'], 403);
+        }
+        $os = $this->achar($request, $id);
+        $dados = $request->validated();
+        $tecnico = $dados['tecnico_id'] ?? null;
+        if ($tecnico && ! $this->tecnicoDaSecretaria((int) $tecnico, (int) $dados['secretaria_id'])) {
+            return response()->json(['message' => 'Técnico não pertence à secretaria de destino.'], 422);
+        }
+
+        $resp = DB::transaction(function () use ($os, $user, $dados, $tecnico) {
+            $os = $this->travar($os);
+            if (! in_array($os->status, ['aberta', 'atribuida'], true)) {
+                return response()->json(['message' => 'A OS já está em atendimento ou encerrada.'], 422);
+            }
+            $de = $os->status;
+            $para = $tecnico ? 'atribuida' : 'aberta';
+            $destino = \App\Models\Secretaria::find($dados['secretaria_id'])?->nome;
+            $os->update(['secretaria_id' => $dados['secretaria_id'], 'tipo_servico_id' => $dados['tipo_servico_id'], 'tecnico_id' => $tecnico, 'status' => $para]);
+            $this->historico($os, $user, 'encaminhada', $de, $para, trim('Encaminhada para '.$destino.'. '.($dados['observacao'] ?? '')));
+
+            return $os;
+        });
+        if ($resp instanceof JsonResponse) {
+            return $resp;
+        }
+        if ($tecnico) {
+            $this->avisar(fn ($n) => $n->tecnicoApontado($resp->load('tecnico')));
+        }
 
         return response()->json($resp);
     }
@@ -190,11 +228,11 @@ class OrdemServicoController extends Controller
             ->download('OS-'.str_replace('/', '-', $os->numero).'.pdf');
     }
 
-    /** Secretarias onde o usuário pode abrir OS: todas as ativas para o admin, só as suas para os demais. */
+    /** Secretarias onde o usuário pode abrir OS: todas as ativas com a permissão de encaminhar (admin sempre), só as suas sem ela. */
     public function secretarias(Request $request): JsonResponse
     {
         $user = $request->user();
-        $query = $user->profile === 'admin' ? \App\Models\Secretaria::query() : $user->secretarias();
+        $query = $user->canEncaminharOs() ? \App\Models\Secretaria::query() : $user->secretarias();
 
         return response()->json($query->where('secretarias.ativa', true)->orderBy('secretarias.nome')->get(['secretarias.id', 'secretarias.nome']));
     }
@@ -203,7 +241,7 @@ class OrdemServicoController extends Controller
     public function tecnicos(Request $request): JsonResponse
     {
         $secretaria = (int) $request->query('secretaria_id');
-        $gestor = \App\Models\Scopes\CadastroProtocoloScope::pode($request->user(), $secretaria);
+        $gestor = \App\Models\Scopes\CadastroProtocoloScope::pode($request->user(), $secretaria) || $request->user()->canEncaminharOs();
         $permitido = $gestor || OsConfiguracao::solicitanteApontaTecnico($secretaria);
 
         return response()->json([
@@ -288,7 +326,8 @@ class OrdemServicoController extends Controller
         $gestor = $os->ehGestorDaSecretaria($user);
 
         return [
-            'atribuir' => $gestor && in_array($os->status, ['aberta', 'atribuida'], true),
+            'atribuir' => ($gestor || $user->canEncaminharOs()) && in_array($os->status, ['aberta', 'atribuida'], true),
+            'encaminhar' => $user->canEncaminharOs() && in_array($os->status, ['aberta', 'atribuida'], true),
             'iniciar' => $os->tecnico_id === $user->id && $os->status === 'atribuida',
             'concluir' => $os->tecnico_id === $user->id && $os->status === 'em_atendimento',
             'cancelar' => $aberta && ($gestor || $os->solicitante_id === $user->id),

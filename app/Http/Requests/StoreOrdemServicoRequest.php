@@ -19,9 +19,9 @@ class StoreOrdemServicoRequest extends FormRequest
         $user = $this->user();
 
         return [
-            // Admin abre para qualquer secretaria; os demais só para as suas.
+            // Quem tem a permissão de encaminhar (admin sempre) abre para qualquer secretaria; os demais só para as suas.
             'secretaria_id' => array_filter(['required', 'integer', Rule::exists('secretarias', 'id')->where('ativa', true),
-                $user?->profile === 'admin' ? null : Rule::in($user?->secretarias()->pluck('secretarias.id')->all() ?? [])]),
+                $user?->canEncaminharOs() ? null : Rule::in($user?->secretarias()->pluck('secretarias.id')->all() ?? [])]),
             'tipo_servico_id' => ['required', 'integer', Rule::exists('os_tipos_servico', 'id')->where('secretaria_id', $secretaria)->where('ativo', true)],
             'tecnico_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('profile', 'tecnico')->where('active', true)],
             'local' => ['required', 'string', 'max:160'],

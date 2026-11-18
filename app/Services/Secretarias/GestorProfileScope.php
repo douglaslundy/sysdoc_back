@@ -17,6 +17,7 @@ class GestorProfileScope
         'client_trips_view_enabled',
         'client_report_view_enabled',
         'client_history_view_enabled',
+        'os_encaminhar_enabled',
     ];
 
     /** Páginas do perfil do ator ∩ liberadas na secretaria ativa (páginas de gestão são isentas, como nas rotas). */

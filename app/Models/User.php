@@ -141,6 +141,16 @@ class User extends Authenticatable
         return (bool) $this->accessProfile()->value('client_report_view_enabled');
     }
 
+    /** Abrir OS para qualquer secretaria e encaminhar OS a outra secretaria/técnico: permissão do perfil; admin sempre. */
+    public function canEncaminharOs(): bool
+    {
+        if ($this->profile === 'admin') {
+            return true;
+        }
+
+        return (bool) $this->accessProfile()->value('os_encaminhar_enabled');
+    }
+
     /** Ver o historico (auditoria) de um cidadao: permissao propria por perfil; admin sempre. */
     public function canViewClientHistory(): bool
     {
