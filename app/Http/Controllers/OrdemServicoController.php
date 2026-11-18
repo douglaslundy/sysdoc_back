@@ -190,10 +190,13 @@ class OrdemServicoController extends Controller
             ->download('OS-'.str_replace('/', '-', $os->numero).'.pdf');
     }
 
-    /** Secretarias ativas (destino possível de uma OS; qualquer uma atende qualquer solicitante). */
-    public function secretarias(): JsonResponse
+    /** Secretarias onde o usuário pode abrir OS: todas as ativas para o admin, só as suas para os demais. */
+    public function secretarias(Request $request): JsonResponse
     {
-        return response()->json(\App\Models\Secretaria::where('ativa', true)->orderBy('nome')->get(['id', 'nome']));
+        $user = $request->user();
+        $query = $user->profile === 'admin' ? \App\Models\Secretaria::query() : $user->secretarias();
+
+        return response()->json($query->where('secretarias.ativa', true)->orderBy('secretarias.nome')->get(['secretarias.id', 'secretarias.nome']));
     }
 
     /** Técnicos da secretaria destino e se o solicitante pode apontar um (usado no formulário de abertura). */

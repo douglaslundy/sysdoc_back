@@ -16,9 +16,12 @@ class StoreOrdemServicoRequest extends FormRequest
     public function rules(): array
     {
         $secretaria = (int) $this->input('secretaria_id');
+        $user = $this->user();
 
         return [
-            'secretaria_id' => ['required', 'integer', Rule::exists('secretarias', 'id')->where('ativa', true)],
+            // Admin abre para qualquer secretaria; os demais só para as suas.
+            'secretaria_id' => array_filter(['required', 'integer', Rule::exists('secretarias', 'id')->where('ativa', true),
+                $user?->profile === 'admin' ? null : Rule::in($user?->secretarias()->pluck('secretarias.id')->all() ?? [])]),
             'tipo_servico_id' => ['required', 'integer', Rule::exists('os_tipos_servico', 'id')->where('secretaria_id', $secretaria)->where('ativo', true)],
             'tecnico_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('profile', 'tecnico')->where('active', true)],
             'local' => ['required', 'string', 'max:160'],
