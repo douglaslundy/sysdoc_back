@@ -196,7 +196,7 @@ class PainelEsusController extends MonitorApsBaseController
             [$inicio, $fim] = [$fim, $inicio];
         }
 
-        $dias = \Carbon\Carbon::parse($inicio)->diffInDays(\Carbon\Carbon::parse($fim));
+        $dias = (int) \Carbon\Carbon::parse($inicio)->diffInDays(\Carbon\Carbon::parse($fim));
         if ($dias > 30) {
             return [$inicio, $fim, 'O intervalo entre as datas não pode ultrapassar 30 dias.'];
         }

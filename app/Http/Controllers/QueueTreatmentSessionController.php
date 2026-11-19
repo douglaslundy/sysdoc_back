@@ -28,7 +28,7 @@ class QueueTreatmentSessionController extends Controller
 
         $oldDate = Carbon::parse($session->scheduled_date);
         $newDate = Carbon::parse($data['new_date']);
-        $delayDays = $oldDate->diffInDays($newDate, false);
+        $delayDays = (int) $oldDate->diffInDays($newDate, false);
 
         DB::transaction(function () use ($session, $plan, $newDate, $delayDays, $data, $oldDate) {
             $session->update([

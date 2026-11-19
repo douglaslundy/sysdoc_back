@@ -105,7 +105,7 @@ class AttendanceController extends Controller
         $queue = $this->queueService->getQueue(
             isset($validated['roomId']) ? (int) $validated['roomId'] : null
         )->map(function ($ticket) {
-            $ticket->waitingMinutes = (int) now()->diffInMinutes($ticket->issued_at);
+            $ticket->waitingMinutes = (int) abs(now()->diffInMinutes($ticket->issued_at));
 
             return $ticket;
         });

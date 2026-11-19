@@ -156,7 +156,7 @@ class ResultadoExameService
         $idade = null;
 
         if (! empty($cliente->born_date)) {
-            $idade = now()->diffInYears($cliente->born_date);
+            $idade = (int) abs(now()->diffInYears($cliente->born_date));
         }
 
         if ($idade !== null) {

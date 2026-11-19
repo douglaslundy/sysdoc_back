@@ -34,7 +34,7 @@ class ListIluminacaoPostesRequest extends FormRequest
                 return;
             }
 
-            if (Carbon::parse($this->input('de'))->diffInDays(Carbon::parse($this->input('ate'))) > self::MAX_DIAS) {
+            if ((int) abs(Carbon::parse($this->input('de'))->diffInDays(Carbon::parse($this->input('ate')))) > self::MAX_DIAS) {
                 $v->errors()->add('ate', 'O período máximo é de '.self::MAX_DIAS.' dias.');
             }
         });
