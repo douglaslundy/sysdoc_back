@@ -7,6 +7,7 @@ use App\Models\SystemNotice;
 use App\Models\User;
 use App\Models\UserPresence;
 use App\Services\DashboardService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1172,5 +1173,49 @@ class DashboardController extends MonitorApsBaseController
         ]);
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=120');
+    }
+
+    /** Métricas das ordens de serviço visíveis ao usuário, no período (`dias`, padrão 30). */
+    public function ordensServico(Request $request)
+    {
+        $user = $request->user();
+        $dias = in_array((int) $request->query('dias'), [7, 30, 90, 365], true) ? (int) $request->query('dias') : 30;
+        $desde = now()->subDays($dias)->startOfDay();
+        $base = fn () => \App\Models\OrdemServico::visiveisPara($user)->where('ordens_servico.created_at', '>=', $desde);
+
+        $porStatus = $base()->select('status', DB::raw('COUNT(*) as total'))->groupBy('status')->pluck('total', 'status');
+        $concluidas = $base()->where('status', 'concluida')->whereNotNull('concluida_em');
+        $minutos = (float) (clone $concluidas)->avg(DB::raw('TIMESTAMPDIFF(MINUTE, ordens_servico.created_at, ordens_servico.concluida_em)'));
+        $noPrazo = (clone $concluidas)->whereNotNull('prazo')->whereRaw('DATE(concluida_em) <= prazo')->count();
+        $comPrazo = (clone $concluidas)->whereNotNull('prazo')->count();
+
+        $data = [
+            'periodo_dias' => $dias,
+            'totais' => [
+                'total' => (int) $porStatus->sum(),
+                'abertas' => (int) (($porStatus['aberta'] ?? 0) + ($porStatus['atribuida'] ?? 0)),
+                'em_atendimento' => (int) ($porStatus['em_atendimento'] ?? 0),
+                'concluidas' => (int) ($porStatus['concluida'] ?? 0),
+                'canceladas' => (int) ($porStatus['cancelada'] ?? 0),
+                'atrasadas' => $base()->whereNotIn('status', \App\Models\OrdemServico::ENCERRADAS)->whereNotNull('prazo')->whereDate('prazo', '<', now()->toDateString())->count(),
+            ],
+            'tempo_medio_resolucao_horas' => $minutos > 0 ? round($minutos / 60, 1) : 0,
+            'tempo_medio_atendimento_min' => (int) round((float) (clone $concluidas)->whereNotNull('tempo_gasto_min')->avg('tempo_gasto_min')),
+            'taxa_no_prazo' => $comPrazo > 0 ? round($noPrazo * 100 / $comPrazo, 1) : null,
+            'por_status' => $porStatus->map(fn ($total, $status) => ['status' => $status, 'total' => (int) $total])->values(),
+            'por_prioridade' => $base()->select('prioridade', DB::raw('COUNT(*) as total'))->groupBy('prioridade')->orderByDesc('total')->get(),
+            'por_tipo' => $base()->join('os_tipos_servico as t', 't.id', '=', 'ordens_servico.tipo_servico_id')
+                ->select('t.nome', DB::raw('COUNT(*) as total'))->groupBy('t.nome')->orderByDesc('total')->limit(8)->get(),
+            'por_tecnico' => $base()->join('users as u', 'u.id', '=', 'ordens_servico.tecnico_id')
+                ->select('u.name as nome', DB::raw('COUNT(*) as total'),
+                    DB::raw("SUM(ordens_servico.status = 'concluida') as concluidas"),
+                    DB::raw("AVG(CASE WHEN ordens_servico.status = 'concluida' AND ordens_servico.concluida_em IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, ordens_servico.created_at, ordens_servico.concluida_em) END) / 60 as horas_medias"))
+                ->groupBy('u.id', 'u.name')->orderByDesc('total')->limit(10)->get()
+                ->map(fn ($r) => ['nome' => $r->nome, 'total' => (int) $r->total, 'concluidas' => (int) $r->concluidas, 'horas_medias' => $r->horas_medias === null ? null : round((float) $r->horas_medias, 1)]),
+            'por_dia' => $base()->select(DB::raw('DATE(ordens_servico.created_at) as dia'), DB::raw('COUNT(*) as abertas'))
+                ->groupBy('dia')->orderBy('dia')->get(),
+        ];
+
+        return response()->json($data)->header('Cache-Control', 'private, max-age=60');
     }
 }

@@ -23,8 +23,12 @@ class GestorProfileScope
     /** Páginas do perfil do ator ∩ liberadas na secretaria ativa (páginas de gestão são isentas, como nas rotas). */
     public static function pageIds(User $actor): array
     {
-        $own = AccessProfile::where('slug', $actor->profile)->first()?->pages()->get(['system_pages.id', 'system_pages.path']);
-        if (! $own) {
+        $own = \App\Models\SystemPage::query()
+            ->whereIn('system_pages.id', \Illuminate\Support\Facades\DB::table('profile_page_permissions')
+                ->whereIn('access_profile_id', AccessProfile::whereIn('slug', $actor->profileSlugs())->select('id'))
+                ->select('system_page_id'))
+            ->get(['system_pages.id', 'system_pages.path']);
+        if ($own->isEmpty()) {
             return [];
         }
 
@@ -41,8 +45,6 @@ class GestorProfileScope
     /** @return array<string,bool> capability => o ator a possui */
     public static function capabilities(User $actor): array
     {
-        $own = AccessProfile::where('slug', $actor->profile)->first();
-
-        return collect(self::CAPABILITIES)->mapWithKeys(fn ($c) => [$c => (bool) ($own?->{$c})])->all();
+        return collect(self::CAPABILITIES)->mapWithKeys(fn ($c) => [$c => $actor->anyProfileFlag($c)])->all();
     }
 }

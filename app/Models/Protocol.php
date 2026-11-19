@@ -89,7 +89,7 @@ class Protocol extends Model
                 });
             }
             // Gestor enxerga os pedidos de cadastro das suas secretarias.
-            if ($user?->profile === 'gestor') {
+            if ($user?->hasProfile('gestor')) {
                 $sub->orWhere(fn ($c) => $c->where('protocols.tipo', \App\Models\Scopes\CadastroProtocoloScope::TIPO)
                     ->whereIn('protocols.secretaria_id', \App\Models\Scopes\CadastroProtocoloScope::secretariasDe($user)));
             }

@@ -4,11 +4,11 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateUserSpecialityPermissionRequest extends FormRequest
+class UpdateProfileSpecialityPermissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return true; // acesso restrito pelo middleware 'admin' na rota
     }
 
     public function rules(): array

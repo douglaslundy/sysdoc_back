@@ -135,7 +135,7 @@ class CadastroSolicitacaoService
             ];
 
             foreach ($contas as $antiga) {
-                if ($por->profile === 'gestor') {
+                if ($por->profile !== 'admin') {
                     // Mesma trava de UserRequest::reactivatableUser (Task 5).
                     $vinculos = $antiga->secretarias()->pluck('secretarias.id');
                     $divide = $vinculos->intersect($por->secretarias()->pluck('secretarias.id'))->isNotEmpty();
@@ -174,7 +174,7 @@ class CadastroSolicitacaoService
             return $user;
         });
 
-        if ($por->profile === 'gestor' && $user->profile === 'gestor') {
+        if ($por->profile !== 'admin' && $user->profile === 'gestor') {
             GestorAlert::perfilGestorAtribuido($por, $user);
         }
         $this->notificarAprovado($s, $user);

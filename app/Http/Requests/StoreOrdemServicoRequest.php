@@ -23,7 +23,7 @@ class StoreOrdemServicoRequest extends FormRequest
             'secretaria_id' => array_filter(['required', 'integer', Rule::exists('secretarias', 'id')->where('ativa', true),
                 $user?->canEncaminharOs() ? null : Rule::in($user?->secretarias()->pluck('secretarias.id')->all() ?? [])]),
             'tipo_servico_id' => ['required', 'integer', Rule::exists('os_tipos_servico', 'id')->where('secretaria_id', $secretaria)->where('ativo', true)],
-            'tecnico_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('profile', 'tecnico')->where('active', true)],
+            'tecnico_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where(fn ($q) => $q->where('active', true)->where(fn ($p) => $p->where('profile', 'tecnico')->orWhereIn('id', \App\Models\User::idsComPerfilAdicional('tecnico'))))],
             'local' => ['required', 'string', 'max:160'],
             'endereco' => ['nullable', 'string', 'max:255'],
             'descricao' => ['required', 'string', 'max:5000'],

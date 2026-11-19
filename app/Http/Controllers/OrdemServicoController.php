@@ -247,7 +247,7 @@ class OrdemServicoController extends Controller
         return response()->json([
             'permitido' => $permitido,
             'tecnicos' => $permitido
-                ? User::where('active', true)->where('profile', 'tecnico')
+                ? User::where('active', true)->withProfile('tecnico')
                     ->whereHas('secretarias', fn ($x) => $x->where('secretarias.id', $secretaria))
                     ->orderBy('name')->get(['id', 'name'])
                 : [],
@@ -336,7 +336,7 @@ class OrdemServicoController extends Controller
 
     private function tecnicoDaSecretaria(int $tecnicoId, int $secretariaId): bool
     {
-        return User::where('id', $tecnicoId)->where('profile', 'tecnico')->where('active', true)
+        return User::where('id', $tecnicoId)->withProfile('tecnico')->where('active', true)
             ->whereHas('secretarias', fn ($x) => $x->where('secretarias.id', $secretariaId))->exists();
     }
 

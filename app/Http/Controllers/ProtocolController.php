@@ -859,7 +859,7 @@ class ProtocolController extends Controller
     /** Gestor também enxerga os pedidos de cadastro das suas secretarias (o escopo global esconde dos demais). */
     private function orPedidosCadastroDoGestor($q, ?User $user): void
     {
-        if ($user?->profile === 'gestor') {
+        if ($user?->hasProfile('gestor')) {
             $q->orWhere(fn ($c) => $c->where('tipo', CadastroProtocoloScope::TIPO)
                 ->whereIn('secretaria_id', CadastroProtocoloScope::secretariasDe($user)));
         }

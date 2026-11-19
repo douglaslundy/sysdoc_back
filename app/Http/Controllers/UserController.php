@@ -18,7 +18,8 @@ class UserController extends Controller
     {
         // Gestão de usuários: admin ou gestor (o gestor fica restrito às suas secretarias, ver scopedTo).
         $this->middleware(function (Request $request, $next) {
-            if (! in_array($request->user()?->profile, ['admin', 'gestor'], true)) {
+            $actor = $request->user();
+            if (! $actor || ($actor->profile !== 'admin' && ! $actor->hasProfile('gestor'))) {
                 return response()->json(['message' => 'Acesso restrito a administradores e gestores.'], 403);
             }
 
@@ -75,7 +76,7 @@ class UserController extends Controller
 
     private function alertIfGestorAssigned(Request $request, User $user, ?string $previousProfile): void
     {
-        if ($request->user()->profile === 'gestor' && $user->profile === 'gestor' && $previousProfile !== 'gestor') {
+        if ($request->user()->profile !== 'admin' && $request->user()->hasProfile('gestor') && $user->hasProfile('gestor') && $previousProfile !== 'gestor') {
             GestorAlert::perfilGestorAtribuido($request->user(), $user);
         }
     }
@@ -89,7 +90,7 @@ class UserController extends Controller
     {
         $actor = $request->user();
         $actorIds = $actor->profile === 'admin' ? null : $this->actorSecretariaIds($actor);
-        $users = $this->scopedTo($actor)->with(['protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo', 'secretarias:secretarias.id,secretarias.nome'])
+        $users = $this->scopedTo($actor)->with(['protocolUnits.unit:id,parent_id,tipo,codigo,nome,ativo', 'secretarias:secretarias.id,secretarias.nome', 'extraProfiles:access_profiles.id,access_profiles.slug'])
             ->where('active', true)
             ->orderBy('id', 'desc')
             ->get();
@@ -108,6 +109,7 @@ class UserController extends Controller
                 'last_seen_at' => $lastSeenAt?->toDateTimeString(),
                 'last_path' => $presence?->last_path,
                 'can_chat' => $user->canUseChatWith($chatEnabledByProfile),
+                'extra_profiles' => $user->extraProfiles->pluck('slug')->values(),
                 'secretarias' => $this->secretariasPayload($actor, $user, $actorIds),
                 'protocol_unit_ids' => $user->protocolUnits
                     ->where('ativo', true)
@@ -148,7 +150,7 @@ class UserController extends Controller
         $array = ['status' => 'created'];
         // Gestor só preenche dados cadastrais e perfil: flags de chat/RT/inativação são do admin.
         $data = $request->user()->profile === 'admin'
-            ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids'])
+            ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids', 'extra_profiles'])
             : $request->only(['profile', 'name', 'preferred_name', 'phone', 'email', 'cpf', 'password', 'is_driver']);
         $data['password'] = Hash::make($data['password']);
         $existing = $request->reactivatableUser();
@@ -169,6 +171,7 @@ class UserController extends Controller
             }
             if ($request->user()->profile === 'admin') {
                 $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+                $this->syncExtraProfiles($user, $request->input('extra_profiles', []));
             }
             // Gestor só troca os vínculos das suas secretarias; os de fora ficam (reativação).
             $this->syncSecretarias($request->user(), $user, $request->input('secretaria_ids', []));
@@ -207,7 +210,7 @@ class UserController extends Controller
         $array = ['status' => 'updated'];
         $isAdmin = $request->user()->profile === 'admin';
         // Gestor altera apenas perfil e vínculos (R10): nada mais do request chega ao model.
-        $data = $isAdmin ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids']) : $request->only('profile');
+        $data = $isAdmin ? $request->except(['password2', 'protocol_unit_ids', 'secretaria_ids', 'extra_profiles']) : $request->only('profile');
 
         if ($isAdmin) {
             $data['password'] = $request->input('password') ? Hash::make($data['password']) : $user->password;
@@ -217,6 +220,9 @@ class UserController extends Controller
             $user->update($data);
             if ($isAdmin) {
                 $this->syncProtocolUnits($user, $request->input('protocol_unit_ids', []));
+                if ($request->has('extra_profiles')) {
+                    $this->syncExtraProfiles($user, $request->input('extra_profiles'));
+                }
             }
             if ($request->has('secretaria_ids')) {
                 $this->syncSecretarias($request->user(), $user, $request->input('secretaria_ids'));
@@ -246,6 +252,19 @@ class UserController extends Controller
         return $array;
     }
 
+    /** Perfis adicionais (slugs) do usuário; o principal fica em users.profile. Só admin chama. */
+    private function syncExtraProfiles(User $user, array $slugs): void
+    {
+        $ids = \App\Models\AccessProfile::query()
+            ->whereIn('slug', $slugs)
+            ->where('slug', '!=', 'admin')
+            ->where('slug', '!=', $user->profile)
+            ->pluck('id');
+
+        $user->extraProfiles()->sync($ids);
+        $user->forgetProfileCache();
+    }
+
     private function syncProtocolUnits(User $user, array $unitIds): void
     {
         $unitIds = collect($unitIds)->map(fn ($id) => (int) $id)->unique()->values();
@@ -268,6 +287,7 @@ class UserController extends Controller
         return [
             ...$user->toArray(),
             'can_chat' => $user->canUseChat(),
+            'extra_profiles' => $user->extraProfiles()->pluck('slug')->values(),
             'secretarias' => $this->secretariasPayload($actor, $user, $actor->profile === 'admin' ? null : $this->actorSecretariaIds($actor)),
             'protocol_unit_ids' => $user->protocolUnits
                 ->where('ativo', true)

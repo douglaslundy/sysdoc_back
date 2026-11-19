@@ -18,7 +18,8 @@ class AccessProfileController extends Controller
     {
         // Perfis: admin, ou gestor (limitado ao que ele mesmo tem, ver GestorProfileScope); /my-* seguem só com login.
         $this->middleware(function (Request $request, $next) {
-            if (! in_array($request->user()?->profile, ['admin', 'gestor'], true)) {
+            $actor = $request->user();
+            if (! $actor || ($actor->profile !== 'admin' && ! $actor->hasProfile('gestor'))) {
                 return response()->json(['message' => 'Acesso restrito a administradores e gestores.'], 403);
             }
 
@@ -133,7 +134,7 @@ class AccessProfileController extends Controller
         if ($user->profile !== 'admin' && (int) $profile->created_by_id !== (int) $user->id) {
             return response()->json(['message' => 'Você só exclui perfis criados por você.'], 403);
         }
-        if (User::where('profile', $profile->slug)->exists()) {
+        if (User::where('profile', $profile->slug)->exists() || $profile->usuariosAdicionais()->exists()) {
             return response()->json(['message' => 'Perfil em uso por usuários; reatribua-os antes de excluir.'], 409);
         }
         $profile->delete();
@@ -158,7 +159,8 @@ class AccessProfileController extends Controller
     public function myPermissions(Request $request)
     {
         $user = $request->user();
-        $profile = AccessProfile::where('slug', $user->profile)
+        // Perfil principal + adicionais: as páginas liberadas são a união de todos.
+        $profiles = AccessProfile::whereIn('slug', $user->profileSlugs())
             ->where('ativo', true)
             ->with([
                 'pages' => function ($query) {
@@ -171,7 +173,14 @@ class AccessProfileController extends Controller
                         ->orderBy('titulo');
                 },
             ])
-            ->first();
+            ->get();
+
+        $profile = $profiles->first();
+        if ($profile) {
+            $profile->setRelation('pages', $profiles->flatMap->pages->unique('id')->sortBy([
+                ['category_id', 'asc'], ['categoria', 'asc'], ['ordem', 'asc'], ['titulo', 'asc'],
+            ])->values());
+        }
 
         if (! $profile) {
             return response()->json([

@@ -91,7 +91,7 @@ use App\Http\Controllers\SystemPageController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserEquipeApsController;
-use App\Http\Controllers\UserSpecialityPermissionController;
+use App\Http\Controllers\AccessProfileSpecialityPermissionController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VigilanciaConfigController;
 use App\Http\Controllers\PeticaoMotivoController;
@@ -249,6 +249,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
             ->middleware(['can:dashboard-chat', 'chat.access']);
         Route::get('/dashboard/vigilancia', [DashboardController::class, 'vigilancia']);
         Route::get('/dashboard/almoxarifado', [DashboardController::class, 'almoxarifado'])->middleware('can:dashboard-almoxarifado');
+        Route::get('/dashboard/ordens-servico', [DashboardController::class, 'ordensServico'])->middleware('can:dashboard-os');
         Route::get('/dashboard/arquivo', [DashboardController::class, 'arquivo'])->middleware('can:dashboard-arquivo');
     });
 
@@ -512,10 +513,10 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::put('/users/{user}/equipe-aps', [UserEquipeApsController::class, 'update']);
     });
 
-    // Permissões por especialidade da Fila (admin)
+    // Acesso do PERFIL às filas por especialidade (admin)
     Route::middleware('admin')->group(function () {
-        Route::get('/users/{user}/speciality-permissions', [UserSpecialityPermissionController::class, 'show']);
-        Route::put('/users/{user}/speciality-permissions', [UserSpecialityPermissionController::class, 'update']);
+        Route::get('/access-profiles/{accessProfile}/speciality-permissions', [AccessProfileSpecialityPermissionController::class, 'show'])->whereNumber('accessProfile');
+        Route::put('/access-profiles/{accessProfile}/speciality-permissions', [AccessProfileSpecialityPermissionController::class, 'update'])->whereNumber('accessProfile');
     });
 
     // Models

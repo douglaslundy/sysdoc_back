@@ -55,6 +55,7 @@ class ChatController extends Controller
             ->whereKeyNot($currentUserId)
             ->when(! app(ActiveSecretaria::class)->isAll(), fn ($q) => SecretariaMembership::filtrar($q, (int) app(ActiveSecretaria::class)->id()))
             ->orderBy('name')
+            ->with('extraProfiles:access_profiles.id,access_profiles.slug')
             ->get(['id', 'name', 'preferred_name', 'email', 'profile', 'chat_access_override'])
             ->filter(fn (User $user) => $user->canUseChatWith($chatEnabledByProfile))
             ->map(function (User $user) use ($presences) {

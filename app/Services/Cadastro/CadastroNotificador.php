@@ -44,7 +44,7 @@ class CadastroNotificador
                 'secretaria' => $s->secretaria?->nome ?? '—',
             ]);
             $destinos = User::where('active', true)->where(function ($q) use ($s) {
-                $q->where('profile', 'admin')->orWhere(fn ($g) => $g->where('profile', 'gestor')
+                $q->where('profile', 'admin')->orWhere(fn ($g) => $g->withProfile('gestor')
                     ->whereHas('secretarias', fn ($x) => $x->where('secretarias.id', $s->secretaria_id)));
             })->get();
             $this->avisarUsuarios($destinos, 'Novo pedido de cadastro', $texto, 'cadastro_novo_pedido');

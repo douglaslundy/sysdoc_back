@@ -48,12 +48,19 @@ class BannedIpController extends Controller
         return response()->json([
             'strike_limit' => $this->bans->strikeLimit(),
             'default_strike_limit' => BannedIpService::STRIKE_LIMIT,
+            'ban_days' => $this->bans->banDays(),
+            'default_ban_days' => BannedIpService::AUTO_BAN_DAYS,
         ]);
     }
 
     public function updateSettings(UpdateBannedIpSettingsRequest $request): JsonResponse
     {
-        $this->bans->setStrikeLimit($request->integer('strike_limit'));
+        if ($request->has('strike_limit')) {
+            $this->bans->setStrikeLimit($request->integer('strike_limit'));
+        }
+        if ($request->has('ban_days')) {
+            $this->bans->setBanDays($request->integer('ban_days'));
+        }
 
         return $this->settings();
     }

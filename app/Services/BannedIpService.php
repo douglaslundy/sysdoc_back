@@ -17,9 +17,10 @@ class BannedIpService
 {
     public const STRIKE_LIMIT = 5;       // padrão: 404s no intervalo abaixo => ban (configurável)
     public const STRIKE_WINDOW = 600;    // segundos
-    public const AUTO_BAN_DAYS = 30;
+    public const AUTO_BAN_DAYS = 30;     // padrão: dias de banimento (configurável)
     private const CACHE_TTL = 300;
     private const LIMIT_KEY = 'banned_ip_strike_limit';
+    private const DAYS_KEY = 'banned_ip_ban_days';
 
     public function strikeLimit(): int
     {
@@ -37,6 +38,26 @@ class BannedIpService
         DB::table('system_settings')->updateOrInsert(
             ['key' => self::LIMIT_KEY],
             ['value' => (string) $limit, 'updated_at' => now()]
+        );
+    }
+
+    /** Dias que um IP fica banido (banimento automático e manual). */
+    public function banDays(): int
+    {
+        try {
+            $value = DB::table('system_settings')->where('key', self::DAYS_KEY)->value('value');
+        } catch (Throwable $e) {
+            $value = null;
+        }
+
+        return $value !== null && (int) $value >= 1 ? (int) $value : self::AUTO_BAN_DAYS;
+    }
+
+    public function setBanDays(int $days): void
+    {
+        DB::table('system_settings')->updateOrInsert(
+            ['key' => self::DAYS_KEY],
+            ['value' => (string) $days, 'updated_at' => now()]
         );
     }
 
@@ -65,6 +86,7 @@ class BannedIpService
 
     public function ban(string $ip, string $reason, string $source = 'manual', ?int $days = null, int $hits = 0): BannedIp
     {
+        $days ??= $this->banDays();
         $origin = $this->lookupOrigin($ip);
         $banned = BannedIp::updateOrCreate(
             ['ip' => $ip],
@@ -107,7 +129,7 @@ class BannedIpService
             });
 
             if ($count >= $this->strikeLimit() && ! $this->isBanned($ip)) {
-                $this->ban($ip, "Varredura de rotas inexistentes ({$count} x 404 em ".(self::STRIKE_WINDOW / 60)." min; última: /{$path})", 'auto', self::AUTO_BAN_DAYS, $count);
+                $this->ban($ip, "Varredura de rotas inexistentes ({$count} x 404 em ".(self::STRIKE_WINDOW / 60)." min; última: /{$path})", 'auto', $this->banDays(), $count);
                 Log::warning('IP banido por varredura de rotas', ['ip' => $ip, 'hits' => $count]);
             }
         } catch (Throwable $e) {

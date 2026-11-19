@@ -14,7 +14,7 @@ class PagePermissionService
         }
 
         return AccessProfile::query()
-            ->where('slug', $user->profile)
+            ->whereIn('slug', $user->profileSlugs())
             ->where('ativo', true)
             ->whereHas('pages', fn ($q) => $q->where('path', $path)->where('ativo', true))
             ->exists();
@@ -51,7 +51,7 @@ class PagePermissionService
         }
 
         return AccessProfile::query()
-            ->where('slug', $user->profile)
+            ->whereIn('slug', $user->profileSlugs())
             ->where('ativo', true)
             ->whereHas('pages', $match)
             ->exists();

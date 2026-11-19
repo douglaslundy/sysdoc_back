@@ -43,7 +43,7 @@ class UserRequest extends FormRequest
 
         // Gestão de usuários (inclusive o campo `profile`, que define permissões) é restrita a
         // administradores e gestores; o escopo do gestor é aplicado no controller e nas regras abaixo.
-        return $user !== null && in_array($user->profile, ['admin', 'gestor'], true);
+        return $user !== null && ($user->profile === 'admin' || $user->hasProfile('gestor'));
     }
 
     /**
@@ -61,7 +61,7 @@ class UserRequest extends FormRequest
         // (reativado no controller), então não pode barrar a unicidade de CPF/e-mail.
         $userId ??= $this->reactivatableUser()?->id;
 
-        $isGestor = $this->user()?->profile === 'gestor';
+        $isGestor = $this->user()?->profile !== 'admin';
         $profileRules = ['required', 'string', 'max:50', Rule::in($validSlugs)];
         if ($isGestor) {
             $profileRules[] = Rule::notIn(['admin']);
@@ -86,6 +86,9 @@ class UserRequest extends FormRequest
                 // Gestor só vincula a secretarias das quais ele mesmo faz parte.
                 $isGestor ? Rule::in($this->user()->secretarias()->pluck('secretarias.id')->all()) : null,
             ])),
+            // Perfis adicionais (só admin grava; o principal segue em `profile`). Admin nunca é adicional.
+            'extra_profiles' => ['nullable', 'array'],
+            'extra_profiles.*' => ['string', 'distinct', Rule::in(array_values(array_diff($validSlugs, ['admin'])))],
             'protocol_unit_ids' => ['nullable', 'array'],
             'protocol_unit_ids.*' => ['integer', 'distinct', 'exists:protocol_organizational_units,id'],
         ];
@@ -104,7 +107,7 @@ class UserRequest extends FormRequest
 
         // Gestor só reativa conta sem vínculos ou que divide secretaria com ele, nunca admin; caso
         // contrário cai na validação de CPF duplicado (mesma mensagem, sem revelar a conta).
-        if ($existing && $this->user()?->profile === 'gestor') {
+        if ($existing && $this->user()?->profile !== 'admin') {
             $linked = $existing->secretarias()->pluck('secretarias.id');
             $shares = $linked->intersect($this->user()->secretarias()->pluck('secretarias.id'))->isNotEmpty();
 

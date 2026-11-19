@@ -42,6 +42,12 @@ class AccessProfile extends Model
         'protocol_can_change_visibility' => 'boolean',
     ];
 
+    /** Usuários que têm este perfil como ADICIONAL (o principal fica em users.profile). */
+    public function usuariosAdicionais()
+    {
+        return $this->belongsToMany(User::class, 'user_access_profiles');
+    }
+
     public function pages()
     {
         return $this->belongsToMany(SystemPage::class, 'profile_page_permissions');

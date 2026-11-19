@@ -37,7 +37,7 @@ class CadastroProtocoloScope implements Scope
         if ($this->protocolFk === null) {
             $builder->where(function ($q) use ($model, $user) {
                 $q->where($model->qualifyColumn('tipo'), '<>', self::TIPO);
-                if ($user?->profile === 'gestor') {
+                if ($user?->hasProfile('gestor')) {
                     $q->orWhereIn($model->qualifyColumn('secretaria_id'), self::secretariasDe($user));
                 }
             });
@@ -51,7 +51,7 @@ class CadastroProtocoloScope implements Scope
 
         $builder->where(function ($q) use ($cadastro, $user) {
             $q->whereNotExists($cadastro);
-            if ($user?->profile === 'gestor') {
+            if ($user?->hasProfile('gestor')) {
                 $q->orWhereExists(fn ($s) => $cadastro($s)->whereIn('pc.secretaria_id', self::secretariasDe($user)));
             }
         });
@@ -64,7 +64,7 @@ class CadastroProtocoloScope implements Scope
             return true;
         }
 
-        return $user?->profile === 'gestor'
+        return $user?->hasProfile('gestor')
             && $secretariaId !== null
             && self::secretariasDe($user)->where('secretaria_id', $secretariaId)->exists();
     }

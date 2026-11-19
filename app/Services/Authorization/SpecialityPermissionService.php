@@ -2,9 +2,14 @@
 
 namespace App\Services\Authorization;
 
+use App\Models\AccessProfile;
+use App\Models\ProfileSpecialityPermission;
 use App\Models\User;
-use App\Models\UserSpecialityPermission;
 
+/**
+ * Acesso às filas por especialidade. Definido no PERFIL de acesso (profile_speciality_permissions);
+ * o usuário recebe a união dos perfis dele (principal + adicionais). Admin sempre tem acesso a tudo.
+ */
 class SpecialityPermissionService
 {
     public function canView(User $user, int $specialityId): bool
@@ -43,10 +48,12 @@ class SpecialityPermissionService
             return null;
         }
 
-        return UserSpecialityPermission::query()
-            ->where('user_id', $user->id)
+        return ProfileSpecialityPermission::query()
+            ->whereIn('access_profile_id', $this->profileIds($user))
             ->where('can_view', true)
             ->pluck('speciality_id')
+            ->unique()
+            ->values()
             ->all();
     }
 
@@ -60,24 +67,34 @@ class SpecialityPermissionService
             return [];
         }
 
-        return UserSpecialityPermission::query()
-            ->where('user_id', $user->id)
+        return ProfileSpecialityPermission::query()
+            ->whereIn('access_profile_id', $this->profileIds($user))
             ->get(['speciality_id', 'can_view', 'can_edit', 'can_insert'])
-            ->keyBy('speciality_id')
-            ->map(fn ($row) => [
-                'can_view' => (bool) $row->can_view,
-                'can_edit' => (bool) $row->can_edit,
-                'can_insert' => (bool) $row->can_insert,
+            ->groupBy('speciality_id')
+            ->map(fn ($rows) => [
+                'can_view' => $rows->contains(fn ($r) => (bool) $r->can_view),
+                'can_edit' => $rows->contains(fn ($r) => (bool) $r->can_edit),
+                'can_insert' => $rows->contains(fn ($r) => (bool) $r->can_insert),
             ])
             ->all();
     }
 
     private function hasFlag(User $user, int $specialityId, string $flag): bool
     {
-        return UserSpecialityPermission::query()
-            ->where('user_id', $user->id)
+        return ProfileSpecialityPermission::query()
+            ->whereIn('access_profile_id', $this->profileIds($user))
             ->where('speciality_id', $specialityId)
             ->where($flag, true)
             ->exists();
+    }
+
+    /** Ids dos perfis ativos do usuário (principal + adicionais). */
+    private function profileIds(User $user): array
+    {
+        return AccessProfile::query()
+            ->whereIn('slug', $user->profileSlugs())
+            ->where('ativo', true)
+            ->pluck('id')
+            ->all();
     }
 }

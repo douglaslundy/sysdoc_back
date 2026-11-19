@@ -35,7 +35,7 @@ class OrdemServico extends Model
 
         return $query->where(function ($q) use ($user) {
             $q->where('ordens_servico.solicitante_id', $user->id)->orWhere('ordens_servico.tecnico_id', $user->id);
-            if ($user->profile === 'gestor') {
+            if ($user->hasProfile('gestor')) {
                 $q->orWhereIn('ordens_servico.secretaria_id', CadastroProtocoloScope::secretariasDe($user));
             }
         });
@@ -44,7 +44,7 @@ class OrdemServico extends Model
     public function ehGestorDaSecretaria(?User $user): bool
     {
         return $user?->profile === 'admin'
-            || ($user?->profile === 'gestor' && CadastroProtocoloScope::pode($user, $this->secretaria_id));
+            || ($user?->hasProfile('gestor') && CadastroProtocoloScope::pode($user, $this->secretaria_id));
     }
 
     /** Número sequencial por ano: 2026/000123. Chamar dentro de transação. */

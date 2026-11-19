@@ -19,7 +19,7 @@ class EncaminharOrdemServicoRequest extends FormRequest
         return [
             'secretaria_id' => ['required', 'integer', Rule::exists('secretarias', 'id')->where('ativa', true)],
             'tipo_servico_id' => ['required', 'integer', Rule::exists('os_tipos_servico', 'id')->where('secretaria_id', $secretaria)->where('ativo', true)],
-            'tecnico_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('profile', 'tecnico')->where('active', true)],
+            'tecnico_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where(fn ($q) => $q->where('active', true)->where(fn ($p) => $p->where('profile', 'tecnico')->orWhereIn('id', \App\Models\User::idsComPerfilAdicional('tecnico'))))],
             'observacao' => ['nullable', 'string', 'max:500'],
         ];
     }

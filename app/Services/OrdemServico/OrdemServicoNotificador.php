@@ -21,17 +21,36 @@ class OrdemServicoNotificador
         }
     }
 
+    /** Técnico recebe "você foi designado"; o solicitante recebe quem vai atender (sem repetir para a mesma pessoa). */
     public function tecnicoApontado(OrdemServico $os): void
     {
-        $this->enviar($this->usuarios([$os->tecnico_id, $os->solicitante_id]), $os, 'os_tecnico', "OS {$os->numero} atribuída", "A OS {$os->numero} ({$os->local}) foi atribuída ao técnico {$os->tecnico?->name}.");
+        $this->enviar(
+            $this->usuarios([$os->tecnico_id]), $os, 'os_tecnico', "OS {$os->numero} designada a você",
+            "Você foi designado para a OS {$os->numero} ({$os->local}). Acesse o sistema para iniciar o atendimento."
+        );
+        $this->enviar(
+            $this->usuarios([$os->solicitante_id])->reject(fn ($u) => (int) $u->id === (int) $os->tecnico_id),
+            $os, 'os_tecnico_solicitante', "OS {$os->numero} atribuída",
+            "A sua OS {$os->numero} ({$os->local}) foi atribuída ao técnico {$os->tecnico?->name}."
+        );
     }
 
+    /** Concluída: o solicitante recebe o aviso direto; gestores e técnico recebem o aviso geral de status. */
     public function mudouStatus(OrdemServico $os, string $rotulo): void
     {
-        $this->enviar(
-            $this->gestores($os)->merge($this->usuarios([$os->solicitante_id, $os->tecnico_id]))->unique('id'),
-            $os, 'os_status', "OS {$os->numero} {$rotulo}", "A OS {$os->numero} ({$os->local}) está {$rotulo}."
-        );
+        $concluida = str_starts_with($rotulo, 'conclu');
+        $destinos = $this->gestores($os)->merge($this->usuarios([$os->tecnico_id]));
+        if (! $concluida) {
+            $destinos = $destinos->merge($this->usuarios([$os->solicitante_id]));
+        }
+        $this->enviar($destinos->unique('id'), $os, 'os_status', "OS {$os->numero} {$rotulo}", "A OS {$os->numero} ({$os->local}) está {$rotulo}.");
+
+        if ($concluida) {
+            $this->enviar(
+                $this->usuarios([$os->solicitante_id]), $os, 'os_concluida_solicitante', "Sua OS {$os->numero} foi concluída",
+                "Sua ordem de serviço {$os->numero} ({$os->local}) foi concluída."
+            );
+        }
     }
 
     public function prazoVencido(OrdemServico $os): void
@@ -45,7 +64,7 @@ class OrdemServicoNotificador
     /** Gestores ativos da secretaria destino. */
     private function gestores(OrdemServico $os): Collection
     {
-        return User::where('active', true)->where('profile', 'gestor')
+        return User::where('active', true)->withProfile('gestor')
             ->whereHas('secretarias', fn ($x) => $x->where('secretarias.id', $os->secretaria_id))->get();
     }
 
@@ -54,7 +73,7 @@ class OrdemServicoNotificador
         return User::where('active', true)->whereIn('id', array_filter($ids))->get();
     }
 
-    private function enviar(Collection $destinos, OrdemServico $os, string $origem, string $assunto, string $texto): void
+    protected function enviar(Collection $destinos, OrdemServico $os, string $origem, string $assunto, string $texto): void
     {
         foreach ($destinos as $u) {
             $meta = ['origem' => $origem];
