@@ -4,6 +4,7 @@ namespace App\Services\OrdemServico;
 
 use App\Models\OrdemServico;
 use App\Models\User;
+use App\Services\Alerts\MensagemDoSistema;
 use App\Services\ConfiguredEmailService;
 use App\Services\WhatsappEvolutionService;
 use Illuminate\Support\Collection;
@@ -14,8 +15,8 @@ class OrdemServicoNotificador
 {
     public function aberta(OrdemServico $os): void
     {
-        $this->enviar($this->gestores($os), $os, 'os_aberta', "Nova OS {$os->numero}", "Nova ordem de serviço {$os->numero} para a secretaria: {$os->local}.");
-        $this->enviar($this->usuarios([$os->solicitante_id]), $os, 'os_aberta_solicitante', "OS {$os->numero} registrada", "Sua ordem de serviço {$os->numero} foi registrada.");
+        $this->avisar($this->gestores($os), $os, 'os_aberta', 'os_aberta_gestor');
+        $this->avisar($this->usuarios([$os->solicitante_id]), $os, 'os_aberta_solicitante', 'os_aberta_solicitante');
         if ($os->tecnico_id) {
             $this->tecnicoApontado($os);
         }
@@ -24,14 +25,10 @@ class OrdemServicoNotificador
     /** Técnico recebe "você foi designado"; o solicitante recebe quem vai atender (sem repetir para a mesma pessoa). */
     public function tecnicoApontado(OrdemServico $os): void
     {
-        $this->enviar(
-            $this->usuarios([$os->tecnico_id]), $os, 'os_tecnico', "OS {$os->numero} designada a você",
-            "Você foi designado para a OS {$os->numero} ({$os->local}). Acesse o sistema para iniciar o atendimento."
-        );
-        $this->enviar(
+        $this->avisar($this->usuarios([$os->tecnico_id]), $os, 'os_tecnico', 'os_tecnico');
+        $this->avisar(
             $this->usuarios([$os->solicitante_id])->reject(fn ($u) => (int) $u->id === (int) $os->tecnico_id),
-            $os, 'os_tecnico_solicitante', "OS {$os->numero} atribuída",
-            "A sua OS {$os->numero} ({$os->local}) foi atribuída ao técnico {$os->tecnico?->name}."
+            $os, 'os_tecnico_solicitante', 'os_tecnico_solicitante'
         );
     }
 
@@ -43,22 +40,31 @@ class OrdemServicoNotificador
         if (! $concluida) {
             $destinos = $destinos->merge($this->usuarios([$os->solicitante_id]));
         }
-        $this->enviar($destinos->unique('id'), $os, 'os_status', "OS {$os->numero} {$rotulo}", "A OS {$os->numero} ({$os->local}) está {$rotulo}.");
+        $this->avisar($destinos->unique('id'), $os, 'os_status', 'os_status', ['os_status' => $rotulo]);
 
         if ($concluida) {
-            $this->enviar(
-                $this->usuarios([$os->solicitante_id]), $os, 'os_concluida_solicitante', "Sua OS {$os->numero} foi concluída",
-                "Sua ordem de serviço {$os->numero} ({$os->local}) foi concluída."
-            );
+            $this->avisar($this->usuarios([$os->solicitante_id]), $os, 'os_concluida_solicitante', 'os_concluida_solicitante');
         }
     }
 
     public function prazoVencido(OrdemServico $os): void
     {
-        $this->enviar(
-            $this->gestores($os)->merge($this->usuarios([$os->tecnico_id]))->unique('id'),
-            $os, 'os_prazo', "OS {$os->numero} com prazo vencido", "A OS {$os->numero} ({$os->local}) passou do prazo ({$os->prazo?->format('d/m/Y')})."
-        );
+        $this->avisar($this->gestores($os)->merge($this->usuarios([$os->tecnico_id]))->unique('id'), $os, 'os_prazo', 'os_prazo_vencido');
+    }
+
+    /** Texto vem da tela Alertas (MensagemDoSistema); mensagem desativada lá não é enviada. */
+    private function avisar(Collection $destinos, OrdemServico $os, string $origem, string $gatilho, array $extra = []): void
+    {
+        $mensagem = MensagemDoSistema::montar('os', $gatilho, [
+            'os_numero' => $os->numero,
+            'os_local' => $os->local,
+            'os_tecnico' => $os->tecnico?->name,
+            'os_prazo' => $os->prazo?->format('d/m/Y'),
+        ] + $extra);
+
+        if ($mensagem) {
+            $this->enviar($destinos, $os, $origem, (string) $mensagem['assunto'], $mensagem['texto']);
+        }
     }
 
     /** Gestores ativos da secretaria destino. */

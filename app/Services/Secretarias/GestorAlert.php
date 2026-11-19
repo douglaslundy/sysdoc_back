@@ -3,6 +3,7 @@
 namespace App\Services\Secretarias;
 
 use App\Models\User;
+use App\Services\Alerts\MensagemDoSistema;
 use App\Services\ConfiguredEmailService;
 use App\Services\WhatsappEvolutionService;
 
@@ -11,8 +12,14 @@ class GestorAlert
     /** Avisa todos os admins ativos que um gestor atribuiu o perfil gestor. Nunca lança. */
     public static function perfilGestorAtribuido(User $ator, User $alvo): void
     {
-        $assunto = 'Perfil Gestor atribuído';
-        $mensagem = "O gestor {$ator->name} atribuiu o perfil Gestor a {$alvo->name} ({$alvo->email}).";
+        $conteudo = MensagemDoSistema::montar('sistema', 'perfil_gestor_atribuido', [
+            'ator' => $ator->name, 'alvo' => $alvo->name, 'alvo_email' => $alvo->email,
+        ]);
+        if (! $conteudo) {
+            return; // desativada na tela Alertas
+        }
+        $assunto = (string) $conteudo['assunto'];
+        $mensagem = $conteudo['texto'];
         $meta = ['origem' => 'perfil_gestor_atribuido'];
 
         try {

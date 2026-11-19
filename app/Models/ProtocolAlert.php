@@ -20,6 +20,7 @@ class ProtocolAlert extends Model
         'canais',
         'destinatarios',
         'template',
+        'assunto',
         'ativo',
         'frequencia',
         'prevenir_duplicidade',
@@ -31,5 +32,6 @@ class ProtocolAlert extends Model
         'destinatarios' => 'array',
         'ativo' => 'boolean',
         'prevenir_duplicidade' => 'boolean',
+        'sistema' => 'boolean',
     ];
 }

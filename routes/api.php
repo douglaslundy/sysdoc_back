@@ -391,6 +391,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::post('/alertas', [ProtocolAlertController::class, 'store'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
         Route::put('/alertas/{id}', [ProtocolAlertController::class, 'update'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
         Route::delete('/alertas/{id}', [ProtocolAlertController::class, 'destroy'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
+        Route::post('/alertas/{id}/restaurar', [ProtocolAlertController::class, 'restaurar'])->middleware('page.permission:/protocolo/alertas,/sistema/alertas');
 
         Route::post('/', [ProtocolController::class, 'store']);
         Route::get('/{id}', [ProtocolController::class, 'show'])->whereNumber('id');

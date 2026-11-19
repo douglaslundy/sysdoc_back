@@ -27,6 +27,7 @@ class StoreProtocolAlertRequest extends FormRequest
             'destinatarios' => 'nullable|array',
             'destinatarios.*' => ['string', Rule::in(ProtocolAlertController::RECIPIENTS)],
             'template' => 'nullable|string',
+            'assunto' => 'nullable|string|max:255',
             'ativo' => 'nullable|boolean',
             'frequencia' => 'nullable|string|max:60',
             'prevenir_duplicidade' => 'nullable|boolean',

@@ -3,6 +3,7 @@
 namespace App\Services\Fiscalizacao;
 
 use App\Models\Fiscalizacao;
+use App\Services\Alerts\MensagemDoSistema;
 use App\Models\VigilanciaContatoWhatsapp;
 use App\Services\WhatsappEvolutionService;
 use App\Support\AfterResponse;
@@ -29,6 +30,9 @@ class VigilanciaAvisoService
         }
 
         $mensagem = $this->mensagem($fiscalizacao);
+        if ($mensagem === null) {
+            return; // desativada na tela Alertas
+        }
         $fiscalizacaoId = $fiscalizacao->id;
 
         // Envio externo (timeout longo) fora da requisição; falha nunca desfaz o registro.
@@ -60,27 +64,30 @@ class VigilanciaAvisoService
         });
     }
 
-    private function mensagem(Fiscalizacao $f): string
+    /** Texto vindo da tela Alertas; null = aviso desativado lá. */
+    private function mensagem(Fiscalizacao $f): ?string
     {
         $link = rtrim((string) config('app.frontend_url'), '/').'/fiscalizacoes';
 
         if ($f->origem === 'peticao') {
             $f->loadMissing('motivo');
 
-            return "🔔 Nova petição recebida\n"
-                ."Protocolo: {$f->protocolo}\n"
-                .'Motivo: '.($f->motivo?->nome ?: '—')."\n"
-                .'Assunto: '.($f->assunto ?: '—')."\n"
-                .'Local: '.($f->local_endereco ?: '—')."\n"
-                ."Acesse: {$link}";
+            return MensagemDoSistema::montar('vigilancia', 'vigilancia_aviso_peticao', [
+                'protocolo' => $f->protocolo,
+                'motivo' => $f->motivo?->nome ?: '—',
+                'assunto' => $f->assunto ?: '—',
+                'local' => $f->local_endereco ?: '—',
+                'link' => $link,
+            ])['texto'] ?? null;
         }
 
         $f->loadMissing('estabelecimento');
 
-        return "📋 Nova fiscalização registrada\n"
-            ."Protocolo: {$f->protocolo}\n"
-            .'Estabelecimento: '.($f->estabelecimento?->nome_estabelecimento ?: '—')."\n"
-            .'Situação: '.($f->resultado ?: '—')."\n"
-            ."Acesse: {$link}";
+        return MensagemDoSistema::montar('vigilancia', 'vigilancia_aviso_fiscalizacao', [
+            'protocolo' => $f->protocolo,
+            'estabelecimento' => $f->estabelecimento?->nome_estabelecimento ?: '—',
+            'situacao' => $f->resultado ?: '—',
+            'link' => $link,
+        ])['texto'] ?? null;
     }
 }

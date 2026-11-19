@@ -1251,13 +1251,17 @@ class ProtocolController extends Controller
         }
 
         $actorName = $actorId ? User::query()->whereKey($actorId)->value('name') : null;
-        $texto = sprintf(
-            'Protocolo %s (%s): %s%s.',
-            $protocol->numero,
-            $protocol->assunto,
-            self::WHATSAPP_ACTION_LABELS[$acao] ?? $acao,
-            $actorName ? " por {$actorName}" : ''
-        );
+        $mensagem = \App\Services\Alerts\MensagemDoSistema::montar('protocolo', 'protocolo_whatsapp', [
+            'protocolo_numero' => $protocol->numero,
+            'protocolo_assunto' => $protocol->assunto,
+            'protocolo_acao' => self::WHATSAPP_ACTION_LABELS[$acao] ?? $acao,
+            'protocolo_por' => $actorName ? " por {$actorName}" : '',
+            'protocolo_autor' => $actorName,
+        ]);
+        if (! $mensagem) {
+            return; // desativada na tela Alertas
+        }
+        $texto = $mensagem['texto'];
 
         // Usuário inativo não recebe alerta.
         $users = User::query()->whereIn('id', $recipientIds)->where('active', true)->get()->keyBy('id');
