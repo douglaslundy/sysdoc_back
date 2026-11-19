@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /api/
+Disallow: /showPublicQueue
+Disallow: /showqueue/
+Disallow: /contato
+
+Sitemap: https://dlsistemas.com.br/sitemap.xml

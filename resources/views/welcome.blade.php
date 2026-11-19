@@ -3,15 +3,111 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Sysdoc é o sistema de gestão municipal de saúde que integra laboratório, farmácia, vigilância sanitária, TFD, atendimento, protocolo, almoxarifado e documentos com IA em uma única plataforma auditada.">
-    <meta name="keywords" content="sistema gestão municipal saúde, software prefeitura saúde, laboratório municipal, farmácia transparência pública, vigilância sanitária, TFD transporte fretado, Monitor APS, fila atendimento, protocolo, almoxarifado">
-    <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Sysdoc — Sistema de Gestão Municipal de Saúde">
-    <meta property="og:description" content="Integre laboratório, farmácia, vigilância sanitária, TFD, atendimento, protocolo e documentos com IA em uma única plataforma auditada.">
+    <title>Sysdoc | Sistema de Gestão Municipal para Prefeituras</title>
+    <meta name="description" content="Sistema de gestão municipal para prefeituras: saúde, protocolo, ordem de serviço, iluminação pública, almoxarifado, laboratório e vigilância num só sistema.">
+    <meta name="keywords" content="sistema de gestão municipal, software para prefeitura, sistema para prefeitura, gestão pública municipal, sistema de saúde municipal, protocolo eletrônico, ordem de serviço prefeitura, iluminação pública, almoxarifado municipal, laboratório municipal, farmácia municipal, vigilância sanitária, alvará sanitário, TFD, fila de atendimento, e-SUS, Monitor APS, transparência pública, auditoria, multissecretaria">
+    <meta name="author" content="DL Sistemas">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="theme-color" content="#1e3a5f">
+    <link rel="canonical" href="https://dlsistemas.com.br/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <meta property="og:site_name" content="Sysdoc">
+    <meta property="og:locale" content="pt_BR">
     <meta property="og:type" content="website">
-    <title>Sysdoc — Sistema de Gestão Municipal de Saúde</title>
+    <meta property="og:url" content="https://dlsistemas.com.br/">
+    <meta property="og:title" content="Sysdoc | Sistema de Gestão Municipal para Prefeituras">
+    <meta property="og:description" content="Saúde, protocolo, ordem de serviço, iluminação pública, almoxarifado, laboratório, TFD e vigilância sanitária em uma única plataforma auditada, com transparência pública.">
+    <meta property="og:image" content="https://dlsistemas.com.br/img/og-sysdoc.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Sysdoc: sistema de gestão municipal para prefeituras, integrado, auditado e transparente">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sysdoc | Sistema de Gestão Municipal para Prefeituras">
+    <meta name="twitter:description" content="Saúde, protocolo, ordem de serviço, iluminação pública, almoxarifado, laboratório, TFD e vigilância sanitária em uma única plataforma auditada.">
+    <meta name="twitter:image" content="https://dlsistemas.com.br/img/og-sysdoc.png">
+    <meta name="twitter:image:alt" content="Sysdoc: sistema de gestão municipal para prefeituras">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {{-- Dados estruturados (schema.org) --}}
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@graph": [
+            {
+                "@@type": "Organization",
+                "@@id": "https://dlsistemas.com.br/#organizacao",
+                "name": "DL Sistemas",
+                "url": "https://dlsistemas.com.br/",
+                "logo": "https://dlsistemas.com.br/img/og-sysdoc.png",
+                "email": "douglaslundy@gmail.com",
+                "contactPoint": {
+                    "@@type": "ContactPoint",
+                    "contactType": "vendas e suporte",
+                    "email": "douglaslundy@gmail.com",
+                    "telephone": "+55-35-98429-7193",
+                    "areaServed": "BR",
+                    "availableLanguage": "pt-BR"
+                }
+            },
+            {
+                "@@type": "WebSite",
+                "@@id": "https://dlsistemas.com.br/#site",
+                "url": "https://dlsistemas.com.br/",
+                "name": "Sysdoc",
+                "inLanguage": "pt-BR",
+                "publisher": { "@@id": "https://dlsistemas.com.br/#organizacao" }
+            },
+            {
+                "@@type": "SoftwareApplication",
+                "@@id": "https://dlsistemas.com.br/#software",
+                "name": "Sysdoc",
+                "alternateName": "Sysdoc — Sistema de Gestão Municipal",
+                "description": "Sistema de gestão municipal para prefeituras que integra saúde, protocolo, ordem de serviço, iluminação pública, almoxarifado, laboratório, farmácia, TFD, vigilância sanitária e documentos com inteligência artificial, com auditoria completa e transparência pública.",
+                "url": "https://dlsistemas.com.br/",
+                "image": "https://dlsistemas.com.br/img/og-sysdoc.png",
+                "applicationCategory": "BusinessApplication",
+                "applicationSubCategory": "Gestão pública municipal",
+                "operatingSystem": "Web (navegador, inclusive no celular)",
+                "inLanguage": "pt-BR",
+                "provider": { "@@id": "https://dlsistemas.com.br/#organizacao" },
+                "audience": { "@@type": "Audience", "audienceType": "Prefeituras e secretarias municipais" },
+                "featureList": [
+                    "Gestão multissecretaria com perfis e permissões por página",
+                    "Protocolo eletrônico com tramitação, caixa de entrada e kanban",
+                    "Ordem de serviço com técnico, fotos, encaminhamento e PDF",
+                    "Iluminação pública: cadastro de postes com mapa, fotos e histórico",
+                    "Almoxarifado com requisições, aprovação e estoque",
+                    "Laboratório clínico com laudo em PDF e consulta pública",
+                    "Farmácia municipal com painel de transparência",
+                    "TFD: viagens, agenda, pacientes e acompanhantes",
+                    "Vigilância sanitária: alvarás, fiscalizações e denúncia pública",
+                    "Fila de atendimento com painel de TV",
+                    "Monitor APS e painel e-SUS",
+                    "Ofícios e portarias com inteligência artificial",
+                    "Auditoria completa de todas as ações",
+                    "API REST com autenticação por token para integrações"
+                ]
+            },
+            {
+                "@@type": "FAQPage",
+                "mainEntity": [
+                    { "@@type": "Question", "name": "O sistema funciona para municípios de qualquer porte?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O Sysdoc foi desenvolvido para municípios de pequeno e médio porte, onde uma única plataforma precisa cobrir saúde, protocolo, almoxarifado, ordens de serviço e vigilância. O controle de permissões por perfil e por secretaria define exatamente o que cada colaborador acessa." } },
+                    { "@@type": "Question", "name": "Cada secretaria enxerga apenas os seus dados?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O Sysdoc é multissecretaria: cada usuário atua na secretaria a que está vinculado e só vê os módulos liberados para ela. O administrador enxerga todas, e o gestor de cada secretaria administra os usuários e aprova os pedidos de cadastro da sua." } },
+                    { "@@type": "Question", "name": "Como funciona a ordem de serviço?", "acceptedAnswer": { "@@type": "Answer", "text": "O usuário abre a ordem escolhendo o tipo de serviço, o local, a descrição, o problema constatado e fotos. A ordem é atribuída a um técnico, que inicia o atendimento e conclui com relato, materiais e tempo gastos. Tudo fica no histórico e há PDF para impressão. Perfis autorizados podem encaminhar a ordem para outra secretaria ou outro técnico." } },
+                    { "@@type": "Question", "name": "O cidadão pode consultar o resultado do exame online?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O laboratório gera um protocolo para cada resultado. O cidadão acessa a página pública de consulta, informa o protocolo e a senha e visualiza ou baixa o laudo em PDF, sem login." } },
+                    { "@@type": "Question", "name": "O cidadão pode fazer uma denúncia sem criar conta?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. A denúncia pública de vigilância sanitária não exige login. O denunciante recebe um protocolo e uma senha para acompanhar o andamento." } },
+                    { "@@type": "Question", "name": "Como funciona a transparência pública da farmácia?", "acceptedAnswer": { "@@type": "Answer", "text": "O Sysdoc publica a disponibilidade diária de medicamentos e as aquisições mensais em painéis públicos, acessíveis por link direto e sem login, atendendo às exigências de transparência pública em saúde." } },
+                    { "@@type": "Question", "name": "Existe API para integrar o Sysdoc a outros sistemas?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O Sysdoc oferece uma API REST com autenticação por token, controle de permissões por perfil e secretaria e documentação em formato OpenAPI para desenvolvedores." } },
+                    { "@@type": "Question", "name": "O sistema funciona no celular?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O Sysdoc roda no navegador, sem instalar aplicativo, e tem telas adaptadas ao celular. Fiscais e técnicos podem anexar fotos direto da câmera do aparelho durante a vistoria ou o serviço." } },
+                    { "@@type": "Question", "name": "O sistema tem controle de quem acessou o quê?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. As ações autenticadas são registradas com usuário, data, IP e dispositivo, e os cadastros auditados guardam o antes e o depois de cada alteração. Os registros ficam disponíveis ao administrador, com filtros." } }
+                ]
+            }
+        ]
+    }
+    </script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -313,6 +409,7 @@
         <li><a href="#modulos">Módulos</a></li>
         <li><a href="#beneficios">Benefícios</a></li>
         <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#seguranca">Segurança</a></li>
         <li><a href="#faq">FAQ</a></li>
     </ul>
     <a href="#contato" class="nav-cta">Solicitar Demo</a>
@@ -320,9 +417,9 @@
 
 <!-- ── HERO ── -->
 <header class="hero" role="banner">
-    <div class="hero-badge">Gestão Pública de Saúde</div>
-    <h1>Gestão Municipal de Saúde <span>Integrada e Auditada</span></h1>
-    <p>Do laboratório à farmácia, do TFD ao protocolo, do almoxarifado à vigilância sanitária — tudo em uma única plataforma com rastreabilidade completa e transparência pública.</p>
+    <div class="hero-badge">Sistema de gestão municipal para prefeituras</div>
+    <h1>Gestão Municipal <span>Integrada, Auditada e Transparente</span></h1>
+    <p>Saúde, protocolo, ordem de serviço, iluminação pública, almoxarifado, laboratório, TFD e vigilância sanitária — tudo em uma única plataforma, para todas as secretarias, com rastreabilidade completa e transparência pública.</p>
     <div class="hero-actions">
         <a href="#modulos" class="btn-primary">Conhecer funcionalidades</a>
         <a href="#contato" class="btn-outline">Solicitar demonstração</a>
@@ -333,20 +430,20 @@
 <div class="stats" aria-label="Números do sistema">
     <div class="stats-grid">
         <div>
-            <div class="stat-num">18+</div>
+            <div class="stat-num">20+</div>
             <div class="stat-label">Módulos integrados</div>
         </div>
         <div>
-            <div class="stat-num">95</div>
+            <div class="stat-num">110+</div>
             <div class="stat-label">Telas em produção</div>
+        </div>
+        <div>
+            <div class="stat-num">480+</div>
+            <div class="stat-label">Rotas na API REST</div>
         </div>
         <div>
             <div class="stat-num">100%</div>
             <div class="stat-label">Ações auditadas</div>
-        </div>
-        <div>
-            <div class="stat-num">22</div>
-            <div class="stat-label">Módulos com auditoria automática</div>
         </div>
         <div>
             <div class="stat-num">IA</div>
@@ -355,12 +452,14 @@
     </div>
 </div>
 
+<main>
+
 <!-- ── MÓDULOS ── -->
 <section id="modulos" aria-labelledby="modulos-title">
     <div class="container">
         <span class="section-tag">Funcionalidades</span>
-        <h2 id="modulos-title">Tudo que sua secretaria de saúde precisa</h2>
-        <p class="section-lead">Cada módulo foi desenvolvido para o fluxo real do serviço público, com controles, validações e rastreabilidade integrados.</p>
+        <h2 id="modulos-title">Tudo que a prefeitura precisa em um só sistema</h2>
+        <p class="section-lead">Da saúde às obras, do protocolo à iluminação pública: cada módulo foi desenvolvido para o fluxo real do serviço público, com controles, validações e rastreabilidade integrados.</p>
 
         <div class="modules-grid">
 
@@ -417,6 +516,8 @@
                     <li>Registro de fiscalização com data, resultado e observações por estabelecimento</li>
                     <li>Foto ou documento anexado direto da câmera do celular, sem instalar aplicativo</li>
                     <li>Controle por nível de risco</li>
+                    <li>Denúncia pública sem login, com protocolo e senha para o cidadão acompanhar</li>
+                    <li>Linha do tempo da denúncia com mensagens ao denunciante e motivos configuráveis</li>
                     <li>Dashboard com alvarás a vencer</li>
                 </ul>
             </article>
@@ -428,6 +529,10 @@
                 <ul>
                     <li>Cadastro de viagens com origem, destino e data</li>
                     <li>Pacientes confirmando presença individualmente</li>
+                    <li>Agenda de viagens com status: agendado, confirmado, cancelado e concluído</li>
+                    <li>Replicação da viagem em várias datas de uma vez, com rota, veículo e motorista já preenchidos</li>
+                    <li>Acompanhantes do paciente na viagem</li>
+                    <li>Histórico de todas as viagens de cada cidadão, direto da tela de cidadãos</li>
                     <li>Controle de veículos e motoristas</li>
                     <li>Rotas predefinidas com distância</li>
                     <li>Dashboard de km rodados e pessoas transportadas</li>
@@ -481,8 +586,103 @@
                     <li>Numeração automática por tipo de protocolo</li>
                     <li>Caixa de entrada com triagem e encaminhamento</li>
                     <li>Fluxo de aprovação configurável</li>
+                    <li>Visibilidade pública ou privada por protocolo, com regras definidas por perfil de acesso</li>
+                    <li>Unidades organizacionais e alertas configuráveis de prazo</li>
+                    <li>Integração com o Kanban de tarefas</li>
                     <li>Histórico completo de tramitação</li>
                     <li>Geração de PDF oficial do protocolo</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#fff7ed;">🛠️</div>
+                <h3>Ordem de Serviço</h3>
+                <p>Solicitações de serviço das secretarias, do pedido à conclusão, com técnico, fotos e PDF.</p>
+                <ul>
+                    <li>Abertura com tipo de serviço, local, endereço, descrição, problema constatado e prioridade</li>
+                    <li>Até 6 fotos por ordem, anexadas ou tiradas na hora pela câmera do celular, com localização por GPS</li>
+                    <li>Técnico definido na abertura ou atribuído depois pelo responsável da secretaria</li>
+                    <li>Atendimento: iniciar, concluir com relato, materiais e tempo gasto, ou cancelar</li>
+                    <li>Encaminhamento para outra secretaria ou outro técnico (permissão configurável por perfil)</li>
+                    <li>Prazo com aviso, histórico completo de cada passo e PDF para impressão</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#fffbeb;">💡</div>
+                <h3>Iluminação Pública</h3>
+                <p>Cadastro e manutenção dos postes do município, com mapa, fotos e histórico.</p>
+                <ul>
+                    <li>Cadastro de postes com localização por GPS e até 4 fotos por poste</li>
+                    <li>Mapa com a posição de cada poste e visão de rua (Street View)</li>
+                    <li>Registro do desfecho do serviço e reabertura quando o problema volta</li>
+                    <li>Histórico completo de movimentações de cada poste</li>
+                    <li>Funciona no navegador do celular, em campo, sem instalar aplicativo</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#e8f0fe;">🏛️</div>
+                <h3>Multissecretaria</h3>
+                <p>Uma única instalação para todas as secretarias, cada uma com o seu espaço e os seus dados.</p>
+                <ul>
+                    <li>Cadastro de secretarias (Saúde, Educação, Cultura, Agricultura, Meio Ambiente, Obras e outras)</li>
+                    <li>Usuário vinculado a uma ou mais secretarias, com escolha da secretaria ativa</li>
+                    <li>Módulos liberados por secretaria: cada uma vê só o que o administrador permitiu</li>
+                    <li>Perfil Gestor: administra os usuários e aprova os cadastros da própria secretaria</li>
+                    <li>Administrador com visão de todas as secretarias</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#f0fdf4;">📝</div>
+                <h3>Cadastro com Aprovação</h3>
+                <p>O servidor pede o próprio acesso pela internet e o gestor autoriza, sem planilha nem papel.</p>
+                <ul>
+                    <li>Página pública de cadastro com secretaria, cargo e observação</li>
+                    <li>Verificação anti-robô e limite de pedidos por IP</li>
+                    <li>Pedido vira protocolo e aparece no Kanban do administrador e do gestor da secretaria</li>
+                    <li>Autorização escolhendo o perfil de acesso e conferindo a secretaria</li>
+                    <li>Avisos por e-mail ao solicitante em cada etapa</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#fdf4ff;">👤</div>
+                <h3>Cadastro Central do Cidadão</h3>
+                <p>A pessoa atendida pelo município em um só lugar, com tudo o que já aconteceu com ela.</p>
+                <ul>
+                    <li>Cadastro com CPF, CNS, endereço e foto</li>
+                    <li>Relatório detalhado somando viagens, fila e exames</li>
+                    <li>Histórico de viagens do TFD aberto direto da lista, sem sair da tela</li>
+                    <li>Prevenção de cadastro duplicado por CPF e CNS</li>
+                    <li>Conformidade cadastral e histórico de alterações auditado</li>
+                    <li>Visibilidade de cada recurso definida por perfil de acesso</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#e0f2fe;">📺</div>
+                <h3>Painéis Públicos e de TV</h3>
+                <p>Informação em telas e links públicos, sem login, para o cidadão e para a recepção.</p>
+                <ul>
+                    <li>Painel de chamada da fila de atendimento em tempo real</li>
+                    <li>Painel PSF em duas colunas, com páginas escolhidas pelo administrador e proporção ajustável</li>
+                    <li>Painel público com a página escolhida pelo administrador, em link aberto e sem menu</li>
+                    <li>Transparência de medicamentos: disponibilidade diária e aquisições mensais</li>
+                    <li>Consulta pública de laudos de exame e acompanhamento de denúncia por protocolo</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
+                <div class="module-icon" style="background:#ecfdf5;">🔌</div>
+                <h3>API REST para Integrações</h3>
+                <p>Os dados do Sysdoc disponíveis para outros sistemas, com segurança e documentação.</p>
+                <ul>
+                    <li>Mais de 480 rotas organizadas por módulo</li>
+                    <li>Autenticação por token com expiração, e permissões por perfil e secretaria</li>
+                    <li>Limites de requisição contra abuso e registro de todas as chamadas</li>
+                    <li>Documentação para desenvolvedores com especificação OpenAPI (Postman, Insomnia, Swagger)</li>
                 </ul>
             </article>
 
@@ -536,6 +736,7 @@
                     <li>Dashboard de vigilância com vencimentos</li>
                     <li>Dashboard TFD com km e pessoas</li>
                     <li>Dashboard de logs e acessos</li>
+                    <li>Aba Início com atalhos pessoais (até 9 por usuário), reordenáveis por arrastar e soltar</li>
                 </ul>
             </article>
 
@@ -545,6 +746,8 @@
                 <p>Perfis, permissões granulares e rastreamento completo de todas as ações.</p>
                 <ul>
                     <li>Perfis de acesso configuráveis por página</li>
+                    <li>Perfil Gestor por secretaria e perfil Técnico para ordens de serviço</li>
+                    <li>Permissões de perfil sob medida, como encaminhar ordens de serviço a outra secretaria ou técnico</li>
                     <li>Permissão granular por especialidade dentro da Fila — ver, editar e inserir paciente, definidos por usuário</li>
                     <li>Auditoria automática de CREATE/UPDATE/DELETE</li>
                     <li>Registro de IP, user-agent e endpoint</li>
@@ -560,7 +763,7 @@
 <section id="beneficios" class="benefits" aria-labelledby="beneficios-title">
     <div class="container">
         <span class="section-tag green">Benefícios</span>
-        <h2 id="beneficios-title">Por que o Sysdoc transforma a gestão municipal de saúde</h2>
+        <h2 id="beneficios-title">Por que o Sysdoc transforma a gestão municipal</h2>
         <p class="section-lead">Cada funcionalidade foi pensada para resolver problemas reais do serviço público.</p>
 
         <div class="benefits-grid">
@@ -593,6 +796,21 @@
                 <div class="icon">📡</div>
                 <h3>Indicadores APS sem exportação manual</h3>
                 <p>Dados do eSUS PEC consultados diretamente pelo sistema. Chega de exportar planilhas para calcular indicadores.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">🏛️</div>
+                <h3>Uma plataforma para toda a prefeitura</h3>
+                <p>Saúde, Educação, Obras, Cultura, Agricultura e Meio Ambiente no mesmo sistema, cada secretaria com os seus módulos, usuários e dados.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">📱</div>
+                <h3>Funciona no celular, em campo</h3>
+                <p>Fiscais e técnicos registram fotos e localização direto da câmera do aparelho, no navegador, sem instalar aplicativo.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="icon">🔌</div>
+                <h3>Pronto para integrar</h3>
+                <p>API REST com autenticação por token e documentação OpenAPI para conectar o Sysdoc a outros sistemas da prefeitura.</p>
             </div>
         </div>
     </div>
@@ -652,16 +870,34 @@
                 </div>
             </div>
 
+            <div>
+                <h3 style="font-size:1rem; font-weight:700; color:#c2410c; margin-bottom:1.5rem;">🛠️ Ordem de serviço</h3>
+                <div class="steps">
+                    <div class="step"><div class="step-num">1</div><div><h3>Abertura</h3><p>O servidor descreve o problema, informa o local e anexa fotos, com localização por GPS.</p></div></div>
+                    <div class="step"><div class="step-num">2</div><div><h3>Técnico e atendimento</h3><p>A ordem é atribuída a um técnico da secretaria, que inicia o serviço e registra o andamento.</p></div></div>
+                    <div class="step"><div class="step-num">3</div><div><h3>Conclusão e PDF</h3><p>Relato, materiais e tempo gasto ficam no histórico, e a ordem pode ser impressa em PDF.</p></div></div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="font-size:1rem; font-weight:700; color:#15803d; margin-bottom:1.5rem;">📝 Cadastro de usuários</h3>
+                <div class="steps">
+                    <div class="step"><div class="step-num">1</div><div><h3>Pedido público</h3><p>O servidor preenche a página de cadastro e escolhe a secretaria e o cargo.</p></div></div>
+                    <div class="step"><div class="step-num">2</div><div><h3>Aprovação do gestor</h3><p>O pedido chega ao Kanban do administrador e do gestor da secretaria para análise.</p></div></div>
+                    <div class="step"><div class="step-num">3</div><div><h3>Acesso liberado</h3><p>Ao autorizar, o gestor escolhe o perfil de acesso e o usuário já pode entrar.</p></div></div>
+                </div>
+            </div>
+
         </div>
     </div>
 </section>
 
 <!-- ── AUDITORIA HIGHLIGHT ── -->
-<section aria-labelledby="audit-title" style="background:var(--gray-50);">
+<section id="seguranca" aria-labelledby="audit-title" style="background:var(--gray-50);">
     <div class="container">
         <div class="highlight">
-            <h2 id="audit-title">Auditoria completa em cada ação</h2>
-            <p>Cada criação, edição ou exclusão no sistema é registrada automaticamente com quem fez, quando, de qual dispositivo e o que mudou — antes e depois.</p>
+            <h2 id="audit-title">Segurança e auditoria em cada ação</h2>
+            <p>Cada criação, edição ou exclusão no sistema é registrada automaticamente com quem fez, quando, de qual dispositivo e o que mudou — antes e depois. E o acesso é protegido em camadas.</p>
             <ul class="highlight-list">
                 <li>✓ Registro de LOGIN e LOGOUT</li>
                 <li>✓ CREATE / UPDATE / DELETE auditados</li>
@@ -669,6 +905,11 @@
                 <li>✓ Antes e depois preservados</li>
                 <li>✓ Dados sensíveis sanitizados</li>
                 <li>✓ Consulta com filtros por usuário e ação</li>
+                <li>✓ Permissões por perfil, por página e por secretaria</li>
+                <li>✓ Bloqueio automático de IPs que varrem o sistema</li>
+                <li>✓ Limite de requisições contra abuso</li>
+                <li>✓ Registro de erros e mensagens enviadas</li>
+                <li>✓ Backup do banco de dados pelo administrador</li>
             </ul>
             <a href="#contato" class="btn-primary">Solicitar demonstração</a>
         </div>
@@ -686,17 +927,32 @@
 
             <details>
                 <summary>O sistema funciona para municípios de qualquer porte?</summary>
-                <p>Sim. O Sysdoc foi desenvolvido pensando em municípios de pequeno e médio porte, onde uma única plataforma precisa cobrir laboratório, farmácia, TFD, vigilância sanitária, protocolo, almoxarifado e documentação. O sistema de permissões granular permite configurar o acesso de cada colaborador exatamente ao que ele precisa.</p>
+                <p>Sim. O Sysdoc foi desenvolvido para municípios de pequeno e médio porte, onde uma única plataforma precisa cobrir saúde, protocolo, almoxarifado, ordens de serviço e vigilância. O controle de permissões por perfil e por secretaria define exatamente o que cada colaborador acessa.</p>
+            </details>
+
+            <details>
+                <summary>Cada secretaria enxerga apenas os seus dados?</summary>
+                <p>Sim. O Sysdoc é multissecretaria: cada usuário atua na secretaria a que está vinculado e só vê os módulos liberados para ela. O administrador enxerga todas, e o gestor de cada secretaria administra os usuários e aprova os pedidos de cadastro da sua.</p>
+            </details>
+
+            <details>
+                <summary>Como funciona a ordem de serviço?</summary>
+                <p>O usuário abre a ordem escolhendo o tipo de serviço, o local, a descrição, o problema constatado e fotos. A ordem é atribuída a um técnico, que inicia o atendimento e conclui com relato, materiais e tempo gastos. Tudo fica no histórico e há PDF para impressão. Perfis autorizados podem encaminhar a ordem para outra secretaria ou outro técnico.</p>
             </details>
 
             <details>
                 <summary>O cidadão pode consultar o resultado do exame online?</summary>
-                <p>Sim. O módulo de laboratório gera um protocolo único para cada resultado. O cidadão acessa a página pública de consulta, informa o protocolo e visualiza ou baixa o laudo em PDF — sem necessidade de login.</p>
+                <p>Sim. O laboratório gera um protocolo para cada resultado. O cidadão acessa a página pública de consulta, informa o protocolo e a senha e visualiza ou baixa o laudo em PDF, sem login.</p>
+            </details>
+
+            <details>
+                <summary>O cidadão pode fazer uma denúncia sem criar conta?</summary>
+                <p>Sim. A denúncia pública de vigilância sanitária não exige login. O denunciante recebe um protocolo e uma senha para acompanhar o andamento.</p>
             </details>
 
             <details>
                 <summary>Como funciona a transparência pública da farmácia?</summary>
-                <p>O Sysdoc publica automaticamente a disponibilidade diária de medicamentos e as aquisições mensais em painéis públicos. O cidadão acessa via link direto, sem login, e visualiza o status de cada medicamento e os valores pagos nas aquisições, atendendo às exigências de transparência pública em saúde.</p>
+                <p>O Sysdoc publica a disponibilidade diária de medicamentos e as aquisições mensais em painéis públicos, acessíveis por link direto e sem login, atendendo às exigências de transparência pública em saúde.</p>
             </details>
 
             <details>
@@ -711,7 +967,17 @@
 
             <details>
                 <summary>O sistema tem controle de quem acessou o quê?</summary>
-                <p>Sim. Toda ação autenticada é registrada automaticamente: login, logout, criação, edição e exclusão de qualquer registro. Os logs ficam disponíveis para consulta pelo administrador com filtros por usuário, tipo de ação, período e módulo.</p>
+                <p>Sim. As ações autenticadas são registradas com usuário, data, IP e dispositivo, e os cadastros auditados guardam o antes e o depois de cada alteração. Os registros ficam disponíveis ao administrador, com filtros.</p>
+            </details>
+
+            <details>
+                <summary>Existe API para integrar o Sysdoc a outros sistemas?</summary>
+                <p>Sim. O Sysdoc oferece uma API REST com autenticação por token, controle de permissões por perfil e secretaria e documentação em formato OpenAPI para desenvolvedores.</p>
+            </details>
+
+            <details>
+                <summary>O sistema funciona no celular?</summary>
+                <p>Sim. O Sysdoc roda no navegador, sem instalar aplicativo, e tem telas adaptadas ao celular. Fiscais e técnicos podem anexar fotos direto da câmera do aparelho durante a vistoria ou o serviço.</p>
             </details>
 
             <details>
@@ -731,7 +997,7 @@
 <!-- ── CTA FINAL / CONTATO ── -->
 <section id="contato" class="cta-final" aria-labelledby="cta-title">
     <div class="cta-box">
-        <h2 id="cta-title">Pronto para modernizar a gestão de saúde do seu município?</h2>
+        <h2 id="cta-title">Pronto para modernizar a gestão do seu município?</h2>
         <p>Entre em contato e agende uma demonstração gratuita. Mostre ao gestor como o Sysdoc funciona na prática — com os dados reais da sua secretaria.</p>
         <ul class="contact-list">
             <li>✉️ <a href="mailto:douglaslundy@gmail.com">douglaslundy@gmail.com</a></li>
@@ -781,12 +1047,14 @@
     </div>
 </section>
 
+</main>
+
 <!-- ── FOOTER ── -->
 <footer aria-label="Rodapé">
     <div class="footer-inner">
         <div>
             <div class="footer-brand">Sys<span>doc</span></div>
-            <p class="footer-desc">Sistema de Gestão Municipal de Saúde — integrado, auditado e em conformidade com a legislação pública.</p>
+            <p class="footer-desc">Sistema de Gestão Municipal para prefeituras — integrado, auditado e em conformidade com a legislação pública.</p>
         </div>
         <div class="footer-col">
             <h4>Módulos</h4>
@@ -800,19 +1068,25 @@
                 <li>Monitor APS</li>
                 <li>Almoxarifado</li>
                 <li>Protocolo de Documentos</li>
+                <li>Ordem de Serviço</li>
+                <li>Iluminação Pública</li>
                 <li>Painel eSUS</li>
             </ul>
         </div>
         <div class="footer-col">
             <h4>Recursos</h4>
             <ul>
+                <li>Multissecretaria</li>
+                <li>Cadastro com aprovação</li>
                 <li>Dashboards analíticos</li>
                 <li>Auditoria completa</li>
                 <li>Transparência pública</li>
                 <li>Consulta pública de exames</li>
-                <li>Painel TV de atendimento</li>
+                <li>Denúncia pública</li>
+                <li>Painéis públicos e de TV</li>
                 <li>Kanban de tarefas</li>
                 <li>Chat interno</li>
+                <li>API REST para integrações</li>
             </ul>
         </div>
         <div class="footer-col">
