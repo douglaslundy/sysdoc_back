@@ -8,6 +8,8 @@ Cadastro de usuários, perfis de acesso (páginas e permissões), secretarias, s
 |---|---|---|
 | `GET` | `/api/access-profiles` | Listar |
 | `POST` | `/api/access-profiles` | Criar |
+| `GET` | `/api/access-profiles/{accessProfile}/speciality-permissions` | Detalhar |
+| `PUT` | `/api/access-profiles/{accessProfile}/speciality-permissions` | Atualizar |
 | `DELETE` | `/api/access-profiles/{access_profile}` | Remover |
 | `GET` | `/api/access-profiles/{access_profile}` | Detalhar |
 | `PATCH` | `/api/access-profiles/{access_profile}` | Atualizar |
@@ -50,8 +52,6 @@ Cadastro de usuários, perfis de acesso (páginas e permissões), secretarias, s
 | `DELETE` | `/api/users/{user}/photo` | Destroy User |
 | `GET` | `/api/users/{user}/photo` | Show User |
 | `POST` | `/api/users/{user}/photo` | Store User |
-| `GET` | `/api/users/{user}/speciality-permissions` | Detalhar |
-| `PUT` | `/api/users/{user}/speciality-permissions` | Atualizar |
 
 ---
 
@@ -90,6 +90,30 @@ Cadastro de usuários, perfis de acesso (páginas e permissões), secretarias, s
 | `protocol_can_change_visibility` | `nullable \| boolean` |
 | `page_ids` | `nullable \| array` |
 | `page_ids.*` | `integer \| exists:system_pages,id` |
+
+
+## `GET /api/access-profiles/{accessProfile}/speciality-permissions`
+
+**Detalhar** · controller `AccessProfileSpecialityPermissionController@show`
+
+- **Acesso:** Token Sanctum; somente administrador
+- **Parâmetros de rota:** `accessProfile`
+
+## `PUT /api/access-profiles/{accessProfile}/speciality-permissions`
+
+**Atualizar** · controller `AccessProfileSpecialityPermissionController@update`
+
+- **Acesso:** Token Sanctum; somente administrador
+- **Parâmetros de rota:** `accessProfile`
+- **Corpo/validação** (`UpdateProfileSpecialityPermissionRequest`):
+
+| Campo | Regras |
+|---|---|
+| `permissions` | `present \| array` |
+| `permissions.*.speciality_id` | `required \| integer \| distinct \| <Exists>` |
+| `permissions.*.can_view` | `boolean` |
+| `permissions.*.can_edit` | `boolean` |
+| `permissions.*.can_insert` | `boolean` |
 
 
 ## `DELETE /api/access-profiles/{access_profile}`
@@ -478,10 +502,12 @@ Cadastro de usuários, perfis de acesso (páginas e permissões), secretarias, s
 | `chat_access_override` | `nullable \| boolean` |
 | `secretaria_ids` | `$this->route('user') === null ? 'required' : 'sometimes', 'array', 'min:1'` |
 | `secretaria_ids.*` | `array_values(array_filter([` |
+| `extra_profiles` | `nullable \| array` |
+| `extra_profiles.*` | `'string', 'distinct', Rule::in(array_values(array_diff($validSlugs, ['admin'])))` |
 | `protocol_unit_ids` | `nullable \| array` |
 | `protocol_unit_ids.*` | `integer \| distinct \| exists:protocol_organizational_units,id` |
 
-- **Outros parâmetros lidos pelo controller:** `protocol_unit_ids`, `secretaria_ids`
+- **Outros parâmetros lidos pelo controller:** `protocol_unit_ids`, `extra_profiles`, `secretaria_ids`
 
 ## `POST /api/users/presence/ping`
 
@@ -528,10 +554,12 @@ Cadastro de usuários, perfis de acesso (páginas e permissões), secretarias, s
 | `chat_access_override` | `nullable \| boolean` |
 | `secretaria_ids` | `$this->route('user') === null ? 'required' : 'sometimes', 'array', 'min:1'` |
 | `secretaria_ids.*` | `array_values(array_filter([` |
+| `extra_profiles` | `nullable \| array` |
+| `extra_profiles.*` | `'string', 'distinct', Rule::in(array_values(array_diff($validSlugs, ['admin'])))` |
 | `protocol_unit_ids` | `nullable \| array` |
 | `protocol_unit_ids.*` | `integer \| distinct \| exists:protocol_organizational_units,id` |
 
-- **Outros parâmetros lidos pelo controller:** `password`, `protocol_unit_ids`, `secretaria_ids`
+- **Outros parâmetros lidos pelo controller:** `password`, `protocol_unit_ids`, `extra_profiles`, `secretaria_ids`
 
 ## `PUT /api/users/{user}`
 
@@ -557,10 +585,12 @@ Cadastro de usuários, perfis de acesso (páginas e permissões), secretarias, s
 | `chat_access_override` | `nullable \| boolean` |
 | `secretaria_ids` | `$this->route('user') === null ? 'required' : 'sometimes', 'array', 'min:1'` |
 | `secretaria_ids.*` | `array_values(array_filter([` |
+| `extra_profiles` | `nullable \| array` |
+| `extra_profiles.*` | `'string', 'distinct', Rule::in(array_values(array_diff($validSlugs, ['admin'])))` |
 | `protocol_unit_ids` | `nullable \| array` |
 | `protocol_unit_ids.*` | `integer \| distinct \| exists:protocol_organizational_units,id` |
 
-- **Outros parâmetros lidos pelo controller:** `password`, `protocol_unit_ids`, `secretaria_ids`
+- **Outros parâmetros lidos pelo controller:** `password`, `protocol_unit_ids`, `extra_profiles`, `secretaria_ids`
 
 ## `GET /api/users/{user}/equipe-aps`
 
@@ -611,29 +641,5 @@ Cadastro de usuários, perfis de acesso (páginas e permissões), secretarias, s
 | Campo | Regras |
 |---|---|
 | `photo` | `required \| file \| image \| mimes:jpg,jpeg,png,webp \| max:4096` |
-
-
-## `GET /api/users/{user}/speciality-permissions`
-
-**Detalhar** · controller `UserSpecialityPermissionController@show`
-
-- **Acesso:** Token Sanctum; somente administrador
-- **Parâmetros de rota:** `user`
-
-## `PUT /api/users/{user}/speciality-permissions`
-
-**Atualizar** · controller `UserSpecialityPermissionController@update`
-
-- **Acesso:** Token Sanctum; somente administrador
-- **Parâmetros de rota:** `user`
-- **Corpo/validação** (`UpdateUserSpecialityPermissionRequest`):
-
-| Campo | Regras |
-|---|---|
-| `permissions` | `present \| array` |
-| `permissions.*.speciality_id` | `required \| integer \| distinct \| <Exists>` |
-| `permissions.*.can_view` | `boolean` |
-| `permissions.*.can_edit` | `boolean` |
-| `permissions.*.can_insert` | `boolean` |
 
 

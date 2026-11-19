@@ -16,11 +16,15 @@ Acesso final a uma funcionalidade = **páginas do perfil ∩ páginas liberadas 
 
 ## 1. Perfil de acesso
 
-Cada usuário tem um perfil (`profile` no login) — por exemplo `admin`, `gestor`, `tecnico`, `user`, além de perfis criados pelo administrador. O perfil define:
+Cada usuário tem um perfil **principal** (`profile` no login) — por exemplo `admin`, `gestor`, `tecnico`, `user`, além de perfis criados pelo administrador. O perfil define:
 
 - **Páginas liberadas** (por exemplo `/ordem-servico`, `/clients`, `/laboratorio/pedidos`). Cada página corresponde a uma tela do sistema e a um conjunto de endpoints.
 - **Permissões operacionais** (`capabilities` em `GET /api/auth/my-permissions`): chat, ações do almoxarifado (criar, aprovar, entregar), ver viagens e relatório/histórico do cidadão, encaminhar ordens de serviço a outra secretaria ou técnico, regras de protocolo (tipos, status e visibilidade que o perfil pode cadastrar) e outras.
-- **Permissões por especialidade da fila** (ver, editar, inserir paciente), definidas por usuário.
+- **Permissões por especialidade da fila** (ver, editar, inserir paciente), definidas **no perfil** (`GET|PUT /api/access-profiles/{id}/speciality-permissions`, somente administrador). Um perfil novo começa sem acesso a nenhuma fila; o administrador sempre acessa todas.
+
+### Mais de um perfil por usuário
+
+Além do principal, o usuário pode ter **perfis adicionais** (`extra_profiles`, lista de slugs em `POST|PUT /api/users`, somente administrador; o perfil `admin` só vale como principal). As permissões efetivas são a **união** de todos os perfis: páginas, permissões operacionais, regras de protocolo e filas. Papéis como `gestor` e `tecnico` também valem quando vêm de um perfil adicional.
 
 ### Como a API aplica as páginas
 

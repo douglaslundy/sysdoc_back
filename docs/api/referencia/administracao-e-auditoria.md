@@ -20,6 +20,9 @@ Configurações (e-mail, WhatsApp, painel público, atalhos), trilha de auditori
 | `GET` | `/api/banned-ips/settings` | Settings |
 | `PUT` | `/api/banned-ips/settings` | Update Settings |
 | `DELETE` | `/api/banned-ips/{bannedIp}` | Remover |
+| `GET` | `/api/docs-api` | Listar |
+| `GET` | `/api/docs-api/openapi` | Openapi |
+| `GET` | `/api/docs-api/{slug}` | Detalhar |
 | `GET` | `/api/email/config` | Detalhar |
 | `POST` | `/api/email/config` | Atualizar |
 | `POST` | `/api/email/testar` | Test |
@@ -183,7 +186,8 @@ Configurações (e-mail, WhatsApp, painel público, atalhos), trilha de auditori
 
 | Campo | Regras |
 |---|---|
-| `strike_limit` | `required \| integer \| min:1 \| max:1000` |
+| `strike_limit` | `required_without:ban_days \| integer \| min:1 \| max:1000` |
+| `ban_days` | `required_without:strike_limit \| integer \| min:1 \| max:3650` |
 
 
 ## `DELETE /api/banned-ips/{bannedIp}`
@@ -192,6 +196,28 @@ Configurações (e-mail, WhatsApp, painel público, atalhos), trilha de auditori
 
 - **Acesso:** Token Sanctum; somente administrador
 - **Parâmetros de rota:** `bannedIp`
+
+## `GET /api/docs-api`
+
+**Listar** · controller `ApiDocsController@index`
+
+- **Acesso:** Token Sanctum
+- **Limite de requisições:** 120 por minuto
+
+## `GET /api/docs-api/openapi`
+
+**Openapi** · controller `ApiDocsController@openapi`
+
+- **Acesso:** Token Sanctum
+- **Limite de requisições:** 120 por minuto
+
+## `GET /api/docs-api/{slug}`
+
+**Detalhar** · controller `ApiDocsController@show`
+
+- **Acesso:** Token Sanctum
+- **Limite de requisições:** 120 por minuto
+- **Parâmetros de rota:** `slug`
 
 ## `GET /api/email/config`
 

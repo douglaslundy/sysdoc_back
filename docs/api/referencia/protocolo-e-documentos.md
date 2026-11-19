@@ -64,6 +64,7 @@ Protocolo com tramitação, documentos com versões e aprovação, ofícios e po
 | `POST` | `/api/protocolos/alertas` | Criar |
 | `DELETE` | `/api/protocolos/alertas/{id}` | Remover |
 | `PUT` | `/api/protocolos/alertas/{id}` | Atualizar |
+| `POST` | `/api/protocolos/alertas/{id}/restaurar` | Restaurar |
 | `GET` | `/api/protocolos/anexos/{attachment}/download` | Download Attachment |
 | `GET` | `/api/protocolos/caixa-entrada` | Inbox |
 | `GET` | `/api/protocolos/configuracoes` | Detalhar |
@@ -695,6 +696,7 @@ Protocolo com tramitação, documentos com versões e aprovação, ofícios e po
 | `destinatarios` | `nullable \| array` |
 | `destinatarios.*` | `string \| <In>` |
 | `template` | `nullable \| string` |
+| `assunto` | `nullable \| string \| max:255` |
 | `ativo` | `nullable \| boolean` |
 | `frequencia` | `nullable \| string \| max:60` |
 | `prevenir_duplicidade` | `nullable \| boolean` |
@@ -728,10 +730,18 @@ Protocolo com tramitação, documentos com versões e aprovação, ofícios e po
 | `destinatarios` | `nullable \| array` |
 | `destinatarios.*` | `string \| <In>` |
 | `template` | `nullable \| string` |
+| `assunto` | `nullable \| string \| max:255` |
 | `ativo` | `nullable \| boolean` |
 | `frequencia` | `nullable \| string \| max:60` |
 | `prevenir_duplicidade` | `nullable \| boolean` |
 
+
+## `POST /api/protocolos/alertas/{id}/restaurar`
+
+**Restaurar** · controller `ProtocolAlertController@restaurar`
+
+- **Acesso:** Token Sanctum; página em Perfis: `/protocolo*` ou `/kanban`; página em Perfis: `/protocolo/alertas,/sistema/alertas`
+- **Parâmetros de rota:** `id`
 
 ## `GET /api/protocolos/anexos/{attachment}/download`
 

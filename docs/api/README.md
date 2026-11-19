@@ -7,9 +7,10 @@ Documentação da API REST do Sysdoc, o sistema de gestão municipal (saúde, pr
 - **Formato:** JSON (`application/json`); uploads em `multipart/form-data`; PDFs e fotos como arquivo binário.
 - **Autenticação:** token Bearer (Laravel Sanctum), obtido com CPF e senha.
 - **Escopo de dados:** cada usuário enxerga os dados da **secretaria ativa** e das páginas liberadas no **perfil de acesso** dele.
-- **Tamanho:** 489 rotas (510 combinações de método + URL), em 16 grupos de módulos.
+- **Tamanho:** 515 combinações de método + URL, em 16 grupos de módulos.
+- **Dentro do sistema:** estes mesmos documentos ficam em **Sistema → Documentação da API** (usuários autenticados), com o OpenAPI para baixar.
 
-> Levantamento feito em 2026-11-19 a partir das rotas reais da aplicação. Se um módulo mudar, a referência em `referencia/` e o `openapi.json` precisam ser regenerados a partir de `php artisan route:list`.
+> Levantamento atualizado em 2026-11-19 a partir das rotas reais da aplicação. Se um módulo mudar, a referência em `referencia/` e o `openapi.json` precisam ser regenerados a partir de `php artisan route:list`.
 
 ## Comece em 3 passos
 

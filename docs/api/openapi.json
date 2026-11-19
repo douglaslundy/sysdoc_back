@@ -203,6 +203,117 @@
                 ]
             }
         },
+        "/access-profiles/{accessProfile}/speciality-permissions": {
+            "get": {
+                "summary": "Detalhar",
+                "operationId": "get_api_access_profiles_accessProfile_speciality_permissions",
+                "tags": [
+                    "Usuários, perfis e secretarias"
+                ],
+                "description": "Controller `AccessProfileSpecialityPermissionController@show`. Acesso: Token Sanctum; somente administrador.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "accessProfile",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Atualizar",
+                "operationId": "put_api_access_profiles_accessProfile_speciality_permissions",
+                "tags": [
+                    "Usuários, perfis e secretarias"
+                ],
+                "description": "Controller `AccessProfileSpecialityPermissionController@update`. Acesso: Token Sanctum; somente administrador.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "accessProfile",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/access-profiles/{access_profile}": {
             "delete": {
                 "summary": "Remover",
@@ -3710,11 +3821,11 @@
                                 "properties": {
                                     "strike_limit": {
                                         "type": "integer"
+                                    },
+                                    "ban_days": {
+                                        "type": "integer"
                                     }
-                                },
-                                "required": [
-                                    "strike_limit"
-                                ]
+                                }
                             }
                         }
                     }
@@ -6980,6 +7091,46 @@
                 ]
             }
         },
+        "/dashboard/ordens-servico": {
+            "get": {
+                "summary": "Ordens Servico",
+                "operationId": "get_api_dashboard_ordens_servico",
+                "tags": [
+                    "Dashboards"
+                ],
+                "description": "Controller `DashboardController@ordensServico`. Acesso: Token Sanctum; gate: dashboard-os.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/dashboard/tfd": {
             "get": {
                 "summary": "Tfd",
@@ -7088,6 +7239,134 @@
                     }
                 ],
                 "parameters": [
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/docs-api": {
+            "get": {
+                "summary": "Listar",
+                "operationId": "get_api_docs_api",
+                "tags": [
+                    "Administração e auditoria"
+                ],
+                "description": "Controller `ApiDocsController@index`. Acesso: Token Sanctum.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/docs-api/openapi": {
+            "get": {
+                "summary": "Openapi",
+                "operationId": "get_api_docs_api_openapi",
+                "tags": [
+                    "Administração e auditoria"
+                ],
+                "description": "Controller `ApiDocsController@openapi`. Acesso: Token Sanctum.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/docs-api/{slug}": {
+            "get": {
+                "summary": "Detalhar",
+                "operationId": "get_api_docs_api_slug",
+                "tags": [
+                    "Administração e auditoria"
+                ],
+                "description": "Controller `ApiDocsController@show`. Acesso: Token Sanctum.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "X-Secretaria-Id",
                         "in": "header",
@@ -19427,6 +19706,9 @@
                                     "template": {
                                         "type": "string"
                                     },
+                                    "assunto": {
+                                        "type": "string"
+                                    },
                                     "ativo": {
                                         "type": "boolean"
                                     },
@@ -19572,6 +19854,9 @@
                                     "template": {
                                         "type": "string"
                                     },
+                                    "assunto": {
+                                        "type": "string"
+                                    },
                                     "ativo": {
                                         "type": "boolean"
                                     },
@@ -19592,6 +19877,54 @@
                         }
                     }
                 },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/protocolos/alertas/{id}/restaurar": {
+            "post": {
+                "summary": "Restaurar",
+                "operationId": "post_api_protocolos_alertas_id_restaurar",
+                "tags": [
+                    "Protocolo, documentos e kanban"
+                ],
+                "description": "Controller `ProtocolAlertController@restaurar`. Acesso: Token Sanctum; página em Perfis: /protocolo* ou /kanban; página em Perfis: /protocolo/alertas,/sistema/alertas.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "parameters": [
                     {
                         "name": "id",
@@ -26295,117 +26628,6 @@
                                 "required": [
                                     "photo"
                                 ]
-                            }
-                        }
-                    }
-                },
-                "parameters": [
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "X-Secretaria-Id",
-                        "in": "header",
-                        "required": false,
-                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ]
-            }
-        },
-        "/users/{user}/speciality-permissions": {
-            "get": {
-                "summary": "Detalhar",
-                "operationId": "get_api_users_user_speciality_permissions",
-                "tags": [
-                    "Usuários, perfis e secretarias"
-                ],
-                "description": "Controller `UserSpecialityPermissionController@show`. Acesso: Token Sanctum; somente administrador.",
-                "responses": {
-                    "200": {
-                        "description": "Sucesso"
-                    },
-                    "401": {
-                        "description": "Token ausente, inválido ou expirado"
-                    },
-                    "403": {
-                        "description": "Sem permissão"
-                    },
-                    "422": {
-                        "description": "Erro de validação"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "X-Secretaria-Id",
-                        "in": "header",
-                        "required": false,
-                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ]
-            },
-            "put": {
-                "summary": "Atualizar",
-                "operationId": "put_api_users_user_speciality_permissions",
-                "tags": [
-                    "Usuários, perfis e secretarias"
-                ],
-                "description": "Controller `UserSpecialityPermissionController@update`. Acesso: Token Sanctum; somente administrador.",
-                "responses": {
-                    "200": {
-                        "description": "Sucesso"
-                    },
-                    "401": {
-                        "description": "Token ausente, inválido ou expirado"
-                    },
-                    "403": {
-                        "description": "Sem permissão"
-                    },
-                    "422": {
-                        "description": "Erro de validação"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "permissions": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
                             }
                         }
                     }

@@ -8,7 +8,7 @@ Estrutura do banco MySQL do Sysdoc, gerada do schema real (apenas estrutura, sem
 
 ## Índice por módulo
 
-- **Acesso, secretarias e usuários:** [`users`](#users), [`access_profiles`](#access_profiles), [`profile_page_permissions`](#profile_page_permissions), [`system_pages`](#system_pages), [`page_categories`](#page_categories), [`secretarias`](#secretarias), [`secretaria_pages`](#secretaria_pages), [`user_secretarias`](#user_secretarias), [`user_speciality_permissions`](#user_speciality_permissions), [`user_equipe_aps`](#user_equipe_aps), [`cadastro_solicitacoes`](#cadastro_solicitacoes), [`sectors`](#sectors), [`specialities`](#specialities), [`states`](#states), [`user_presences`](#user_presences)
+- **Acesso, secretarias e usuários:** [`users`](#users), [`access_profiles`](#access_profiles), [`profile_page_permissions`](#profile_page_permissions), [`system_pages`](#system_pages), [`page_categories`](#page_categories), [`secretarias`](#secretarias), [`secretaria_pages`](#secretaria_pages), [`user_secretarias`](#user_secretarias), [`user_speciality_permissions`](#user_speciality_permissions), [`user_access_profiles`](#user_access_profiles), [`profile_speciality_permissions`](#profile_speciality_permissions), [`user_equipe_aps`](#user_equipe_aps), [`cadastro_solicitacoes`](#cadastro_solicitacoes), [`sectors`](#sectors), [`specialities`](#specialities), [`states`](#states), [`user_presences`](#user_presences)
 - **Auditoria e administração:** [`audit_logs`](#audit_logs), [`logs`](#logs), [`error_logs`](#error_logs), [`banned_ips`](#banned_ips), [`message_logs`](#message_logs), [`notification_channel_configs`](#notification_channel_configs), [`system_settings`](#system_settings), [`system_notices`](#system_notices), [`system_notice_views`](#system_notice_views), [`qrcode_logs`](#qrcode_logs), [`public_queue_logs`](#public_queue_logs), [`painel_publico_config`](#painel_publico_config), [`dashboard_atalhos`](#dashboard_atalhos), [`user_atalhos`](#user_atalhos), [`monitor_aps_configs`](#monitor_aps_configs)
 - **Cidadãos:** [`clients`](#clients), [`addresses`](#addresses), [`pessoa_fotos`](#pessoa_fotos), [`sincronizacoes_cidadao`](#sincronizacoes_cidadao), [`sincronizacao_itens`](#sincronizacao_itens), [`painel_esus_presences`](#painel_esus_presences)
 - **Atendimento e fila:** [`attendance_tickets`](#attendance_tickets), [`attendance_rooms`](#attendance_rooms), [`attendance_calls`](#attendance_calls), [`attendance_records`](#attendance_records), [`queue`](#queue), [`queue_attachments`](#queue_attachments), [`queue_treatment_plans`](#queue_treatment_plans), [`queue_treatment_sessions`](#queue_treatment_sessions)
@@ -67,6 +67,7 @@ Estrutura do banco MySQL do Sysdoc, gerada do schema real (apenas estrutura, sem
 | `protocol_allowed_statuses` | json | sim |  |
 | `protocol_allowed_visibilities` | json | sim |  |
 | `protocol_can_change_visibility` | tinyint(1) | não |  |
+| `os_encaminhar_enabled` | tinyint(1) | não |  |
 
 ### profile_page_permissions
 
@@ -136,6 +137,29 @@ Estrutura do banco MySQL do Sysdoc, gerada do schema real (apenas estrutura, sem
 |---|---|---|---|
 | `id` | bigint unsigned | não | PK |
 | `user_id` | bigint unsigned | não | → users.id |
+| `speciality_id` | bigint unsigned | não | → specialities.id |
+| `can_view` | tinyint(1) | não |  |
+| `can_edit` | tinyint(1) | não |  |
+| `can_insert` | tinyint(1) | não |  |
+| `created_at` | timestamp | sim |  |
+| `updated_at` | timestamp | sim |  |
+
+### user_access_profiles
+
+| Coluna | Tipo | Nulo | Chave |
+|---|---|---|---|
+| `id` | bigint unsigned | não | PK |
+| `user_id` | bigint unsigned | não | → users.id |
+| `access_profile_id` | bigint unsigned | não | → access_profiles.id |
+| `created_at` | timestamp | sim |  |
+| `updated_at` | timestamp | sim |  |
+
+### profile_speciality_permissions
+
+| Coluna | Tipo | Nulo | Chave |
+|---|---|---|---|
+| `id` | bigint unsigned | não | PK |
+| `access_profile_id` | bigint unsigned | não | → access_profiles.id |
 | `speciality_id` | bigint unsigned | não | → specialities.id |
 | `can_view` | tinyint(1) | não |  |
 | `can_edit` | tinyint(1) | não |  |
@@ -1421,9 +1445,11 @@ Estrutura do banco MySQL do Sysdoc, gerada do schema real (apenas estrutura, sem
 | `canais` | json | sim |  |
 | `destinatarios` | json | sim |  |
 | `template` | text | sim |  |
+| `assunto` | varchar(255) | sim |  |
 | `ativo` | tinyint(1) | não |  |
 | `frequencia` | varchar(60) | sim |  |
 | `prevenir_duplicidade` | tinyint(1) | não |  |
+| `sistema` | tinyint(1) | não |  |
 | `created_at` | timestamp | sim |  |
 | `updated_at` | timestamp | sim |  |
 
