@@ -11,11 +11,23 @@
         .grid td, .grid th { padding: 6px; border: 1px solid #d1d5db; text-align: left; vertical-align: top; }
         .grid th { background: #f3f4f6; width: 22%; }
         .foto { width: 31%; max-height: 150px; margin: 0 1% 6px 0; }
+        .cabecalho { width: 100%; border-collapse: collapse; margin-bottom: 10px; border-bottom: 2px solid #111; }
+        .cabecalho td { text-align: center; padding: 0 0 8px; }
+        .brasao { height: 70px; }
+        .prefeitura { margin: 4px 0 0; font-size: 15px; font-weight: bold; text-transform: uppercase; }
+        .sec-solicitante { margin: 2px 0 0; font-size: 12px; }
         .assinatura { margin-top: 36px; width: 100%; }
         .assinatura td { width: 50%; text-align: center; padding-top: 6px; border-top: 1px solid #111; }
     </style>
 </head>
 <body>
+    <table class="cabecalho">
+        <tr><td>
+            @if($brasaoB64)<img class="brasao" src="{{ $brasaoB64 }}" alt="Brasão"><br>@endif
+            <p class="prefeitura">Prefeitura Municipal de Ilicínea</p>
+            <p class="sec-solicitante">{{ $secretariaSolicitante }}</p>
+        </td></tr>
+    </table>
     <h1>Ordem de Serviço {{ $os->numero }}</h1>
     <div class="muted">{{ $os->secretaria?->nome }} · {{ strtoupper(str_replace('_', ' ', $os->status)) }}</div>
 

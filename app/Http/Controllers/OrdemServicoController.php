@@ -224,7 +224,12 @@ class OrdemServicoController extends Controller
             return $bin ? ['fase' => $f->fase, 'src' => 'data:'.($f->mime_type ?: 'image/jpeg').';base64,'.base64_encode($bin)] : null;
         })->filter()->values();
 
-        return Pdf::loadView('pdf.ordem-servico', ['os' => $os, 'fotos' => $fotos])->setPaper('a4')
+        $brasao = public_path('files/brasao.png');
+        $brasaoB64 = is_file($brasao) ? 'data:image/png;base64,'.base64_encode(file_get_contents($brasao)) : null;
+        // A OS guarda só a secretaria de destino: a solicitante é a(s) do usuário que abriu (a de destino se ele não tiver vínculo).
+        $secretariaSolicitante = $os->solicitante?->secretarias()->orderBy('nome')->pluck('secretarias.nome')->implode(' / ') ?: ($os->secretaria?->nome ?? '');
+
+        return Pdf::loadView('pdf.ordem-servico', ['os' => $os, 'fotos' => $fotos, 'brasaoB64' => $brasaoB64, 'secretariaSolicitante' => $secretariaSolicitante])->setPaper('a4')
             ->download('OS-'.str_replace('/', '-', $os->numero).'.pdf');
     }
 
