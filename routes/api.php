@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccessProfileController;
+use App\Http\Controllers\ApiDocsController;
 use App\Http\Controllers\CadastroPublicoController;
 use App\Http\Controllers\AgendaColetaController;
 use App\Http\Controllers\AlmoxarifadoCatalogController;
@@ -233,6 +234,10 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
 
     // Dashboard analítico — throttle: 120 req/min + controle de acesso por perfil
     Route::middleware('throttle:120,1')->group(function () {
+        // Documentação da API: qualquer usuário autenticado (o menu depende da página /sistema/documentacao-api).
+        Route::get('/docs-api', [ApiDocsController::class, 'index']);
+        Route::get('/docs-api/openapi', [ApiDocsController::class, 'openapi']);
+        Route::get('/docs-api/{slug}', [ApiDocsController::class, 'show'])->where('slug', '[a-z0-9-]+');
         Route::get('/dashboard/inicio', [DashboardController::class, 'inicio']);
         Route::get('/dashboard/atalhos', [DashboardAtalhoController::class, 'index']);
         Route::get('/dashboard/meus-atalhos', [UserAtalhoController::class, 'index']);
