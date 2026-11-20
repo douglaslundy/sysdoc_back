@@ -438,7 +438,7 @@
             <div class="stat-label">Telas em produção</div>
         </div>
         <div>
-            <div class="stat-num">480+</div>
+            <div class="stat-num">500+</div>
             <div class="stat-label">Rotas na API REST</div>
         </div>
         <div>
@@ -485,7 +485,7 @@
                     <li>Disponibilidade diária por medicamento</li>
                     <li>Aquisições mensais com fonte e custo</li>
                     <li>Previsão de falta e ranking de consumo, calculados a partir do histórico</li>
-                    <li>Painel público de transparência farmacêutica (Lei 2.488)</li>
+                    <li>Painel público de transparência farmacêutica</li>
                     <li>Integração com REMUME e SUS-MG</li>
                 </ul>
             </article>
@@ -498,7 +498,7 @@
                     <li>Emissão de senha com número sequencial diário</li>
                     <li>Fila ordenada por prioridade</li>
                     <li>Agendamento por sessões: paciente com tratamento contínuo (ex: fisioterapia) sai da fila na hora, sem travar os demais</li>
-                    <li>Permissão de acesso por especialidade, configurável por usuário</li>
+                    <li>Permissão de acesso por especialidade, configurável por perfil de acesso</li>
                     <li>Painel TV público sem necessidade de login</li>
                     <li>Controle de múltiplas salas de atendimento</li>
                     <li>Histórico completo por atendente e sala</li>
@@ -604,7 +604,9 @@
                     <li>Técnico definido na abertura ou atribuído depois pelo responsável da secretaria</li>
                     <li>Atendimento: iniciar, concluir com relato, materiais e tempo gasto, ou cancelar</li>
                     <li>Encaminhamento para outra secretaria ou outro técnico (permissão configurável por perfil)</li>
-                    <li>Prazo com aviso, histórico completo de cada passo e PDF para impressão</li>
+                    <li>Prazo com aviso, histórico completo de cada passo e PDF para impressão com brasão e secretaria solicitante</li>
+                    <li>Aviso ao técnico quando a ordem é atribuída e ao solicitante quando é concluída</li>
+                    <li>Painel com ordens por status e tempo médio de resolução</li>
                 </ul>
             </article>
 
@@ -631,6 +633,7 @@
                     <li>Módulos liberados por secretaria: cada uma vê só o que o administrador permitiu</li>
                     <li>Perfil Gestor: administra os usuários e aprova os cadastros da própria secretaria</li>
                     <li>Administrador com visão de todas as secretarias</li>
+                    <li>Usuário com mais de um perfil de acesso, com as permissões somadas</li>
                 </ul>
             </article>
 
@@ -679,7 +682,7 @@
                 <h3>API REST para Integrações</h3>
                 <p>Os dados do Sysdoc disponíveis para outros sistemas, com segurança e documentação.</p>
                 <ul>
-                    <li>Mais de 480 rotas organizadas por módulo</li>
+                    <li>Mais de 500 rotas organizadas por módulo</li>
                     <li>Autenticação por token com expiração, e permissões por perfil e secretaria</li>
                     <li>Limites de requisição contra abuso e registro de todas as chamadas</li>
                     <li>Documentação para desenvolvedores com especificação OpenAPI (Postman, Insomnia, Swagger)</li>
@@ -708,6 +711,7 @@
                     <li>Histórico de conversas por setor</li>
                     <li>Notificações de novos avisos do sistema</li>
                     <li>Avisos gerais visíveis a todos os perfis</li>
+                    <li>Textos das mensagens automáticas do sistema editáveis pelo administrador na tela Alertas</li>
                     <li>Integração com WhatsApp (configurável)</li>
                 </ul>
             </article>
@@ -748,7 +752,7 @@
                     <li>Perfis de acesso configuráveis por página</li>
                     <li>Perfil Gestor por secretaria e perfil Técnico para ordens de serviço</li>
                     <li>Permissões de perfil sob medida, como encaminhar ordens de serviço a outra secretaria ou técnico</li>
-                    <li>Permissão granular por especialidade dentro da Fila — ver, editar e inserir paciente, definidos por usuário</li>
+                    <li>Permissão granular por especialidade dentro da Fila — ver, editar e inserir paciente, definidos por perfil de acesso</li>
                     <li>Auditoria automática de CREATE/UPDATE/DELETE</li>
                     <li>Registro de IP, user-agent e endpoint</li>
                     <li>Consulta de logs com filtros avançados</li>
@@ -982,7 +986,7 @@
 
             <details>
                 <summary>Como são gerenciados os perfis de acesso?</summary>
-                <p>O administrador define, por perfil, quais páginas cada colaborador pode acessar — controle granular por página, não por um conjunto fixo de perfis. Dentro do módulo de Fila, dá pra ir ainda mais fundo: por especialidade (ex: Fisioterapia, Fonoaudiologia), cada usuário pode ter permissão configurada separadamente para visualizar, editar ou inserir paciente — em vez de acesso tudo-ou-nada ao módulo inteiro.</p>
+                <p>O administrador define, por perfil, quais páginas cada colaborador pode acessar — controle granular por página, não por um conjunto fixo de perfis. Dentro do módulo de Fila, dá pra ir ainda mais fundo: por especialidade (ex: Fisioterapia, Fonoaudiologia), cada perfil pode ter permissão configurada separadamente para visualizar, editar ou inserir paciente — em vez de acesso tudo-ou-nada ao módulo inteiro. Um mesmo usuário também pode ter mais de um perfil, e as permissões de todos eles se somam.</p>
             </details>
 
             <details>

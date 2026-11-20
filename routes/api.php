@@ -130,7 +130,7 @@ Route::middleware('throttle:10,1')->post('/consulta-exame/pdf/{protocolo}', [Con
 // Motivos de petição ativos (select do formulário público)
 Route::get('/public/petition/reasons', [PeticaoMotivoController::class, 'publicIndex']);
 
-// Transparência pública - Farmácia básica (Lei 2488)
+// Transparência pública - Farmácia básica
 Route::get('/public/pharmacy/medicines/daily', [MedicineTransparencyPublicController::class, 'daily']);
 Route::get('/public/pharmacy/medicines/panel', [MedicineTransparencyPublicController::class, 'panel']);
 Route::get('/public/pharmacy/medicines/monthly-acquisitions', [MedicineTransparencyPublicController::class, 'monthly']);

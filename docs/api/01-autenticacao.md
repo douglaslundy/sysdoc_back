@@ -138,7 +138,7 @@ O pedido **não** cria o usuário: ele vira um pedido pendente (e um protocolo n
 
 ## Bloqueio automático de IP
 
-Chamadas **sem token** que geram muitos `404` (comportamento típico de varredura de sites) levam ao bloqueio do IP: por padrão **5 respostas 404 em 10 minutos** bloqueiam o IP por 30 dias (o limite é configurável pelo administrador). IP bloqueado recebe `403 {"message":"Acesso bloqueado."}` nas chamadas sem token. Chamadas que enviam token passam pelo bloqueio e são decididas pela autenticação.
+Chamadas **sem token** que geram muitos `404` (comportamento típico de varredura de sites) levam ao bloqueio do IP: por padrão **5 respostas 404 em 10 minutos** bloqueiam o IP por 30 dias (o limite e os dias de bloqueio são configuráveis pelo administrador). Pedir um caminho que só robôs procuram (`.env`, `wp-login.php`, `phpmyadmin`, `.git` e semelhantes) bloqueia o IP **na primeira tentativa**. IP bloqueado recebe `403 {"message":"Acesso bloqueado."}` nas chamadas sem token, com os cabeçalhos CORS normais, então o navegador mostra a mensagem em vez de um erro de CORS. Chamadas que enviam token passam pelo bloqueio e são decididas pela autenticação.
 
 Por isso: em integrações, nunca chame URLs que não existem sem enviar o token, e prefira sempre as URLs documentadas aqui.
 
