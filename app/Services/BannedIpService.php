@@ -111,11 +111,28 @@ class BannedIpService
         Cache::forget('scan404:'.$ip);
     }
 
+    /** Caminhos de CMS, painéis e arquivos sensíveis que este sistema nunca serve. */
+    public function isBotPath(string $path): bool
+    {
+        return (bool) preg_match(
+            '#(^|/)(\.env[^/]*|\.git(/|$)|\.svn|\.aws|\.ssh|\.htpasswd|wp-(login|admin|content|includes|json|config)[^/]*|xmlrpc\.php|wlwmanifest\.xml|phpmyadmin|pma(/|$)|adminer[^/]*|phpinfo\.php|cgi-bin|boaform|actuator|server-status|vendor/phpunit|eval-stdin\.php|shell\.php|config\.json|backup\.(sql|zip|tar)[^/]*)#i',
+            $path
+        );
+    }
+
     /** Registra um 404 anônimo; bane ao atingir o limite. */
     public function registerNotFound(?string $ip, string $path): void
     {
         if (! $ip || ! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
             return; // nunca bane loopback/rede interna
+        }
+
+        // Caminho que só robô procura (.env, wp-login.php, phpmyadmin...): bane na primeira tentativa.
+        if ($this->isBotPath($path) && ! $this->isBanned($ip)) {
+            $this->ban($ip, "Varredura de robô: tentou acessar /{$path}", 'auto', $this->banDays(), 1);
+            Log::warning('IP banido por caminho de robô', ['ip' => $ip, 'path' => $path]);
+
+            return;
         }
 
         try {

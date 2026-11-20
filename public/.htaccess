@@ -12,6 +12,9 @@ php_value max_input_time 120
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+    # Nunca serve pastas/arquivos ocultos (.git, .env, .svn...); .well-known fica livre (SSL).
+    RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$

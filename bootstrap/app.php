@@ -14,11 +14,13 @@ $app = Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
     )
     ->withMiddleware(function (MiddlewareConfig $middleware) {
-        // Pilha global: mesma ordem de antes da migração (o bloqueio de IP vem logo após o TrustProxies).
+        // Pilha global: o bloqueio de IP vem logo após o TrustProxies e o CORS.
         $middleware->use([
             Middleware\TrustProxies::class,
-            Middleware\BlockBannedIps::class,
+            // CORS antes do bloqueio: o 403 do IP banido leva os cabecalhos CORS e o navegador mostra
+            // "Acesso bloqueado" em vez de um falso erro de CORS.
             \Illuminate\Http\Middleware\HandleCors::class,
+            Middleware\BlockBannedIps::class,
             Middleware\PreventRequestsDuringMaintenance::class,
             \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
             Middleware\TrimStrings::class,
