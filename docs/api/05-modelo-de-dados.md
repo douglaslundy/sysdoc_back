@@ -19,6 +19,7 @@ Estrutura do banco MySQL do Sysdoc, gerada do schema real (apenas estrutura, sem
 - **Protocolo, documentos e kanban:** [`protocols`](#protocols), [`protocol_types`](#protocol_types), [`protocol_movements`](#protocol_movements), [`protocol_comments`](#protocol_comments), [`protocol_attachments`](#protocol_attachments), [`protocol_alerts`](#protocol_alerts), [`protocol_configs`](#protocol_configs), [`protocol_notifications`](#protocol_notifications), [`protocol_organizational_units`](#protocol_organizational_units), [`protocol_user_units`](#protocol_user_units), [`protocol_views`](#protocol_views), [`documents`](#documents), [`document_versions`](#document_versions), [`document_approvals`](#document_approvals), [`document_configs`](#document_configs), [`document_types`](#document_types), [`letters`](#letters), [`letter_attachments`](#letter_attachments), [`ordinances`](#ordinances), [`ordinance_attachments`](#ordinance_attachments), [`models`](#models), [`kanban_tasks`](#kanban_tasks)
 - **Vigilância sanitária:** [`estabelecimentos`](#estabelecimentos), [`estabelecimento_cnaes`](#estabelecimento_cnaes), [`cnaes`](#cnaes), [`alvaras`](#alvaras), [`fiscalizacoes`](#fiscalizacoes), [`fiscalizacao_movimentacoes`](#fiscalizacao_movimentacoes), [`fiscalizacao_attachments`](#fiscalizacao_attachments), [`peticao_motivos`](#peticao_motivos), [`vigilancia_configs`](#vigilancia_configs), [`vigilancia_contatos_whatsapp`](#vigilancia_contatos_whatsapp)
 - **Iluminação e ordens de serviço:** [`iluminacao_postes`](#iluminacao_postes), [`iluminacao_poste_fotos`](#iluminacao_poste_fotos), [`iluminacao_poste_movimentacoes`](#iluminacao_poste_movimentacoes), [`ordens_servico`](#ordens_servico), [`os_fotos`](#os_fotos), [`os_historico`](#os_historico), [`os_tipos_servico`](#os_tipos_servico), [`os_configuracoes`](#os_configuracoes)
+- **Ouvidoria:** [`ouvidoria_manifestacoes`](#ouvidoria_manifestacoes), [`ouvidoria_historico`](#ouvidoria_historico), [`ouvidoria_anexos`](#ouvidoria_anexos), [`ouvidoria_acessos_leitura`](#ouvidoria_acessos_leitura)
 - **Chat:** [`chat_conversations`](#chat_conversations), [`chat_conversation_participants`](#chat_conversation_participants), [`chat_messages`](#chat_messages), [`chat_attachments`](#chat_attachments), [`chat_connections`](#chat_connections), [`chat_usage_daily`](#chat_usage_daily), [`chat_realtime_configs`](#chat_realtime_configs)
 
 ## Acesso, secretarias e usuários
@@ -114,6 +115,7 @@ Estrutura do banco MySQL do Sysdoc, gerada do schema real (apenas estrutura, sem
 | `nome` | varchar(120) | não | único |
 | `slug` | varchar(60) | não | único |
 | `ativa` | tinyint(1) | não |  |
+| `ouvidoria_publica` | tinyint(1) | não |  |
 | `created_at` | timestamp | sim |  |
 | `updated_at` | timestamp | sim |  |
 
@@ -2029,6 +2031,77 @@ Estrutura do banco MySQL do Sysdoc, gerada do schema real (apenas estrutura, sem
 | `updated_at` | timestamp | sim |  |
 
 ## Chat
+
+### ouvidoria_manifestacoes
+
+| Coluna | Tipo | Nulo | Chave |
+|---|---|---|---|
+| `id` | bigint unsigned | não | PK |
+| `protocolo` | varchar(20) | não | único |
+| `senha_hash` | varchar(255) | não |  |
+| `secretaria_id` | bigint unsigned | não | → secretarias.id |
+| `tipo` | varchar(20) | não |  |
+| `assunto` | varchar(160) | não |  |
+| `descricao` | text | não |  |
+| `status` | varchar(20) | não |  |
+| `anonimo` | tinyint(1) | não |  |
+| `nome` | varchar(120) | sim |  |
+| `email` | varchar(160) | sim |  |
+| `phone` | varchar(30) | sim |  |
+| `cpf` | text | sim |  |
+| `responsavel_id` | bigint unsigned | sim | → users.id |
+| `resposta` | text | sim |  |
+| `respondida_por_id` | bigint unsigned | sim | → users.id |
+| `respondida_em` | timestamp | sim |  |
+| `prazo_em` | timestamp | sim |  |
+| `prazo_avisado_em` | timestamp | sim |  |
+| `tentativas_falhas` | tinyint unsigned | não |  |
+| `bloqueado_ate` | timestamp | sim |  |
+| `created_at` | timestamp | sim |  |
+| `updated_at` | timestamp | sim |  |
+
+`cpf` é guardado cifrado. `senha_hash` e os controles de bloqueio nunca saem pela API.
+
+### ouvidoria_historico
+
+| Coluna | Tipo | Nulo | Chave |
+|---|---|---|---|
+| `id` | bigint unsigned | não | PK |
+| `manifestacao_id` | bigint unsigned | não | → ouvidoria_manifestacoes.id |
+| `user_id` | bigint unsigned | sim | → users.id |
+| `acao` | varchar(30) | não |  |
+| `status_de` | varchar(20) | sim |  |
+| `status_para` | varchar(20) | sim |  |
+| `secretaria_de` | bigint unsigned | sim | → secretarias.id |
+| `secretaria_para` | bigint unsigned | sim | → secretarias.id |
+| `observacao` | text | sim |  |
+| `interno` | tinyint(1) | não |  |
+| `created_at` | timestamp | sim |  |
+
+`user_id` nulo indica ação do cidadão.
+
+### ouvidoria_anexos
+
+| Coluna | Tipo | Nulo | Chave |
+|---|---|---|---|
+| `id` | bigint unsigned | não | PK |
+| `manifestacao_id` | bigint unsigned | não | → ouvidoria_manifestacoes.id |
+| `disk` | varchar(20) | não |  |
+| `path` | varchar(255) | não |  |
+| `original_name` | varchar(255) | sim |  |
+| `mime_type` | varchar(100) | sim |  |
+| `size_bytes` | bigint unsigned | não |  |
+| `created_at` | timestamp | sim |  |
+| `updated_at` | timestamp | sim |  |
+
+### ouvidoria_acessos_leitura
+
+| Coluna | Tipo | Nulo | Chave |
+|---|---|---|---|
+| `manifestacao_id` | bigint unsigned | não | PK, → ouvidoria_manifestacoes.id |
+| `secretaria_id` | bigint unsigned | não | PK, → secretarias.id |
+
+Secretarias de origem que continuam vendo, só em leitura, uma manifestação encaminhada.
 
 ### chat_conversations
 

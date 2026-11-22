@@ -75,6 +75,7 @@ Descubra as opções do usuário com `GET /api/auth/secretarias` (`{"secretarias
 Regras que dependem da secretaria:
 
 - **Ordem de serviço:** o usuário comum só abre OS para as **próprias** secretarias. O perfil com a permissão `os_encaminhar_enabled` (e o administrador) pode abrir para qualquer secretaria e **encaminhar** uma OS a outra secretaria ou a outro técnico (`POST /api/ordens-servico/{id}/encaminhar`).
+- **Ouvidoria:** a secretaria só aparece no portal público (`/api/public/ouvidoria/opcoes`) se estiver `ativa` e com `ouvidoria_publica` ligada (`PUT /api/secretarias/{id}`); só a Saúde nasce liberada. Qualquer usuário com a página `/sistema/ouvidoria` responde, muda o status e encaminha, mas só nas manifestações da secretaria ativa. Ao encaminhar para outra secretaria, a de origem continua vendo em somente leitura. Nome, e-mail, telefone e CPF do cidadão aparecem mascarados e só são revelados (com registro na auditoria) por `POST /api/ouvidoria/{id}/dados-pessoais`.
 - **Técnico de OS:** é um usuário com perfil `tecnico` vinculado à secretaria; não existe cadastro separado de técnicos.
 - **Listas vazias:** se a secretaria ativa não tem dados ou o módulo não foi liberado para ela, a lista volta vazia ou `403`. Confira primeiro `X-Secretaria-Id` e `GET /api/auth/my-permissions`.
 
@@ -85,6 +86,7 @@ Regras que dependem da secretaria:
 | `admin` | Acesso total. Enxerga todas as secretarias. Único que acessa rotas "somente administrador" |
 | `gestor` | Gestor de uma secretaria: lista os usuários da **sua** secretaria, aprova ou recusa pedidos de cadastro dela e atua dentro do escopo dela |
 | `tecnico` | Atende ordens de serviço: vê, atende e conclui OS; precisa estar vinculado a uma secretaria |
+| `ouvidor` | Responde a Ouvidoria: só as páginas da Ouvidoria (`/sistema/ouvidoria`) e o início. Vê as manifestações da secretaria ativa; o admin vê todas |
 | demais | Conforme as páginas liberadas pelo administrador |
 
 ## 4. Visibilidade de protocolos
