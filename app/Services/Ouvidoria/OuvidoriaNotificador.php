@@ -12,6 +12,18 @@ use Throwable;
 /** Avisos da ouvidoria por WhatsApp e e-mail. Nunca lança; cada destinatário/canal é isolado. */
 class OuvidoriaNotificador
 {
+    /** Avisos saem depois da resposta: canal lento ou fora do ar nunca segura nem derruba a requisição. */
+    public static function depoisDaResposta(callable $fn): void
+    {
+        dispatch(function () use ($fn) {
+            try {
+                $fn(app(self::class));
+            } catch (Throwable $e) {
+                report($e);
+            }
+        })->afterResponse();
+    }
+
     public function registrada(OuvidoriaManifestacao $m): void
     {
         $this->paraUsuarios($this->ouvidores($m->secretaria_id), $m, 'ouvidoria_registrada',

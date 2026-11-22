@@ -23,6 +23,7 @@ class SecretariaAdminController extends Controller
             'nome' => $data['nome'],
             'slug' => $this->slugUnico($data['nome']),
             'ativa' => $data['ativa'] ?? true,
+            'ouvidoria_publica' => $data['ouvidoria_publica'] ?? false,
         ]);
         $secretaria->pages()->sync($data['page_ids'] ?? []);
 

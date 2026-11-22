@@ -11,6 +11,7 @@ use App\Services\Ouvidoria\OuvidoriaNotificador;
 use App\Services\Ouvidoria\OuvidoriaRegistroService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class OuvidoriaPublicaController extends Controller
 {
@@ -18,8 +19,14 @@ class OuvidoriaPublicaController extends Controller
 
     private const BLOQUEIO_MIN = 15;
 
-    // Hash fixo: protocolo inexistente gasta o mesmo tempo de um existente (sem enumeração por tempo).
-    private const HASH_FALSO = '$2y$12$usesomesillystringforeOZ9tqTzC0X4mB9VQe0m5Jj5x6o1p3nXe';
+
+    /** Hash gerado com o custo configurado: protocolo inexistente gasta o mesmo tempo de um existente. */
+    public static function hashFalso(): string
+    {
+        static $hash;
+
+        return $hash ??= Hash::make(Str::random(16));
+    }
 
     public function __construct()
     {
@@ -40,7 +47,7 @@ class OuvidoriaPublicaController extends Controller
     {
         $r = $service->registrar($request->dadosManifestacao(), $request->file('anexos', []));
         $m = $r['manifestacao'];
-        app(OuvidoriaNotificador::class)->registrada($m);
+        OuvidoriaNotificador::depoisDaResposta(fn (OuvidoriaNotificador $n) => $n->registrada($m));
 
         return response()->json([
             'protocolo' => $m->protocolo,
@@ -56,7 +63,7 @@ class OuvidoriaPublicaController extends Controller
         $m = OuvidoriaManifestacao::withoutSecretaria()->where('protocolo', $request->input('protocolo'))->first();
         $senha = (string) $request->input('senha');
 
-        $ok = Hash::check($senha, $m?->senha_hash ?? self::HASH_FALSO);
+        $ok = Hash::check($senha, $m?->senha_hash ?? self::hashFalso());
         $bloqueada = $m && $m->bloqueado_ate && $m->bloqueado_ate->isFuture();
 
         if (! $m || $bloqueada || ! $ok) {

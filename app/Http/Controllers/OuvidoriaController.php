@@ -89,7 +89,7 @@ class OuvidoriaController extends Controller
         $this->exigirAgir($m);
 
         $resp = DB::transaction(function () use ($request, $m) {
-            $m = $this->travar($m);
+            $m = $this->travarParaAgir($m);
             if ($m->estaFinal()) {
                 return response()->json(['message' => 'Manifestação encerrada: peça ao administrador para reabri-la.'], 422);
             }
@@ -105,7 +105,8 @@ class OuvidoriaController extends Controller
         });
 
         if ($resp->isSuccessful()) {
-            app(OuvidoriaNotificador::class)->respondida($m->fresh());
+            $atual = $m->fresh();
+            OuvidoriaNotificador::depoisDaResposta(fn (OuvidoriaNotificador $n) => $n->respondida($atual));
         }
 
         return $resp;
@@ -118,7 +119,7 @@ class OuvidoriaController extends Controller
         $novo = (string) $request->input('status');
 
         return DB::transaction(function () use ($request, $m, $novo) {
-            $m = $this->travar($m);
+            $m = $this->travarParaAgir($m);
             $admin = $request->user()->profile === 'admin';
             $permitido = $admin ? $m->status !== $novo : in_array($novo, OuvidoriaManifestacao::TRANSICOES[$m->status] ?? [], true);
             if (! $permitido) {
@@ -136,7 +137,10 @@ class OuvidoriaController extends Controller
     {
         $m = $this->visivel($id);
         $this->exigirAgir($m);
-        $this->historico($m, $request->user(), 'comentario', null, null, $request->input('observacao'), interno: true);
+        DB::transaction(function () use ($request, $m) {
+            $m = $this->travarParaAgir($m);
+            $this->historico($m, $request->user(), 'comentario', null, null, $request->input('observacao'), interno: true);
+        });
 
         return response()->json(['ok' => true]);
     }
@@ -160,7 +164,7 @@ class OuvidoriaController extends Controller
         }
 
         $resp = DB::transaction(function () use ($request, $m, $destino, $novaSec) {
-            $m = $this->travar($m);
+            $m = $this->travarParaAgir($m);
             if ($m->estaFinal()) {
                 return response()->json(['message' => 'Manifestação encerrada: não pode ser encaminhada.'], 422);
             }
@@ -179,7 +183,8 @@ class OuvidoriaController extends Controller
         });
 
         if ($resp->isSuccessful()) {
-            app(OuvidoriaNotificador::class)->encaminhada($m->fresh());
+            $atual = $m->fresh();
+            OuvidoriaNotificador::depoisDaResposta(fn (OuvidoriaNotificador $n) => $n->encaminhada($atual));
         }
 
         return $resp;
@@ -201,6 +206,15 @@ class OuvidoriaController extends Controller
     protected function travar(OuvidoriaManifestacao $m): OuvidoriaManifestacao
     {
         return OuvidoriaManifestacao::withoutSecretaria()->lockForUpdate()->findOrFail($m->id);
+    }
+
+    /** Trava e reconfere a posse: entre a leitura e o lock outra pessoa pode ter encaminhado o caso. */
+    protected function travarParaAgir(OuvidoriaManifestacao $m): OuvidoriaManifestacao
+    {
+        $travada = $this->travar($m);
+        $this->exigirAgir($travada);
+
+        return $travada;
     }
 
     protected function historico(OuvidoriaManifestacao $m, User $user, string $acao, ?string $de, ?string $para, ?string $obs, bool $interno = false, ?int $secDe = null, ?int $secPara = null): void
