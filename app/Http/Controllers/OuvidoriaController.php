@@ -9,6 +9,7 @@ use App\Http\Requests\OuvidoriaStatusRequest;
 use App\Models\OuvidoriaHistorico;
 use App\Models\OuvidoriaManifestacao;
 use App\Models\User;
+use App\Services\AuditService;
 use App\Services\Ouvidoria\OuvidoriaDestinatarios;
 use App\Services\Ouvidoria\OuvidoriaNotificador;
 use App\Services\Ouvidoria\OuvidoriaVisibilidade;
@@ -68,10 +69,28 @@ class OuvidoriaController extends Controller
         $m = $this->visivel($id);
         $m->load(['responsavel', 'secretaria', 'anexos:id,manifestacao_id,original_name,mime_type,size_bytes', 'historico.user']);
 
-        return response()->json($m->toArray() + [
+        // Dados do cidadão saem mascarados; o claro só pela rota dados-pessoais, que audita.
+        return response()->json($m->dadosMascarados() + $m->toArray() + [
             'tipo_rotulo' => OuvidoriaManifestacao::TIPOS[$m->tipo] ?? $m->tipo,
             'pode_agir' => $this->visibilidade->podeAgir($m),
+            'dados_mascarados' => true,
         ]);
+    }
+
+    public function dadosPessoais(int $id): JsonResponse
+    {
+        $m = $this->visivel($id);
+        $this->exigirAgir($m);
+
+        if (! $m->anonimo) {
+            // Auditoria registra quem revelou e quais campos, nunca o valor.
+            AuditService::record('OUVIDORIA_DADOS_REVELADOS', $m, null, [
+                'protocolo' => $m->protocolo,
+                'campos' => array_keys(array_filter($m->dadosPessoais(), fn ($v) => $v !== null && $v !== '')),
+            ]);
+        }
+
+        return response()->json($m->dadosPessoais());
     }
 
     public function anexo(int $id, int $anexoId)

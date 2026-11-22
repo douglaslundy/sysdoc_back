@@ -73,6 +73,29 @@ class OuvidoriaManifestacao extends Model
         return $this->belongsTo(Secretaria::class)->select('id', 'nome');
     }
 
+    /** Dados do cidadão em claro: só saem pela rota de revelar, que grava auditoria. */
+    public function dadosPessoais(): array
+    {
+        return ['nome' => $this->nome, 'email' => $this->email, 'phone' => $this->phone, 'cpf' => $this->cpf];
+    }
+
+    /** Mesmos campos, mascarados (ex.: CPF ***.***.***-25) para a tela de detalhe. */
+    public function dadosMascarados(): array
+    {
+        $d = $this->dadosPessoais();
+        $oculta = fn (?string $v, int $fim) => $v === null || $v === '' ? $v : str_repeat('*', max(strlen($v) - $fim, 0)).substr($v, -$fim);
+        $cpf = preg_replace('/\D/', '', (string) $d['cpf']);
+        $nome = trim((string) $d['nome']);
+        $email = (string) $d['email'];
+
+        return [
+            'nome' => $nome === '' ? null : (str_contains($nome, ' ') ? strtok($nome, ' ').' ***' : $nome[0].'***'),
+            'email' => str_contains($email, '@') ? $email[0].'***@'.substr(strrchr($email, '@'), 1) : null,
+            'phone' => $oculta($d['phone'] === null ? null : preg_replace('/\D/', '', $d['phone']), 4),
+            'cpf' => strlen($cpf) === 11 ? '***.***.***-'.substr($cpf, -2) : null,
+        ];
+    }
+
     public function estaFinal(): bool
     {
         return in_array($this->status, self::FINAIS, true);

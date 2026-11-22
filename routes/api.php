@@ -645,6 +645,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
     Route::get('/ouvidoria/{id}', [\App\Http\Controllers\OuvidoriaController::class, 'show'])->whereNumber('id');
     Route::get('/ouvidoria/{id}/anexos/{anexoId}', [\App\Http\Controllers\OuvidoriaController::class, 'anexo'])->whereNumber(['id', 'anexoId']);
     Route::middleware('throttle:60,1')->group(function () {
+        Route::post('/ouvidoria/{id}/dados-pessoais', [\App\Http\Controllers\OuvidoriaController::class, 'dadosPessoais'])->whereNumber('id');
         Route::post('/ouvidoria/{id}/responder', [\App\Http\Controllers\OuvidoriaController::class, 'responder'])->whereNumber('id');
         Route::post('/ouvidoria/{id}/status', [\App\Http\Controllers\OuvidoriaController::class, 'status'])->whereNumber('id');
         Route::post('/ouvidoria/{id}/encaminhar', [\App\Http\Controllers\OuvidoriaController::class, 'encaminhar'])->whereNumber('id');

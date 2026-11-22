@@ -45,5 +45,8 @@ Corpo: `protocolo`, `senha`. Resposta `200`: `protocolo`, `tipo`, `tipo_rotulo`,
 | `POST` | `/api/ouvidoria/{id}/status` | Alterar status (`status`: `em_analise`, `encerrada` ou `arquivada`; `observacao`) |
 | `POST` | `/api/ouvidoria/{id}/encaminhar` | Encaminhar (`user_id`, `secretaria_id`, `observacao`) |
 | `POST` | `/api/ouvidoria/{id}/comentarios` | Comentário interno (`observacao`), invisível ao cidadão |
+| `POST` | `/api/ouvidoria/{id}/dados-pessoais` | Revela nome, e-mail, telefone e CPF em claro e grava `OUVIDORIA_DADOS_REVELADOS` na auditoria (só a secretaria dona; `403` em somente leitura) |
+
+O detalhe (`GET /api/ouvidoria/{id}`) devolve esses quatro campos mascarados (`dados_mascarados: true`).
 
 Ações de escrita em manifestação em somente leitura devolvem `403`.
