@@ -21,7 +21,8 @@ class OuvidoriaAvisarPrazos extends Command
             ->whereNotIn('status', OuvidoriaManifestacao::FINAIS)
             ->where('prazo_em', '<=', now()->addDays(self::DIAS_ANTES))
             ->whereNull('prazo_avisado_em')
-            ->each(function (OuvidoriaManifestacao $m) use ($notificador, &$n) {
+            // lazyById pagina pela chave: each() usa offset e pularia linhas que saem do filtro ao serem avisadas.
+            ->lazyById(500)->each(function (OuvidoriaManifestacao $m) use ($notificador, &$n) {
                 $notificador->prazoProximo($m);
                 $m->forceFill(['prazo_avisado_em' => now()])->save();
                 $n++;

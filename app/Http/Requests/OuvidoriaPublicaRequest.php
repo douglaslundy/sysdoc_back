@@ -8,6 +8,7 @@ use App\Rules\ValidCpf;
 use App\Services\Cadastro\CaptchaDesafio;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\Rule;
 
 class OuvidoriaPublicaRequest extends FormRequest
@@ -64,6 +65,7 @@ class OuvidoriaPublicaRequest extends FormRequest
             'anexos' => ['nullable', 'array', 'max:3'],
             'anexos.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'mimetypes:image/jpeg,image/png,application/pdf', 'max:5120'],
             'captcha_token' => ['required', 'string', 'max:2000'],
+            'iniciado' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -73,12 +75,30 @@ class OuvidoriaPublicaRequest extends FormRequest
             if ($this->boolean('identificar') && ! $this->filled('email') && ! $this->filled('phone')) {
                 $v->errors()->add('email', 'Informe e-mail ou telefone para contato.');
             }
+            if ($v->errors()->isEmpty() && ! $this->preenchidoComCalma()) {
+                $v->errors()->add('iniciado', 'Formulário enviado rápido demais. Aguarde alguns segundos e tente novamente.');
+            }
             // Por último e só se o resto passou: captcha errado queima o token.
             if ($v->errors()->isEmpty()
                 && ! app(CaptchaDesafio::class)->validar((string) $this->input('captcha_token'), (string) $this->input('captcha_resposta'))) {
                 $v->errors()->add('captcha_resposta', 'Resposta incorreta ou expirada. Tente novamente.');
             }
         });
+    }
+
+    private function preenchidoComCalma(): bool
+    {
+        $minimo = (int) config('ouvidoria.tempo_minimo_segundos');
+        if ($minimo <= 0) {
+            return true;
+        }
+        try {
+            $abertura = (int) Crypt::decryptString((string) $this->input('iniciado'));
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return now()->timestamp - $abertura >= $minimo;
     }
 
     /** Anônimo nunca leva dado pessoal, mesmo que o corpo o envie. */

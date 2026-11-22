@@ -189,7 +189,7 @@ class OuvidoriaController extends Controller
             }
             $antes = $m->status;
             $secAntes = (int) $m->secretaria_id;
-            $m->update(['responsavel_id' => $destino->id, 'status' => 'encaminhada', 'secretaria_id' => $novaSec]);
+            $m->update(['responsavel_id' => $destino->id, 'status' => 'encaminhada', 'secretaria_id' => $novaSec, 'prazo_avisado_em' => null]);
 
             if ($secAntes !== $novaSec) {
                 // A origem continua vendo (só leitura); a nova dona deixa de ser "leitura" se estava devolvendo.

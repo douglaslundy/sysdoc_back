@@ -10,6 +10,8 @@ use App\Services\Cadastro\CaptchaDesafio;
 use App\Services\Ouvidoria\OuvidoriaNotificador;
 use App\Services\Ouvidoria\OuvidoriaRegistroService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -40,6 +42,8 @@ class OuvidoriaPublicaController extends Controller
             'secretarias' => Secretaria::where('ativa', true)->where('ouvidoria_publica', true)->orderBy('nome')->get(['id', 'nome']),
             'tipos' => collect(OuvidoriaManifestacao::TIPOS)->map(fn ($rotulo, $valor) => ['valor' => $valor, 'rotulo' => $rotulo])->values(),
             'desafio' => $captcha->gerar(),
+            // Selo cifrado com a hora de abertura: o servidor mede o tempo de preenchimento sem confiar no cliente.
+            'iniciado' => Crypt::encryptString((string) now()->timestamp),
         ]);
     }
 
@@ -92,12 +96,19 @@ class OuvidoriaPublicaController extends Controller
 
     private function registrarFalha(OuvidoriaManifestacao $m): void
     {
-        $falhas = (int) $m->tentativas_falhas + 1;
-        if ($falhas >= self::MAX_FALHAS) {
-            $m->forceFill(['tentativas_falhas' => 0, 'bloqueado_ate' => now()->addMinutes(self::BLOQUEIO_MIN)])->save();
+        // Lock + leitura fresca: tentativas simultâneas não podem perder contagem e furar o limite de 5.
+        DB::transaction(function () use ($m) {
+            $atual = OuvidoriaManifestacao::withoutSecretaria()->lockForUpdate()->find($m->id);
+            if (! $atual) {
+                return;
+            }
+            $falhas = (int) $atual->tentativas_falhas + 1;
+            if ($falhas >= self::MAX_FALHAS) {
+                $atual->forceFill(['tentativas_falhas' => 0, 'bloqueado_ate' => now()->addMinutes(self::BLOQUEIO_MIN)])->save();
 
-            return;
-        }
-        $m->forceFill(['tentativas_falhas' => $falhas])->save();
+                return;
+            }
+            $atual->forceFill(['tentativas_falhas' => $falhas])->save();
+        });
     }
 }
