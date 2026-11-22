@@ -27652,7 +27652,7 @@
                 "tags": [
                     "Ouvidoria"
                 ],
-                "description": "Controller `OuvidoriaPublicaController@opcoes`. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
+                "description": "Controller `OuvidoriaPublicaController@opcoes`. Devolve também `iniciado`, o selo de abertura que o envio deve devolver. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
                 "responses": {
                     "200": {
                         "description": "Sucesso"
@@ -27747,6 +27747,10 @@
                                     },
                                     "captcha_resposta": {
                                         "type": "string"
+                                    },
+                                    "iniciado": {
+                                        "type": "string",
+                                        "description": "Selo devolvido por GET /public/ouvidoria/opcoes; o envio só vale depois de alguns segundos (OUVIDORIA_TEMPO_MINIMO, padrão 3)."
                                     }
                                 },
                                 "required": [
@@ -27895,7 +27899,7 @@
                 "tags": [
                     "Ouvidoria"
                 ],
-                "description": "Controller `OuvidoriaController@show`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "description": "Controller `OuvidoriaController@show`. Nome, e-mail, telefone e CPF vêm mascarados (`dados_mascarados: true`); o claro sai por `POST /ouvidoria/{id}/dados-pessoais`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
                 "responses": {
                     "200": {
                         "description": "Sucesso"
@@ -28200,6 +28204,54 @@
                         }
                     }
                 }
+            }
+        },
+        "/ouvidoria/{id}/dados-pessoais": {
+            "post": {
+                "summary": "Revelar dados pessoais do cidadão",
+                "operationId": "post_api_ouvidoria_id_dados_pessoais",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@dadosPessoais`. Devolve nome, e-mail, telefone e CPF em claro (o detalhe da manifestação os traz mascarados) e grava `OUVIDORIA_DADOS_REVELADOS` na auditoria. Só a secretaria dona; somente leitura devolve 403. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Dados em claro (nulos quando a manifestação é anônima)"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão ou manifestação em somente leitura"
+                    },
+                    "404": {
+                        "description": "Manifestação não encontrada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
             }
         },
         "/ouvidoria/{id}/comentarios": {

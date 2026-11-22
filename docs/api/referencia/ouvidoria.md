@@ -17,13 +17,13 @@ Portal público para o cidadão registrar manifestações (reclamação, sugest�
 
 | Método | URL | Ação | Limite |
 |---|---|---|---|
-| `GET` | `/api/public/ouvidoria/opcoes` | Secretarias liberadas, tipos e desafio (captcha) | 30/min por IP |
+| `GET` | `/api/public/ouvidoria/opcoes` | Secretarias liberadas, tipos, desafio (captcha) e `iniciado` (selo de abertura do formulário) | 30/min por IP |
 | `POST` | `/api/public/ouvidoria` | Registrar manifestação (`multipart/form-data`) | 5/h por IP |
 | `POST` | `/api/public/ouvidoria/consulta` | Consultar por protocolo e senha | 10/min por IP |
 
 ### `POST /api/public/ouvidoria`
 
-Campos: `secretaria_id`, `tipo`, `assunto` (3 a 160), `descricao` (10 a 5000), `captcha_token`, `captcha_resposta`, `anexos[]` (até 3 arquivos JPG, PNG ou PDF, 5 MB cada, tipo conferido pelo conteúdo) e `website` (isca: deve ficar vazio).
+Campos: `secretaria_id`, `tipo`, `assunto` (3 a 160), `descricao` (10 a 5000), `captcha_token`, `captcha_resposta`, `iniciado` (selo recebido em `opcoes`; envio antes de 3 s, ajustável por `OUVIDORIA_TEMPO_MINIMO`, é rejeitado), `anexos[]` (até 3 arquivos JPG, PNG ou PDF, 5 MB cada, tipo conferido pelo conteúdo) e `website` (isca: deve ficar vazio).
 
 Identificação opcional: envie `identificar=1` junto com `nome` e ao menos um entre `email` e `phone`; `cpf` é opcional e validado. Sem `identificar`, nome, e-mail, telefone e CPF são ignorados e a manifestação é anônima.
 
