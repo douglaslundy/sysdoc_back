@@ -226,6 +226,17 @@ class AppServiceProvider extends ServiceProvider
             ->by('cadastro-publico-leitura|'.$request->ip())
             ->response(fn () => response()->json(['message' => 'Muitas requisições. Aguarde um instante.'], 429)));
 
+        // Ouvidoria pública: registro 5/h por IP; consulta 10/min por IP (o bloqueio por protocolo fica no controller).
+        RateLimiter::for('ouvidoria-create', fn (Request $request) => Limit::perHour(5)
+            ->by('ouvidoria-create|'.$request->ip())
+            ->response(fn () => response()->json(['message' => 'Muitos registros deste local. Tente novamente mais tarde.'], 429)));
+        RateLimiter::for('ouvidoria-consulta', fn (Request $request) => Limit::perMinute(10)
+            ->by('ouvidoria-consulta|'.$request->ip())
+            ->response(fn () => response()->json(['message' => 'Muitas consultas. Aguarde um instante.'], 429)));
+        RateLimiter::for('ouvidoria-leitura', fn (Request $request) => Limit::perMinute(30)
+            ->by('ouvidoria-leitura|'.$request->ip())
+            ->response(fn () => response()->json(['message' => 'Muitas requisições. Aguarde um instante.'], 429)));
+
         RateLimiter::for('forgot-password', function (Request $request) {
             $email = (string) $request->input('email', '');
             $key = sprintf('forgot-password|%s|%s', mb_strtolower(trim($email)), $request->ip());
