@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\OuvidoriaComentarioRequest;
+use App\Http\Requests\OuvidoriaEncaminharRequest;
 use App\Http\Requests\OuvidoriaResponderRequest;
 use App\Http\Requests\OuvidoriaStatusRequest;
 use App\Models\OuvidoriaHistorico;
 use App\Models\OuvidoriaManifestacao;
 use App\Models\User;
+use App\Services\Ouvidoria\OuvidoriaDestinatarios;
 use App\Services\Ouvidoria\OuvidoriaVisibilidade;
 use App\Services\Secretarias\ActiveSecretaria;
 use Illuminate\Http\JsonResponse;
@@ -132,6 +134,44 @@ class OuvidoriaController extends Controller
         $this->historico($m, $request->user(), 'comentario', null, null, $request->input('observacao'), interno: true);
 
         return response()->json(['ok' => true]);
+    }
+
+    public function destinatarios(OuvidoriaDestinatarios $dest): JsonResponse
+    {
+        return response()->json($dest->elegiveis()->map(fn (User $u) => [
+            'id' => $u->id, 'name' => $u->name, 'profile' => $u->profile, 'secretarias' => $dest->secretariasDe($u),
+        ])->filter(fn ($d) => $d['secretarias']->isNotEmpty())->values());
+    }
+
+    public function encaminhar(OuvidoriaEncaminharRequest $request, int $id, OuvidoriaDestinatarios $dest): JsonResponse
+    {
+        $m = $this->visivel($id);
+        $this->exigirAgir($m);
+
+        $destino = User::findOrFail((int) $request->input('user_id'));
+        $novaSec = (int) $request->input('secretaria_id');
+        if (! $dest->valido($destino, $novaSec)) {
+            return response()->json(['message' => 'Destinatário inválido para a secretaria escolhida.'], 422);
+        }
+
+        return DB::transaction(function () use ($request, $m, $destino, $novaSec) {
+            $m = $this->travar($m);
+            if ($m->estaFinal()) {
+                return response()->json(['message' => 'Manifestação encerrada: não pode ser encaminhada.'], 422);
+            }
+            $antes = $m->status;
+            $secAntes = (int) $m->secretaria_id;
+            $m->update(['responsavel_id' => $destino->id, 'status' => 'encaminhada', 'secretaria_id' => $novaSec]);
+
+            if ($secAntes !== $novaSec) {
+                // A origem continua vendo (só leitura); a nova dona deixa de ser "leitura" se estava devolvendo.
+                DB::table('ouvidoria_acessos_leitura')->insertOrIgnore(['manifestacao_id' => $m->id, 'secretaria_id' => $secAntes]);
+                DB::table('ouvidoria_acessos_leitura')->where('manifestacao_id', $m->id)->where('secretaria_id', $novaSec)->delete();
+            }
+            $this->historico($m, $request->user(), 'encaminhada', $antes, 'encaminhada', $request->input('observacao'), interno: true, secDe: $secAntes, secPara: $novaSec);
+
+            return response()->json($m->fresh());
+        });
     }
 
     protected function visivel(int $id): OuvidoriaManifestacao
