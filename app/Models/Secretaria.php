@@ -12,9 +12,9 @@ class Secretaria extends Model
     // Páginas de gestão (admin/gestor): não dependem da liberação da secretaria.
     public const PAGINAS_GESTAO = ['/users', '/perfis', '/secretarias', '/usuarios/aprovacoes'];
 
-    protected $fillable = ['nome', 'slug', 'ativa'];
+    protected $fillable = ['nome', 'slug', 'ativa', 'ouvidoria_publica'];
 
-    protected $casts = ['ativa' => 'boolean'];
+    protected $casts = ['ativa' => 'boolean', 'ouvidoria_publica' => 'boolean'];
 
     // REGRA: toda migration/seeder que cria uma system_page deve chamar liberarPaginas(), senão ninguém a vê.
     public static function liberarPaginas(array $paths, ?array $slugs = null): void

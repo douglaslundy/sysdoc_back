@@ -34,7 +34,7 @@ class SecretariaAdminController extends Controller
         $secretaria = Secretaria::findOrFail($id);
         $data = $request->validated();
         // O slug nunca muda: ele identifica a secretaria em código (ex.: Secretaria::SAUDE_SLUG).
-        $secretaria->update(array_intersect_key($data, array_flip(['nome', 'ativa'])));
+        $secretaria->update(array_intersect_key($data, array_flip(['nome', 'ativa', 'ouvidoria_publica'])));
         if (array_key_exists('page_ids', $data)) {
             $secretaria->pages()->sync($data['page_ids']);
         }
