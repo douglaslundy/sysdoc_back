@@ -641,6 +641,13 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
 
     // Ouvidoria interna (acesso por route_permissions.php; escopo por secretaria dentro do controller)
     Route::get('/ouvidoria', [\App\Http\Controllers\OuvidoriaController::class, 'index']);
+    Route::get('/ouvidoria/{id}', [\App\Http\Controllers\OuvidoriaController::class, 'show'])->whereNumber('id');
+    Route::get('/ouvidoria/{id}/anexos/{anexoId}', [\App\Http\Controllers\OuvidoriaController::class, 'anexo'])->whereNumber(['id', 'anexoId']);
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::post('/ouvidoria/{id}/responder', [\App\Http\Controllers\OuvidoriaController::class, 'responder'])->whereNumber('id');
+        Route::post('/ouvidoria/{id}/status', [\App\Http\Controllers\OuvidoriaController::class, 'status'])->whereNumber('id');
+        Route::post('/ouvidoria/{id}/comentarios', [\App\Http\Controllers\OuvidoriaController::class, 'comentar'])->whereNumber('id');
+    });
 
     // Ordem de Serviço (acesso por route_permissions.php; regras de papel dentro dos controllers)
     Route::get('/ordens-servico/secretarias', [OrdemServicoController::class, 'secretarias']);
