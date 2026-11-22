@@ -7,6 +7,7 @@ use App\Http\Requests\OuvidoriaPublicaRequest;
 use App\Models\OuvidoriaManifestacao;
 use App\Models\Secretaria;
 use App\Services\Cadastro\CaptchaDesafio;
+use App\Services\Ouvidoria\OuvidoriaNotificador;
 use App\Services\Ouvidoria\OuvidoriaRegistroService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -39,6 +40,7 @@ class OuvidoriaPublicaController extends Controller
     {
         $r = $service->registrar($request->dadosManifestacao(), $request->file('anexos', []));
         $m = $r['manifestacao'];
+        app(OuvidoriaNotificador::class)->registrada($m);
 
         return response()->json([
             'protocolo' => $m->protocolo,

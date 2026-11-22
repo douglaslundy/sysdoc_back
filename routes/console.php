@@ -23,3 +23,4 @@ Schedule::command('kanban:arquivar-concluidas')->dailyAt('02:00');
 Schedule::command('logs:limpar-erros')->dailyAt('03:00');
 Schedule::command('mensagens:limpar-logs')->dailyAt('03:30');
 Schedule::command('os:avisar-prazos')->dailyAt('08:00');
+Schedule::command('ouvidoria:avisar-prazos')->dailyAt('08:15');

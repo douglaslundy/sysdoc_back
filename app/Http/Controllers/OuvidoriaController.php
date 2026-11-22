@@ -10,6 +10,7 @@ use App\Models\OuvidoriaHistorico;
 use App\Models\OuvidoriaManifestacao;
 use App\Models\User;
 use App\Services\Ouvidoria\OuvidoriaDestinatarios;
+use App\Services\Ouvidoria\OuvidoriaNotificador;
 use App\Services\Ouvidoria\OuvidoriaVisibilidade;
 use App\Services\Secretarias\ActiveSecretaria;
 use Illuminate\Http\JsonResponse;
@@ -103,6 +104,10 @@ class OuvidoriaController extends Controller
             return response()->json($m->fresh());
         });
 
+        if ($resp->isSuccessful()) {
+            app(OuvidoriaNotificador::class)->respondida($m->fresh());
+        }
+
         return $resp;
     }
 
@@ -154,7 +159,7 @@ class OuvidoriaController extends Controller
             return response()->json(['message' => 'Destinatário inválido para a secretaria escolhida.'], 422);
         }
 
-        return DB::transaction(function () use ($request, $m, $destino, $novaSec) {
+        $resp = DB::transaction(function () use ($request, $m, $destino, $novaSec) {
             $m = $this->travar($m);
             if ($m->estaFinal()) {
                 return response()->json(['message' => 'Manifestação encerrada: não pode ser encaminhada.'], 422);
@@ -172,6 +177,12 @@ class OuvidoriaController extends Controller
 
             return response()->json($m->fresh());
         });
+
+        if ($resp->isSuccessful()) {
+            app(OuvidoriaNotificador::class)->encaminhada($m->fresh());
+        }
+
+        return $resp;
     }
 
     protected function visivel(int $id): OuvidoriaManifestacao
