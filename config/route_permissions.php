@@ -61,6 +61,8 @@ return [
         ['prefix' => 'os-tipos', 'methods' => ['GET'], 'pages' => ['/ordem-servico', '/ordem-servico/configuracao']],
         ['prefix' => 'os-tipos', 'pages' => ['/ordem-servico/configuracao']],
         ['prefix' => 'os-configuracao', 'pages' => ['/ordem-servico/configuracao']],
+        // Ouvidoria (área interna). O portal público fica em /public/ouvidoria, fora deste grupo.
+        ['prefix' => 'ouvidoria', 'pages' => ['/sistema/ouvidoria']],
         // Iluminação pública: cadastro e serviço são páginas irmãs; qualquer uma libera a leitura.
         ['prefix' => 'iluminacao/postes', 'pages' => ['/iluminacao/cadastro', '/iluminacao/servico']],
         ['prefix' => 'estabelecimentos', 'methods' => ['GET'], 'pages' => ['/estabelecimentos', '/alvaras', '/fiscalizacoes', '/auditoria']],

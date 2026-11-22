@@ -634,6 +634,9 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::apiResource('alvaras', AlvaraController::class)->only(['store', 'update', 'destroy']);
     });
 
+    // Ouvidoria interna (acesso por route_permissions.php; escopo por secretaria dentro do controller)
+    Route::get('/ouvidoria', [\App\Http\Controllers\OuvidoriaController::class, 'index']);
+
     // Ordem de Serviço (acesso por route_permissions.php; regras de papel dentro dos controllers)
     Route::get('/ordens-servico/secretarias', [OrdemServicoController::class, 'secretarias']);
     Route::get('/ordens-servico/tecnicos', [OrdemServicoController::class, 'tecnicos']);
