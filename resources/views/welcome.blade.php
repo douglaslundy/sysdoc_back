@@ -99,6 +99,7 @@
                     { "@@type": "Question", "name": "Como funciona a ordem de serviço?", "acceptedAnswer": { "@@type": "Answer", "text": "O usuário abre a ordem escolhendo o tipo de serviço, o local, a descrição, o problema constatado e fotos. A ordem é atribuída a um técnico, que inicia o atendimento e conclui com relato, materiais e tempo gastos. Tudo fica no histórico e há PDF para impressão. Perfis autorizados podem encaminhar a ordem para outra secretaria ou outro técnico." } },
                     { "@@type": "Question", "name": "O cidadão pode consultar o resultado do exame online?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O laboratório gera um protocolo para cada resultado. O cidadão acessa a página pública de consulta, informa o protocolo e a senha e visualiza ou baixa o laudo em PDF, sem login." } },
                     { "@@type": "Question", "name": "O cidadão pode fazer uma denúncia sem criar conta?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. A denúncia pública de vigilância sanitária não exige login. O denunciante recebe um protocolo e uma senha para acompanhar o andamento." } },
+                    { "@@type": "Question", "name": "O cidadão pode registrar uma ouvidoria online?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O portal público da ouvidoria não exige login: o cidadão escolhe a secretaria, o tipo de manifestação (reclamação, sugestão, elogio, denúncia, solicitação ou pedido de informação), descreve o caso e pode anexar arquivos. A identificação é opcional, e o registro pode ser anônimo. Ele recebe um protocolo e uma senha para acompanhar a resposta. O administrador escolhe quais secretarias ficam disponíveis no portal." } },
                     { "@@type": "Question", "name": "Como funciona a transparência pública da farmácia?", "acceptedAnswer": { "@@type": "Answer", "text": "O Sysdoc publica a disponibilidade diária de medicamentos e as aquisições mensais em painéis públicos, acessíveis por link direto e sem login, atendendo às exigências de transparência pública em saúde." } },
                     { "@@type": "Question", "name": "Existe API para integrar o Sysdoc a outros sistemas?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O Sysdoc oferece uma API REST com autenticação por token, controle de permissões por perfil e secretaria e documentação em formato OpenAPI para desenvolvedores." } },
                     { "@@type": "Question", "name": "O sistema funciona no celular?", "acceptedAnswer": { "@@type": "Answer", "text": "Sim. O Sysdoc roda no navegador, sem instalar aplicativo, e tem telas adaptadas ao celular. Fiscais e técnicos podem anexar fotos direto da câmera do aparelho durante a vistoria ou o serviço." } },
@@ -611,6 +612,20 @@
             </article>
 
             <article class="module-card">
+                <div class="module-icon" style="background:#eef2ff;">📣</div>
+                <h3>Ouvidoria</h3>
+                <p>Portal público para o cidadão registrar reclamações, sugestões, elogios, denúncias e pedidos de informação, com resposta e acompanhamento pela secretaria.</p>
+                <ul>
+                    <li>Registro sem login, com identificação opcional: o cidadão pode se identificar ou ficar anônimo</li>
+                    <li>O administrador escolhe quais secretarias aparecem no portal (por exemplo, só a Saúde)</li>
+                    <li>Protocolo e senha para acompanhar o andamento e ler a resposta oficial</li>
+                    <li>Perfil de ouvidor com acesso apenas às páginas da ouvidoria</li>
+                    <li>Resposta, mudança de status e encaminhamento a outro responsável ou a outra secretaria</li>
+                    <li>Prazo de 30 dias com aviso de vencimento, anexos e histórico completo de cada passo</li>
+                </ul>
+            </article>
+
+            <article class="module-card">
                 <div class="module-icon" style="background:#fffbeb;">💡</div>
                 <h3>Iluminação Pública</h3>
                 <p>Cadastro e manutenção dos postes do município, com mapa, fotos e histórico.</p>
@@ -884,6 +899,15 @@
             </div>
 
             <div>
+                <h3 style="font-size:1rem; font-weight:700; color:#4338ca; margin-bottom:1.5rem;">📣 Ouvidoria</h3>
+                <div class="steps">
+                    <div class="step"><div class="step-num">1</div><div><h3>Registro pelo cidadão</h3><p>No portal público, o cidadão escolhe a secretaria, descreve a manifestação e recebe protocolo e senha.</p></div></div>
+                    <div class="step"><div class="step-num">2</div><div><h3>Análise e encaminhamento</h3><p>O ouvidor analisa, muda o status e, se preciso, encaminha a outro responsável ou secretaria.</p></div></div>
+                    <div class="step"><div class="step-num">3</div><div><h3>Resposta ao cidadão</h3><p>A resposta oficial fica disponível na consulta por protocolo e senha, dentro do prazo de 30 dias.</p></div></div>
+                </div>
+            </div>
+
+            <div>
                 <h3 style="font-size:1rem; font-weight:700; color:#15803d; margin-bottom:1.5rem;">📝 Cadastro de usuários</h3>
                 <div class="steps">
                     <div class="step"><div class="step-num">1</div><div><h3>Pedido público</h3><p>O servidor preenche a página de cadastro e escolhe a secretaria e o cargo.</p></div></div>
@@ -952,6 +976,11 @@
             <details>
                 <summary>O cidadão pode fazer uma denúncia sem criar conta?</summary>
                 <p>Sim. A denúncia pública de vigilância sanitária não exige login. O denunciante recebe um protocolo e uma senha para acompanhar o andamento.</p>
+            </details>
+
+            <details>
+                <summary>O cidadão pode registrar uma ouvidoria online?</summary>
+                <p>Sim. O portal público da ouvidoria não exige login: o cidadão escolhe a secretaria, o tipo de manifestação (reclamação, sugestão, elogio, denúncia, solicitação ou pedido de informação), descreve o caso e pode anexar arquivos. A identificação é opcional, e o registro pode ser anônimo. Ele recebe um protocolo e uma senha para acompanhar a resposta. O administrador escolhe quais secretarias ficam disponíveis no portal.</p>
             </details>
 
             <details>

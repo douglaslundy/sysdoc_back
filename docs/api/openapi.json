@@ -27644,6 +27644,628 @@
                     }
                 ]
             }
+        },
+        "/public/ouvidoria/opcoes": {
+            "get": {
+                "summary": "Opções do portal",
+                "operationId": "get_api_public_ouvidoria_opcoes",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaPublicaController@opcoes`. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/public/ouvidoria": {
+            "post": {
+                "summary": "Registrar manifestação",
+                "operationId": "post_api_public_ouvidoria",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaPublicaController@store`. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "secretaria_id": {
+                                        "type": "integer"
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "reclamacao",
+                                            "sugestao",
+                                            "elogio",
+                                            "denuncia",
+                                            "solicitacao",
+                                            "informacao"
+                                        ]
+                                    },
+                                    "assunto": {
+                                        "type": "string"
+                                    },
+                                    "descricao": {
+                                        "type": "string"
+                                    },
+                                    "identificar": {
+                                        "type": "boolean"
+                                    },
+                                    "nome": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "cpf": {
+                                        "type": "string"
+                                    },
+                                    "anexos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "captcha_token": {
+                                        "type": "string"
+                                    },
+                                    "captcha_resposta": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "secretaria_id",
+                                    "tipo",
+                                    "assunto",
+                                    "descricao",
+                                    "captcha_token"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/public/ouvidoria/consulta": {
+            "post": {
+                "summary": "Consultar por protocolo e senha",
+                "operationId": "post_api_public_ouvidoria_consulta",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaPublicaController@consultar`. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "protocolo": {
+                                        "type": "string"
+                                    },
+                                    "senha": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "protocolo",
+                                    "senha"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ouvidoria": {
+            "get": {
+                "summary": "Listar",
+                "operationId": "get_api_ouvidoria",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@index`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/ouvidoria/destinatarios": {
+            "get": {
+                "summary": "Destinatários de encaminhamento",
+                "operationId": "get_api_ouvidoria_destinatarios",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@destinatarios`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/ouvidoria/{id}": {
+            "get": {
+                "summary": "Detalhar",
+                "operationId": "get_api_ouvidoria_id",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@show`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/ouvidoria/{id}/anexos/{anexoId}": {
+            "get": {
+                "summary": "Baixar anexo",
+                "operationId": "get_api_ouvidoria_id_anexos_anexoId",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@anexo`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "anexoId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/ouvidoria/{id}/responder": {
+            "post": {
+                "summary": "Responder",
+                "operationId": "post_api_ouvidoria_id_responder",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@responder`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "resposta": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "resposta"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ouvidoria/{id}/status": {
+            "post": {
+                "summary": "Alterar status",
+                "operationId": "post_api_ouvidoria_id_status",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@status`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "em_analise",
+                                            "encerrada",
+                                            "arquivada"
+                                        ]
+                                    },
+                                    "observacao": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "status"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ouvidoria/{id}/encaminhar": {
+            "post": {
+                "summary": "Encaminhar",
+                "operationId": "post_api_ouvidoria_id_encaminhar",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@encaminhar`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    },
+                                    "secretaria_id": {
+                                        "type": "integer"
+                                    },
+                                    "observacao": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "user_id",
+                                    "secretaria_id"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ouvidoria/{id}/comentarios": {
+            "post": {
+                "summary": "Comentário interno",
+                "operationId": "post_api_ouvidoria_id_comentarios",
+                "tags": [
+                    "Ouvidoria"
+                ],
+                "description": "Controller `OuvidoriaController@comentar`. Acesso: Token Sanctum; página em Perfis: /sistema/ouvidoria.",
+                "responses": {
+                    "200": {
+                        "description": "Sucesso"
+                    },
+                    "401": {
+                        "description": "Token ausente, inválido ou expirado"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Secretaria-Id",
+                        "in": "header",
+                        "required": false,
+                        "description": "Secretaria ativa (id, ou \"all\" para administrador).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "observacao": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "observacao"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

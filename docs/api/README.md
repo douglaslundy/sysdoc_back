@@ -64,6 +64,7 @@ Sempre envie `Accept: application/json`. Sem ele, erros de validação e de aute
 | Monitor APS e painel e-SUS | [monitor-aps-esus](referencia/monitor-aps-esus.md) | Indicadores da Atenção Primária, painéis |
 | Chat interno | [chat](referencia/chat.md) | Conversas, mensagens, presença |
 | Dashboards | [dashboard](referencia/dashboard.md) | Indicadores por módulo, atalhos |
+| Ouvidoria | [ouvidoria](referencia/ouvidoria.md) | Portal público, resposta, status e encaminhamento |
 | Endpoints públicos | [publicos](referencia/publicos.md) | Rotas sem login |
 
 ## Endpoints públicos (sem token)
