@@ -27652,7 +27652,7 @@
                 "tags": [
                     "Ouvidoria"
                 ],
-                "description": "Controller `OuvidoriaPublicaController@opcoes`. Devolve também `iniciado`, o selo de abertura que o envio deve devolver. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
+                "description": "Controller `OuvidoriaPublicaController@opcoes`. Devolve também `iniciado`, o selo de abertura que o envio deve devolver. Acesso: Pública (sem login); 404 quando nenhuma secretaria ativa está liberada no portal.",
                 "responses": {
                     "200": {
                         "description": "Sucesso"
@@ -27677,7 +27677,7 @@
                 "tags": [
                     "Ouvidoria"
                 ],
-                "description": "Controller `OuvidoriaPublicaController@store`. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
+                "description": "Controller `OuvidoriaPublicaController@store`. Acesso: Pública (sem login); 404 quando nenhuma secretaria ativa está liberada no portal.",
                 "responses": {
                     "200": {
                         "description": "Sucesso"
@@ -27773,7 +27773,7 @@
                 "tags": [
                     "Ouvidoria"
                 ],
-                "description": "Controller `OuvidoriaPublicaController@consultar`. Acesso: Pública (sem login); desligada (404) quando OUVIDORIA_PUBLICA_HABILITADA é falso.",
+                "description": "Controller `OuvidoriaPublicaController@consultar`. Acesso: Pública (sem login); 404 quando nenhuma secretaria ativa está liberada no portal.",
                 "responses": {
                     "200": {
                         "description": "Sucesso"

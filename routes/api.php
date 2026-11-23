@@ -150,7 +150,7 @@ Route::middleware('throttle:cadastro-publico-leitura')->get('/public/cadastro/se
 Route::middleware('throttle:cadastro-publico-leitura')->get('/public/cadastro/desafio', [CadastroPublicoController::class, 'desafio']);
 Route::middleware('throttle:cadastro-publico')->post('/public/cadastro', [CadastroPublicoController::class, 'store']);
 
-// Ouvidoria pública (flag config('ouvidoria.publica_habilitada'); sem login; secretaria validada no servidor)
+// Ouvidoria pública (aberta quando o admin libera uma secretaria; sem login; secretaria validada no servidor)
 Route::middleware('throttle:ouvidoria-leitura')->get('/public/ouvidoria/opcoes', [\App\Http\Controllers\OuvidoriaPublicaController::class, 'opcoes']);
 Route::middleware('throttle:ouvidoria-create')->post('/public/ouvidoria', [\App\Http\Controllers\OuvidoriaPublicaController::class, 'store']);
 Route::middleware('throttle:ouvidoria-consulta')->post('/public/ouvidoria/consulta', [\App\Http\Controllers\OuvidoriaPublicaController::class, 'consultar']);

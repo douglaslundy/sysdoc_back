@@ -6,7 +6,7 @@ Portal público para o cidadão registrar manifestações (reclamação, sugest�
 
 ## Regras gerais
 
-- As rotas `/api/public/ouvidoria*` não exigem login e só respondem quando `OUVIDORIA_PUBLICA_HABILITADA=true` (senão, 404).
+- As rotas `/api/public/ouvidoria*` não exigem login e `opcoes` e o registro só respondem (senão, 404) quando o administrador liberou ao menos uma secretaria ativa; a consulta de um protocolo existente continua sempre disponível.
 - O portal só lista e só aceita secretarias com `ativa` e `ouvidoria_publica` verdadeiros (campo ajustado em `PUT /api/secretarias-admin/{id}`).
 - Tipos: `reclamacao`, `sugestao`, `elogio`, `denuncia`, `solicitacao`, `informacao`.
 - Status: `recebida`, `em_analise`, `encaminhada`, `respondida`, `encerrada`, `arquivada`. `encerrada` e `arquivada` só são reabertas pelo administrador.

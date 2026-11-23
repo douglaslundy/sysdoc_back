@@ -32,8 +32,10 @@ class OuvidoriaPublicaController extends Controller
 
     public function __construct()
     {
-        // Roda antes de qualquer trabalho (inclusive a validação do FormRequest).
-        $this->middleware(fn ($request, $next) => config('ouvidoria.publica_habilitada') ? $next($request) : abort(404));
+        // Portal aberto = o admin liberou ao menos uma secretaria ativa (/secretarias). Roda antes da validação do FormRequest.
+        // A consulta de protocolo já existente nunca é bloqueada: o cidadão não perde o acesso à resposta.
+        $this->middleware(fn ($request, $next) => Secretaria::where('ativa', true)->where('ouvidoria_publica', true)->exists() ? $next($request) : abort(404))
+            ->only(['opcoes', 'store']);
     }
 
     public function opcoes(CaptchaDesafio $captcha): JsonResponse
