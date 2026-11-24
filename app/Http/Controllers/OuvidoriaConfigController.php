@@ -37,7 +37,14 @@ class OuvidoriaConfigController extends Controller
     {
         $config = OuvidoriaConfig::atual();
         $anterior = $config->logo_path;
-        $config->update(['logo_path' => $request->file('logo')->store('ouvidoria', 'public')]);
+        $novo = $request->file('logo')->store('ouvidoria', 'public');
+        try {
+            $config->update(['logo_path' => $novo]);
+        } catch (\Throwable $e) {
+            // Sem gravar no banco, o arquivo novo ficaria órfão no disco.
+            Storage::disk('public')->delete($novo);
+            throw $e;
+        }
         if ($anterior) {
             Storage::disk('public')->delete($anterior);
         }
@@ -48,9 +55,11 @@ class OuvidoriaConfigController extends Controller
     public function removerLogo(): JsonResponse
     {
         $config = OuvidoriaConfig::atual();
-        if ($config->logo_path) {
-            Storage::disk('public')->delete($config->logo_path);
+        $anterior = $config->logo_path;
+        if ($anterior) {
+            // Banco primeiro: se falhar, a logo atual continua no disco.
             $config->update(['logo_path' => null]);
+            Storage::disk('public')->delete($anterior);
         }
 
         return response()->json($config->paraPortal());
