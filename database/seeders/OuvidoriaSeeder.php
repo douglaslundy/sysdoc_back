@@ -12,6 +12,8 @@ class OuvidoriaSeeder extends Seeder
 
     public const PAGINA = '/sistema/ouvidoria';
 
+    public const PAGINA_CONFIG = '/sistema/ouvidoria/configuracao';
+
     public const OUVIDOR = 'ouvidor';
 
     // Query builder (sem eventos de model) para não gravar audit_logs; roda na migration e no seed.
@@ -53,5 +55,32 @@ class OuvidoriaSeeder extends Seeder
             [self::PAGINA, '/dashboard', '/dashboard/inicio'],
             DB::table('secretarias')->pluck('slug')->all()
         );
+
+        self::paginaConfig();
+    }
+
+    /**
+     * Página "Configuração do portal" (textos e logo do portal público): só o perfil admin.
+     * Separada do run() para a migration criá-la sem reaplicar as liberações acima.
+     */
+    public static function paginaConfig(): void
+    {
+        $categoria = DB::table('page_categories')->where('nome', self::CATEGORIA)->first();
+        if (! $categoria) {
+            return;
+        }
+        DB::table('system_pages')->updateOrInsert(['path' => self::PAGINA_CONFIG], [
+            'titulo' => 'Configuração do portal', 'icone' => 'settings', 'categoria' => self::CATEGORIA,
+            'category_id' => $categoria->id, 'ordem' => 2, 'ativo' => true, 'updated_at' => now(),
+        ]);
+        $pagina = DB::table('system_pages')->where('path', self::PAGINA_CONFIG)->value('id');
+        $admin = DB::table('access_profiles')->where('slug', 'admin')->value('id');
+        if ($admin) {
+            DB::table('profile_page_permissions')->updateOrInsert(
+                ['access_profile_id' => $admin, 'system_page_id' => $pagina],
+                ['updated_at' => now()]
+            );
+        }
+        Secretaria::liberarPaginas([self::PAGINA_CONFIG], DB::table('secretarias')->pluck('slug')->all());
     }
 }

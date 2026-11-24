@@ -151,6 +151,7 @@ Route::middleware('throttle:cadastro-publico-leitura')->get('/public/cadastro/de
 Route::middleware('throttle:cadastro-publico')->post('/public/cadastro', [CadastroPublicoController::class, 'store']);
 
 // Ouvidoria pública (aberta quando o admin libera uma secretaria; sem login; secretaria validada no servidor)
+Route::middleware('throttle:ouvidoria-leitura')->get('/public/ouvidoria/config', [\App\Http\Controllers\OuvidoriaConfigController::class, 'show']);
 Route::middleware('throttle:ouvidoria-leitura')->get('/public/ouvidoria/opcoes', [\App\Http\Controllers\OuvidoriaPublicaController::class, 'opcoes']);
 Route::middleware('throttle:ouvidoria-create')->post('/public/ouvidoria', [\App\Http\Controllers\OuvidoriaPublicaController::class, 'store']);
 Route::middleware('throttle:ouvidoria-consulta')->post('/public/ouvidoria/consulta', [\App\Http\Controllers\OuvidoriaPublicaController::class, 'consultar']);
@@ -341,6 +342,10 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
 
     Route::middleware('admin')->group(function () {
         Route::put('/admin/painel-publico', [PainelPublicoController::class, 'update']);
+        Route::get('/admin/ouvidoria/config', [\App\Http\Controllers\OuvidoriaConfigController::class, 'show']);
+        Route::put('/admin/ouvidoria/config', [\App\Http\Controllers\OuvidoriaConfigController::class, 'update']);
+        Route::post('/admin/ouvidoria/config/logo', [\App\Http\Controllers\OuvidoriaConfigController::class, 'enviarLogo']);
+        Route::delete('/admin/ouvidoria/config/logo', [\App\Http\Controllers\OuvidoriaConfigController::class, 'removerLogo']);
         Route::get('/admin/dashboard-atalhos', [DashboardAtalhoController::class, 'adminIndex']);
         Route::post('/admin/dashboard-atalhos', [DashboardAtalhoController::class, 'store']);
         Route::put('/admin/dashboard-atalhos/{atalho}', [DashboardAtalhoController::class, 'update']);
