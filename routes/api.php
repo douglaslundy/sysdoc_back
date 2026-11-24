@@ -260,6 +260,7 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::get('/dashboard/vigilancia', [DashboardController::class, 'vigilancia']);
         Route::get('/dashboard/almoxarifado', [DashboardController::class, 'almoxarifado'])->middleware('can:dashboard-almoxarifado');
         Route::get('/dashboard/ordens-servico', [DashboardController::class, 'ordensServico'])->middleware('can:dashboard-os');
+        Route::get('/dashboard/protocolos', [DashboardController::class, 'protocolos'])->middleware('can:dashboard-protocolos');
         Route::get('/dashboard/arquivo', [DashboardController::class, 'arquivo'])->middleware('can:dashboard-arquivo');
     });
 

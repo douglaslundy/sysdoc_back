@@ -1218,4 +1218,73 @@ class DashboardController extends MonitorApsBaseController
 
         return response()->json($data)->header('Cache-Control', 'private, max-age=60');
     }
+
+    /**
+     * Métricas dos protocolos que o usuário vê na caixa de entrada (admin: todos), no período (`dias`, padrão 30).
+     * Situação atual (abertos, vencidos, parados) não depende do período.
+     */
+    public function protocolos(Request $request)
+    {
+        $user = $request->user();
+        $dias = in_array((int) $request->query('dias'), [7, 30, 90, 365], true) ? (int) $request->query('dias') : 30;
+        $desde = now()->subDays($dias)->startOfDay();
+        $hoje = now()->toDateString();
+        $encerrados = ['encerrado', 'concluido', 'cancelado'];
+        $todos = fn () => \App\Models\Protocol::visiveis($user)->visiveisPara($user);
+        $periodo = fn () => $todos()->where('protocols.created_at', '>=', $desde);
+        $abertos = fn () => $todos()->whereNotIn('protocols.status', $encerrados);
+        $fim = 'COALESCE(protocols.encerrado_em, protocols.updated_at)';
+
+        $porStatus = $periodo()->select('status', DB::raw('COUNT(*) as total'))->groupBy('status')->pluck('total', 'status');
+        $concluidos = $periodo()->whereIn('protocols.status', ['encerrado', 'concluido']);
+        $horasConclusao = (float) (clone $concluidos)->avg(DB::raw("TIMESTAMPDIFF(MINUTE, protocols.created_at, {$fim})")) / 60;
+        $horasRecebimento = (float) $periodo()->whereNotNull('protocols.recebido_em')
+            ->avg(DB::raw('TIMESTAMPDIFF(MINUTE, protocols.created_at, protocols.recebido_em)')) / 60;
+        $comPrazo = (clone $concluidos)->whereNotNull('protocols.prazo_atendimento');
+        $noPrazo = (clone $comPrazo)->whereRaw("DATE({$fim}) <= DATE(protocols.prazo_atendimento)")->count();
+        $totalComPrazo = (clone $comPrazo)->count();
+
+        // Ranking do que está em aberto agora: volume, vencidos e dias parado (desde a última atualização).
+        $ranking = fn ($q, string $nome, string $chave) => $q
+            ->select(DB::raw("{$nome} as nome"), DB::raw('COUNT(*) as abertos'),
+                DB::raw("SUM(protocols.prazo_atendimento IS NOT NULL AND DATE(protocols.prazo_atendimento) < '{$hoje}') as vencidos"),
+                DB::raw('AVG(TIMESTAMPDIFF(HOUR, protocols.updated_at, NOW())) / 24 as dias_parado'))
+            ->groupBy($chave, DB::raw($nome))->orderByDesc('abertos')->limit(10)->get()
+            ->map(fn ($r) => ['nome' => $r->nome, 'abertos' => (int) $r->abertos, 'vencidos' => (int) $r->vencidos, 'dias_parado' => round((float) $r->dias_parado, 1)]);
+
+        $data = [
+            'periodo_dias' => $dias,
+            'totais' => [
+                'total' => (int) $porStatus->sum(),
+                'concluidos' => (int) (($porStatus['encerrado'] ?? 0) + ($porStatus['concluido'] ?? 0)),
+                'cancelados' => (int) ($porStatus['cancelado'] ?? 0),
+                'abertos' => $abertos()->count(),
+                'novos' => $abertos()->where('protocols.novo', true)->count(),
+                'vencidos' => $abertos()->whereNotNull('protocols.prazo_atendimento')->whereDate('protocols.prazo_atendimento', '<', $hoje)->count(),
+                'vence_em_breve' => $abertos()->whereNotNull('protocols.prazo_atendimento')
+                    ->whereDate('protocols.prazo_atendimento', '>=', $hoje)->whereDate('protocols.prazo_atendimento', '<=', now()->addDays(3)->toDateString())->count(),
+            ],
+            'tempo_medio_recebimento_horas' => round(max(0, $horasRecebimento), 1),
+            'tempo_medio_conclusao_horas' => round(max(0, $horasConclusao), 1),
+            'taxa_no_prazo' => $totalComPrazo > 0 ? round($noPrazo * 100 / $totalComPrazo, 1) : null,
+            'por_status' => $porStatus->map(fn ($total, $status) => ['status' => $status, 'total' => (int) $total])->values(),
+            'por_prioridade' => $periodo()->select(DB::raw("COALESCE(protocols.prioridade, 'normal') as prioridade"), DB::raw('COUNT(*) as total'))
+                ->groupBy(DB::raw("COALESCE(protocols.prioridade, 'normal')"))->orderByDesc('total')->get(),
+            'por_tipo' => $periodo()->leftJoin('protocol_types as t', 't.codigo', '=', 'protocols.tipo')
+                ->select(DB::raw('COALESCE(t.nome, protocols.tipo) as nome'), DB::raw('COUNT(*) as total'))
+                ->groupBy(DB::raw('COALESCE(t.nome, protocols.tipo)'))->orderByDesc('total')->limit(8)->get(),
+            'por_secretaria' => $ranking($abertos()->join('secretarias as s', 's.id', '=', 'protocols.secretaria_id'), 's.nome', 's.id'),
+            'por_unidade' => $ranking($abertos()->join('protocol_organizational_units as u', 'u.id', '=', 'protocols.destino_unit_id'), 'u.nome', 'u.id'),
+            'por_responsavel' => $ranking($abertos()->join('users as r', 'r.id', '=', 'protocols.responsavel_atual_id'), 'r.name', 'r.id'),
+            'por_dia' => $periodo()->select(DB::raw('DATE(protocols.created_at) as dia'), DB::raw('COUNT(*) as abertos'))
+                ->groupBy('dia')->orderBy('dia')->get(),
+            // Resolvidos contam no dia da conclusão (não no da abertura), dentro do período.
+            'resolvidos_por_dia' => $todos()->whereIn('protocols.status', ['encerrado', 'concluido'])
+                ->whereRaw("{$fim} >= ?", [$desde])
+                ->select(DB::raw("DATE({$fim}) as dia"), DB::raw('COUNT(*) as resolvidos'))
+                ->groupBy('dia')->orderBy('dia')->get(),
+        ];
+
+        return response()->json($data)->header('Cache-Control', 'private, max-age=60');
+    }
 }

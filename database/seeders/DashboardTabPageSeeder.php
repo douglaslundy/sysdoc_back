@@ -36,6 +36,7 @@ class DashboardTabPageSeeder extends Seeder
             ['titulo' => 'Dashboard - Almoxarifado',          'path' => '/dashboard/almoxarifado', 'icone' => 'package',      'ordem' => 10],
             ['titulo' => 'Dashboard - Arquivo',               'path' => '/dashboard/arquivo',      'icone' => 'archive',      'ordem' => 11],
             ['titulo' => 'Dashboard - Ordens de Serviço',     'path' => '/dashboard/ordens-servico','icone' => 'tool',       'ordem' => 12],
+            ['titulo' => 'Dashboard - Protocolos',            'path' => '/dashboard/protocolos',   'icone' => 'inbox',        'ordem' => 13],
         ];
 
         foreach ($pages as $page) {

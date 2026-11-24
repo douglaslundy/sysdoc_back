@@ -21,6 +21,7 @@ Indicadores gerenciais por módulo, atalhos do dashboard e painel executivo.
 | `PUT` | `/api/dashboard/meus-atalhos/ordem` | Reordenar |
 | `DELETE` | `/api/dashboard/meus-atalhos/{id}` | Remover |
 | `GET` | `/api/dashboard/ordens-servico` | Ordens Servico |
+| `GET` | `/api/dashboard/protocolos` | Protocolos |
 | `GET` | `/api/dashboard/tfd` | Tfd |
 | `GET` | `/api/dashboard/vigilancia` | Vigilancia |
 
@@ -148,6 +149,15 @@ Indicadores gerenciais por módulo, atalhos do dashboard e painel executivo.
 - **Acesso:** Token Sanctum; gate: dashboard-os
 - **Limite de requisições:** 120 por minuto
 - **Outros parâmetros lidos pelo controller:** `dias`
+
+## `GET /api/dashboard/protocolos`
+
+**Protocolos** · controller `DashboardController@protocolos`
+
+- **Acesso:** Token Sanctum; gate: dashboard-protocolos
+- **Limite de requisições:** 120 por minuto
+- **Outros parâmetros lidos pelo controller:** `dias` (7, 30, 90 ou 365; padrão 30)
+- **Escopo:** os mesmos protocolos da caixa de entrada do usuário; o admin em "Todas" vê todos.
 
 ## `GET /api/dashboard/tfd`
 
