@@ -9,7 +9,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 /** Tamanho de texto rico: conta o texto sem tags; o HTML inteiro tem um teto próprio (cabe na coluna). */
 class TextoRico implements ValidationRule
 {
-    public function __construct(private int $maxTexto, private int $minTexto = 0, private int $maxHtml = 60000) {}
+    public function __construct(private int $maxTexto, private int $minTexto = 0, private int $maxHtml = 16000) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

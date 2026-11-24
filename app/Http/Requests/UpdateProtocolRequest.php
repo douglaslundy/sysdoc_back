@@ -2,10 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\LimpaTextoRico;
+use App\Rules\TextoRico;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProtocolRequest extends FormRequest
 {
+    use LimpaTextoRico;
+
+    protected function prepareForValidation(): void
+    {
+        $this->limparTextoRico(['descricao', 'kanban.descricao']);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -15,7 +24,7 @@ class UpdateProtocolRequest extends FormRequest
     {
         return [
             'assunto' => 'sometimes|required|string|max:200',
-            'descricao' => 'nullable|string',
+            'descricao' => ['nullable', 'string', new TextoRico(16000)],
             'tipo' => 'sometimes|required|string|max:40|exists:protocol_types,codigo|not_in:solicitacao_cadastro',
             'prioridade' => 'nullable|string|max:20',
             'visibility' => 'sometimes|string|in:public,private',
@@ -28,7 +37,7 @@ class UpdateProtocolRequest extends FormRequest
             'kanban.ativar' => 'nullable|boolean',
             'kanban.id' => 'nullable|integer|exists:kanban_tasks,id',
             'kanban.titulo' => 'nullable|string|max:200',
-            'kanban.descricao' => 'nullable|string',
+            'kanban.descricao' => ['nullable', 'string', new TextoRico(16000)],
             'kanban.status' => 'nullable|string|max:40',
             'kanban.prioridade' => 'nullable|string|max:20',
             'kanban.vencimento' => 'nullable|date',

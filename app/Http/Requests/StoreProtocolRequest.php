@@ -2,10 +2,21 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\LimpaTextoRico;
+use App\Models\Secretaria;
+use App\Rules\TextoRico;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProtocolRequest extends FormRequest
 {
+    use LimpaTextoRico;
+
+    protected function prepareForValidation(): void
+    {
+        $this->limparTextoRico(['descricao', 'kanban.descricao']);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -17,11 +28,11 @@ class StoreProtocolRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['nullable', 'string', \Illuminate\Validation\Rule::in(self::STATUSES_INICIAIS)],
+            'status' => ['nullable', 'string', Rule::in(self::STATUSES_INICIAIS)],
             'visibility' => ['nullable', 'string', 'in:public,private'],
             'assunto' => 'required|string|max:200',
-            'descricao' => 'nullable|string',
-            'secretaria_id' => \App\Models\Secretaria::regraId(),
+            'descricao' => ['nullable', 'string', new TextoRico(16000)],
+            'secretaria_id' => Secretaria::regraId(),
             'tipo' => 'required|string|max:40|exists:protocol_types,codigo|not_in:solicitacao_cadastro',
             'prioridade' => 'nullable|string|max:20',
             'origem_unit_id' => 'nullable|integer|exists:protocol_organizational_units,id',
@@ -32,7 +43,7 @@ class StoreProtocolRequest extends FormRequest
             'kanban.ativar' => 'nullable|boolean',
             'kanban.id' => 'nullable|integer|exists:kanban_tasks,id',
             'kanban.titulo' => 'nullable|string|max:200',
-            'kanban.descricao' => 'nullable|string',
+            'kanban.descricao' => ['nullable', 'string', new TextoRico(16000)],
             'kanban.status' => 'nullable|string|max:40',
             'kanban.prioridade' => 'nullable|string|max:20',
             'kanban.vencimento' => 'nullable|date',

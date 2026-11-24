@@ -3,12 +3,21 @@
 namespace App\Http\Requests;
 
 use App\Http\Controllers\KanbanController;
+use App\Http\Requests\Concerns\LimpaTextoRico;
 use App\Models\KanbanTask;
+use App\Rules\TextoRico;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateKanbanTaskRequest extends FormRequest
 {
+    use LimpaTextoRico;
+
+    protected function prepareForValidation(): void
+    {
+        $this->limparTextoRico(['descricao']);
+    }
+
     public function authorize(): bool
     {
         // 404 e 403 do item vêm antes da validação, como no controller original.
@@ -29,7 +38,7 @@ class UpdateKanbanTaskRequest extends FormRequest
     {
         return [
             'titulo' => 'sometimes|required|string|max:200',
-            'descricao' => 'nullable|string',
+            'descricao' => ['nullable', 'string', new TextoRico(16000)],
             'status' => 'sometimes|required|string|max:40',
             'prioridade' => 'sometimes|required|string|max:20',
             'vencimento' => 'nullable|date',

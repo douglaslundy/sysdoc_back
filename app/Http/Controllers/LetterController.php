@@ -14,11 +14,13 @@ use App\Models\ProtocolConfig;
 use App\Models\ProtocolMovement;
 use App\Models\ProtocolOrganizationalUnit;
 use App\Models\User;
+use App\Rules\TextoRico;
 use App\Services\AuditService;
 use App\Services\Kanban\ProtocolKanbanService;
 use App\Services\Secretarias\ActiveSecretaria;
 use App\Services\Secretarias\SecretariaMembership;
 use App\Services\SystemAlertService;
+use App\Services\Texto\HtmlSeguro;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,12 +43,22 @@ class LetterController extends Controller
         return $this->withProtocolState($letters);
     }
 
+    /** Corpo do ofício vem do editor rico: HTML limpo antes de validar e gravar. */
+    private function limparCorpo(Request $request): void
+    {
+        if (is_string($request->input('obs'))) {
+            $request->merge(['obs' => HtmlSeguro::limpar($request->input('obs'))]);
+        }
+    }
+
     public function store(Request $request)
     {
         $array = ['errors' => ''];
+        $this->limparCorpo($request);
 
         $validator = Validator::make($request->all(), [
             'id_user' => 'required|integer',
+            'obs' => ['nullable', 'string', new TextoRico(10000, 0, 60000)],
             'subject_matter' => 'required',
             'sender' => 'required',
             'recipient' => 'required',
@@ -109,9 +121,11 @@ class LetterController extends Controller
     public function update(Request $request)
     {
         $array = ['errors' => ''];
+        $this->limparCorpo($request);
 
         $validator = Validator::make($request->all(), [
             'id' => 'required',
+            'obs' => ['nullable', 'string', new TextoRico(10000, 0, 60000)],
             'subject_matter' => 'required',
             'sender' => 'required',
             'recipient' => 'required',

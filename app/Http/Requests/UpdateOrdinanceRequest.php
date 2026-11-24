@@ -2,12 +2,21 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\LimpaTextoRico;
+use App\Rules\TextoRico;
 use App\Services\Authorization\PagePermissionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateOrdinanceRequest extends FormRequest
 {
+    use LimpaTextoRico;
+
+    protected function prepareForValidation(): void
+    {
+        $this->limparTextoRico(['content']);
+    }
+
     public function authorize(): bool
     {
         $user = $this->user();
@@ -23,7 +32,7 @@ class UpdateOrdinanceRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'subject' => ['required', 'string', 'max:255'],
             'summary' => ['nullable', 'string'],
-            'content' => ['nullable', 'string'],
+            'content' => ['nullable', 'string', new TextoRico(60000, 0, 60000)],
             'legal_basis' => ['nullable', 'string'],
             'signatory_name' => ['required', 'string', 'max:150'],
             'signatory_role' => ['nullable', 'string', 'max:150'],
