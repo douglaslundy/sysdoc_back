@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\OuvidoriaConfig;
 use Database\Seeders\OuvidoriaSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -23,6 +24,14 @@ return new class extends Migration
                 $table->json('consultar_itens')->nullable();
                 $table->timestamps();
             });
+        }
+
+        // Linha única já criada aqui: evita duas linhas se o portal for acessado em paralelo logo após o deploy.
+        if (! DB::table('ouvidoria_config')->exists()) {
+            DB::table('ouvidoria_config')->insert(array_merge(
+                array_map(fn ($v) => is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v, OuvidoriaConfig::PADRAO),
+                ['created_at' => now(), 'updated_at' => now()]
+            ));
         }
 
         // Página "Configuração do portal" no menu Ouvidoria, só para admin.

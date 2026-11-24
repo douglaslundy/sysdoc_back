@@ -65,12 +65,16 @@ class OuvidoriaSeeder extends Seeder
      */
     public static function paginaConfig(): void
     {
-        $categoria = DB::table('page_categories')->where('nome', self::CATEGORIA)->first();
-        if (! $categoria) {
-            return;
+        // Mesma categoria da página da Ouvidoria (sobrevive a renomear a categoria na tela); sem ela, cria a padrão.
+        $categoriaId = DB::table('system_pages')->where('path', self::PAGINA)->value('category_id')
+            ?? DB::table('page_categories')->where('nome', self::CATEGORIA)->value('id');
+        if (! $categoriaId) {
+            DB::table('page_categories')->insert(['nome' => self::CATEGORIA, 'icone' => 'message-square', 'ordem' => 22, 'created_at' => now(), 'updated_at' => now()]);
+            $categoriaId = DB::table('page_categories')->where('nome', self::CATEGORIA)->value('id');
         }
+        $categoria = DB::table('page_categories')->where('id', $categoriaId)->first();
         DB::table('system_pages')->updateOrInsert(['path' => self::PAGINA_CONFIG], [
-            'titulo' => 'Configuração do portal', 'icone' => 'settings', 'categoria' => self::CATEGORIA,
+            'titulo' => 'Configuração do portal', 'icone' => 'settings', 'categoria' => $categoria->nome,
             'category_id' => $categoria->id, 'ordem' => 2, 'ativo' => true, 'updated_at' => now(),
         ]);
         $pagina = DB::table('system_pages')->where('path', self::PAGINA_CONFIG)->value('id');

@@ -34,7 +34,8 @@ class OuvidoriaConfig extends Model
 
     public static function atual(): self
     {
-        return self::query()->first() ?? self::create(self::PADRAO);
+        // A migration já cria a linha; orderBy garante que admin e portal leiam sempre a mesma.
+        return self::query()->orderBy('id')->first() ?? self::create(self::PADRAO);
     }
 
     public function paraPortal(): array
