@@ -33,6 +33,7 @@ use App\Http\Controllers\DocumentApprovalController;
 use App\Http\Controllers\DocumentConfigController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTypeController;
+use App\Http\Controllers\EditorImagemController;
 use App\Http\Controllers\EmailConfigController;
 use App\Http\Controllers\ErrorLogController;
 use App\Http\Controllers\EstabelecimentoController;
@@ -491,6 +492,8 @@ Route::group(['middleware' => ['auth:sanctum', 'secretaria.active', 'route.pages
         Route::put('/page-categories/{id}', [PageCategoryController::class, 'update']);
         Route::delete('/page-categories/{id}', [PageCategoryController::class, 'destroy']);
     });
+
+    Route::middleware('throttle:editor-imagens')->post('/editor/imagens', [EditorImagemController::class, 'store']);
 
     Route::get('/system-notices', [SystemNoticeController::class, 'index']);
     Route::post('/system-notices', [SystemNoticeController::class, 'store']);

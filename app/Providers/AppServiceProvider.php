@@ -237,6 +237,10 @@ class AppServiceProvider extends ServiceProvider
             ->by('ouvidoria-leitura|'.$request->ip())
             ->response(fn () => response()->json(['message' => 'Muitas requisições. Aguarde um instante.'], 429)));
 
+        RateLimiter::for('editor-imagens', fn (Request $request) => Limit::perMinute(30)
+            ->by('editor-imagens|'.($request->user()?->id ?: $request->ip()))
+            ->response(fn () => response()->json(['message' => 'Muitas imagens enviadas. Aguarde um instante.'], 429)));
+
         RateLimiter::for('forgot-password', function (Request $request) {
             $email = (string) $request->input('email', '');
             $key = sprintf('forgot-password|%s|%s', mb_strtolower(trim($email)), $request->ip());
