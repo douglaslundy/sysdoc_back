@@ -63,8 +63,10 @@ class OrdemServicoController extends Controller
         }
 
         $os = $this->comLimpezaDeFotos(fn () => $this->tentar(fn () => DB::transaction(function () use ($dados, $user, $tecnicoId, $request) {
-            $os = OrdemServico::create(array_merge(collect($dados)->except(['fotos', 'tecnico_id', 'prioridade'])->all(), [
+            $os = OrdemServico::create(array_merge(collect($dados)->except(['fotos', 'tecnico_id', 'prioridade', 'prazo_dias'])->all(), [
                 'numero' => OrdemServico::gerarNumero(),
+                // Prazo informado em dias corridos a partir da abertura; sem valor, 10 dias.
+                'prazo' => now()->addDays((int) ($dados['prazo_dias'] ?? 10))->toDateString(),
                 'solicitante_id' => $user->id,
                 'tecnico_id' => $tecnicoId,
                 'prioridade' => $dados['prioridade'] ?? 'normal',

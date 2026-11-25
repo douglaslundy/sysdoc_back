@@ -29,7 +29,7 @@ class StoreOrdemServicoRequest extends FormRequest
             'descricao' => ['required', 'string', 'max:5000'],
             'problema' => ['nullable', 'string', 'max:5000'],
             'prioridade' => ['nullable', Rule::in(OrdemServico::PRIORIDADES)],
-            'prazo' => ['nullable', 'date', 'after_or_equal:today'],
+            'prazo_dias' => ['nullable', 'integer', 'min:1', 'max:365'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'contato_nome' => ['nullable', 'string', 'max:120'],
