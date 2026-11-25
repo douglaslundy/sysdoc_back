@@ -11,7 +11,7 @@ class ListMedicineItemsRequest extends BaseApiFormRequest
         $user = $this->user();
 
         return $user !== null
-            && app(PagePermissionService::class)->canAccess($user, '/pharmacy/medicines');
+            && app(PagePermissionService::class)->canAccessAny($user, ['/pharmacy/medicines', '/pharmacy/consulta-medicamentos']);
     }
 
     public function rules(): array
