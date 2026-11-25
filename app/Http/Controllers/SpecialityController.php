@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSpecialityRequest;
 use App\Http\Requests\UpdateSpecialityRequest;
 use App\Models\Speciality;
+use App\Services\Authorization\LiberacaoFilaPerfis;
 use Illuminate\Http\Request;
 
 class SpecialityController extends Controller
@@ -35,6 +36,7 @@ class SpecialityController extends Controller
 
         // Cria uma nova especialidade
         $speciality = Speciality::create($validatedData);
+        LiberacaoFilaPerfis::aposSalvarEspecialidade($speciality, false);
 
         // Retorna a especialidade criada com código de status 201 (Created)
         return response()->json($speciality, 201);
@@ -61,8 +63,10 @@ class SpecialityController extends Controller
         // Valida os dados de entrada
                 $validatedData = $request->validated();
 
+        $antes = (bool) $speciality->liberar_perfis_fila;
         // Atualiza a especialidade com os dados validados
         $speciality->update($validatedData);
+        LiberacaoFilaPerfis::aposSalvarEspecialidade($speciality, $antes);
 
         // Retorna a especialidade atualizada com código de status 200 (OK)
         return response()->json($speciality, 200);

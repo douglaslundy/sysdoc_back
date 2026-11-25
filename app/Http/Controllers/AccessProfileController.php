@@ -10,6 +10,7 @@ use App\Models\Secretaria;
 use App\Models\SystemPage;
 use App\Models\User;
 use App\Services\Secretarias\GestorProfileScope;
+use App\Services\Authorization\LiberacaoFilaPerfis;
 use Illuminate\Http\Request;
 
 class AccessProfileController extends Controller
@@ -75,6 +76,9 @@ class AccessProfileController extends Controller
 
         if ($request->has('page_ids')) {
             $profile->pages()->sync($request->page_ids);
+            if (LiberacaoFilaPerfis::temFila($profile)) {
+                LiberacaoFilaPerfis::aposPerfilGanharFila($profile);
+            }
         }
         if ($request->has('protocol_destino_unit_ids')) {
             $profile->protocolDestinoUnits()->sync($request->input('protocol_destino_unit_ids') ?? []);
@@ -125,7 +129,11 @@ class AccessProfileController extends Controller
         $profile->update($request->only($campos));
 
         if ($request->has('page_ids')) {
+            $tinhaFila = LiberacaoFilaPerfis::temFila($profile);
             $profile->pages()->sync($request->page_ids);
+            if (! $tinhaFila && LiberacaoFilaPerfis::temFila($profile)) {
+                LiberacaoFilaPerfis::aposPerfilGanharFila($profile);
+            }
         }
         if ($request->has('protocol_destino_unit_ids')) {
             $profile->protocolDestinoUnits()->sync($request->input('protocol_destino_unit_ids') ?? []);

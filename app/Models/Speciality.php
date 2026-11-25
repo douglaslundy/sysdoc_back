@@ -19,11 +19,13 @@ class Speciality extends Model
         'id_user',
         'name',
         'allows_session_scheduling',
+        'liberar_perfis_fila',
     ];
 
     // Define os casts dos campos
     protected $casts = [
         'allows_session_scheduling' => 'boolean',
+        'liberar_perfis_fila' => 'boolean',
     ];
 
     /**

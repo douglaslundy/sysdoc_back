@@ -18,6 +18,7 @@ class StoreSpecialityRequest extends FormRequest
             'id_user' => 'required|exists:users,id',
             'name' => 'required|string|max:50',
             'allows_session_scheduling' => 'sometimes|boolean',
+            'liberar_perfis_fila' => 'sometimes|boolean',
         ];
     }
 }
