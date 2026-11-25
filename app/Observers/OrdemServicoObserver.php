@@ -22,6 +22,12 @@ class OrdemServicoObserver
             return;
         }
 
+        $this->sincronizar($os);
+    }
+
+    /** Cria ou atualiza o card da OS (também usado pela migration que cria os cards das OS antigas). */
+    public function sincronizar(OrdemServico $os): void
+    {
         $card = KanbanTask::withoutSecretaria()->firstWhere('ordem_servico_id', $os->id);
 
         $card ??=new KanbanTask(['ordem_servico_id' => $os->id, 'visibility' => 'public', 'ordem' => 0, 'created_by_id' => $os->solicitante_id]);
