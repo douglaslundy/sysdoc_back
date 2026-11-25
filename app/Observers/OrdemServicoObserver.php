@@ -5,7 +5,7 @@ namespace App\Observers;
 use App\Models\KanbanTask;
 use App\Models\OrdemServico;
 
-/** Mantém o card da OS no Kanban: existe enquanto há técnico, com ele como responsável e a situação da OS. */
+/** Mantém o card da OS no Kanban desde a abertura: técnico (quando houver) como responsável e a situação da OS. */
 class OrdemServicoObserver
 {
     private const STATUS = [
@@ -24,13 +24,7 @@ class OrdemServicoObserver
 
         $card = KanbanTask::withoutSecretaria()->firstWhere('ordem_servico_id', $os->id);
 
-        if (! $os->tecnico_id) {
-            $card?->delete();
-
-            return;
-        }
-
-        $card ??= new KanbanTask(['ordem_servico_id' => $os->id, 'visibility' => 'public', 'ordem' => 0, 'created_by_id' => $os->solicitante_id]);
+        $card ??=new KanbanTask(['ordem_servico_id' => $os->id, 'visibility' => 'public', 'ordem' => 0, 'created_by_id' => $os->solicitante_id]);
         $status = self::STATUS[$os->status] ?? 'novo';
 
         // forceFill + saveQuietly: o card fica na secretaria de destino da OS, não na secretaria ativa de quem abriu.
