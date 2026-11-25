@@ -77,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Client::observe(ClientObserver::class);
+        \App\Models\OrdemServico::observe(\App\Observers\OrdemServicoObserver::class);
         PedidoExame::observe(PedidoExameObserver::class);
         ResultadoExame::observe(ResultadoExameObserver::class);
         Trip::observe(TripObserver::class);

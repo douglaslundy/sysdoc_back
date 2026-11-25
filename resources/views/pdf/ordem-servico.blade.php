@@ -35,7 +35,9 @@
         <tr><th>Tipo de serviço</th><td>{{ $os->tipo?->nome }}</td><th>Prioridade</th><td>{{ ucfirst($os->prioridade) }}</td></tr>
         <tr><th>Local</th><td>{{ $os->local }}</td><th>Prazo</th><td>{{ optional($os->prazo)->format('d/m/Y') ?? '-' }}</td></tr>
         <tr><th>Endereço</th><td colspan="3">{{ $os->endereco ?? '-' }}@if($os->latitude && $os->longitude) ({{ $os->latitude }}, {{ $os->longitude }})@endif</td></tr>
-        <tr><th>Solicitante</th><td>{{ $os->solicitante?->name }}</td><th>Técnico</th><td>{{ $os->tecnico?->name ?? '-' }}</td></tr>
+        <tr><th>Secretaria solicitante</th><td>{{ $secretariaSolicitante ?: '-' }}</td><th>Secretaria de destino</th><td>{{ $os->secretaria?->nome ?? '-' }}</td></tr>
+        <tr><th>Solicitante</th><td>{{ $os->solicitante?->name ?? '-' }}</td><th>Aberta em</th><td>{{ optional($os->created_at)->format('d/m/Y H:i') ?? '-' }}</td></tr>
+        <tr><th>Técnico</th><td colspan="3">{{ $os->tecnico?->name ?? '-' }}</td></tr>
         <tr><th>Contato no local</th><td colspan="3">{{ $os->contato_nome ?? '-' }} {{ $os->contato_telefone }}</td></tr>
         <tr><th>O que deve ser feito</th><td colspan="3">{{ $os->descricao }}</td></tr>
         <tr><th>Problema constatado</th><td colspan="3">{{ $os->problema ?? '-' }}</td></tr>

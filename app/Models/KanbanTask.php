@@ -23,6 +23,7 @@ class KanbanTask extends Model
         'protocol_id',
         'unit_id',
         'fiscalizacao_id',
+        'ordem_servico_id',
         'created_by_id',
         'secretaria_id',
         'updated_by_id',
