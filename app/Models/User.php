@@ -109,6 +109,31 @@ class User extends Authenticatable
         return $this->accessProfiles()->contains(fn ($p) => (bool) $p->{$column});
     }
 
+    /**
+     * Unidades para onde o usuário pode enviar protocolo, já com as subunidades.
+     * null = sem limite (admin, sem perfil, ou algum perfil sem destinos marcados).
+     */
+    public function protocolDestinoUnitIds(): ?array
+    {
+        $perfis = $this->accessProfiles();
+        if ($this->profile === 'admin' || $perfis->isEmpty()) {
+            return null;
+        }
+
+        $ids = [];
+        foreach ($perfis as $perfil) {
+            $marcadas = $perfil->protocolDestinoUnits()->pluck('protocol_organizational_units.id')->all();
+            if ($marcadas === []) {
+                return null;
+            }
+            foreach ($marcadas as $id) {
+                array_push($ids, ...\App\Services\Protocol\UnitTree::withDescendantIds((int) $id));
+            }
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
     /** Usuários com o perfil principal OU adicional informado. */
     public function scopeWithProfile($query, string $slug)
     {

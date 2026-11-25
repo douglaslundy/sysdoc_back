@@ -32,7 +32,11 @@ class AccessProfileController extends Controller
     {
         $user = $request->user();
         if ($user->profile === 'admin' || (int) $profile->created_by_id === (int) $user->id) {
-            return $profile->loadMissing('pages');
+            $profile->loadMissing('pages');
+
+            return array_merge($profile->toArray(), [
+                'protocol_destino_unit_ids' => $profile->protocolDestinoUnits()->pluck('protocol_organizational_units.id')->map(fn ($id) => (int) $id)->all(),
+            ]);
         }
 
         return $profile->only(['id', 'nome', 'slug', 'descricao']);
@@ -71,6 +75,9 @@ class AccessProfileController extends Controller
 
         if ($request->has('page_ids')) {
             $profile->pages()->sync($request->page_ids);
+        }
+        if ($request->has('protocol_destino_unit_ids')) {
+            $profile->protocolDestinoUnits()->sync($request->input('protocol_destino_unit_ids') ?? []);
         }
 
         return response()->json($profile->load('pages'), 201);
@@ -119,6 +126,9 @@ class AccessProfileController extends Controller
 
         if ($request->has('page_ids')) {
             $profile->pages()->sync($request->page_ids);
+        }
+        if ($request->has('protocol_destino_unit_ids')) {
+            $profile->protocolDestinoUnits()->sync($request->input('protocol_destino_unit_ids') ?? []);
         }
 
         return response()->json($profile->load('pages'));

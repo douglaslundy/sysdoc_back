@@ -52,4 +52,11 @@ class AccessProfile extends Model
     {
         return $this->belongsToMany(SystemPage::class, 'profile_page_permissions');
     }
+
+    /** Destinos de protocolo permitidos (cada unidade vale com as subunidades). Vazio = sem limite. */
+    public function protocolDestinoUnits()
+    {
+        return $this->belongsToMany(ProtocolOrganizationalUnit::class, 'access_profile_protocol_units')
+            ->withoutGlobalScopes()->withTimestamps();
+    }
 }

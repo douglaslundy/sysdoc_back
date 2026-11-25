@@ -42,6 +42,8 @@ class StoreAccessProfileRequest extends FormRequest
             'protocol_can_change_visibility' => 'nullable|boolean',
             'page_ids' => 'nullable|array',
             'page_ids.*' => 'integer|exists:system_pages,id',
+            'protocol_destino_unit_ids' => 'nullable|array',
+            'protocol_destino_unit_ids.*' => 'integer|exists:protocol_organizational_units,id',
         ];
     }
 }
