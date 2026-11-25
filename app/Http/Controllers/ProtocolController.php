@@ -307,7 +307,10 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Selecione um usuário de destino ativo.'], 422);
         }
 
-        // Unidade só é checada quando informada: sem ela, o destino é a lotação da pessoa (checada como pessoa).
+        // Perfil limitado precisa informar a unidade: sem ela o destino seria a secretaria inteira da pessoa.
+        if (empty($validated['destino_unit_id']) && $user?->protocolDestinoUnitIds() !== null) {
+            return response()->json(['message' => 'Selecione a unidade de destino.', 'errors' => ['destino_unit_id' => ['Selecione a unidade de destino.']]], 422);
+        }
         if ($recusa = $this->destinoForaDoPerfil($user, $validated['destino_unit_id'] ?? null, $validated['destino_user_id'] ?? null)) {
             return $recusa;
         }
@@ -379,6 +382,15 @@ class ProtocolController extends Controller
         }
         if (! $this->podeMudarVisibilidade($request->user())) {
             unset($validated['visibility']);
+        }
+
+        // Mudar destino/responsável na edição segue a mesma regra do perfil que criar e encaminhar.
+        // Só quando muda: a tela de edição reenvia o destino atual junto com os outros campos.
+        $mudaUnidade = ! empty($validated['destino_unit_id']) && (int) $validated['destino_unit_id'] !== (int) $protocol->destino_unit_id;
+        $mudaPessoa = ! empty($validated['destino_user_id']) && (int) $validated['destino_user_id'] !== (int) $protocol->responsavel_atual_id;
+        if (($mudaUnidade || $mudaPessoa)
+            && ($recusa = $this->destinoForaDoPerfil($request->user(), $validated['destino_unit_id'] ?? $protocol->destino_unit_id, $validated['destino_user_id'] ?? null))) {
+            return $recusa;
         }
 
         if ($recusa = $this->referenciasDeOutraSecretaria((int) $protocol->secretaria_id, $validated)) {

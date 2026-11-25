@@ -127,7 +127,7 @@ class User extends Authenticatable
                 return null;
             }
             foreach ($marcadas as $id) {
-                array_push($ids, ...\App\Services\Protocol\UnitTree::withDescendantIds((int) $id));
+                array_push($ids, ...\App\Services\Protocol\UnitTree::withDescendantIds((int) $id, true));
             }
         }
 

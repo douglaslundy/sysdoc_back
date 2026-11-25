@@ -449,6 +449,10 @@ class LetterController extends Controller
             return response()->json(['message' => 'O usuário de destino deve pertencer à secretaria selecionada.'], 422);
         }
 
+        if ($negado = \App\Services\Protocol\ProtocolDestinoPolicy::negar($user, $destinationUnit->id, $destinationUser?->id)) {
+            return response()->json(['message' => $negado['mensagem'], 'errors' => [$negado['campo'] => [$negado['mensagem']]]], 422);
+        }
+
         if ($this->hasOpenProtocol($letter->id)) {
             return response()->json([
                 'message' => 'Este ofício já possui um protocolo aberto vinculado.',

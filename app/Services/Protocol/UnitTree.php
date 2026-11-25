@@ -9,13 +9,15 @@ use App\Models\ProtocolUserUnit;
 class UnitTree
 {
     /** @return array<int, int> a unidade e todas as suas subunidades (qualquer nível). */
-    public static function withDescendantIds(int $unitId): array
+    public static function withDescendantIds(int $unitId, bool $todasSecretarias = false): array
     {
         $ids = [$unitId];
         $frontier = [$unitId];
 
         while ($frontier !== []) {
-            $frontier = ProtocolOrganizationalUnit::query()->whereIn('parent_id', $frontier)->pluck('id')->all();
+            // $todasSecretarias: sem o escopo da secretaria ativa (unidade de outra secretaria).
+            $frontier = ($todasSecretarias ? ProtocolOrganizationalUnit::withoutSecretaria() : ProtocolOrganizationalUnit::query())
+                ->whereIn('parent_id', $frontier)->pluck('id')->all();
             $ids = array_merge($ids, $frontier);
         }
 
