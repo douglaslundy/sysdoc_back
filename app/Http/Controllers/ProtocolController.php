@@ -307,6 +307,11 @@ class ProtocolController extends Controller
             return response()->json(['message' => 'Selecione um usuário de destino ativo.'], 422);
         }
 
+        // Unidade só é checada quando informada: sem ela, o destino é a lotação da pessoa (checada como pessoa).
+        if ($recusa = $this->destinoForaDoPerfil($user, $validated['destino_unit_id'] ?? null, $validated['destino_user_id'] ?? null)) {
+            return $recusa;
+        }
+
         // Só barra quando o usuário TEM lotação e ela é de outra secretaria.
         // Usuário sem lotação nenhuma pode ser escolhido: o protocolo fica na
         // secretaria informada e ele passa a ser o responsável.
@@ -481,6 +486,10 @@ class ProtocolController extends Controller
                 return $recusa;
             }
             if ($recusa = $this->responsavelInvalidoDeCadastro($protocolo, $validated)) {
+                return $recusa;
+            }
+            // Sem unidade nova, o protocolo segue na unidade atual: é ela que precisa ser permitida.
+            if ($recusa = $this->destinoForaDoPerfil($request->user(), $validated['destino_unit_id'] ?? $protocolo->destino_unit_id, $validated['destino_user_id'] ?? null)) {
                 return $recusa;
             }
         }
@@ -922,6 +931,14 @@ class ProtocolController extends Controller
         }
 
         return $ids;
+    }
+
+    /** 422 quando o perfil do autor não permite o destino (ver ProtocolDestinoPolicy). */
+    private function destinoForaDoPerfil(?User $autor, $unitId, $destinoUserId): ?JsonResponse
+    {
+        $negado = $autor ? \App\Services\Protocol\ProtocolDestinoPolicy::negar($autor, $unitId !== null ? (int) $unitId : null, $destinoUserId !== null ? (int) $destinoUserId : null) : null;
+
+        return $negado ? response()->json(['message' => $negado['mensagem'], 'errors' => [$negado['campo'] => [$negado['mensagem']]]], 422) : null;
     }
 
     private function resolveDestinationUnit(array $validated, ?User $destinationUser): ?ProtocolOrganizationalUnit
