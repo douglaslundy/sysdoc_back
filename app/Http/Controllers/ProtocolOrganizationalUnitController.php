@@ -16,12 +16,27 @@ class ProtocolOrganizationalUnitController extends Controller
         // Árvore completa (todos os níveis): carregar só `children` de 1 nível deixava
         // de fora qualquer unidade cadastrada abaixo do segundo nível.
         // ?todas=1: árvore de todas as secretarias (só nomes), para escolher o destino de um protocolo entre secretarias.
-        $byParent = ($request->boolean('todas') ? ProtocolOrganizationalUnit::withoutSecretaria() : ProtocolOrganizationalUnit::query())
+        // ?destinos=1: com perfil limitado, só as unidades permitidas (permitido=true) e os ancestrais para montar a árvore (false).
+        $permitidas = $request->boolean('destinos') ? $request->user()?->protocolDestinoUnitIds() : null;
+        $units = ($request->boolean('todas') || $permitidas !== null ? ProtocolOrganizationalUnit::withoutSecretaria() : ProtocolOrganizationalUnit::query())
             ->orderBy('tipo')
             ->orderBy('nome')
             ->when($request->boolean('todas'), fn ($q) => $q->select(['id', 'parent_id', 'tipo', 'nome']))
-            ->get()
-            ->groupBy(fn (ProtocolOrganizationalUnit $unit) => $unit->parent_id ?? 0);
+            ->get();
+
+        if ($permitidas !== null) {
+            $porId = $units->keyBy('id');
+            $manter = [];
+            foreach ($permitidas as $id) {
+                for ($u = $porId->get($id); $u && ! isset($manter[$u->id]); $u = $porId->get($u->parent_id)) {
+                    $manter[$u->id] = true;
+                }
+            }
+            $units = $units->filter(fn ($u) => isset($manter[$u->id]))
+                ->each(fn ($u) => $u->setAttribute('permitido', in_array((int) $u->id, $permitidas, true)));
+        }
+
+        $byParent = $units->groupBy(fn (ProtocolOrganizationalUnit $unit) => $unit->parent_id ?? 0);
 
         $attach = function ($units) use (&$attach, $byParent) {
             foreach ($units as $unit) {

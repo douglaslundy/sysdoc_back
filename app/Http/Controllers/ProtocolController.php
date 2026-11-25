@@ -776,6 +776,9 @@ class ProtocolController extends Controller
                     ->whereIn('protocol_organizational_unit_id', $unitIds)
                     ->select('user_id'));
             })
+            // Perfil com destinos limitados: só quem está lotado numa unidade permitida.
+            ->when($request->user()?->protocolDestinoUnitIds(), fn ($q, $permitidas) => $q->whereIn('id', ProtocolUserUnit::withoutGlobalScopes()
+                ->where('ativo', true)->whereIn('protocol_organizational_unit_id', $permitidas)->select('user_id')))
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name]);
