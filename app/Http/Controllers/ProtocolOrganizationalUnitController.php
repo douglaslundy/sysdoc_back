@@ -22,6 +22,8 @@ class ProtocolOrganizationalUnitController extends Controller
             ->orderBy('tipo')
             ->orderBy('nome')
             ->when($request->boolean('todas'), fn ($q) => $q->select(['id', 'parent_id', 'tipo', 'nome']))
+            // Escolha de destino não oferece unidade inativa (e o que está abaixo dela some junto, sem pai na árvore).
+            ->when($request->boolean('todas') || $request->boolean('destinos'), fn ($q) => $q->where('ativo', true))
             ->get();
 
         if ($permitidas !== null) {
