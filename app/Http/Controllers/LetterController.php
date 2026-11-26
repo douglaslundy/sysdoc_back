@@ -110,9 +110,7 @@ class LetterController extends Controller
                 $letter->load('user')->loadCount('attachments'),
             ]))->first();
         } else {
-            $array['errors'] = $validator->errors()->first();
-
-            return $array;
+            return response()->json(['message' => $validator->errors()->first(), 'errors' => $validator->errors()], 422);
         }
 
         return $array;
@@ -155,9 +153,7 @@ class LetterController extends Controller
                 $letter->load('user')->loadCount('attachments'),
             ]))->first();
         } else {
-            $array['errors'] = $validator->errors()->first();
-
-            return $array;
+            return response()->json(['message' => $validator->errors()->first(), 'errors' => $validator->errors()], 422);
         }
 
         return $array;
@@ -178,7 +174,7 @@ class LetterController extends Controller
             $lastLetter = Letter::withoutSecretaria()->where('secretaria_id', $letter->secretaria_id)->latest()->first();
 
             if ($letter->id !== $lastLetter->id) {
-                throw new Exception('é permitido excluir Somente o ultimo Ofício');
+                return response()->json(['message' => 'Só é permitido excluir o último ofício.'], 422);
             }
 
             $letter->delete();
@@ -243,6 +239,7 @@ class LetterController extends Controller
             ]);
         } catch (Exception $e) {
             return response()->json([
+                'message' => 'Não foi possível gerar o modelo com a Inteligência Artificial. Tente novamente.',
                 'errors' => 'Erro ao conectar com a Inteligencia Artificial, tente novamente. '.$e->getMessage(),
             ], 500);
         }
